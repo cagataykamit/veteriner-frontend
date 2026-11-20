@@ -11,6 +11,7 @@ import { CLEAR_CONTEXT_FILTER_QUERY, readContextFilterParam } from '@/app/shared
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { Paginator } from 'primeng/paginator';
 import { TableModule } from 'primeng/table';
 import { ListPageState } from '@/app/shared/list/list-page-state';
@@ -34,6 +35,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { AuthService } from '@/app/core/auth/auth.service';
 import { APPOINTMENTS_CANCEL_CLAIM, APPOINTMENTS_CREATE_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { istanbulTodayYmd } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
+import { type AppointmentListPeriod, appointmentListWindow, readAppointmentListPeriod, writeAppointmentListPeriod } from '@/app/features/appointments/pages/appointments-list-page/appointments-list-period';
 
 type AppointmentListState = {
     search: string;
@@ -58,6 +61,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
         ButtonModule,
         InputTextModule,
         SelectModule,
+        SelectButtonModule,
         AppListHeaderComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
@@ -93,6 +97,22 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                         }
                     </app-list-header>
                     <div class="flex flex-wrap items-end gap-3">
+                        <app-filter-field label="Dönem" labelId="lblApptPeriod" width="select">
+                            <p-selectbutton
+                                [options]="periodOptions"
+                                [ngModel]="period()"
+                                (ngModelChange)="setPeriod($event)"
+                                optionLabel="label"
+                                optionValue="value"
+                                [allowEmpty]="false"
+                                [disabled]="isRangeActive()"
+                                ariaLabelledBy="lblApptPeriod"
+                                data-testid="appt-period"
+                            />
+                            @if (isRangeActive()) {
+                                <small class="block mt-1 text-xs text-muted-color">Tarih aralığı seçili: aralık eskiden yeniye sıralanır.</small>
+                            }
+                        </app-filter-field>
                         <app-filter-field label="Durum" labelId="lblApptStatus" [active]="isStatusActive()" width="select">
                             <p-select
                                 ariaLabelledBy="lblApptStatus"
@@ -128,7 +148,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                     <app-error-state [detail]="error()!" (retry)="reload()" />
                 } @else {
                     @if (displayedRows().length === 0) {
-                        <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz randevu yok." [createLabel]="canCreateAppointment && !ro.mutationBlocked() ? 'İlk randevuyu oluştur' : null" [createLink]="'/panel/appointments/new'" (clear)="resetFilters()" />
+                        <app-list-empty-state [filtered]="hasActiveFilters()" [emptyMessage]="emptyMessage()" [createLabel]="canCreateAppointment && !ro.mutationBlocked() ? 'İlk randevuyu oluştur' : null" [createLink]="'/panel/appointments/new'" (clear)="resetFilters()" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
                             <p-table
@@ -276,21 +296,24 @@ export class AppointmentsListPageComponent implements OnInit {
     readonly contextFilterLabel = computed(() => (this.contextPetId() ? 'Seçili hastanın kayıtları gösteriliyor' : 'Seçili müşterinin kayıtları gösteriliyor'));
 
     readonly list = new ListPageState<AppointmentListItemVm>({
-        fetch: (page, pageSize) =>
-            this.appointmentsService
-                .getAppointments({
-                    petId: this.contextPetId() || undefined,
-                    clientId: this.contextClientId() || undefined,
-                    page,
-                    pageSize,
-                    search: this.activeSearch() || undefined,
-                    fromDate: this.activeFromDate() || undefined,
-                    toDate: this.activeToDate() || undefined,
-                    status: this.statusFilter || undefined,
-                    sort: 'scheduledAtUtc',
-                    order: 'desc'
-                }),
-        loadKey: (page, pageSize) => `${page}|${pageSize}|${this.activeSearch().trim()}|${this.activeFromDate().trim()}|${this.activeToDate().trim()}|${this.statusFilter.trim()}|${this.contextPetId()}|${this.contextClientId()}`,
+        fetch: (page, pageSize) => {
+            const span = appointmentListWindow(this.period(), { fromDate: this.activeFromDate().trim(), toDate: this.activeToDate().trim() }, istanbulTodayYmd());
+
+            return this.appointmentsService.getAppointments({
+                petId: this.contextPetId() || undefined,
+                clientId: this.contextClientId() || undefined,
+                page,
+                pageSize,
+                search: this.activeSearch() || undefined,
+                fromDate: span.fromDate,
+                toDate: span.toDate,
+                status: this.statusFilter || undefined,
+                sort: 'scheduledAtUtc',
+                order: span.order
+            });
+        },
+        loadKey: (page, pageSize) =>
+            `${page}|${pageSize}|${this.period()}|${this.activeSearch().trim()}|${this.activeFromDate().trim()}|${this.activeToDate().trim()}|${this.statusFilter.trim()}|${this.contextPetId()}|${this.contextClientId()}`,
         persist: {
             key: APPOINTMENTS_LIST_STATE_KEY,
             save: (): Omit<AppointmentListState, 'page' | 'pageSize'> => ({
@@ -326,6 +349,17 @@ export class AppointmentsListPageComponent implements OnInit {
     readonly activeSearch = signal('');
     readonly activeFromDate = signal('');
     readonly activeToDate = signal('');
+
+    readonly periodOptions: Array<{ label: string; value: AppointmentListPeriod }> = [
+        { label: 'Yaklaşan', value: 'upcoming' },
+        { label: 'Geçmiş', value: 'past' },
+        { label: 'Tümü', value: 'all' }
+    ];
+    /** Varsayılan yaklaşan: geçmiş ve uzak gelecek, bugünün randevularını aşağı itmesin. */
+    readonly period = signal<AppointmentListPeriod>(readAppointmentListPeriod());
+    readonly isRangeActive = computed(() => this.isFromDateActive() || this.isToDateActive());
+    /** Filtresiz boş liste (filtre varken boş durum "filtreye uyan kayıt yok" der). */
+    readonly emptyMessage = computed(() => (this.period() === 'upcoming' ? 'Yaklaşan randevu yok.' : this.period() === 'past' ? 'Geçmiş randevu yok.' : 'Henüz randevu yok.'));
 
     searchInput = '';
     fromDateInput = '';
@@ -399,6 +433,16 @@ export class AppointmentsListPageComponent implements OnInit {
         this.activeSearch.set(this.searchInput.trim());
         this.activeFromDate.set(from);
         this.activeToDate.set(to);
+        this.list.loadFirstPage();
+    }
+
+    setPeriod(period: AppointmentListPeriod): void {
+        if (period === this.period()) {
+            return;
+        }
+
+        this.period.set(period);
+        writeAppointmentListPeriod(period);
         this.list.loadFirstPage();
     }
 

@@ -10,6 +10,8 @@ import { isLastRowAction, isRightAfterDetail, rowDangerActions, rowEditActions }
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { WaitlistService } from '@/app/entities/waitlist/services/waitlist.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { istanbulTodayYmd } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
+import { addGregorianDaysToYmd } from '@/app/shared/utils/date.utils';
 import { AppointmentsListPageComponent } from './appointments-list-page.component';
 
 const STATE_KEY = 'panel:appointments:listState';
@@ -79,9 +81,85 @@ describe('AppointmentsListPageComponent — karttan gelen süzgeç bağlantısı
         const args = vi.mocked(getAppointments).mock.lastCall![0];
 
         expect(args.status).toBe('1');
-        expect(args.fromDate).toBeUndefined();
+        // Geçersiz fromDate uygulanmaz; varsayılan dönem (yaklaşan) bugünden başlatır.
+        expect(args.fromDate).toBe(istanbulTodayYmd());
         expect(args.page).toBe(2);
         expect(navigate).not.toHaveBeenCalled();
+    });
+});
+
+describe('AppointmentsListPageComponent — dönem (Yaklaşan / Geçmiş / Tümü)', () => {
+    const PERIOD_KEY = 'vetinity.appointments.period';
+
+    const setup = () => {
+        const getAppointments = vi
+            .fn()
+            .mockName('getAppointments')
+            .mockReturnValue(of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }));
+
+        TestBed.configureTestingModule({
+            imports: [AppointmentsListPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } },
+                { provide: AppointmentsService, useValue: { getAppointments } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        const fixture = TestBed.createComponent(AppointmentsListPageComponent);
+
+        fixture.detectChanges();
+
+        return { fixture, el: fixture.nativeElement as HTMLElement, cmp: fixture.componentInstance, last: () => vi.mocked(getAppointments).mock.lastCall![0] };
+    };
+
+    beforeEach(() => {
+        sessionStorage.removeItem(STATE_KEY);
+        localStorage.removeItem(PERIOD_KEY);
+    });
+    afterEach(() => {
+        sessionStorage.removeItem(STATE_KEY);
+        localStorage.removeItem(PERIOD_KEY);
+    });
+
+    it('varsayılan yaklaşan: bugünden itibaren, en yakın üstte; boş listede "Yaklaşan randevu yok."', () => {
+        const { el, last } = setup();
+
+        expect(last()).toEqual(expect.objectContaining({ fromDate: istanbulTodayYmd(), toDate: undefined, sort: 'scheduledAtUtc', order: 'asc' }));
+        expect(el.querySelector('[data-testid="appt-period"]')?.textContent).toContain('Yaklaşan');
+        expect(el.textContent).toContain('Yaklaşan randevu yok.');
+    });
+
+    it('Geçmiş: dünün sonuna kadar, en yeni üstte; seçim tarayıcıda hatırlanır', () => {
+        const { fixture, cmp, last } = setup();
+
+        cmp.setPeriod('past');
+        fixture.detectChanges();
+        expect(last()).toEqual(expect.objectContaining({ fromDate: undefined, toDate: addGregorianDaysToYmd(istanbulTodayYmd(), -1), order: 'desc', page: 1 }));
+        expect(localStorage.getItem(PERIOD_KEY)).toBe('past');
+        TestBed.resetTestingModule();
+        expect(setup().cmp.period()).toBe('past');
+    });
+
+    it('Tümü: tarih sınırı yok, en yeni üstte', () => {
+        localStorage.setItem(PERIOD_KEY, 'all');
+        const { last } = setup();
+
+        expect(last()).toEqual(expect.objectContaining({ fromDate: undefined, toDate: undefined, order: 'desc' }));
+    });
+
+    it('tarih aralığı girilince aralık artan sıralanır ve dönem seçimi devre dışı kalır', () => {
+        localStorage.setItem(PERIOD_KEY, 'past');
+        const { fixture, el, cmp, last } = setup();
+
+        cmp.fromDateInput = '2026-12-01';
+        cmp.toDateInput = '2026-12-31';
+        cmp.applyFilters();
+        fixture.detectChanges();
+        expect(last()).toEqual(expect.objectContaining({ fromDate: '2026-12-01', toDate: '2026-12-31', order: 'asc' }));
+        expect(cmp.isRangeActive()).toBe(true);
+        expect(el.textContent).toContain('aralık eskiden yeniye sıralanır');
     });
 });
 
