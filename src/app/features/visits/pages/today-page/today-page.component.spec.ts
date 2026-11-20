@@ -21,6 +21,7 @@ import { EDocumentsService } from '@/app/entities/e-document/services/e-document
 /** e-belge diyaloğu ve bağlantı kartı sayfaya gömülü; gerçek HTTP yerine sessiz taklit. */
 const eDocumentsStub = {
     preview: () => of({ connection: { status: 'NotConnected', environment: null, providerName: null }, groups: [], skipped: [], missingBuyerFields: [], buyer: null, clientId: '', clientName: '' }),
+    visitCloseSuggestion: () => of(null),
     getConnection: () => of({ clinicId: '', status: 'NotConnected', availableProviders: [] })
 };
 
@@ -1278,7 +1279,8 @@ describe('TodayPageComponent', () => {
             const actionsOf = (row: HTMLElement) => Array.from(row.querySelectorAll('td:last-child button')).map((b) => b.getAttribute('aria-label'));
             const rows = Array.from(host.querySelectorAll('tbody tr[data-today-row]')) as HTMLElement[];
 
-            expect(rows.map(actionsOf)).toEqual([['Muayeneye al', 'Diğer işlemler'], ['Muayene aç', 'Tamamla', 'Diğer işlemler'], ['Geldi', 'Diğer işlemler'], ['Ödeme al', 'Diğer işlemler'], ['Diğer işlemler']]);
+            // Ön büro yetkisinde (tahsilat) "Hesabı kapat" hem "Tamamla"nın hem "Ödeme al"ın yerine birincil adımdır (CHECKOUT-001).
+            expect(rows.map(actionsOf)).toEqual([['Muayeneye al', 'Diğer işlemler'], ['Muayene aç', 'Hesabı kapat', 'Diğer işlemler'], ['Geldi', 'Diğer işlemler'], ['Hesabı kapat', 'Diğer işlemler'], ['Diğer işlemler']]);
             const container = rows[0].querySelector('td:last-child > div') as HTMLElement;
 
             expect(container.className).toContain('justify-end');
@@ -1369,18 +1371,25 @@ describe('TodayPageComponent', () => {
             expect(navigate).toHaveBeenCalledWith(['/panel/charges/new'], { queryParams: { clientId: 'cl4', petId: 'p4', visitId: 'v4' } });
         });
 
-        it('tamamlanmış satırın "Ödeme al" düğmesi müşteri ve geliş bağlamıyla ödeme formuna gider; yetki yoksa düğme yok', async () => {
+        it('tamamlanmış satırın kalanı varsa birincil adım "Hesabı kapat"; "Ödeme al" menüde kalır ve ödeme formuna gider; yetki yoksa ikisi de yok', async () => {
             const done = item({ key: 'c', visitId: 'v5', clientId: 'cl5', careStatus: 'Completed', outstandingAmount: 850 });
             const without = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [done] });
 
+            expect((without.nativeElement as HTMLElement).querySelector('[data-testid="today-checkout"]')).toBeNull();
             expect((without.nativeElement as HTMLElement).querySelector('[data-testid="today-collect-remaining"]')).toBeNull();
             TestBed.resetTestingModule();
 
             const f = await create(['Visits.Read', 'Payments.Create'], { date: 'd', activeHospitalizations: [], items: [done] });
+            const el = f.nativeElement as HTMLElement;
             const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
-            ((f.nativeElement as HTMLElement).querySelector('[data-testid="today-collect-remaining"]') as HTMLButtonElement).click();
+            expect(el.querySelector('[data-testid="today-collect-remaining"]')).toBeNull();
+            (el.querySelector('[data-testid="today-checkout"]') as HTMLButtonElement).click();
+            expect(f.componentInstance.checkoutVisitId()).toBe('v5');
+
+            f.componentInstance.openPayment(done);
             expect(navigate).toHaveBeenCalledWith(['/panel/payments/new'], { queryParams: { clientId: 'cl5', visitId: 'v5' } });
+            expect(f.componentInstance.secondaryActionsOf(done, f.componentInstance.actionsOf(done)).map((a) => a.key)).toContain('collectPayment');
         });
 
         it('acil ⋯ menüsünden işaretlenir; işaretli satırda hasta adının yanında "Acil" etiketi', async () => {
