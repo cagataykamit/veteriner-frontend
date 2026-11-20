@@ -4,9 +4,8 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import type { AnyReportListState } from './report-list-state';
-import { ReportPreferencesService, type ReportSavedFilterDto } from './report-preferences.service';
-import { ReportSavedFiltersComponent } from './report-saved-filters.component';
+import { ReportPreferencesService, type ReportSavedFilterDto } from '../services/report-preferences.service';
+import { ReportSavedFiltersComponent, type SavedFilterSource } from './report-saved-filters.component';
 
 describe('ReportSavedFiltersComponent — kayıtlı filtreler (REPORT-004)', () => {
     let preferences: MockedObject<ReportPreferencesService>;
@@ -25,7 +24,7 @@ describe('ReportSavedFiltersComponent — kayıtlı filtreler (REPORT-004)', () 
     function create() {
         const fixture = TestBed.createComponent(ReportSavedFiltersComponent);
 
-        fixture.componentRef.setInput('state', state as unknown as AnyReportListState);
+        fixture.componentRef.setInput('state', state as unknown as SavedFilterSource);
         fixture.detectChanges();
 
         return fixture;

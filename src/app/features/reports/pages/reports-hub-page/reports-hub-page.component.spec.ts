@@ -7,7 +7,7 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { APPOINTMENTS_READ_CLAIM, PAYMENTS_READ_CLAIM, PRESCRIPTIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { ReportHubSummaryDto } from '@/app/features/reports/hub/models/report-hub-summary.model';
 import { ReportHubSummaryService } from '@/app/features/reports/hub/services/report-hub-summary.service';
-import { ReportPreferencesService } from '@/app/features/reports/shared/report-preferences.service';
+import { ReportPreferencesService } from '@/app/entities/report-preference/services/report-preferences.service';
 import { ReportsHubPageComponent } from './reports-hub-page.component';
 
 function hubSummary(attention: Partial<ReportHubSummaryDto['attention']> = {}): ReportHubSummaryDto {

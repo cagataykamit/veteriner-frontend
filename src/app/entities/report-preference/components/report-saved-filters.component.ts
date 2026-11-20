@@ -9,8 +9,7 @@ import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import type { AnyReportListState } from '@/app/features/reports/shared/report-list-state';
-import { ReportPreferencesService, reportKeyFromRoute, type ReportSavedFilterDto } from '@/app/features/reports/shared/report-preferences.service';
+import { ReportPreferencesService, reportKeyFromRoute, type ReportSavedFilterDto } from '@/app/entities/report-preference/services/report-preferences.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -18,6 +17,12 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
 
 /** Kayıtlı filtre adı üst sınırı (sözleşme §3; `ReportSavedFilter.MaxNameLength`). */
 const MAX_NAME_LENGTH = 100;
+
+/** Kaydedilecek filtre setini veren ve kayıtlı seti ekrana uygulayan taraf (rapor liste durumu ya da ekran). */
+export interface SavedFilterSource {
+    savedFilterValues(): Record<string, string>;
+    applySavedFilterValues(values: Readonly<Record<string, string>>): void;
+}
 
 /**
  * Kayıtlı filtreler (REPORT-004): seçilen kayıt uygulanır, ekrandaki filtre seti adla kaydedilir, seçili kayıt silinir.
@@ -107,7 +112,7 @@ export class ReportSavedFiltersComponent implements OnInit {
 
     readonly copy = PANEL_COPY;
     readonly maxNameLength = MAX_NAME_LENGTH;
-    readonly state = input.required<AnyReportListState>();
+    readonly state = input.required<SavedFilterSource>();
 
     /** Sayfa adresinden türeyen rapor anahtarı; Rapor Merkezi dışında `null` (bileşen görünmez). */
     readonly reportKey = reportKeyFromRoute(inject(Router).url);

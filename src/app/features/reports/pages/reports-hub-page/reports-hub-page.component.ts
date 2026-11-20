@@ -11,7 +11,7 @@ import { ReportHubSparklineComponent } from '@/app/features/reports/hub/componen
 import { attentionRows, type FigurePart, reportMatches, visibleQuestions, visibleReports } from '@/app/features/reports/hub/data/report-hub.rules';
 import type { ReportHubPeriod, ReportHubSummaryDto } from '@/app/features/reports/hub/models/report-hub-summary.model';
 import { ReportHubSummaryService } from '@/app/features/reports/hub/services/report-hub-summary.service';
-import { ReportPreferencesService, reportKeyFromRoute } from '@/app/features/reports/shared/report-preferences.service';
+import { ReportPreferencesService, reportKeyFromRoute } from '@/app/entities/report-preference/services/report-preferences.service';
 import { PANEL_COPY, REPORT_HUB_COPY } from '@/app/shared/copy/panel-tr';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 
