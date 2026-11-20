@@ -4,9 +4,8 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import type { AnyReportListState } from './report-list-state';
-import { ReportPreferencesService, type ReportSavedFilterDto } from './report-preferences.service';
-import { ReportSavedFiltersComponent } from './report-saved-filters.component';
+import { ReportPreferencesService, type ReportSavedFilterDto } from '../services/report-preferences.service';
+import { ReportSavedFiltersComponent, type SavedFilterSource } from './report-saved-filters.component';
 
 describe('ReportSavedFiltersComponent — kayıtlı filtreler (REPORT-004)', () => {
     let preferences: MockedObject<ReportPreferencesService>;
@@ -22,10 +21,11 @@ describe('ReportSavedFiltersComponent — kayıtlı filtreler (REPORT-004)', () 
         createdAtUtc: '2026-10-30T08:00:00Z'
     });
 
-    function create() {
+    function create(inputs: Record<string, string> = {}) {
         const fixture = TestBed.createComponent(ReportSavedFiltersComponent);
 
-        fixture.componentRef.setInput('state', state as unknown as AnyReportListState);
+        fixture.componentRef.setInput('state', state as unknown as SavedFilterSource);
+        Object.entries(inputs).forEach(([name, value]) => fixture.componentRef.setInput(name, value));
         fixture.detectChanges();
 
         return fixture;
@@ -129,5 +129,23 @@ describe('ReportSavedFiltersComponent — kayıtlı filtreler (REPORT-004)', () 
         expect(preferences.deleteSavedFilter).toHaveBeenCalledWith('f1');
         expect(c.savedFilters()).toEqual([]);
         expect(c.selectedId()).toBeNull();
+    });
+
+    it('ekran anahtarı verilince Rapor Merkezi dışında da o anahtarla listeler ve kaydeder (APPT-026)', () => {
+        url = '/panel/appointments/calendar?types=asi';
+        preferences.createSavedFilter.mockReturnValue(of(saved('f2', 'Aşılar', { types: 'asi' })));
+        state.savedFilterValues.mockReturnValue({ types: 'asi' });
+        const fixture = create({ filterKey: 'screens.appointments-calendar', dialogHint: 'Ekran ipucu' });
+        const c = fixture.componentInstance;
+
+        expect(preferences.listSavedFilters).toHaveBeenCalledWith('screens.appointments-calendar');
+        expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="report-saved-filters"]')).not.toBeNull();
+
+        c.openSave();
+        c.nameInput.set('Aşılar');
+        c.save();
+
+        expect(preferences.createSavedFilter).toHaveBeenCalledWith('screens.appointments-calendar', 'Aşılar', { types: 'asi' });
+        expect(c.dialogHint()).toBe('Ekran ipucu');
     });
 });

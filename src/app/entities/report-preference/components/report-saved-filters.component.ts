@@ -9,8 +9,7 @@ import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import type { AnyReportListState } from '@/app/features/reports/shared/report-list-state';
-import { ReportPreferencesService, reportKeyFromRoute, type ReportSavedFilterDto } from '@/app/features/reports/shared/report-preferences.service';
+import { ReportPreferencesService, reportKeyFromRoute, type ReportSavedFilterDto } from '@/app/entities/report-preference/services/report-preferences.service';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -19,9 +18,16 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
 /** Kayıtlı filtre adı üst sınırı (sözleşme §3; `ReportSavedFilter.MaxNameLength`). */
 const MAX_NAME_LENGTH = 100;
 
+/** Kaydedilecek filtre setini veren ve kayıtlı seti ekrana uygulayan taraf (rapor liste durumu ya da ekran). */
+export interface SavedFilterSource {
+    savedFilterValues(): Record<string, string>;
+    applySavedFilterValues(values: Readonly<Record<string, string>>): void;
+}
+
 /**
  * Kayıtlı filtreler (REPORT-004): seçilen kayıt uygulanır, ekrandaki filtre seti adla kaydedilir, seçili kayıt silinir.
  * Kayıtlar kullanıcıya özeldir; rapor anahtarı sayfa adresinden türer. Tarih aralığı kaydedilmez (`savedFilterValues`).
+ * Rapor dışı ekranlar (takvim, talep listesi; APPT-026) aynı depoyu `filterKey` ile kullanır: `screens.<ekran>`.
  */
 @Component({
     selector: 'app-report-saved-filters',
@@ -30,7 +36,7 @@ const MAX_NAME_LENGTH = 100;
     providers: [ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        @if (reportKey) {
+        @if (reportKey()) {
             <div class="flex flex-wrap items-end gap-2" data-testid="report-saved-filters">
                 <app-filter-field [label]="copy.reportsSavedFilters" labelId="reportSavedFiltersLabel" width="select">
                     <p-select
@@ -77,14 +83,14 @@ const MAX_NAME_LENGTH = 100;
                     pInputText
                     class="w-full"
                     [maxlength]="maxNameLength"
-                    [placeholder]="copy.reportsSavedFilterNamePlaceholder"
+                    [placeholder]="namePlaceholder()"
                     [ngModel]="nameInput()"
                     (ngModelChange)="nameInput.set($event)"
                     (keydown.enter)="save()"
                 />
-                <p class="text-sm text-muted-color mt-3 mb-0">{{ copy.reportsSavedFilterDialogHint }}</p>
+                <p class="text-sm text-muted-color mt-3 mb-0">{{ dialogHint() }}</p>
                 @if (pendingIsEmpty()) {
-                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-2 mb-0" role="status">{{ copy.reportsSavedFilterEmptySet }}</p>
+                    <p class="text-amber-700 dark:text-amber-300 text-sm mt-2 mb-0" role="status">{{ emptySetText() }}</p>
                 }
                 @if (dialogError(); as message) {
                     <p class="text-danger text-sm mt-2 mb-0" role="alert">{{ message }}</p>
@@ -107,10 +113,17 @@ export class ReportSavedFiltersComponent implements OnInit {
 
     readonly copy = PANEL_COPY;
     readonly maxNameLength = MAX_NAME_LENGTH;
-    readonly state = input.required<AnyReportListState>();
+    readonly state = input.required<SavedFilterSource>();
+    /** Rapor dışı ekranın kayıt anahtarı (`screens.…`); verilmezse rapor anahtarı sayfa adresinden türer. */
+    readonly filterKey = input<string | null>(null);
+    readonly namePlaceholder = input<string>(PANEL_COPY.reportsSavedFilterNamePlaceholder);
+    /** Diyalogda neyin kaydedildiği (tarih/dönem kaydedilmez). */
+    readonly dialogHint = input<string>(PANEL_COPY.reportsSavedFilterDialogHint);
+    readonly emptySetText = input<string>(PANEL_COPY.reportsSavedFilterEmptySet);
 
-    /** Sayfa adresinden türeyen rapor anahtarı; Rapor Merkezi dışında `null` (bileşen görünmez). */
-    readonly reportKey = reportKeyFromRoute(inject(Router).url);
+    private readonly routeKey = reportKeyFromRoute(inject(Router).url);
+    /** Kayıt anahtarı; ekran anahtarı yoksa ve Rapor Merkezi dışındaysa `null` (bileşen görünmez). */
+    readonly reportKey = computed(() => this.filterKey() ?? this.routeKey);
 
     readonly savedFilters = signal<ReportSavedFilterDto[]>([]);
     readonly selectedId = signal<string | null>(null);
@@ -130,11 +143,13 @@ export class ReportSavedFiltersComponent implements OnInit {
     readonly canSave = computed(() => !this.busy() && !this.pendingIsEmpty() && !!this.nameInput().trim() && !this.ro.mutationBlocked());
 
     ngOnInit(): void {
-        if (!this.reportKey) {
+        const key = this.reportKey();
+
+        if (!key) {
             return;
         }
 
-        this.preferences.listSavedFilters(this.reportKey).subscribe({
+        this.preferences.listSavedFilters(key).subscribe({
             next: (rows) => this.savedFilters.set(rows),
             error: () => this.savedFilters.set([])
         });
@@ -158,13 +173,15 @@ export class ReportSavedFiltersComponent implements OnInit {
     }
 
     save(): void {
-        if (!this.reportKey || !this.canSave()) {
+        const key = this.reportKey();
+
+        if (!key || !this.canSave()) {
             return;
         }
 
         this.busy.set(true);
         this.dialogError.set(null);
-        this.preferences.createSavedFilter(this.reportKey, this.nameInput().trim(), this.pending()).subscribe({
+        this.preferences.createSavedFilter(key, this.nameInput().trim(), this.pending()).subscribe({
             next: (created) => {
                 this.busy.set(false);
                 this.savedFilters.set(

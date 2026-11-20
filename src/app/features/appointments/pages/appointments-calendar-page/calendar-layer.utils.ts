@@ -79,9 +79,7 @@ export function readStoredCalendarFilters(): CalendarFilters {
 
 export function writeStoredCalendarFilters(f: CalendarFilters): void {
     try {
-        const q = new URLSearchParams(Object.entries(calendarFiltersToQueryParams(f)).filter((e): e is [string, string] => !!e[1]));
-
-        localStorage.setItem(FILTERS_KEY, q.toString());
+        localStorage.setItem(FILTERS_KEY, new URLSearchParams(calendarFilterValues(f)).toString());
     } catch {
         // Depolama kapalıysa seçim yalnız adres çubuğunda kalır.
     }
@@ -122,6 +120,14 @@ export function parseCalendarFilters(params: { get(name: string): string | null 
 /** Adres çubuğu parametreleri; boş filtre parametre yazmaz (`undefined` siler). */
 export function calendarFiltersToQueryParams(f: CalendarFilters): Record<string, string | undefined> {
     return { vet: f.vet ?? undefined, types: f.types.length ? f.types.join(',') : undefined, states: f.states.length ? f.states.join(',') : undefined };
+}
+
+/**
+ * Yalnız dolu filtre parametreleri: tarayıcıdaki son seçim ve kayıtlı filtre (APPT-026) bunu saklar. Gün ve görünüm (`date`, `view`)
+ * filtre değildir, saklanmaz; geri okunurken {@link parseCalendarFilters} kullanılır.
+ */
+export function calendarFilterValues(f: CalendarFilters): Record<string, string> {
+    return Object.fromEntries(Object.entries(calendarFiltersToQueryParams(f)).filter((e): e is [string, string] => !!e[1]));
 }
 
 /**

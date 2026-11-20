@@ -4,7 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
 import type { AnyReportListState } from '@/app/features/reports/shared/report-list-state';
-import { ReportSavedFiltersComponent } from '@/app/features/reports/shared/report-saved-filters.component';
+import { ReportSavedFiltersComponent } from '@/app/entities/report-preference/components/report-saved-filters.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import type { DateInputLimit } from '@/app/shared/forms/date-input/date-input-limits.utils';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';

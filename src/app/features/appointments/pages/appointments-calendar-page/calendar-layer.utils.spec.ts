@@ -3,6 +3,7 @@ import type { VaccinationCalendarItemVm } from '@/app/entities/vaccination/model
 import { convertToParamMap } from '@angular/router';
 import {
     appointmentBubble,
+    calendarFilterValues,
     calendarFiltersToQueryParams,
     calendarRequestFor,
     parseCalendarFilters,
@@ -110,6 +111,14 @@ describe('calendar-layer.utils', () => {
         expect(f).toEqual({ vet: 'none', types: ['asi', '1'], states: ['DueToday', 'Completed'] });
         expect(calendarFiltersToQueryParams(f)).toEqual({ vet: 'none', types: 'asi,1', states: 'DueToday,Completed' });
         expect(calendarFiltersToQueryParams({ vet: null, types: [], states: [] })).toEqual({ vet: undefined, types: undefined, states: undefined });
+    });
+
+    it('kayıtlı filtre değerleri yalnız dolu filtrelerdir ve aynı filtreye geri okunur (APPT-026)', () => {
+        const f = { vet: null, types: ['asi', '1'], states: ['Overdue' as const] };
+
+        expect(calendarFilterValues(f)).toEqual({ types: 'asi,1', states: 'Overdue' });
+        expect(parseCalendarFilters(new URLSearchParams(calendarFilterValues(f)))).toEqual(f);
+        expect(calendarFilterValues({ vet: null, types: [], states: [] })).toEqual({});
     });
 
     it('sunucu isteği: tür boşsa randevu ve aşı tümü; yalnız aşı seçiliyse randevu yok; hekim seçiliyse aşı yok', () => {

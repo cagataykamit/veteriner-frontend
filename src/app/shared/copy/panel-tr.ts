@@ -75,6 +75,13 @@ export const PANEL_COPY = {
     reportsSavedFilterEmptySet: 'Kaydedilecek filtre yok; önce klinik, arama veya rapora özgü bir filtre seçin.',
     reportsSavedFilterFailed: 'Kayıtlı filtre işlemi tamamlanamadı.',
     reportsSavedFilterDeleteConfirm: 'kayıtlı filtresi silinsin mi?',
+    /** Randevu takviminde kayıtlı filtreler (APPT-026; rapor kayıtlı filtreleriyle aynı depo) */
+    calendarSavedFilterNamePlaceholder: 'Ör. Gecikmiş aşılar',
+    calendarSavedFilterDialogHint: 'Hekim, tür ve durum filtreleri kaydedilir; gün ve görünüm kaydedilmez, uygulandığında ekrandaki tarih korunur.',
+    calendarSavedFilterEmptySet: 'Kaydedilecek filtre yok; önce hekim, tür veya durum filtresi seçin.',
+    /** Randevu talepleri listesinde kayıtlı filtreler (APPT-026) */
+    appointmentRequestsSavedFilterNamePlaceholder: 'Ör. Reddedilenler',
+    appointmentRequestsSavedFilterDialogHint: 'Durum filtresi kaydedilir; uygulandığında liste ilk sayfadan açılır.',
     reportsExportResponseEmpty: 'İndirilecek dosya oluşturulamadı.',
     reportsExportFailedFallback: 'Dışa aktarma işlemi tamamlanamadı.',
     reportsTotalRecords: 'Toplam kayıt',
