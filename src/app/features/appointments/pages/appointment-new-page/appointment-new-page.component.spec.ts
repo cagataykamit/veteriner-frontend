@@ -32,7 +32,7 @@ describe('AppointmentNewPageComponent — varsayılanlar (H1)', () => {
         availability = () => throwError(() => new Error('yok'));
     });
 
-    const create = (hours: ClinicWorkingHourVm[], query: Record<string, string> = {}) => {
+    const create = (hours: ClinicWorkingHourVm[], query: Record<string, string> = {}, enforceWorkingHours = true) => {
         TestBed.configureTestingModule({
             imports: [AppointmentNewPageComponent],
             providers: [
@@ -43,7 +43,7 @@ describe('AppointmentNewPageComponent — varsayılanlar (H1)', () => {
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez', getUserId: () => 'u1', hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
-                { provide: ClinicsService, useValue: { getWorkingHours: () => of(hours), getAppointmentSettings: () => of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 30 }) } },
+                { provide: ClinicsService, useValue: { getWorkingHours: () => of(hours), getAppointmentSettings: () => of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 30, enforceWorkingHours }) } },
                 { provide: OnlineBookingService, useValue: { availability: (_clinicId: string, reasonId: string | null) => availability(reasonId) } }
             ]
         });
@@ -164,5 +164,19 @@ describe('AppointmentNewPageComponent — varsayılanlar (H1)', () => {
         cmp.selectSlot(next!);
         expect(cmp.form.controls.scheduledDate.value).toBe('2026-11-18');
         expect(cmp.form.controls.scheduledTime.value).toBe('08:00');
+    });
+
+    it('çalışma saati kısıtı kapalıyken kapalı günde de günün her saati seçilir (gün sonunu aşan saat yok)', () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date('2026-11-16T10:10:00+03:00'));
+        const cmp = create([0, 1, 3, 4, 5, 6].map((d) => day(d)).concat(day(2, true)), {}, false);
+
+        cmp.form.controls.scheduledDate.setValue('2026-11-17');
+        const values = cmp.timeOptions().map((o) => o.value);
+
+        expect(values[0]).toBe('00:00');
+        expect(values).toContain('22:00');
+        expect(values.at(-1)).toBe('23:00');
+        expect(cmp.nextAvailableSlot()).toBeNull();
     });
 });

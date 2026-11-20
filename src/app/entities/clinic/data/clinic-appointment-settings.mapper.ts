@@ -14,6 +14,8 @@ const DEFAULT_ALLOW_OVERLAPPING_APPOINTMENTS = false;
 const DEFAULT_OWNER_CANCEL_LINK_ENABLED = true;
 /** Backend varsayılanı (TIER-018): alan yoksa bekleme listesine otomatik teklif açık sayılır. */
 const DEFAULT_WAITLIST_AUTO_OFFER_ENABLED = true;
+/** Backend varsayılanı: alan yoksa çalışma saati kısıtı açık sayılır (mevcut davranış). */
+const DEFAULT_ENFORCE_WORKING_HOURS = true;
 
 function isRecord(x: unknown): x is Record<string, unknown> {
     return x !== null && typeof x === 'object' && !Array.isArray(x);
@@ -90,13 +92,15 @@ export function mapClinicAppointmentSettingsRaw(raw: unknown): ClinicAppointment
         pickBoolean(source, ['ownerCancelLinkEnabled', 'OwnerCancelLinkEnabled']) ?? DEFAULT_OWNER_CANCEL_LINK_ENABLED;
     const waitlistAutoOfferEnabled =
         pickBoolean(source, ['waitlistAutoOfferEnabled', 'WaitlistAutoOfferEnabled']) ?? DEFAULT_WAITLIST_AUTO_OFFER_ENABLED;
+    const enforceWorkingHours = pickBoolean(source, ['enforceWorkingHours', 'EnforceWorkingHours']) ?? DEFAULT_ENFORCE_WORKING_HOURS;
 
     return {
         defaultAppointmentDurationMinutes,
         slotIntervalMinutes,
         allowOverlappingAppointments,
         ownerCancelLinkEnabled,
-        waitlistAutoOfferEnabled
+        waitlistAutoOfferEnabled,
+        enforceWorkingHours
     };
 }
 

@@ -3,12 +3,14 @@ import { Component, DestroyRef, effect, inject, input, signal, untracked, Change
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin, map, type Observable, of, switchMap } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLINICS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { clinicAppointmentSettingsFormToPutBody } from '@/app/entities/clinic/data/clinic-appointment-settings.mapper';
 import { clinicWorkingHoursFormToPutBody, normalizeTimeForInput } from '@/app/entities/clinic/data/clinic-working-hours.mapper';
 import type { ClinicWorkingHourFormValue, ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
@@ -21,8 +23,10 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
- * Klinik ayarlarındaki "Çalışma Saatleri" kartı: haftalık gün/saat/mola formu ve kaydı. Yalnız `Clinics.Update` olan
- * kullanıcıya gösterilir (sayfa koşulu). `reloadKey` değişince (pasife alma/aktifleştirme sonrası) yeniden yüklenir.
+ * Klinik ayarlarındaki "Çalışma Saatleri" kartı: haftalık gün/saat/mola formu, "Çalışma saati kısıtı" ve kaydı. Yalnız
+ * `Clinics.Update` olan kullanıcıya gösterilir (sayfa koşulu). `reloadKey` değişince (pasife alma/aktifleştirme sonrası) yeniden
+ * yüklenir. Kısıt randevu ayarında tutulur (`appointment-settings.enforceWorkingHours`); kapalıyken saatler online randevu için
+ * düzenlenebilir kalır, yalnız soluk görünür.
  */
 @Component({
     selector: 'app-clinic-working-hours-section',
@@ -41,7 +45,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 @if (whFormError()) {
                     <p class="text-danger text-sm mb-3 m-0" role="alert">{{ whFormError() }}</p>
                 }
-                <div formArrayName="days" class="flex flex-col gap-4">
+                <div formArrayName="days" class="flex flex-col gap-4" [class.opacity-60]="!restrictionEnabled()" data-testid="wh-days">
                     @for (row of whDays.controls; track trackWhRow($index, row); let idx = $index) {
                         <div [formGroupName]="idx" class="rounded-lg border border-surface-200 dark:border-surface-700 p-3 md:p-4 grid grid-cols-12 gap-3 gap-y-2">
                             <div class="col-span-12 md:col-span-2 flex flex-col justify-center">
@@ -70,6 +74,13 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         </div>
                     }
                 </div>
+                <div class="mt-4">
+                    <div class="flex items-center gap-2">
+                        <p-checkbox formControlName="enforceWorkingHours" [binary]="true" inputId="whEnforceWorkingHours" />
+                        <label class="text-sm cursor-pointer" for="whEnforceWorkingHours">Çalışma saati kısıtı</label>
+                    </div>
+                    <small class="block text-muted-color mt-1">Kapalıyken panelden her saate randevu verilir; online randevu yukarıdaki saatlere göre devam eder.</small>
+                </div>
                 <div class="mt-4 flex justify-end">
                     <button pButton type="button" severity="secondary" [disabled]="!canSaveWorkingHours() || whSaving()" (click)="onSaveWorkingHours()"><i class="p-button-icon" [class]="whSaving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Çalışma saatlerini kaydet</button>
                 </div>
@@ -93,9 +104,12 @@ export class ClinicWorkingHoursSectionComponent {
     readonly whError = signal<string | null>(null);
     readonly whSaving = signal(false);
     readonly whFormError = signal<string | null>(null);
+    /** Formdaki "Çalışma saati kısıtı"; kapalıyken saat satırları soluk görünür. */
+    readonly restrictionEnabled = signal(true);
 
     readonly whForm = this.fb.group({
-        days: this.fb.array<FormGroup>([])
+        days: this.fb.array<FormGroup>([]),
+        enforceWorkingHours: [true]
     });
 
     get whDays(): FormArray<FormGroup> {
@@ -115,6 +129,7 @@ export class ClinicWorkingHoursSectionComponent {
             this.reloadKey();
             untracked(() => this.loadWorkingHours(clinicId));
         });
+        this.whForm.controls.enforceWorkingHours.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((v) => this.restrictionEnabled.set(v !== false));
     }
 
     trackWhRow(_i: number, row: AbstractControl): number {
@@ -162,12 +177,30 @@ export class ClinicWorkingHoursSectionComponent {
 
         const days = this.whDays.getRawValue() as ClinicWorkingHourFormValue[];
         const body = clinicWorkingHoursFormToPutBody(days);
+        const saveHours: Observable<ClinicWorkingHourVm[] | null> = this.whDays.dirty ? this.clinicsApi.updateWorkingHours(id, body) : of(null);
+        const enforceControl = this.whForm.controls.enforceWorkingHours;
+        // Kısıt randevu ayarındadır: diğer varsayılanlar ezilmesin diye güncel ayar okunup yalnız bu alan değiştirilir.
+        const saveRestriction: Observable<boolean | null> = enforceControl.dirty
+            ? this.clinicsApi.getAppointmentSettings(id).pipe(
+                  switchMap((latest) => this.clinicsApi.updateAppointmentSettings(id, { ...clinicAppointmentSettingsFormToPutBody(latest), enforceWorkingHours: enforceControl.value !== false })),
+                  map((saved) => saved.enforceWorkingHours)
+              )
+            : of(null);
 
         this.whSaving.set(true);
-        this.clinicsApi.updateWorkingHours(id, body).subscribe({
-            next: (items) => {
+        saveHours.pipe(switchMap((items) => saveRestriction.pipe(map((enforce) => ({ items, enforce }))))).subscribe({
+            next: ({ items, enforce }) => {
                 this.whSaving.set(false);
-                this.patchWorkingHoursForm(items);
+
+                if (items) {
+                    this.patchWorkingHoursForm(items);
+                }
+
+                if (enforce !== null) {
+                    enforceControl.setValue(enforce);
+                }
+
+                this.whForm.markAsPristine();
                 this.whFormError.set(null);
                 addTracedToast(this.messages, 'ClinicDetailPage', this.router.url, {
                     severity: 'success',
@@ -209,6 +242,12 @@ export class ClinicWorkingHoursSectionComponent {
         const lock = this.ro.mutationBlocked() || !this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) || this.whSaving();
         const arr = this.whDays;
 
+        if (lock) {
+            this.whForm.controls.enforceWorkingHours.disable({ emitEvent: false });
+        } else {
+            this.whForm.controls.enforceWorkingHours.enable({ emitEvent: false });
+        }
+
         for (const ctrl of arr.controls) {
             const g = ctrl as FormGroup;
             const closedCtrl = g.get('isClosed');
@@ -235,8 +274,9 @@ export class ClinicWorkingHoursSectionComponent {
         this.whLoading.set(true);
         this.whError.set(null);
         this.whFormError.set(null);
-        this.clinicsApi.getWorkingHours(clinicId).subscribe({
-            next: (items) => {
+        forkJoin({ items: this.clinicsApi.getWorkingHours(clinicId), settings: this.clinicsApi.getAppointmentSettings(clinicId) }).subscribe({
+            next: ({ items, settings }) => {
+                this.whForm.controls.enforceWorkingHours.setValue(settings.enforceWorkingHours);
                 this.patchWorkingHoursForm(items);
                 this.whLoading.set(false);
             },

@@ -44,7 +44,9 @@ describe('ClinicDetailPageComponent — çalışma saatleri ve randevu varsayıl
                 }))
             )
         );
-        clinics.getAppointmentSettings.mockReturnValue(of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false, ownerCancelLinkEnabled: true, waitlistAutoOfferEnabled: true }));
+        clinics.getAppointmentSettings.mockReturnValue(
+            of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false, ownerCancelLinkEnabled: true, waitlistAutoOfferEnabled: true, enforceWorkingHours: true })
+        );
         await TestBed.configureTestingModule({
             imports: [ClinicDetailPageComponent],
             providers: [
@@ -111,7 +113,7 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
             breakStartsAt: null,
             breakEndsAt: null
         }));
-    const settings = { defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false, ownerCancelLinkEnabled: true, waitlistAutoOfferEnabled: true };
+    const settings = { defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false, ownerCancelLinkEnabled: true, waitlistAutoOfferEnabled: true, enforceWorkingHours: true };
 
     const el = () => fixture.nativeElement as HTMLElement;
     const text = () => el().textContent ?? '';
@@ -299,7 +301,40 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
 
         expect(clinics['updateWorkingHours']).toHaveBeenCalledTimes(1);
         expect(clinics['updateWorkingHours'].mock.calls[0][0]).toBe('c1');
+        expect(clinics['updateAppointmentSettings']).not.toHaveBeenCalled();
         expect(button('Çalışma saatlerini kaydet').disabled).toBe(true);
+    });
+
+    it('çalışma saati kısıtı kapatılınca saatler soluklaşır; yalnız kısıt güncel randevu ayarının üstüne kaydedilir', async () => {
+        const latest = { ...settings, slotIntervalMinutes: 20 };
+
+        clinics['updateAppointmentSettings'].mockReturnValue(of({ ...latest, enforceWorkingHours: false }));
+        await render();
+        const days = () => el().querySelector('[data-testid="wh-days"]') as HTMLElement;
+
+        expect(text()).toContain('Kapalıyken panelden her saate randevu verilir; online randevu yukarıdaki saatlere göre devam eder.');
+        expect((el().querySelector('#whEnforceWorkingHours') as HTMLInputElement).checked).toBe(true);
+        expect(days().classList).not.toContain('opacity-60');
+
+        (el().querySelector('#whEnforceWorkingHours') as HTMLInputElement).click();
+        await settle();
+        expect(days().classList).toContain('opacity-60');
+        expect((el().querySelector('#whOpens1') as HTMLInputElement | null)?.disabled ?? false).toBe(false);
+
+        clinics['getAppointmentSettings'].mockReturnValue(of(latest));
+        await click('Çalışma saatlerini kaydet');
+
+        expect(clinics['updateWorkingHours']).not.toHaveBeenCalled();
+        expect(clinics['updateAppointmentSettings']).toHaveBeenCalledWith('c1', {
+            defaultAppointmentDurationMinutes: 30,
+            slotIntervalMinutes: 20,
+            allowOverlappingAppointments: false,
+            ownerCancelLinkEnabled: true,
+            waitlistAutoOfferEnabled: true,
+            enforceWorkingHours: false
+        });
+        expect(button('Çalışma saatlerini kaydet').disabled).toBe(true);
+        expect(days().classList).toContain('opacity-60');
     });
 
     it('randevu varsayılanı değişiklik yokken veya aralık dışıysa kaydetme kapalı; geçerli değer kaydedilir ve düğme yeniden kapanır', async () => {
@@ -340,7 +375,8 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
         expect(clinics['deactivateClinic']).toHaveBeenCalledWith('c1');
         expect(clinics['getClinicById']).toHaveBeenCalledTimes(2);
         expect(clinics['getWorkingHours']).toHaveBeenCalledTimes(2);
-        expect(clinics['getAppointmentSettings']).toHaveBeenCalledTimes(2);
+        // Her yüklemede iki kart okur: Çalışma Saatleri (kısıt) ve Randevu Varsayılanları.
+        expect(clinics['getAppointmentSettings']).toHaveBeenCalledTimes(4);
         expect(text()).toContain('Pasif');
         expect(button('Aktifleştir')).toBeTruthy();
     });

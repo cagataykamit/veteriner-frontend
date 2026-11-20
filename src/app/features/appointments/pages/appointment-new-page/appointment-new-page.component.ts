@@ -16,6 +16,7 @@ import { SelectModule } from 'primeng/select';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { mapAppointmentUpsertFormToCreateRequest } from '@/app/entities/appointment/data/appointment.mapper';
+import { panelBookingHours } from '@/app/entities/clinic/data/clinic-working-hours.mapper';
 import type { ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
 import { type AppointmentUpsertFieldErrors, type AppointmentUpsertFormFieldKey, parseAppointmentUpsertHttpError } from '@/app/features/appointments/utils/appointment-upsert-validation-parse.utils';
@@ -190,6 +191,8 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
     readonly nextAvailableSlot = signal<AppointmentSlot | null>(null);
     readonly workingHoursLoadError = signal<string | null>(null);
     private workingHours: ClinicWorkingHourVm[] = [];
+    /** Klinik çalışma saati kısıtı (randevu ayarı); kapalıysa günün her saati seçilebilir. */
+    private enforceWorkingHours = true;
     /** İlk uygun gün/saat önden seçimi için çalışma saatleri ve randevu ayarı yüklendi mi; seçim bir kez yapılır. */
     private workingHoursLoaded = false;
     private appointmentSettingsLoaded = false;
@@ -432,6 +435,7 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
             next: (s) => {
                 this.form.patchValue({ durationMinutes: s.defaultAppointmentDurationMinutes });
                 this.clinicSlotIntervalMinutes.set(s.slotIntervalMinutes);
+                this.enforceWorkingHours = s.enforceWorkingHours;
                 this.appointmentSettingsLoaded = true;
                 this.rebuildTimeOptions();
             },
@@ -703,7 +707,7 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
 
         const dow = date.getDay();
 
-        return this.workingHours.find((x) => x.dayOfWeek === dow) ?? null;
+        return panelBookingHours(this.workingHours, this.enforceWorkingHours).find((x) => x.dayOfWeek === dow) ?? null;
     }
 
     private buildTimeOptions(day: ClinicWorkingHourVm, durationMinutes: number, intervalMinutes: number): SelectOption[] {

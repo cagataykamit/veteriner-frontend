@@ -23,6 +23,7 @@ import { messageFromClinicResolutionHttpError } from '@/app/features/appointment
 import { APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/entities/appointment/utils/appointment-type.utils';
 import { appointmentStatusLabel, appointmentStatusSeverity } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { APPOINTMENT_NOTES_MAX_LENGTH, appointmentLatestDateYmd } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
+import { panelBookingHours } from '@/app/entities/clinic/data/clinic-working-hours.mapper';
 import type { ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { messageFromHttpError, panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -203,6 +204,8 @@ export class AppointmentEditPageComponent implements OnInit, HasUnsavedChanges {
 
     private appointmentId = '';
     private workingHours: ClinicWorkingHourVm[] = [];
+    /** Klinik çalışma saati kısıtı (randevu ayarı); kapalıysa günün her saati seçilebilir. */
+    private enforceWorkingHours = true;
     private legacyInitialTime: string | null = null;
 
     readonly typeOptions = [...APPOINTMENT_TYPE_WRITE_OPTIONS];
@@ -485,6 +488,7 @@ export class AppointmentEditPageComponent implements OnInit, HasUnsavedChanges {
         this.clinicsApi.getAppointmentSettings(clinicId).subscribe({
             next: (settings) => {
                 this.clinicSlotIntervalMinutes.set(settings.slotIntervalMinutes);
+                this.enforceWorkingHours = settings.enforceWorkingHours;
                 this.rebuildTimeOptions();
             },
             error: () => {
@@ -583,7 +587,7 @@ export class AppointmentEditPageComponent implements OnInit, HasUnsavedChanges {
 
         const dow = date.getDay();
 
-        return this.workingHours.find((x) => x.dayOfWeek === dow) ?? null;
+        return panelBookingHours(this.workingHours, this.enforceWorkingHours).find((x) => x.dayOfWeek === dow) ?? null;
     }
 
     private buildTimeOptions(day: ClinicWorkingHourVm, durationMinutes: number, intervalMinutes: number): SelectOption[] {
