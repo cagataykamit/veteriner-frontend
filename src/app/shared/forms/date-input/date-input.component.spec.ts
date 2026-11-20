@@ -148,6 +148,22 @@ describe('DateInputComponent', () => {
         expect(host.control.value).toBe('2026-10-15');
     });
 
+    it('tarih alanında "Bugün" görünür; boş alanda Enter değer yazmaz (yalnız saat alanı paneldeki saati seçer)', async () => {
+        await create('date');
+        input().focus();
+        input().click();
+        fixture.detectChanges();
+        await wait(400);
+        const today = [...panel()!.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Bugün')!;
+
+        expect(today).toBeDefined();
+        expect(today.classList.contains('!hidden')).toBe(false);
+        input().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
+        fixture.detectChanges();
+        await wait(50);
+        expect(host.control.value).toBe('');
+    });
+
     it('min/max dışındaki günler takvimde seçilemez', async () => {
         await create('date');
         host.control.setValue('2026-10-11');

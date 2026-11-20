@@ -11,18 +11,19 @@ interface MonthCell {
     vaccines: number;
     /** Randevu ve aşı gecikmişleri. */
     overdue: number;
-    /** Kapasite 0 ve randevu yok: kapalı gün (taralı). */
+    /** Kapasite 0: kapalı gün (taralı); o güne randevu verilmişse sayısı yine görünür. */
     closed: boolean;
-    /** 0–1; kapasite bilinmiyorsa `null` (renk yok). */
+    /** 0–1; kapasite bilinmiyorsa ya da gün kapalıysa `null` (renk yok). */
     load: number | null;
 }
 
 const WEEKDAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 
 /**
- * Ay görünümü, A · Doluluk haritası (ux/takvim-yeniden-tasarim.md, kullanıcı seçimi 2026-11-18): hücrede büyük randevu sayısı, aşı sayısı ve
- * kırmızı "N gecikmiş" rozeti; hücrenin rengi günün doluluğuyla koyulaşır (randevu / kapasite; kapasite backend'de, sözleşme §8.4).
- * Tek tek randevu satırı yok; kapalı gün taralı; hücreye tıklayınca o günün gün görünümü.
+ * Ay görünümü, A · Doluluk haritası (ux/takvim-yeniden-tasarim.md, kullanıcı seçimi 2026-11-18): hücrede büyük randevu sayısı (boş günde
+ * sayı yok), aşı sayısı ve "N gecikmiş"; hücrenin rengi günün doluluğuyla koyulaşır (randevu / kapasite; kapasite backend'de, sözleşme §8.4).
+ * Gecikmiş yalnız geçmiş günde olur (vadesi o gün olup yapılmamış kayıt, sözleşme §5–6): aktarılan eski vadeler ayı kırmızıya boğmasın diye
+ * dolgulu rozet değil, kırmızı küçük yazı. Tek tek randevu satırı yok; kapalı gün taralı; hücreye tıklayınca o günün gün görünümü.
  */
 @Component({
     selector: 'app-appointment-calendar-month',
@@ -61,7 +62,8 @@ const WEEKDAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
                             >
                             @if (c.closed) {
                                 <span class="absolute top-1.5 right-2 text-[11.5px] text-muted-color">kapalı</span>
-                            } @else {
+                            }
+                            @if (c.appointments) {
                                 <!-- Sayı ve "randevu" tek satırda: alttaki aşı/gecikmiş satırıyla çakışmasın. -->
                                 <span class="flex items-baseline gap-1 -mt-2"
                                     ><span class="text-xl md:text-[26px] font-bold leading-none tabular-nums">{{ c.appointments }}</span
@@ -73,7 +75,7 @@ const WEEKDAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
                                     <span class="inline-flex items-center gap-1"><i class="pi pi-shield !text-[11px]" aria-hidden="true"></i>{{ c.vaccines }}</span>
                                 }
                                 @if (c.overdue) {
-                                    <span class="ml-auto rounded-full bg-red-600 text-white px-1.5 text-[11px] font-bold">{{ c.overdue }} gecikmiş</span>
+                                    <span class="ml-auto font-semibold text-red-600 dark:text-red-400" data-testid="calendar-month-overdue">{{ c.overdue }} gecikmiş</span>
                                 }
                             </span>
                             @if (c.overdue) {
@@ -130,8 +132,8 @@ export class AppointmentCalendarMonthComponent {
                     appointments,
                     vaccines: v?.total ?? 0,
                     overdue: (a?.overdue ?? 0) + (v?.overdue ?? 0),
-                    closed: cap === 0 && appointments === 0,
-                    load: cap ? Math.min(1, appointments / cap) : cap === 0 && appointments ? 1 : null
+                    closed: cap === 0,
+                    load: cap ? Math.min(1, appointments / cap) : null
                 };
             })
         )
@@ -147,11 +149,15 @@ export class AppointmentCalendarMonthComponent {
     }
 
     protected ariaLabel(c: MonthCell): string {
+        const parts = [`${c.dayNumber}`];
+
         if (c.closed) {
-            return `${c.dayNumber}, kapalı` + (c.vaccines ? `, ${c.vaccines} aşı` : '');
+            parts.push('kapalı');
         }
 
-        const parts = [`${c.dayNumber}`, `${c.appointments} randevu`];
+        if (c.appointments || !c.closed) {
+            parts.push(c.appointments ? `${c.appointments} randevu` : 'randevu yok');
+        }
 
         if (c.vaccines) {
             parts.push(`${c.vaccines} aşı`);

@@ -29,7 +29,7 @@ describe('AppointmentCalendarMonthComponent — doluluk haritası', () => {
         fixture.componentInstance.dayOpen.subscribe((d) => opened.push(d));
         fixture.detectChanges();
 
-        return { el: fixture.nativeElement as HTMLElement, opened };
+        return { el: fixture.nativeElement as HTMLElement, opened, fixture };
     };
 
     it('hücre: büyük randevu sayısı, aşı sayısı, randevu + aşı gecikmiş rozeti; renk doluluğa göre', () => {
@@ -54,6 +54,32 @@ describe('AppointmentCalendarMonthComponent — doluluk haritası', () => {
         expect(closed.textContent).toContain('kapalı');
         expect(closed.className).toContain('calendar-closed');
         expect(closed.getAttribute('aria-label')).toBe('22, kapalı, 2 aşı');
+    });
+
+    it('kapalı güne randevu verilmişse taralı kalır, sayı görünür; kapasite 0 doluluk rengi vermez', () => {
+        const { el, fixture } = setup();
+
+        fixture.componentRef.setInput('appointmentSummary', new Map([sum('2026-11-22', { total: 1, upcoming: 1 })]));
+        fixture.detectChanges();
+        const closed = el.querySelector<HTMLElement>('[data-testid="calendar-month-day-2026-11-22"]')!;
+
+        expect(closed.className).toContain('calendar-closed');
+        expect(closed.textContent).toContain('kapalı');
+        expect(closed.textContent).toContain('1');
+        expect(closed.getAttribute('style') ?? '').not.toContain('color-mix');
+        expect(closed.getAttribute('aria-label')).toBe('22, kapalı, 1 randevu, 2 aşı');
+    });
+
+    it('boş günde "0 randevu" yazmaz (erişilebilir adında "randevu yok"); gecikmiş dolgulu rozet değil, kırmızı yazı', () => {
+        const { el } = setup();
+        const empty = el.querySelector<HTMLElement>('[data-testid="calendar-month-day-2026-11-17"]')!;
+        const overdue = el.querySelector<HTMLElement>('[data-testid="calendar-month-day-2026-11-16"] [data-testid="calendar-month-overdue"]')!;
+
+        expect(empty.textContent).not.toContain('0');
+        expect(empty.textContent).not.toContain('randevu');
+        expect(empty.getAttribute('aria-label')).toBe('17, randevu yok, yüzde 0 dolu');
+        expect(overdue.className).toContain('text-red-600');
+        expect(overdue.className).not.toContain('bg-red-600');
     });
 
     it('ay dışı günler soluk; hücreye tıklayınca o gün açılır', () => {

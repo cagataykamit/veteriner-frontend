@@ -93,13 +93,15 @@ const MANY_COLUMNS = 4;
                                     >
                                 </span>
                                 @if (listOpen()) {
+                                    <!-- Satırlar truncate ile overflow gizli: flex içinde büzülmesinler (shrink-0), liste kendi içinde kaysın. -->
                                     <div class="absolute left-2 right-2 top-full mt-1 z-50 max-h-80 overflow-y-auto rounded-lg border border-surface bg-surface-0 dark:bg-surface-900 shadow-lg p-2 flex flex-col gap-1" data-testid="calendar-vaccine-list">
                                         @for (g of listGroups(); track g.title) {
-                                            <p class="m-0 mt-1 px-1 text-[10.5px] font-bold uppercase tracking-wide text-muted-color">{{ g.title }} · {{ g.items.length }}</p>
+                                            <p class="m-0 mt-1 px-1 shrink-0 text-[10.5px] font-bold uppercase tracking-wide text-muted-color">{{ g.title }} · {{ g.items.length }}</p>
                                             @for (v of g.items; track v.key) {
                                                 <button
                                                     type="button"
-                                                    class="text-left rounded-md border border-l-[3px] px-2 py-1 text-sm cursor-pointer truncate"
+                                                    class="shrink-0 text-left rounded-md border border-l-[3px] px-2 py-1 text-sm cursor-pointer truncate"
+                                                    [attr.data-testid]="'calendar-vaccine-list-item-' + v.key"
                                                     [class]="vaccineCard(v)"
                                                     [appCalendarBubble]="vaccineBubble(v)"
                                                     (click)="vaccinePick.emit({ item: v, event: $event })"

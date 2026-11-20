@@ -53,19 +53,19 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                             </div>
                             <div class="col-span-6 md:col-span-2">
                                 <label class="block text-xs text-muted-color mb-1" [for]="'whOpens' + idx"><span class="sr-only">{{ row.get('dayLabel')?.value }} </span>Açılış</label>
-                                <app-date-input type="time" formControlName="opensAt" [inputId]="'whOpens' + idx" />
+                                <app-date-input type="time" formControlName="opensAt" defaultTime="09:00" [inputId]="'whOpens' + idx" />
                             </div>
                             <div class="col-span-6 md:col-span-2">
                                 <label class="block text-xs text-muted-color mb-1" [for]="'whCloses' + idx"><span class="sr-only">{{ row.get('dayLabel')?.value }} </span>Kapanış</label>
-                                <app-date-input type="time" formControlName="closesAt" [inputId]="'whCloses' + idx" />
+                                <app-date-input type="time" formControlName="closesAt" defaultTime="18:00" [inputId]="'whCloses' + idx" />
                             </div>
                             <div class="col-span-6 md:col-span-2">
                                 <label class="block text-xs text-muted-color mb-1" [for]="'whBreakStart' + idx"><span class="sr-only">{{ row.get('dayLabel')?.value }} </span>Mola başlangıç</label>
-                                <app-date-input type="time" formControlName="breakStartsAt" [inputId]="'whBreakStart' + idx" />
+                                <app-date-input type="time" formControlName="breakStartsAt" defaultTime="12:00" [inputId]="'whBreakStart' + idx" />
                             </div>
                             <div class="col-span-6 md:col-span-2">
                                 <label class="block text-xs text-muted-color mb-1" [for]="'whBreakEnd' + idx"><span class="sr-only">{{ row.get('dayLabel')?.value }} </span>Mola bitiş</label>
-                                <app-date-input type="time" formControlName="breakEndsAt" [inputId]="'whBreakEnd' + idx" />
+                                <app-date-input type="time" formControlName="breakEndsAt" defaultTime="13:00" [inputId]="'whBreakEnd' + idx" />
                             </div>
                         </div>
                     }
