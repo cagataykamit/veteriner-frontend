@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
@@ -17,6 +17,18 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
 
 /** Kayıtlı filtre adı üst sınırı (sözleşme §3; `ReportSavedFilter.MaxNameLength`). */
 const MAX_NAME_LENGTH = 100;
+
+/** İki filtre seti aynı mı (boş değerler yok sayılır, anahtar sırası önemsiz). */
+function sameFilterValues(a: Readonly<Record<string, string>>, b: Readonly<Record<string, string>>): boolean {
+    const entries = (v: Readonly<Record<string, string>>) =>
+        Object.entries(v)
+            .filter(([, value]) => !!value)
+            .sort(([x], [y]) => x.localeCompare(y));
+    const left = entries(a);
+    const right = entries(b);
+
+    return left.length === right.length && left.every(([key, value], i) => key === right[i][0] && value === right[i][1]);
+}
 
 /** Kaydedilecek filtre setini veren ve kayıtlı seti ekrana uygulayan taraf (rapor liste durumu ya da ekran). */
 export interface SavedFilterSource {
@@ -142,6 +154,27 @@ export class ReportSavedFiltersComponent implements OnInit {
     readonly pendingIsEmpty = computed(() => Object.keys(this.pending()).length === 0);
     readonly canSave = computed(() => !this.busy() && !this.pendingIsEmpty() && !!this.nameInput().trim() && !this.ro.mutationBlocked());
 
+    /** Seçili kayıt ekranda uygulanmış görüldü; ancak bundan sonra ekran filtresinin ayrılması seçimi bırakır (uygulama adres üzerinden gecikebilir). */
+    private appliedSeen = false;
+
+    constructor() {
+        // Ekrandaki filtreler seçili kayıttan ayrılınca (ör. "Filtreleri temizle") seçim bırakılır: seçili seçeneğe tıklamak
+        // değişiklik yaymadığı için aynı kayıt aksi hâlde yeniden uygulanamaz.
+        effect(() => {
+            const saved = this.selected();
+
+            if (!saved) {
+                return;
+            }
+
+            if (sameFilterValues(this.state().savedFilterValues(), saved.filters)) {
+                this.appliedSeen = true;
+            } else if (this.appliedSeen) {
+                untracked(() => this.selectedId.set(null));
+            }
+        });
+    }
+
     ngOnInit(): void {
         const key = this.reportKey();
 
@@ -156,6 +189,7 @@ export class ReportSavedFiltersComponent implements OnInit {
     }
 
     apply(id: string | null): void {
+        this.appliedSeen = false;
         this.selectedId.set(id);
         const saved = this.selected();
 
@@ -187,6 +221,7 @@ export class ReportSavedFiltersComponent implements OnInit {
                 this.savedFilters.set(
                     [...this.savedFilters(), created].sort((a, b) => a.name.localeCompare(b.name, 'tr', { sensitivity: 'base' }))
                 );
+                this.appliedSeen = false;
                 this.selectedId.set(created.id);
                 this.dialogVisible.set(false);
             },

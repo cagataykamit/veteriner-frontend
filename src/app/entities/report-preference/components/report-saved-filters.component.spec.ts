@@ -63,6 +63,30 @@ describe('ReportSavedFiltersComponent — kayıtlı filtreler (REPORT-004)', () 
         expect(c.selected()?.name).toBe('Kartlı');
     });
 
+    it('ekrandaki filtreler uygulanan kayıttan ayrılınca seçim bırakılır; aynı kayıt yeniden seçilip uygulanabilir', () => {
+        // Ekran filtreleri sinyalden okunur (takvim, rapor listesi); "Filtreleri temizle" kayıtlı seti ekrandan kaldırır.
+        const current = signal<Record<string, string>>({ method: 'Cash' });
+
+        state.savedFilterValues.mockImplementation(() => current());
+        state.applySavedFilterValues.mockImplementation((values: Record<string, string>) => current.set({ ...values }));
+        const fixture = create();
+        const c = fixture.componentInstance;
+
+        c.apply('f1');
+        fixture.detectChanges();
+        expect(c.selected()?.name).toBe('Kartlı');
+
+        current.set({});
+        fixture.detectChanges();
+        expect(c.selectedId()).toBeNull();
+
+        c.apply('f1');
+        fixture.detectChanges();
+        expect(state.applySavedFilterValues).toHaveBeenCalledTimes(2);
+        expect(current()).toEqual({ method: 'Card' });
+        expect(c.selected()?.name).toBe('Kartlı');
+    });
+
     it('Rapor Merkezi dışında hiçbir şey göstermez ve istek atmaz', () => {
         url = '/panel/clients';
         const fixture = create();
