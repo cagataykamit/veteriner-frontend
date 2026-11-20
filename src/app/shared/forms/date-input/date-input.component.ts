@@ -51,6 +51,7 @@ let openInstance: DateInputComponent | null = null;
         <p-datepicker
             [inputId]="inputId()"
             [ngModel]="view()"
+            [ngModelOptions]="{ standalone: true }"
             (ngModelChange)="onPickerChange($event)"
             [disabled]="disabled()"
             dateFormat="dd.mm.yy"
@@ -63,6 +64,8 @@ let openInstance: DateInputComponent | null = null;
             [keepInvalid]="true"
             [showClear]="true"
             [showButtonBar]="true"
+            [todayButtonStyleClass]="type() === 'time' ? '!hidden' : ''"
+            [defaultDate]="panelDefault()"
             [showIcon]="true"
             iconDisplay="input"
             [fluid]="true"
@@ -85,6 +88,8 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
     /** Üst sınır politikası (`past` = en geç şimdi, `planned` = bugünden 5 yıl); açık `max` verilirse o geçerlidir. */
     readonly limit = input<DateInputLimit>('none');
     readonly placeholder = input('');
+    /** Saat alanı boşken panelin açıldığı saat (`HH:mm`); o anki saat çalışma saati ya da mola için anlamsız. */
+    readonly defaultTime = input('12:00');
 
     private readonly picker = viewChild(DatePicker);
 
@@ -100,6 +105,8 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
     readonly defaultPlaceholder = computed(() => PLACEHOLDERS[this.type()]);
     readonly minDate = computed(() => (this.type() === 'time' ? null : parseDateInputValue('datetime-local', this.min())));
     readonly maxDate = computed(() => this.resolveMax());
+    /** Yalnız saat alanında; tarih alanlarında takvim bugünden açılır (`undefined` PrimeNG varsayılanı). */
+    readonly panelDefault = computed(() => (this.type() === 'time' ? (parseDateInputValue('time', this.defaultTime()) ?? undefined) : undefined));
 
     readonly errorMessage = computed<string | null>(() => {
         if (this.editing()) {
@@ -139,10 +146,19 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
             }
         };
 
+        // Capture: PrimeNG Enter'da paneli kapatır, seçim yapmaz; boş saat alanında paneldeki saat seçilmiş sayılır.
+        const onKeydown = (event: KeyboardEvent): void => {
+            if (event.key === 'Enter') {
+                this.commitShownTime(event.target);
+            }
+        };
+
         host.addEventListener('input', onInput, true);
         host.addEventListener('focusin', onFocus, true);
         host.addEventListener('focusout', onFocusOut, true);
+        host.addEventListener('keydown', onKeydown, true);
         inject(DestroyRef).onDestroy(() => {
+            host.removeEventListener('keydown', onKeydown, true);
             host.removeEventListener('input', onInput, true);
             host.removeEventListener('focusin', onFocus, true);
             host.removeEventListener('focusout', onFocusOut, true);
@@ -175,6 +191,20 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
         if (picker) {
             picker.isKeydown = true;
         }
+    }
+
+    /**
+     * Saat alanı boş ve panel açıkken Enter: panelde görünen saat (varsayılan ya da oklarla ayarlanan) alana yazılır. Oklar zaten
+     * her tıklamada yazar; yazılmış bir metin varsa (geçerli ya da değil) ona dokunulmaz.
+     */
+    private commitShownTime(target: EventTarget | null): void {
+        const picker = this.picker() as unknown as (PickerInternals & { updateTime(): void }) | undefined;
+
+        if (this.type() !== 'time' || !picker?.overlayVisible() || this.view() !== null || (target instanceof HTMLInputElement && target.value.trim() !== '')) {
+            return;
+        }
+
+        picker.updateTime();
     }
 
     onPanelShow(): void {
