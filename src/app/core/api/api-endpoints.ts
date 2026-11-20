@@ -69,6 +69,8 @@ export const ApiEndpoints = {
         byId: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}`,
         start: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/start`,
         complete: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/complete`,
+        /** "Hesabı kapat" paneli okuması (BE `VISIT_CHECKOUT_API_CONTRACT.md`). */
+        checkoutSummary: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/checkout-summary`,
         corrections: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/corrections`,
         restore: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/restore`,
         urgency: (id: string) => `/api/v1/visits/${encodeURIComponent(id)}/urgency`,
