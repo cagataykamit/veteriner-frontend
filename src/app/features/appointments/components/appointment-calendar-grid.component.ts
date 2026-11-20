@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { afterRenderEffect, ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output, signal } from '@angular/core';
 import type { VaccinationCalendarItemVm } from '@/app/entities/vaccination/models/vaccination-calendar.model';
 import { appointmentStatusLabel } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { CalendarBubbleDirective, type CalendarBubbleData } from '@/app/features/appointments/components/calendar-bubble';
@@ -139,7 +139,7 @@ const MANY_COLUMNS = 4;
                     <div class="sticky left-0 z-20 bg-surface-0 dark:bg-surface-900 border-r border-surface-100 dark:border-surface-800" [style.height.px]="height()">
                         <div class="relative h-full">
                             @for (m of hourMarks(); track m) {
-                                <div class="absolute right-2 text-[11.5px] text-muted-color tabular-nums -translate-y-1/2" [style.top.px]="y(m) + (m === start() ? 8 : 0)">{{ clock(m) }}</div>
+                                <div class="absolute right-2 text-[11.5px] text-muted-color tabular-nums -translate-y-1/2 scroll-mt-32" [style.top.px]="y(m) + (m === start() ? 8 : 0)" [attr.data-minute]="m">{{ clock(m) }}</div>
                             }
                             @if (showNow()) {
                                 <div class="absolute left-1 z-10 -translate-y-1/2 rounded-md bg-primary text-primary-contrast text-[11px] font-bold tabular-nums px-1.5 py-px" [style.top.px]="y(nowMinute()!)" data-testid="calendar-now">
@@ -270,6 +270,8 @@ export class AppointmentCalendarGridComponent {
     /** Kabul kuyruğu: randevu kimliği → bekliyor / muayenede. */
     readonly care = input<ReadonlyMap<string, CareMark>>(new Map());
     readonly clinicName = input('');
+    /** Verilirse ızgara ilk çizimde bu saate kaydırılır (çalışma saati kısıtı kapalı klinikte 00–24 ızgarada 08:00). */
+    readonly scrollToMinute = input<number | null>(null);
 
     readonly slotPick = output<CalendarSlotPick>();
     readonly open = output<string>();
@@ -280,6 +282,8 @@ export class AppointmentCalendarGridComponent {
     protected readonly listOpen = signal(false);
     /** Gövdenin yatay kaydırması; sabit başlık aynı miktarda kayar. */
     protected readonly scrollX = signal(0);
+    private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+    private scrolledToMinute = false;
 
     private readonly vaccinesFirst = computed(() => this.columns().length >= MANY_COLUMNS);
 
@@ -349,6 +353,19 @@ export class AppointmentCalendarGridComponent {
               ].filter((g) => g.items.length > 0)
             : [];
     });
+
+    constructor() {
+        afterRenderEffect(() => {
+            const minute = this.scrollToMinute();
+
+            if (this.scrolledToMinute || minute === null || minute <= this.start()) {
+                return;
+            }
+
+            this.scrolledToMinute = true;
+            this.host.nativeElement.querySelector(`[data-minute="${minute}"]`)?.scrollIntoView({ block: 'start' });
+        });
+    }
 
     protected y(minute: number): number {
         return (minute - this.start()) * PX_PER_MIN;
