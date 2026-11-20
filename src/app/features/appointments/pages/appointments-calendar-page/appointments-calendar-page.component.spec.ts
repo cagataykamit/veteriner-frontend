@@ -12,6 +12,7 @@ import type { AppointmentCalendarItemVm } from '@/app/entities/appointment/model
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { AppointmentReasonsService, OnlineBookingService } from '@/app/entities/online-booking/services/online-booking.service';
+import { ReportPreferencesService } from '@/app/entities/report-preference/services/report-preferences.service';
 import { AppointmentsCalendarPageComponent } from './appointments-calendar-page.component';
 
 /** İstanbul 16.11.2026 (pazartesi) hh:mm. */
@@ -78,6 +79,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
     let claims: Set<string>;
     let myClinics: { id: string; name: string }[];
     let selectClinic: Mock;
+    let listSavedFilters: Mock;
 
     beforeEach(() => {
         claims = new Set([APPOINTMENTS_CREATE_CLAIM]);
@@ -99,6 +101,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
         getCalendarSummary = vi.fn().mockReturnValue(of(new Map([['2026-11-16', { dateKey: '2026-11-16', total: 3, dueToday: 3, upcoming: 0, overdue: 0, completed: 0 }]])));
         getVaccineSummary = vi.fn().mockReturnValue(of(new Map()));
         getCalendarCapacity = vi.fn().mockReturnValue(of(new Map([['2026-11-16', 6], ['2026-11-22', 0]])));
+        listSavedFilters = vi.fn().mockReturnValue(of([]));
         params = new BehaviorSubject(convertToParamMap(query));
         TestBed.configureTestingModule({
             imports: [AppointmentsCalendarPageComponent],
@@ -125,6 +128,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
                     provide: AuthService,
                     useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez', getUserId: () => 'v1', hasOperationClaim: (c: string) => claims.has(c), getMyClinics: () => of(myClinics), selectClinic }
                 },
+                { provide: ReportPreferencesService, useValue: { listSavedFilters } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
         });
@@ -312,6 +316,21 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
         TestBed.resetTestingModule();
         create([]);
         expect(navigate).toHaveBeenCalledWith(['/panel/appointments/calendar'], { queryParams: expect.objectContaining({ types: '1', states: 'Overdue' }), replaceUrl: true });
+    });
+
+    it('kayıtlı filtre (APPT-026): yalnız filtre parametreleri kaydedilir, gün ve görünüm kaydedilmez; uygulanınca filtreler değişir, gün ve görünüm kalır', () => {
+        const { fixture, cmp } = create([], { view: 'week', date: '2026-11-18', types: 'asi', states: 'Overdue' });
+
+        expect(cmp.savedFilterSource.savedFilterValues()).toEqual({ types: 'asi', states: 'Overdue' });
+
+        cmp.savedFilterSource.applySavedFilterValues({ vet: 'none', states: 'DueToday,Bad' });
+        expect(navigate).toHaveBeenLastCalledWith(['/panel/appointments/calendar'], {
+            queryParams: { view: 'week', date: '2026-11-18', vet: 'none', types: undefined, states: 'DueToday' }
+        });
+
+        cmp.filtersOpen.set(true);
+        fixture.detectChanges();
+        expect(listSavedFilters).toHaveBeenCalledWith('screens.appointments-calendar');
     });
 
     it('şube seçimi yalnız birden çok klinikte görünür ve aktif kliniği değiştirir', () => {

@@ -11,7 +11,10 @@ import type { VaccinePick } from '@/app/features/appointments/components/calenda
 import { AppointmentDetailPageComponent } from '@/app/features/appointments/pages/appointment-detail-page/appointment-detail-page.component';
 import { AppointmentEditPageComponent } from '@/app/features/appointments/pages/appointment-edit-page/appointment-edit-page.component';
 import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
+import { ReportSavedFiltersComponent, type SavedFilterSource } from '@/app/entities/report-preference/components/report-saved-filters.component';
+import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import {
+    calendarFilterValues,
     calendarFiltersToQueryParams,
     calendarRequestFor,
     type CalendarFilters,
@@ -143,7 +146,8 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
         AppointmentCalendarWeekComponent,
         AppointmentFreeSlotFinderComponent,
         RouterLink,
-        AppointmentDayAgendaComponent
+        AppointmentDayAgendaComponent,
+        ReportSavedFiltersComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -216,8 +220,15 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                                 @if (narrowed()) {
                                     <p class="m-0 mt-1 text-xs text-muted-color">Tür ya da durum filtresi açıkken boş saatler gösterilmez; "Boş saat bul" tüm randevulara bakar.</p>
                                 }
-                                <div class="flex justify-end mt-2">
-                                    <button type="button" class="text-sm text-primary font-medium cursor-pointer hover:underline" (click)="filtersOpen.set(false)">Kapat</button>
+                                <div class="flex flex-wrap items-end justify-between gap-2 mt-2">
+                                    <app-report-saved-filters
+                                        [state]="savedFilterSource"
+                                        filterKey="screens.appointments-calendar"
+                                        [namePlaceholder]="copy.calendarSavedFilterNamePlaceholder"
+                                        [dialogHint]="copy.calendarSavedFilterDialogHint"
+                                        [emptySetText]="copy.calendarSavedFilterEmptySet"
+                                    />
+                                    <button type="button" class="ml-auto text-sm text-primary font-medium cursor-pointer hover:underline" (click)="filtersOpen.set(false)">Kapat</button>
                                 </div>
                             </div>
                         }
@@ -466,6 +477,7 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
     `
 })
 export class AppointmentsCalendarPageComponent implements OnInit {
+    readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly appointments = inject(AppointmentsService);
     private readonly clinics = inject(ClinicsService);
@@ -898,6 +910,12 @@ export class AppointmentsCalendarPageComponent implements OnInit {
             this.reload();
         });
     }
+
+    /** Kayıtlı filtreler (APPT-026): yalnız filtre parametreleri kaydedilir; uygulanınca filtreler değişir, gün ve görünüm kalır. */
+    readonly savedFilterSource: SavedFilterSource = {
+        savedFilterValues: () => calendarFilterValues(this.filters()),
+        applySavedFilterValues: (values) => this.applyFilters(parseCalendarFilters(new URLSearchParams(values)))
+    };
 
     /** Filtre seçimi anında uygulanır: adres çubuğuna yazılır (yeniden yükleme oradan), son seçim hatırlanır. */
     applyFilters(f: CalendarFilters): void {
