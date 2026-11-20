@@ -511,6 +511,8 @@ export class VisitCheckoutPanelComponent {
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
     readonly summary = signal<VisitCheckoutSummaryDto | null>(null);
+    /** Geliş bu panelde tamamlandı; özet açılış görüntüsü olarak kalır, yalnız başlıktaki durum rozeti güncellenir. */
+    private readonly completedHere = signal(false);
 
     readonly view = signal<'panel' | 'receipt'>('panel');
     readonly phase = signal<Phase>('edit');
@@ -760,11 +762,15 @@ export class VisitCheckoutPanelComponent {
     }
 
     protected careLabel(s: VisitCheckoutSummaryDto): string {
-        return CARE_LABEL[s.careStatus];
+        return CARE_LABEL[this.careStatusOf(s)];
     }
 
     protected careSeverity(s: VisitCheckoutSummaryDto): 'warn' | 'info' | 'success' {
-        return CARE_SEVERITY[s.careStatus];
+        return CARE_SEVERITY[this.careStatusOf(s)];
+    }
+
+    private careStatusOf(s: VisitCheckoutSummaryDto): VisitCheckoutSummaryDto['careStatus'] {
+        return this.completedHere() ? 'Completed' : s.careStatus;
     }
 
     protected lineErrorOf(line: CheckoutPaymentLine): string | null {
@@ -1080,6 +1086,7 @@ export class VisitCheckoutPanelComponent {
                 const withoutCharge = completesWithoutCharge(s.charges?.visitCharges.length ?? 1, this.convertedCharges.size, this.undecided());
 
                 await firstValueFrom(this.visits.completeVisit(s.visitId, { withoutCharge }));
+                this.completedHere.set(true);
 
                 return;
             }
@@ -1151,6 +1158,7 @@ export class VisitCheckoutPanelComponent {
 
         this.view.set('panel');
         this.phase.set('edit');
+        this.completedHere.set(false);
         this.steps.set([]);
         this.savedLineIds.set(new Set());
         this.failedLineId.set(null);

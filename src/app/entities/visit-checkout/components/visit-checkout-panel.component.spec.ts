@@ -162,6 +162,8 @@ describe('VisitCheckoutPanelComponent (CHECKOUT-001)', () => {
         expect(visits.completeVisit).toHaveBeenCalledWith('v1', { withoutCharge: false });
         expect(c.phase()).toBe('done');
         expect(finished).toHaveBeenCalled();
+        // Başlıktaki durum rozeti kapanıştan sonra tamamlanmış gelişi gösterir (açılıştaki "Muayenede" kalmaz).
+        expect((f.nativeElement as HTMLElement).querySelector('p-tag')?.textContent?.trim()).toBe('Tamamlandı');
     });
 
     it('ikinci ödeme hata verirse panel durur; tekrar deneme aynı requestId ile gider ve kaydedilen ödeme tekrarlanmaz', async () => {
