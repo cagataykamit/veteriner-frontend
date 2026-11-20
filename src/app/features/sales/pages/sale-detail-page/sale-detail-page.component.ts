@@ -7,7 +7,7 @@ import { SaleReceiptComponent } from '@/app/features/sales/components/sale-recei
 import { SaleVoidDialogComponent } from '@/app/features/sales/components/sale-void-dialog.component';
 import type { SaleDetailVm } from '@/app/features/sales/models/sale-vm.model';
 import { SalesService } from '@/app/features/sales/services/sales.service';
-import { printSaleReceipt } from '@/app/features/sales/utils/sale-receipt-print.utils';
+import { printSaleReceipt } from '@/app/shared/utils/sale-receipt-print.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';

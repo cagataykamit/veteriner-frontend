@@ -32,7 +32,7 @@ import {
     type SalePaymentMode,
     toCreateSaleRequest
 } from '@/app/features/sales/utils/sale-cart.utils';
-import { printSaleReceipt } from '@/app/features/sales/utils/sale-receipt-print.utils';
+import { printSaleReceipt } from '@/app/shared/utils/sale-receipt-print.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { CashRegisterSelectComponent } from '@/app/entities/cash-register/components/cash-register-select.component';
 import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
