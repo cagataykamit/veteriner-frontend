@@ -7,6 +7,7 @@ import { AppTopbar } from './app.topbar';
 import { AppSidebar } from './app.sidebar';
 import { AppReadOnlyBannerComponent } from './app-read-only-banner.component';
 import { AppSectionTabsComponent } from './app-section-tabs.component';
+import { AppUpdateNoticeComponent } from './app-update-notice.component';
 import { LayoutService } from '@/app/layout/service/layout.service';
 import { LegalAcceptanceGateComponent } from '@/app/features/legal-acceptance/components/legal-acceptance-gate.component';
 import { UnsavedChangesDialogComponent } from '@/app/shared/ui/unsaved-changes/unsaved-changes-dialog.component';
@@ -17,7 +18,7 @@ import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
 @Component({
     selector: 'app-layout',
     standalone: true,
-    imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppReadOnlyBannerComponent, AppSectionTabsComponent, LegalAcceptanceGateComponent, UnsavedChangesDialogComponent, AiPanelComponent],
+    imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppReadOnlyBannerComponent, AppSectionTabsComponent, LegalAcceptanceGateComponent, UnsavedChangesDialogComponent, AiPanelComponent, AppUpdateNoticeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `<div class="layout-wrapper" [ngClass]="containerClass()">
         <a class="layout-skip-link" href="#panel-main" (click)="skipToMain($event)">İçeriğe geç</a>
@@ -36,6 +37,7 @@ import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
         <app-ai-panel />
         <div class="layout-mask"></div>
         <app-unsaved-changes-dialog />
+        <app-update-notice />
         <!-- Bekleyen hukuki kabul penceresi (ADR-029); ilk paketi büyütmemek için ayrı parça. Durum rota çözülürken okunur, parça hemen yüklenir (H18). -->
         @defer (on immediate) {
             <app-legal-acceptance-gate />
