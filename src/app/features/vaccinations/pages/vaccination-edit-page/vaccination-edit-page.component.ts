@@ -33,6 +33,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import {
     buildVaccinationAppliedDueForSubmit,
+    dueChanged,
     minDateTimeLocalMinuteAfter,
     minDateTimeLocalMinuteAfterNow,
     vaccinationAppliedNotFutureValidator,
@@ -435,6 +436,9 @@ export class VaccinationEditPageComponent implements OnInit, HasUnsavedChanges {
             vaccineDefinitionId: v.vaccineDefinitionId.trim(),
             appliedAtUtc: dates.appliedAtUtc,
             dueAtUtc: dates.dueAtUtc,
+            // Yalnız vade bu düzenlemede değiştiyse saat gerçektir; değişmeyen vadede sunucu mevcut bayrağı korur (aktarılan saatsiz vade
+            // yalnız başka alan düzenlenince 12:00'lik saatli kayda dönmesin).
+            dueTimeSpecified: dueChanged(this.editVmCache?.dueAtUtc ?? null, dates.dueAtUtc),
             status,
             notes: v.notes.trim() || null,
             route: v.route,
