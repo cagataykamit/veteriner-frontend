@@ -122,7 +122,8 @@ export function mapTodayOpenItemsDtoToVm(dto: TodayOpenItemsDto): TodayOpenItems
         incompleteVisitCount: dto.incompleteVisitCount,
         hbsNotEnteredPrescriptionCount: dto.hbsNotEnteredPrescriptionCount ?? null,
         hbsNotEnteredVaccinationCount: dto.hbsNotEnteredVaccinationCount ?? null,
-        pendingChargeItemCount: dto.pendingChargeItemCount ?? null
+        pendingChargeItemCount: dto.pendingChargeItemCount ?? null,
+        overdueAppointmentCount: dto.overdueAppointmentCount ?? null
     };
 }
 
@@ -150,7 +151,8 @@ export function mapTodayDtoToVm(dto: TodayDto): TodayVm {
         date: dto.date,
         items: (dto.items ?? []).map(mapTodayItemDtoToVm),
         activeHospitalizations: (dto.activeHospitalizations ?? []).map(mapTodayHospitalizationDtoToVm),
-        openItems: dto.openItems ? mapTodayOpenItemsDtoToVm(dto.openItems) : null
+        openItems: dto.openItems ? mapTodayOpenItemsDtoToVm(dto.openItems) : null,
+        cancelledAppointmentCount: dto.cancelledAppointmentCount ?? null
     };
 }
 

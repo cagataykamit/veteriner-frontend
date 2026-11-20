@@ -106,6 +106,7 @@
                                 <span class="w-[9px] h-[9px] rounded-full shrink-0" [class]="statusDotClass[s.tone]" aria-hidden="true"></span>{{ s.text }}
                             </span>
                         }
+                        <ng-container [ngTemplateOutlet]="cancelledLink" />
                     </div>
                 }
             </div>
@@ -299,10 +300,27 @@
                     [hint]="view() === 'voided' ? '' : 'Randevusuz gelen hastayı “Randevusuz geliş” ile kaydedebilirsiniz.'"
                     iconClass="pi pi-calendar"
                 />
+                @if (cancelledAppointments() > 0) {
+                    <div class="flex justify-center mt-3"><ng-container [ngTemplateOutlet]="cancelledLink" /></div>
+                }
             }
         </div>
     }
 }
+
+<!-- İptal edilen randevu listede yer almaz (ADR-052): sayaç günün takvimine götürür; hekim süzgecinden etkilenmez, yalnız "Tümü"nde. -->
+<ng-template #cancelledLink>
+    @if (cancelledAppointments() > 0) {
+        <a
+            routerLink="/panel/appointments/calendar"
+            [queryParams]="{ date: today()?.date }"
+            class="inline-flex items-center gap-[7px] text-[13px] text-muted-color whitespace-nowrap no-underline hover:underline touch:min-h-(--touch-target)"
+            data-testid="today-cancelled-count"
+            title="Bu gün için iptal edilen randevular (Randevu takvimi)"
+            ><i class="pi pi-ban text-[11px]" aria-hidden="true"></i>{{ cancelledAppointments() }} randevu iptal edildi</a
+        >
+    }
+</ng-template>
 
 @if (!loading() && !loadError() && hospitalizations().length > 0) {
     <section class="card mb-4" aria-label="Aktif yatışlar">

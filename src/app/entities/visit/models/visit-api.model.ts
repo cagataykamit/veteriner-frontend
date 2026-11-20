@@ -105,6 +105,8 @@ export interface TodayOpenItemsDto {
     hbsNotEnteredVaccinationCount?: number | null;
     /** `OPEN_ITEMS_API_CONTRACT.md` madde 1b: ücrete çevrilmeyi bekleyen kalem sayısı (30 gün); `Charges.Read` yoksa `null`. */
     pendingChargeItemCount?: number | null;
+    /** ADR-052 K5: önceki günlerden (30 gün) kalan, hâlâ planlı, gelişi açılmamış randevu; `Appointments.Read` yoksa `null`. */
+    overdueAppointmentCount?: number | null;
 }
 
 /** `GET /visits/open-items/{kind}` (`OPEN_ITEMS_API_CONTRACT.md` §10). */
@@ -136,6 +138,8 @@ export interface TodayDto {
     items: TodayItemDto[];
     activeHospitalizations?: TodayHospitalizationDto[] | null;
     openItems?: TodayOpenItemsDto | null;
+    /** Seçili günün iptal edilen randevuları (liste iptali göstermez); `Appointments.Read` yoksa `null` (`REPORT_HUB_SUMMARY_API_CONTRACT.md` §7.1). */
+    cancelledAppointmentCount?: number | null;
 }
 
 export interface VeterinarianDto {

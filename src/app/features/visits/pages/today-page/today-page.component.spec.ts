@@ -484,6 +484,32 @@ describe('TodayPageComponent', () => {
             expect(link?.getAttribute('href')).toBe('/panel/charges/pending');
         });
 
+        it('Açık işler: gecikmiş randevu sayısı takvimi "Gecikmiş" süzgeciyle açar (ADR-052)', async () => {
+            const f = await create(['Visits.Read'], {
+                date: 'd',
+                activeHospitalizations: [],
+                items: [],
+                openItems: { unchargedVisitCount: 0, outstandingVisitCount: 0, outstandingAmount: 0, awaitingLabCount: 0, incompleteVisitCount: 0, overdueAppointmentCount: 2 }
+            });
+            const link = Array.from((f.nativeElement as HTMLElement).querySelectorAll('a')).find((a) => a.textContent?.includes('Gecikmiş randevu: 2'));
+
+            expect(link?.getAttribute('href')).toBe('/panel/appointments/calendar?view=month&states=Overdue');
+        });
+
+        it('iptal edilen randevu listede yok; sayaç günün takvimine götürür', async () => {
+            const f = await create(['Visits.Read'], { date: '2026-11-20', activeHospitalizations: [], items: [], cancelledAppointmentCount: 2 });
+            const link = (f.nativeElement as HTMLElement).querySelector('[data-testid="today-cancelled-count"]');
+
+            expect(link?.textContent).toContain('2 randevu iptal edildi');
+            expect(link?.getAttribute('href')).toBe('/panel/appointments/calendar?date=2026-11-20');
+        });
+
+        it('iptal sayısı sıfırsa sayaç yazılmaz', async () => {
+            const f = await create(['Visits.Read'], { date: '2026-11-20', activeHospitalizations: [], items: [], cancelledAppointmentCount: 0 });
+
+            expect((f.nativeElement as HTMLElement).querySelector('[data-testid="today-cancelled-count"]')).toBeNull();
+        });
+
         it('planlı satırda (null göstergeler) çip yok', async () => {
             const f = await create(['Visits.Read'], {
                 date: 'd',

@@ -110,6 +110,8 @@ export interface TodayOpenItemsVm {
     hbsNotEnteredVaccinationCount?: number | null;
     /** Ücrete çevrilmeyi bekleyen kalem sayısı (son 30 gün); `Charges.Read` yoksa `null`. */
     pendingChargeItemCount?: number | null;
+    /** Önceki günlerden kalan, hâlâ planlı randevu (son 30 gün); `Appointments.Read` yoksa `null`. */
+    overdueAppointmentCount?: number | null;
 }
 
 /** Listesi açılabilen özet sayısı (`OPEN_ITEMS_API_CONTRACT.md` §10). */
@@ -144,6 +146,8 @@ export interface TodayVm {
     activeHospitalizations: TodayHospitalizationVm[];
     /** `null`: özet yok (yanlış işaretlenenler görünümü). */
     openItems?: TodayOpenItemsVm | null;
+    /** Seçili günün iptal edilen randevuları; `null`: izin yok ya da yanlış işaretlenenler görünümü. */
+    cancelledAppointmentCount?: number | null;
 }
 
 export interface VeterinarianVm {

@@ -155,6 +155,20 @@ export class TodayOpenItemsComponent {
             });
         }
 
+        // Zamanı geçmiş randevu (ADR-052 K5; Özet'ten taşındı): önceki günlerden kalan planlı randevu, takvimde "Gecikmiş" süzgeciyle açılır.
+        // Bugünün saati geçmiş randevusu zaten listede görünür; gelişi açılmış olan aşağıdaki "açık geliş"tedir.
+        if ((s.overdueAppointmentCount ?? 0) > 0) {
+            out.push({
+                key: 'overdueAppointments',
+                icon: 'pi pi-calendar-times',
+                text: `Gecikmiş randevu: ${s.overdueAppointmentCount}`,
+                title: 'Önceki günlerden kalan, gelinmemiş ve hâlâ planlı randevular (son 30 gün; Randevu takvimi)',
+                link: '/panel/appointments/calendar',
+                queryParams: { view: 'month', states: 'Overdue' },
+                tone: TONE_WARN
+            });
+        }
+
         if (s.incompleteVisitCount > 0) {
             out.push({
                 key: 'incomplete',

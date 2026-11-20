@@ -270,6 +270,8 @@ export class TodayPageComponent implements OnInit {
         { label: 'Tümü', value: 'all' }
     ];
     readonly scope = signal<TodayScope>('all');
+    /** Günün iptal edilen randevuları (liste göstermez); klinik geneli sayı olduğu için yalnız günlük listede ve "Tümü"nde yazılır. */
+    readonly cancelledAppointments = computed(() => (this.view() === 'today' && this.scope() === 'all' ? (this.today()?.cancelledAppointmentCount ?? 0) : 0));
     /** Giriş yapan kullanıcı aktif klinikte hekimse kimliği; değilse `null` ve kapsam süzgeci görünmez. */
     readonly myUserId = signal<string | null>(null);
 
