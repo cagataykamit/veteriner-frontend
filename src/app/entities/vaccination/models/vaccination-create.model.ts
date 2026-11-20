@@ -28,6 +28,8 @@ export interface CreateVaccinationRequest {
     site?: string | null;
     /** Bağlı muayene kesinleşmişse zorunlu gerekçe (sonradan ekleme, ADR-043 AK-6); ürünlü aşıda uygulamaya da yazılır. */
     lateEntryReason?: string | null;
+    /** Vadenin saati kullanıcı tarafından girildi (form tarih ve saat ister); takvimde saatiyle durur (BE `APPOINTMENT_CALENDAR` §8.1). */
+    dueTimeSpecified?: boolean;
 }
 
 export interface UpdateVaccinationRequest {
@@ -45,4 +47,6 @@ export interface UpdateVaccinationRequest {
     site?: string | null;
     /** Ekranın açıldığı sürüm (zorunlu). */
     rowVersion: string;
+    /** Vade bu düzenlemede saatiyle girildi ya da değişti; verilmezse sunucu değişmeyen vadenin bayrağını korur. */
+    dueTimeSpecified?: boolean;
 }

@@ -573,6 +573,8 @@ export class VaccinationFormComponent implements OnInit, HasUnsavedChanges {
             vaccineDefinitionId: v.vaccineDefinitionId.trim(),
             appliedAtUtc: dates.appliedAtUtc,
             dueAtUtc: dates.dueAtUtc,
+            // Vade alanı tarih ve saat ister: girilen saat gerçektir, takvimde saatiyle durur.
+            dueTimeSpecified: dates.dueAtUtc !== null,
             status,
             notes: v.notes.trim() || null,
             route: v.route,

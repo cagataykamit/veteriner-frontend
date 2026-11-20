@@ -1,5 +1,5 @@
 import type { VaccinationDetailDto } from '@/app/entities/vaccination/models/vaccination-api.model';
-import { mapCreateVaccinationToApiBody, mapVaccinationCreateResponse, mapVaccinationDetailDtoToEditVm, mapVaccinationDetailDtoToVm, vaccinationsQueryToHttpParams } from '@/app/entities/vaccination/data/vaccination.mapper';
+import { mapCreateVaccinationToApiBody, mapUpdateVaccinationToApiBody, mapVaccinationCreateResponse, mapVaccinationDetailDtoToEditVm, mapVaccinationDetailDtoToVm, vaccinationsQueryToHttpParams } from '@/app/entities/vaccination/data/vaccination.mapper';
 
 const base = { clinicId: 'c1', petId: 'p1', vaccineDefinitionId: 'd1', status: 1, appliedAtUtc: '2026-10-14T08:00:00Z' };
 
@@ -22,6 +22,23 @@ describe('vaccination.mapper — aşı + stok düşümü', () => {
             const manual = mapCreateVaccinationToApiBody({ ...base, productId: 'pr1', quantity: 0.5, batchId: 'b2', requestId: 'r1' });
 
             expect(manual.batchId).toBe('b2');
+        });
+
+        it('vade saati bayrağı yalnız vade varken ve true ise gönderilir (APPOINTMENT_CALENDAR §8.1)', () => {
+            const planned = { ...base, status: 0, appliedAtUtc: null, dueAtUtc: '2026-12-01T07:14:00.000Z' };
+
+            expect(mapCreateVaccinationToApiBody({ ...planned, dueTimeSpecified: true }).dueTimeSpecified).toBe(true);
+            expect(mapCreateVaccinationToApiBody({ ...planned }).dueTimeSpecified).toBeUndefined();
+            expect(mapCreateVaccinationToApiBody({ ...base, dueAtUtc: null, dueTimeSpecified: true }).dueTimeSpecified).toBeUndefined();
+        });
+    });
+
+    describe('mapUpdateVaccinationToApiBody', () => {
+        it('vade saati bayrağı yalnız true ise gönderilir; verilmezse sunucu mevcut bayrağı korur', () => {
+            const update = { clinicId: 'c1', petId: 'p1', vaccineDefinitionId: 'd1', status: 0, dueAtUtc: '2026-12-01T07:14:00.000Z', rowVersion: 'rv' };
+
+            expect(mapUpdateVaccinationToApiBody('v1', { ...update, dueTimeSpecified: true }).dueTimeSpecified).toBe(true);
+            expect(mapUpdateVaccinationToApiBody('v1', update).dueTimeSpecified).toBeUndefined();
         });
     });
 

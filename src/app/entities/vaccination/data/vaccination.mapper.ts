@@ -254,6 +254,7 @@ export function mapCreateVaccinationToApiBody(req: CreateVaccinationRequest): Va
         route: req.route ?? null,
         site: req.site?.trim() ? req.site.trim() : null,
         ...(req.lateEntryReason?.trim() ? { lateEntryReason: req.lateEntryReason.trim() } : {}),
+        ...(dueAtUtc && req.dueTimeSpecified ? { dueTimeSpecified: true } : {}),
         ...(productId
             ? {
                   productId,
@@ -291,7 +292,8 @@ export function mapUpdateVaccinationToApiBody(routeId: string, req: UpdateVaccin
         notes: req.notes?.trim() ? req.notes.trim() : null,
         route: req.route ?? null,
         site: req.site?.trim() ? req.site.trim() : null,
-        rowVersion: req.rowVersion
+        rowVersion: req.rowVersion,
+        ...(req.dueAtUtc?.trim() && req.dueTimeSpecified ? { dueTimeSpecified: true } : {})
     };
 }
 

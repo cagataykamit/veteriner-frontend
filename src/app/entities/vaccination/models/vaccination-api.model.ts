@@ -117,6 +117,8 @@ export interface VaccinationCreateRequestDto {
     site?: string | null;
     /** Bağlı muayene kesinleşmişse zorunlu (5–500; `VACCINATIONS_API_CONTRACT.md` §5); yalnız POST. */
     lateEntryReason?: string | null;
+    /** Vadenin saati gerçek (`APPOINTMENT_CALENDAR_API_CONTRACT.md` §8.1); yalnız `true` gönderilir. */
+    dueTimeSpecified?: boolean;
 }
 
 export interface VaccinationUpdateRequestDto {
@@ -134,6 +136,8 @@ export interface VaccinationUpdateRequestDto {
     site?: string | null;
     /** GET'ten alınan sürüm; zorunlu (VACCINATIONS_API_CONTRACT.md §2). */
     rowVersion: string;
+    /** Vade saatiyle girildi ya da değişti (`APPOINTMENT_CALENDAR_API_CONTRACT.md` §8.1); yalnız `true` gönderilir. */
+    dueTimeSpecified?: boolean;
 }
 
 /** GET /vaccinations/{id} → `administration` (`ADMINISTRATIONS_API_CONTRACT.md` §9.4). */

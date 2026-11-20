@@ -271,3 +271,18 @@ export function minDateTimeLocalMinuteAfter(appliedLocalDateTime: string): strin
     return toIstanbulDateTimeLocalInputValue(new Date(ms).toISOString());
 }
 
+
+/**
+ * Düzenlemede vade değişti mi (dakika duyarlı; ISO biçim farkı sayılmaz). Değiştiyse panelde saatiyle girilmiştir ve
+ * `dueTimeSpecified` gönderilir; değişmediyse sunucu mevcut bayrağı korur (`APPOINTMENT_CALENDAR_API_CONTRACT.md` §8.1).
+ */
+export function dueChanged(originalDueAtUtc: string | null, submittedDueAtUtc: string | null): boolean {
+    if (!submittedDueAtUtc) {
+        return false;
+    }
+
+    const before = originalDueAtUtc ? new Date(originalDueAtUtc).getTime() : NaN;
+    const after = new Date(submittedDueAtUtc).getTime();
+
+    return Number.isNaN(before) || Math.floor(before / 60_000) !== Math.floor(after / 60_000);
+}
