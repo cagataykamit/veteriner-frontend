@@ -91,8 +91,9 @@ const PERIODS: readonly ReportHubPeriod[] = ['today', 'week', 'month'];
                 <h2 id="attention-title" class="m-0 px-4 pt-2.5 pb-1.5 text-sm font-semibold flex items-center gap-2"><i class="pi pi-exclamation-circle text-amber-600 dark:text-amber-400" aria-hidden="true"></i>{{ hub.attention.title }}</h2>
                 @for (row of attention(); track row.key; let first = $first) {
                     <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 px-4 py-2" [class.border-t]="!first" [class.border-surface]="!first" [attr.data-testid]="'attention-' + row.key">
-                        <span class="min-w-11 text-xl font-semibold text-right tabular-nums text-amber-700 dark:text-amber-400">{{ row.count }}</span>
-                        <span class="flex-1 min-w-0">
+                        <!-- Telefonda metin satırın kalanını alır, düğme alta iner ve metinle hizalanır (sayı 2.75rem + boşluk 0.75rem = ml-14). -->
+                        <span class="w-11 shrink-0 text-xl font-semibold text-right tabular-nums text-amber-700 dark:text-amber-400">{{ row.count }}</span>
+                        <span class="grow min-w-0 basis-[calc(100%-3.5rem)] sm:basis-0">
                             <span class="font-medium">{{ row.text }}</span>
                             <small class="block text-muted-color text-[12.5px]">{{ row.hint }}</small>
                         </span>
@@ -107,7 +108,7 @@ const PERIODS: readonly ReportHubPeriod[] = ['today', 'week', 'month'];
             </section>
         }
 
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4" data-testid="question-grid">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 transition-opacity" [class.opacity-60]="loading() && summary()" [attr.aria-busy]="loading()" data-testid="question-grid">
             @for (q of questions(); track q.id) {
                 @let hit = isHit(q.reports);
                 <section
@@ -131,7 +132,7 @@ const PERIODS: readonly ReportHubPeriod[] = ['today', 'week', 'month'];
                                 </div>
                                 <div class="mt-1 text-[13px] text-muted-color" data-testid="figure-sub">
                                     @if (f.when) {
-                                        <span>{{ f.when }} · </span>
+                                        <span>{{ f.when }}{{ f.parts.length ? ' · ' : '' }}</span>
                                     }
                                     @for (part of f.parts; track $index) {
                                         <span [class]="toneClass(part.tone)">{{ part.text }}</span>
@@ -220,8 +221,11 @@ export class ReportsHubPageComponent implements OnInit {
     readonly query = signal('');
     readonly summary = signal<ReportHubSummaryDto | null>(null);
     readonly loadError = signal(false);
+    /** Yeni dönemin sayıları yüklenirken kartlar soluk; eski sayılar yeni dönemin adıyla görünmez. */
+    readonly loading = signal(true);
 
-    readonly questions = computed(() => visibleQuestions(this.reports, this.summary(), this.period()));
+    /** Etiketler gelen yanıtın dönemine bağlıdır: dönem değişip yanıt gelmeden kart eski dönemin adıyla kalır. */
+    readonly questions = computed(() => visibleQuestions(this.reports, this.summary(), this.summary()?.period ?? this.period()));
     readonly attention = computed(() => attentionRows(this.summary(), this.hasClaim));
 
     /** Favori rapor anahtarları, eklenme sırasıyla (sunucu sırası; yeni eklenen sona). */
@@ -259,6 +263,7 @@ export class ReportsHubPageComponent implements OnInit {
                 }
 
                 this.summary.set(summary);
+                this.loading.set(false);
             });
 
         this.load$.next(this.period());
@@ -267,6 +272,7 @@ export class ReportsHubPageComponent implements OnInit {
     setPeriod(period: ReportHubPeriod): void {
         if (period !== this.period()) {
             this.period.set(period);
+            this.loading.set(true);
             this.load$.next(period);
         }
     }

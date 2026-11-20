@@ -1,7 +1,7 @@
 import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { APPOINTMENTS_READ_CLAIM, PAYMENTS_READ_CLAIM, PRESCRIPTIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -91,6 +91,26 @@ describe('ReportsHubPageComponent — tasarım B (ADR-052) ve favoriler (REPORT-
 
         expect(summaryService.get).toHaveBeenLastCalledWith('month');
         expect(el(fixture).querySelector('[data-testid="period-month"]')?.getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('yeni dönem yüklenirken kart eski sayıyı eski dönemin adıyla gösterir ve ızgara meşgul işaretlenir', () => {
+        const fixture = render();
+        const month$ = new Subject<ReportHubSummaryDto>();
+        const sub = () => el(fixture).querySelector('[data-testid="question-appointments"] [data-testid="figure-sub"]')?.textContent;
+        const grid = () => el(fixture).querySelector('[data-testid="question-grid"]');
+
+        summaryService.get.mockReturnValue(month$);
+        el(fixture).querySelector<HTMLButtonElement>('[data-testid="period-month"]')!.click();
+        fixture.detectChanges();
+
+        expect(sub()).toContain('bu hafta');
+        expect(grid()?.getAttribute('aria-busy')).toBe('true');
+
+        month$.next({ ...hubSummary(), period: 'month' });
+        fixture.detectChanges();
+
+        expect(sub()).toContain('bu ay');
+        expect(grid()?.getAttribute('aria-busy')).toBe('false');
     });
 
     it('bant yalnız sıfırdan büyük ve izinli uyarıyla görünür', () => {
