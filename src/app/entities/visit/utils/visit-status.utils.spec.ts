@@ -126,6 +126,17 @@ describe('todayItemActions', () => {
         expect(todayItemActions(item({ careStatus: 'Completed', chargeIndicator: 'NoChargeableWork' })).canAddMissingCharge).toBe(false);
         expect(todayItemActions(item({ careStatus: 'InProgress', chargeIndicator: 'ChargeMissing' })).canAddMissingCharge).toBe(false);
     });
+
+    it('Hesabı kapat: muayenedeki hasta ya da kalanı / bekleyen kalemi olan tamamlanmış ziyaret; ödenmiş, bekleyen ve yanlış kayıtta yok', () => {
+        expect(todayItemActions(item({ careStatus: 'InProgress' })).canCheckout).toBe(true);
+        expect(todayItemActions(item({ careStatus: 'InProgress', chargeIndicator: 'NoChargeableWork', pendingChargeCount: 0 })).canCheckout).toBe(false);
+        expect(todayItemActions(item({ careStatus: 'InProgress', chargeIndicator: 'NoChargeableWork', pendingChargeCount: 1 })).canCheckout).toBe(true);
+        expect(todayItemActions(item({ careStatus: 'Completed', outstandingAmount: 150 })).canCheckout).toBe(true);
+        expect(todayItemActions(item({ careStatus: 'Completed', pendingChargeCount: 1 })).canCheckout).toBe(true);
+        expect(todayItemActions(item({ careStatus: 'Completed', outstandingAmount: 0, pendingChargeCount: 0 })).canCheckout).toBe(false);
+        expect(todayItemActions(item({ careStatus: 'Waiting' })).canCheckout).toBe(false);
+        expect(todayItemActions(item({ careStatus: 'InProgress', isVoided: true })).canCheckout).toBe(false);
+    });
 });
 
 describe('todayNeedsCompletionPrompt', () => {
