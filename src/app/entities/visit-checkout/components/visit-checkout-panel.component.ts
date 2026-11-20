@@ -13,7 +13,7 @@ import type { EDocumentSource } from '@/app/entities/e-document/models/e-documen
 import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
 import { PaymentsService } from '@/app/entities/payment/services/payments.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
-import { VisitCheckoutReceiptComponent, type VisitCheckoutReceiptData } from '@/app/features/visits/checkout/components/visit-checkout-receipt.component';
+import { VisitCheckoutReceiptComponent, type VisitCheckoutReceiptData } from '@/app/entities/visit-checkout/components/visit-checkout-receipt.component';
 import {
     CHECKOUT_METHOD_LABEL,
     completesWithoutCharge,
@@ -30,10 +30,10 @@ import {
     type CheckoutPaymentLine,
     type CheckoutPaymentMethod,
     type ItemDecision
-} from '@/app/features/visits/checkout/data/visit-checkout.rules';
-import type { VisitCheckoutChargeDto, VisitCheckoutOtherChargeDto, VisitCheckoutPendingItemDto, VisitCheckoutSummaryDto } from '@/app/features/visits/checkout/models/visit-checkout.model';
-import { VisitCheckoutService } from '@/app/features/visits/checkout/services/visit-checkout.service';
-import { printSaleReceipt } from '@/app/features/sales/utils/sale-receipt-print.utils';
+} from '@/app/entities/visit-checkout/data/visit-checkout.rules';
+import type { VisitCheckoutChargeDto, VisitCheckoutOtherChargeDto, VisitCheckoutPendingItemDto, VisitCheckoutSummaryDto } from '@/app/entities/visit-checkout/models/visit-checkout.model';
+import { VisitCheckoutService } from '@/app/entities/visit-checkout/services/visit-checkout.service';
+import { printSaleReceipt } from '@/app/shared/utils/sale-receipt-print.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
@@ -1047,6 +1047,7 @@ export class VisitCheckoutPanelComponent {
                 await firstValueFrom(this.credits.applyCredit(s.clientId, this.creditRequestId, this.allocationPlan().credit));
 
                 return;
+
             case 'pay': {
                 const index = this.lines().findIndex((l) => l.id === step.lineId);
                 const line = this.lines()[index];
@@ -1070,6 +1071,7 @@ export class VisitCheckoutPanelComponent {
 
                 return;
             }
+
             case 'complete': {
                 if (s.careStatus === 'Waiting') {
                     await firstValueFrom(this.visits.startVisit(s.visitId));

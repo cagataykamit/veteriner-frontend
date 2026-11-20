@@ -11,7 +11,7 @@ import { Menu, MenuModule } from 'primeng/menu';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { DrawerModule } from 'primeng/drawer';
-import { VisitCheckoutPanelComponent } from '@/app/features/visits/checkout/components/visit-checkout-panel.component';
+import { VisitCheckoutPanelComponent } from '@/app/entities/visit-checkout/components/visit-checkout-panel.component';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
 import { AppointmentNoShowDialogComponent } from '@/app/entities/appointment/components/appointment-no-show-dialog.component';
 import { SelectButtonModule } from 'primeng/selectbutton';

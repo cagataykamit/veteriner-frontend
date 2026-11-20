@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { CHECKOUT_METHOD_LABEL, roundMoney, type CheckoutPaymentMethod } from '@/app/features/visits/checkout/data/visit-checkout.rules';
+import { CHECKOUT_METHOD_LABEL, roundMoney, type CheckoutPaymentMethod } from '@/app/entities/visit-checkout/data/visit-checkout.rules';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
 export interface VisitCheckoutReceiptData {

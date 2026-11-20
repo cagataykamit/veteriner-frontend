@@ -9,8 +9,8 @@ import { ClientCreditsService } from '@/app/entities/client-credit/services/clie
 import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
 import { PaymentsService } from '@/app/entities/payment/services/payments.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
-import type { VisitCheckoutSummaryDto } from '@/app/features/visits/checkout/models/visit-checkout.model';
-import { VisitCheckoutService } from '@/app/features/visits/checkout/services/visit-checkout.service';
+import type { VisitCheckoutSummaryDto } from '@/app/entities/visit-checkout/models/visit-checkout.model';
+import { VisitCheckoutService } from '@/app/entities/visit-checkout/services/visit-checkout.service';
 import { VisitCheckoutPanelComponent } from './visit-checkout-panel.component';
 
 function summary(over: Partial<VisitCheckoutSummaryDto> = {}): VisitCheckoutSummaryDto {

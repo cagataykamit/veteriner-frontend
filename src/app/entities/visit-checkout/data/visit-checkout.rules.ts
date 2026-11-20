@@ -106,6 +106,7 @@ export function creditError(credit: number, creditBalance: number, due: number):
  */
 export function planAllocations(charges: readonly ChargeToSettle[], credit: number, lineAmounts: readonly number[]): AllocationPlan {
     const open = charges.map((c) => ({ chargeId: c.chargeId, left: roundMoney(c.outstanding) }));
+
     const take = (amount: number): { allocations: AllocationLine[]; rest: number } => {
         const allocations: AllocationLine[] = [];
         let rest = roundMoney(amount);

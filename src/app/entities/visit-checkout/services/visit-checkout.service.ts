@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { toUserError } from '@/app/shared/utils/api-error.utils';
-import type { VisitCheckoutSummaryDto } from '@/app/features/visits/checkout/models/visit-checkout.model';
+import type { VisitCheckoutSummaryDto } from '@/app/entities/visit-checkout/models/visit-checkout.model';
 
 /** "Hesabı kapat" okuması. Yazma mevcut uçlarla yapılır (kalem, kredi, ödeme, geliş servisleri). */
 @Injectable({ providedIn: 'root' })
