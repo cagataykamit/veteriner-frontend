@@ -16,3 +16,16 @@ describe('clinic-appointment-settings.mapper (hatırlatmadaki iptal bağlantıs�
         });
     });
 });
+
+describe('clinic-appointment-settings.mapper (çalışma saati kısıtı)', () => {
+    it('enforceWorkingHours okunur; alan yoksa backend varsayılanı gibi açık sayılır', () => {
+        expect(mapClinicAppointmentSettingsResponse({ enforceWorkingHours: false }).enforceWorkingHours).toBe(false);
+        expect(mapClinicAppointmentSettingsResponse({ defaultAppointmentDurationMinutes: 30 }).enforceWorkingHours).toBe(true);
+    });
+
+    it('Randevu Varsayılanları gövdesi kısıtı göndermez (mevcut değer korunur)', () => {
+        const body = clinicAppointmentSettingsFormToPutBody({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false, ownerCancelLinkEnabled: true, waitlistAutoOfferEnabled: true });
+
+        expect(body).not.toHaveProperty('enforceWorkingHours');
+    });
+});

@@ -6,6 +6,8 @@ export interface ClinicAppointmentSettingsDto {
     ownerCancelLinkEnabled: boolean;
     /** İptalde bekleme listesine otomatik teklif (TIER-018; varsayılan açık). */
     waitlistAutoOfferEnabled: boolean;
+    /** Panelden randevu çalışma saati ve molaya uyar (varsayılan açık); online randevu bu ayardan etkilenmez. */
+    enforceWorkingHours: boolean;
 }
 
 export interface UpdateClinicAppointmentSettingsRequestDto {
@@ -15,4 +17,6 @@ export interface UpdateClinicAppointmentSettingsRequestDto {
     ownerCancelLinkEnabled: boolean;
     /** İptalde bekleme listesine otomatik teklif (TIER-018; varsayılan açık). */
     waitlistAutoOfferEnabled: boolean;
+    /** Gönderilmezse mevcut değer korunur; yalnız Çalışma Saatleri kartı gönderir. */
+    enforceWorkingHours?: boolean;
 }

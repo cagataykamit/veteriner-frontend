@@ -219,3 +219,22 @@ export function clinicWorkingHoursFormToPutBody(days: ClinicWorkingHourFormValue
 
     return { items: sorted.map((d) => clinicWorkingHourFormRowToWriteItem(d)) };
 }
+
+/** Kısıtsız hafta: her gün 00:00–23:59, mola ve kapalı gün yok (randevu backend kuralıyla tek yerel gün içinde kalır). */
+const UNRESTRICTED_WEEK: readonly ClinicWorkingHourVm[] = [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+    dayOfWeek,
+    dayLabel: clinicWorkingHourDayLabel(dayOfWeek),
+    isClosed: false,
+    opensAt: '00:00',
+    closesAt: '23:59',
+    breakStartsAt: null,
+    breakEndsAt: null
+}));
+
+/**
+ * Panelin randevu verirken kullandığı hafta (randevu formu ve takvim): klinik çalışma saati kısıtını kapattıysa
+ * (`appointment-settings.enforceWorkingHours = false`) kısıtsız hafta, yoksa tanımlı saatler. Online randevu tanımlı saatlere göre sürer.
+ */
+export function panelBookingHours(hours: readonly ClinicWorkingHourVm[], enforceWorkingHours: boolean): readonly ClinicWorkingHourVm[] {
+    return enforceWorkingHours ? hours : UNRESTRICTED_WEEK;
+}
