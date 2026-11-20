@@ -4,6 +4,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
+import { AiProvenanceNoteComponent } from '@/app/entities/ai/components/ai-provenance-note.component';
+import { OwnerExplanationsSectionComponent } from '@/app/entities/owner-explanation/components/owner-explanations-section.component';
 import { catchError, EMPTY, switchMap } from 'rxjs';
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
@@ -96,7 +98,9 @@ const RECORD_TEXT_SECTIONS: readonly {
         ExaminationProceduresSectionComponent,
         ExaminationTemplateApplyDialogComponent,
         ToastModule,
-        TrDateTimePipe
+        TrDateTimePipe,
+        AiProvenanceNoteComponent,
+        OwnerExplanationsSectionComponent
     ],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -226,6 +230,7 @@ const RECORD_TEXT_SECTIONS: readonly {
                     <div class="col-span-12 @4xl:col-span-8 min-w-0 flex flex-col gap-4">
                         <div class="card mb-0" data-testid="exam-record">
                             <h5 class="mt-0 mb-4">Muayene kaydı</h5>
+                            <app-ai-provenance-note [provenance]="e.aiProvenance ?? []" text="Serbest nottan AI taslağıyla dolduruldu" />
                             @for (s of recordSectionsBeforeVitals(); track s.label) {
                                 <div class="mb-4">
                                     <h6 class="m-0 mb-1 field-label">{{ s.label }}</h6>
@@ -264,6 +269,9 @@ const RECORD_TEXT_SECTIONS: readonly {
                         @if (e.status === 'Finalized') {
                             <app-examination-addenda-section [examinationId]="e.id" [canAdd]="canAddAddendum()" />
                         }
+
+                        <!-- AI-003: hasta sahibine açıklama; kesinleşmiş muayenede de hazırlanır (muayene kaydını değiştirmez). -->
+                        <app-owner-explanations-section [examinationId]="e.id" [canCreate]="canUpdateExamination && !ro.mutationBlocked()" />
 
                         <app-examination-procedures-section [exam]="e" [summary]="relatedSummary()" [loading]="relatedSummaryLoading()" [error]="relatedSummaryError()" (changed)="onProcedureAdded()" (retry)="retryRelatedSummary()" />
 

@@ -107,3 +107,31 @@
         }
     }
 }
+
+/* Tek öğe yazdırma (`printElement`, ör. hasta sahibine açıklama): yalnız işaretli öğe basılır, siyah-beyaz ve sayfanın başında. */
+@media print {
+    body.print-element-active {
+        visibility: hidden;
+
+        .print-element-target {
+            visibility: visible;
+            position: absolute;
+            inset: 0 auto auto 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            background: #fff;
+            color: #000;
+            font-size: 11pt;
+
+            * {
+                visibility: visible;
+            }
+
+            .print-hidden {
+                display: none !important;
+            }
+        }
+    }
+}

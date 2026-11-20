@@ -1,3 +1,5 @@
+import type { AiProvenanceVm } from '@/app/entities/ai/models/ai-vm.model';
+
 /** Bakım talimatı metin üst sınırı (sözleşme §6). */
 export const CARE_INSTRUCTION_TEXT_MAX = 4000;
 
@@ -8,6 +10,8 @@ export interface CareInstructionVm {
     updatedAtUtc: string | null;
     /** PUT'a aynen geri gönderilir. */
     rowVersion: string;
+    /** "AI taslağından" izi (AI-004); kabulden sonra metin düzeltildiyse "düzenlendi". */
+    aiProvenance?: AiProvenanceVm[];
 }
 
 export interface CareInstructionsListQuery {

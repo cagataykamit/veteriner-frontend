@@ -1,0 +1,199 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import type { AiClinicUsageVm, AiEntryState, AiStatusVm } from '@/app/entities/ai/models/ai-vm.model';
+import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
+
+/**
+ * Yapay zekâ durum ve hata metinleri tek yerde (tasarım: ux/ai-arayuz-tasarim.md "Görünürlük" ve "İstek durumları").
+ * Ton yardımcıdır: kırmızı ve "hata" sözcüğü yok; her hata yalnız AI alanını etkiler (ADR-008 madde 6).
+ */
+
+const UNTOUCHED = 'Hasta kartı ve kayıtlar etkilenmedi';
+
+/** Sınır doldu / sistem durdu: giriş düğmesi soluk kalır, nedeni altında yazar. */
+export const AI_SYSTEM_UNAVAILABLE_REASON = 'Yapay zekâ şu an kullanılamıyor';
+export const AI_CLINIC_SELECTION_REASON = 'Önce klinik seçin';
+
+/** "Bu ayın AI kredisi bitti · 1 Aralık'ta yenilenir". */
+export function aiQuotaExceededReason(status: AiStatusVm | null, now: Date = new Date()): string {
+    return `Bu ayın AI kredisi bitti · ${aiStatusResetLabel(status, now)}`;
+}
+
+const RESET_DAY_LABELS = ["1 Ocak'ta", "1 Şubat'ta", "1 Mart'ta", "1 Nisan'da", "1 Mayıs'ta", "1 Haziran'da", "1 Temmuz'da", "1 Ağustos'ta", "1 Eylül'de", "1 Ekim'de", "1 Kasım'da", "1 Aralık'ta"];
+
+const ISTANBUL_MONTH = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Istanbul', month: 'numeric' });
+
+/** Sunucu yenilenme anını bildirmediyse: kredi İstanbul takvim ayının ilk günü yenilenir. */
+export function aiQuotaResetLabel(now: Date = new Date()): string {
+    const month = Number(ISTANBUL_MONTH.format(now)); // 1–12
+
+    return `${RESET_DAY_LABELS[month % 12]} yenilenir`;
+}
+
+/** Yenilenme etiketi: önce durumdaki `quotaResetsAtUtc` (İstanbul ayının 1'i), yoksa istemcinin İstanbul ayı. */
+export function aiStatusResetLabel(status: Pick<AiStatusVm, 'quotaResetsAtUtc'> | null, now: Date = new Date()): string {
+    const resetsAt = status?.quotaResetsAtUtc ? new Date(status.quotaResetsAtUtc) : null;
+
+    if (resetsAt && !Number.isNaN(resetsAt.getTime())) {
+        return `${RESET_DAY_LABELS[Number(ISTANBUL_MONTH.format(resetsAt)) - 1]} yenilenir`;
+    }
+
+    return aiQuotaResetLabel(now);
+}
+
+/**
+ * Giriş düğmesi: izin yoksa, durum okunamadıysa, yapılandırılmamış ya da klinikte kapalıysa hiç görünmez (UX ilkesi 11, 13);
+ * kota/bütçe/klinik seçimi gibi geçici engellerde soluk ve nedeni yazılı.
+ */
+export function aiEntryState(status: AiStatusVm | null, canUse: boolean, now: Date = new Date()): AiEntryState {
+    if (!canUse || !status) {
+        return { kind: 'hidden' };
+    }
+
+    if (status.isAvailable) {
+        return { kind: 'available' };
+    }
+
+    switch (status.unavailableCode) {
+        case 'Ai.NotConfigured':
+        case 'Ai.ClinicNotEnabled':
+            return { kind: 'hidden' };
+        case 'Ai.ClinicQuotaExceeded':
+            return { kind: 'disabled', reason: aiQuotaExceededReason(status, now) };
+        case 'Clinics.ClinicSelectionRequired':
+            return { kind: 'disabled', reason: AI_CLINIC_SELECTION_REASON };
+        default:
+            return { kind: 'disabled', reason: AI_SYSTEM_UNAVAILABLE_REASON };
+    }
+}
+
+/** Kliniğin aylık kullanımı bu orana gelince sonucun altında uyarı notu çıkar (ADR-044 madde 7). */
+export const AI_USAGE_WARNING_PERCENT = 80;
+
+/** "Bu ayki AI kullanımı %84 · 320 kredi kaldı · 1 Aralık'ta yenilenir. …"; %80 altında `null`. */
+export function aiUsageWarning(status: AiStatusVm | null, now: Date = new Date()): string | null {
+    const p = status?.clinicMonthUsedPercent ?? 0;
+
+    if (!status || p < AI_USAGE_WARNING_PERCENT) {
+        return null;
+    }
+
+    const parts = [`Bu ayki AI kullanımı %${Math.min(100, Math.round(p))}`];
+
+    if (typeof status.creditsRemaining === 'number') {
+        parts.push(`${status.creditsRemaining.toLocaleString('tr-TR')} kredi kaldı`);
+    }
+
+    parts.push(aiStatusResetLabel(status, now));
+
+    return `${parts.join(' · ')}. Kredi bitince yalnız AI özellikleri durur; diğer işler etkilenmez.`;
+}
+
+/**
+ * Klinik ayarlarındaki kullanım satırı: AI klinikte açık ve yapılandırılmışsa (kullanılabilir ya da kredi/bütçe engeli)
+ * oran ve yenilenme; kapalı, yapılandırılmamış, klinik seçili değil ya da durum okunamadıysa `null` (satır görünmez).
+ */
+export function aiClinicUsage(status: AiStatusVm | null, now: Date = new Date()): AiClinicUsageVm | null {
+    if (!status) {
+        return null;
+    }
+
+    const shown = status.isAvailable || status.unavailableCode === 'Ai.ClinicQuotaExceeded' || status.unavailableCode === 'Ai.SystemBudgetExhausted';
+
+    if (!shown) {
+        return null;
+    }
+
+    const exhausted = status.unavailableCode === 'Ai.ClinicQuotaExceeded';
+
+    return {
+        percent: exhausted ? 100 : Math.max(0, Math.min(100, Math.round(status.clinicMonthUsedPercent))),
+        resetLabel: aiStatusResetLabel(status, now),
+        exhausted
+    };
+}
+
+/** 429 `Ai.RateLimited`: sözleşmede `Retry-After` yok; istemci 60 sn sayar, başlık gelirse ona uyar. */
+export const AI_RATE_LIMIT_FALLBACK_SECONDS = 60;
+
+/** Panelde gösterilen istek sorunu. `retryAfterSeconds` doluysa "Yeniden dene" geri sayımla pasif durur. */
+export interface AiProblem {
+    code: string | null;
+    title: string;
+    message: string;
+    /** Tekrar dene düğmesi gösterilsin mi. */
+    retryable: boolean;
+    retryAfterSeconds: number | null;
+    /** Kullanılabilirlik değişmiş olabilir: durum ucu yeniden sorulur (kota, bütçe, kapalı, klinik). */
+    refreshStatus: boolean;
+}
+
+/**
+ * Hangi işin sorunu: üretimde "Özet / Taslak şu an hazırlanamadı"; kararda (kabul, at) kayıt kendi kurallarına takılabilir
+ * (kesinleşmiş muayene, sürüm çakışması, uzunluk) ve bu tekrar denenerek düzelmez.
+ */
+export type AiSubject = 'summary' | 'draft' | 'decision' | 'search';
+
+const SUBJECT_NOUN: Record<AiSubject, string> = { summary: 'Özet', draft: 'Taslak', decision: 'Taslak', search: 'Filtre' };
+const REFUSED_TITLE: Record<AiSubject, string> = {
+    summary: 'Bu kayıtlar için özet üretilemedi',
+    draft: 'Bu içerik için taslak üretilemedi',
+    decision: 'Bu içerik için taslak üretilemedi',
+    search: 'Bu cümle için filtre çıkarılamadı'
+};
+
+export function aiProblemFromError(err: unknown, subject: AiSubject, now: Date = new Date()): AiProblem {
+    const http = err instanceof HttpErrorResponse ? err : null;
+    const code = http ? problemCodeFromHttpError(http) : null;
+    const noun = SUBJECT_NOUN[subject];
+    const problem = (title: string, message: string, retryable: boolean, refreshStatus = false): AiProblem => ({ code, title, message, retryable, retryAfterSeconds: null, refreshStatus });
+
+    switch (code) {
+        case 'Ai.RateLimited':
+            return { ...problem('Kısa sürede çok fazla istek gönderildi', `Bir dakika içinde yeniden deneyebilirsiniz. ${UNTOUCHED}.`, true), retryAfterSeconds: retryAfterSeconds(http) };
+        case 'Ai.ClinicQuotaExceeded':
+            return problem('Bu ayın AI kredisi bitti', `Kredi ${aiQuotaResetLabel(now)}. ${UNTOUCHED}.`, false, true);
+        case 'Ai.SystemBudgetExhausted':
+        case 'Ai.NotConfigured':
+        case 'Ai.ClinicNotEnabled':
+            return problem(AI_SYSTEM_UNAVAILABLE_REASON, `${UNTOUCHED}.`, false, true);
+        case 'Clinics.ClinicSelectionRequired':
+            return problem(AI_CLINIC_SELECTION_REASON, 'Yapay zekâ yalnız seçili kliniğin kayıtlarıyla çalışır.', false, true);
+        case 'Ai.ProviderUnavailable':
+            return problem(`${noun} şu an hazırlanamadı`, `Yapay zekâ hizmetine ulaşılamadı. ${UNTOUCHED}; birazdan yeniden deneyebilirsiniz.`, true);
+        case 'Ai.InvalidOutput':
+            return problem(`${noun} şu an hazırlanamadı`, `Yapay zekânın yanıtı kullanılabilir değildi. ${UNTOUCHED}; birazdan yeniden deneyebilirsiniz.`, true);
+        case 'Ai.ProviderRejected':
+            return problem('Yapay zekâ hizmeti isteği kabul etmedi', 'Sorun sürerse destek ekibine yazın.', false);
+        case 'Ai.Refused':
+            return problem(REFUSED_TITLE[subject], 'Kayıtlar her zamanki gibi okunabilir.', false);
+        case 'AiDrafts.NotFound':
+            return problem('Taslak bulunamadı', 'Taslak başka bir klinikte olabilir ya da kaldırılmış olabilir.', false);
+        case 'AiDrafts.Forbidden':
+            return problem('Bu taslağa karar verme yetkiniz yok', 'Taslağı, ilgili kaydı düzenleme yetkisi olan biri kabul edebilir.', false);
+        case 'AiDrafts.NotPending':
+            return problem('Bu taslağa zaten karar verilmiş', 'Kaydı yenileyip son durumu görün.', false);
+        case 'AiDrafts.Expired':
+            return problem('Taslağın süresi doldu', 'Hiçbir şey kaydedilmedi; yeni bir taslak hazırlayabilirsiniz.', false);
+        case 'AiDrafts.Validation':
+            return problem('Düzenlenen taslak kaydedilemedi', http ? messageFromHttpError(http, 'Metni kısaltıp yeniden deneyin.') : 'Metni kısaltıp yeniden deneyin.', false);
+        case 'AiDrafts.FeatureNotSupported':
+            return problem('Bu taslak türü henüz desteklenmiyor', 'Hiçbir şey kaydedilmedi.', false);
+        case 'AiSearch.Forbidden':
+            return problem('Bu filtreyle arama yetkiniz yok', `${http ? messageFromHttpError(http, 'Filtredeki bir kayıt türünü görme yetkiniz yok.') : 'Filtredeki bir kayıt türünü görme yetkiniz yok.'} İlgili çipi kaldırıp yeniden arayabilirsiniz.`, false);
+        case 'AiSearch.Validation':
+            return problem('Aranacak bir şey kalmadı', http ? messageFromHttpError(http, 'Aramak istediğinizi yazın.') : 'Aramak istediğinizi yazın.', false);
+        default:
+            if (subject === 'decision') {
+                return problem('Taslak kayda geçirilemedi', `${http ? messageFromHttpError(http, 'Kayıt güncellenemedi.') : 'Kayıt güncellenemedi.'} Taslak bekliyor; hiçbir şey kaydedilmedi.`, false);
+            }
+
+            return problem(`${noun} şu an hazırlanamadı`, http ? `${messageFromHttpError(http, 'Yapay zekâ isteği tamamlanamadı.')} ${UNTOUCHED}.` : `${UNTOUCHED}; birazdan yeniden deneyebilirsiniz.`, true);
+    }
+}
+
+function retryAfterSeconds(err: HttpErrorResponse | null): number {
+    const header = err?.headers?.get('Retry-After');
+    const sec = header ? Number.parseInt(header, 10) : NaN;
+
+    return Number.isFinite(sec) && sec > 0 ? sec : AI_RATE_LIMIT_FALLBACK_SECONDS;
+}

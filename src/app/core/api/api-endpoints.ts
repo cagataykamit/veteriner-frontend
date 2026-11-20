@@ -269,7 +269,9 @@ export const ApiEndpoints = {
         finalize: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/finalize`,
         addenda: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/addenda`,
         /** POST `{ templateId, rowVersion }` (muayenenin sürümü). */
-        applyTemplate: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/apply-template`
+        applyTemplate: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/apply-template`,
+        /** GET `Examinations.Read`: muayeneye bağlı hasta sahibine açıklamalar (AI-003, yeniden eskiye; `AI_DRAFTS_API_CONTRACT.md` §7.2). */
+        ownerExplanations: (id: string) => `/api/v1/examinations/${encodeURIComponent(id)}/owner-explanations`
     },
     vaccinations: {
         /** Query: `Page`, `PageSize`, `Search`, `Status`, `dateFromUtc`, `dateToUtc` (iki uç dahil), `OnlyOverdue`, `Sort` (`dueAtUtc` | `appliedAtUtc`), `Order` (+ `clinicId`, `PetId`, `ClientId`). */
@@ -577,6 +579,32 @@ export const ApiEndpoints = {
         activate: (id: string) => `/api/v1/clinical-snippets/${encodeURIComponent(id)}/activate`,
         deactivate: (id: string) => `/api/v1/clinical-snippets/${encodeURIComponent(id)}/deactivate`
     },
+    /** Yapay zekâ (Veteriner `docs/AI_HISTORY_SUMMARY_API_CONTRACT.md`, `docs/AI_DRAFTS_API_CONTRACT.md`); hepsi `Ai.Use` ister. */
+    ai: {
+        /** GET: giriş düğmesini göster / soluklaştır (`isAvailable`, `unavailableCode`, `clinicMonthUsedPercent`). */
+        status: () => `/api/v1/ai/status`,
+        /** POST, gövde yok (`Pets.Read` de gerekir): kaydedilmeyen taslak özet. */
+        petHistorySummary: (petId: string) => `/api/v1/pets/${encodeURIComponent(petId)}/ai/history-summary`,
+        /** GET `?targetType=&targetId=`: kaydın karar bekleyen taslakları (en çok 20). */
+        drafts: () => `/api/v1/ai/drafts`,
+        draftById: (id: string) => `/api/v1/ai/drafts/${encodeURIComponent(id)}`,
+        /** POST `{ editedContent? }`: hedef kayda özelliğin uygulayıcısıyla yazar. */
+        draftAccept: (id: string) => `/api/v1/ai/drafts/${encodeURIComponent(id)}/accept`,
+        /** POST, gövde yok: hiçbir kayda yazılmaz. */
+        draftDiscard: (id: string) => `/api/v1/ai/drafts/${encodeURIComponent(id)}/discard`,
+        /** AI-001 POST `{ text }` (zorunlu, ≤8000; `Examinations.Update`): serbest notu muayene alanlarına ayıran taslak (`AI_DRAFTS_API_CONTRACT.md` §7.1). */
+        examNoteDraft: (examinationId: string) => `/api/v1/examinations/${encodeURIComponent(examinationId)}/ai/note-draft`,
+        /** AI-003 POST `{ text? }` (≤2000; `Examinations.Read` + `Examinations.Update`): hasta sahibine sade açıklama taslağı (§7.2). */
+        ownerExplanationDraft: (examinationId: string) => `/api/v1/examinations/${encodeURIComponent(examinationId)}/ai/owner-explanation-draft`,
+        /** AI-004 POST `{ text? }` (`Examinations.Read` + `CareInstructions.Create`): muayeneden bakım talimatı taslağı (§7.3). */
+        examinationCareInstructionDraft: (examinationId: string) => `/api/v1/examinations/${encodeURIComponent(examinationId)}/ai/care-instruction-draft`,
+        /** AI-004 POST `{ text? }` (`Hospitalizations.Read` + `CareInstructions.Create`; iptal yatış 409): yatıştan bakım talimatı taslağı (§7.3). */
+        hospitalizationCareInstructionDraft: (hospitalizationId: string) => `/api/v1/hospitalizations/${encodeURIComponent(hospitalizationId)}/ai/care-instruction-draft`,
+        /** AI-006 POST `{ query }` (≤500; `Pets.Read`): cümleyi yapılandırılmış filtreye çevirir, arama yapmaz; kota harcar (`AI_PATIENT_SEARCH_API_CONTRACT.md` §3). */
+        petSearchInterpret: () => `/api/v1/ai/pet-search/interpret`,
+        /** AI-006 POST `{ filter, page, pageSize }` (`Pets.Read`): filtreyle arar; AI çağırmaz, kota harcamaz (§4). */
+        petSearchResults: () => `/api/v1/ai/pet-search/results`
+    },
     examinationTemplates: {
         /** GET (Query: `search`, `includeInactive`, `page`, `pageSize`) ve POST. */
         list: () => `/api/v1/examination-templates`,
@@ -699,6 +727,17 @@ export const ApiEndpoints = {
     /** Platform yöneticisi: deneme aktivasyon özeti (`TRIAL_ACTIVATION_METRICS_API_CONTRACT.md` §3); Query `fromUtc`/`toUtc`. */
     trialMetrics: {
         summary: () => `/api/v1/admin/trial-metrics`
+    },
+    /** Platform yöneticisi: yapay zekâ kredi, fon ve maliyet (AI-007/008; Veteriner `docs/AI_HISTORY_SUMMARY_API_CONTRACT.md` §3). */
+    aiAdmin: {
+        /** GET `?month=yyyy-MM` (yoksa bu ay): sistem toplamı, bütçe, klinik/özellik/model kırılımı. */
+        usage: () => `/api/v1/admin/ai/usage`,
+        /** GET `?search=` (en az 2 karakter; yoksa AI ayarı olan klinikler). */
+        clinics: () => `/api/v1/admin/ai/clinics`,
+        /** PUT `{ isEnabled }`. */
+        clinic: (clinicId: string) => `/api/v1/admin/ai/clinics/${encodeURIComponent(clinicId)}`,
+        /** GET hareketler (en çok 100), POST `{ credits, note? }` (1–100.000). */
+        fundGrants: (clinicId: string) => `/api/v1/admin/ai/clinics/${encodeURIComponent(clinicId)}/fund-grants`
     },
     /** Platform yöneticisi: aynı ödeme denemesinde gelen ikinci ödemeler ve iadeleri; en yeni tespit önce, en fazla 200 satır. */
     /** Destek: klinik sitesine ek adres değiştirme hakkı (Veteriner `docs/CLINIC_SITE_API_CONTRACT.md` §4). Yalnız platform yöneticisi. */

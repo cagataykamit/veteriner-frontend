@@ -35,7 +35,7 @@ describe('CareInstructionsService', () => {
     it('liste: yatış ve aktif klinik süzgeciyle istenir, rowVersion taşınır', () =>
         new Promise<void>((done) => {
             service.getCareInstructions({ hospitalizationId: 'h1' }).subscribe((rows) => {
-                expect(rows).toEqual([{ id: 'ci1', text: 'Günde iki kez yemek', createdAtUtc: dto.createdAtUtc, updatedAtUtc: null, rowVersion: 'AAAAAAAAB9E=' }]);
+                expect(rows).toEqual([{ id: 'ci1', text: 'Günde iki kez yemek', createdAtUtc: dto.createdAtUtc, updatedAtUtc: null, rowVersion: 'AAAAAAAAB9E=', aiProvenance: [] }]);
                 done();
             });
             const req = http.expectOne((r) => r.url === 'http://api.test/api/v1/care-instructions');

@@ -134,12 +134,14 @@ describe('panel-navigation', () => {
         expect(labels(clinic)).not.toContain('Çift ödemeler');
         expect(labels(clinic)).not.toContain('Klinik adresleri');
         expect(labels(clinic)).not.toContain('Özel geliştirme talepleri');
+        expect(labels(clinic)).not.toContain('Yapay zekâ');
         expect(platform.find((g) => g.heading === 'Yönetim')!.entries.map((e) => e.label)).toEqual([
             'Raporlar',
             'Özet',
             'Satış ortakları',
             'Deneme ölçümleri',
             'Çift ödemeler',
+            'Yapay zekâ',
             'Klinik adresleri',
             'Özel geliştirme talepleri',
             'Ayarlar'
@@ -147,6 +149,7 @@ describe('panel-navigation', () => {
         expect(entryForUrl(MENU_GROUPS, '/panel/sales-partners/p1')?.label).toBe('Satış ortakları');
         expect(entryForUrl(MENU_GROUPS, '/panel/trial-metrics')?.label).toBe('Deneme ölçümleri');
         expect(entryForUrl(MENU_GROUPS, '/panel/duplicate-payments')?.label).toBe('Çift ödemeler');
+        expect(entryForUrl(MENU_GROUPS, '/panel/ai-admin')?.label).toBe('Yapay zekâ');
         expect(entryForUrl(MENU_GROUPS, '/panel/clinic-addresses')?.label).toBe('Klinik adresleri');
         expect(entryForUrl(MENU_GROUPS, '/panel/custom-development-requests')?.label).toBe('Özel geliştirme talepleri');
     });

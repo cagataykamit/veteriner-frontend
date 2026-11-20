@@ -1,6 +1,6 @@
 import type { Mock, MockedObject } from 'vitest';
 import { HttpErrorResponse, provideHttpClient, withXhr } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { EMPTY, of, Subject, throwError } from 'rxjs';
@@ -15,6 +15,10 @@ import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { DetailRelatedSummariesService } from '@/app/entities/patient/services/detail-related-summaries.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ExaminationWorkspacePageComponent } from './examination-workspace-page.component';
+import { AiPanelComponent } from '@/app/entities/ai/components/ai-panel.component';
+import type { AiDraftVm } from '@/app/entities/ai/models/ai-vm.model';
+import { AiService } from '@/app/entities/ai/services/ai.service';
+import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
 
 const editVm = (over: Partial<ExaminationEditVm> = {}): ExaminationEditVm => ({
     id: 'e1',
@@ -430,5 +434,97 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         expect(el.querySelectorAll('[data-testid="clinical-term-picker"]').length).toBe(2);
         expect(el.querySelector('#visitReasonTerm')).not.toBeNull();
         expect(el.querySelector('#assessmentTerm')).not.toBeNull();
+    });
+
+    describe('Notu alanlara ayır (AI-001)', () => {
+        const noteDraft: AiDraftVm = {
+            id: 'd1',
+            feature: 'ExamNoteStructure',
+            status: 'Draft',
+            targetType: 'Examination',
+            targetId: 'e1',
+            sources: [],
+            content: { fields: { visitReason: '2 gündür kusma', plan: 'Sıvı tedavisi', weightKg: 4.2 }, replaceFields: [] },
+            createdAtUtc: '',
+            expiresAtUtc: '',
+            decidedByUserId: null,
+            decidedAtUtc: null,
+            appliedRecordId: null
+        };
+        let ai: AiService;
+
+        const aiReady = () => {
+            TestBed.inject(HttpTestingController)
+                .match('http://api.test/api/v1/ai/status')
+                .forEach((r) => r.flush({ isAvailable: true, unavailableCode: null, isConfigured: true, isClinicEnabled: true, clinicMonthUsedPercent: 0 }));
+            fixture.detectChanges();
+        };
+
+        const entry = () => (fixture.nativeElement as HTMLElement).querySelector('[data-testid="ai-entry-button"]') as HTMLButtonElement | null;
+
+        beforeEach(() => {
+            ai = TestBed.inject(AiService);
+            vi.spyOn(ai, 'getPendingDrafts').mockReturnValue(of([]));
+            vi.spyOn(ai, 'draftExamNote').mockReturnValue(of(noteDraft));
+        });
+
+        it('kaydedilmiş, kesinleşmemiş muayenede başlıkta görünür; kesinleşmişse görünmez', () => {
+            aiReady();
+            expect(entry()?.textContent).toContain('Notu alanlara ayır');
+
+            service.getExaminationForEditById.mockReturnValue(of(editVm({ status: 'Finalized' })));
+            cmp.reload();
+            fixture.detectChanges();
+            expect(entry()).toBeNull();
+        });
+
+        it('yan panelde açılır, bekleyen taslağa bakar; not muayene kimliğiyle gider', () => {
+            aiReady();
+            entry()!.click();
+
+            expect(TestBed.inject(AiPanelService).content()).toEqual(expect.objectContaining({ kind: 'custom', title: 'Notu alanlara ayır', owner: cmp }));
+            expect(ai.getPendingDrafts).toHaveBeenCalledWith('Examination', 'e1');
+
+            cmp.noteFlow.note.set('Sahip 2 gündür kusma diyor');
+            cmp.noteFlow.generate();
+            expect(ai.draftExamNote).toHaveBeenCalledWith('e1', 'Sahip 2 gündür kusma diyor');
+        });
+
+        it('formda kaydedilmemiş değişiklik varken kabul edilmez: önce kaydetmesi söylenir', () => {
+            const accept = vi.spyOn(ai, 'acceptDraft');
+
+            cmp.form.controls.plan.setValue('Yeni plan');
+            cmp.form.markAsDirty();
+            cmp.form.controls.plan.setValue('Yeni plan.');
+            cmp.noteFlow.generate();
+            cmp.acceptNote();
+
+            expect(accept).not.toHaveBeenCalled();
+            expect(cmp.noteFlow.problem()?.title).toBe('Önce formu kaydedin');
+        });
+
+        it('kabul: paneldeki alanlar muayeneye yazılır (varsayılan sona ekle), form yeniden okunur, şerit ve alan çipleri görünür', () => {
+            const accept = vi.spyOn(ai, 'acceptDraft').mockReturnValue(of({ ...noteDraft, status: 'Accepted', content: null, appliedRecordId: 'e1' }));
+            const panelHost = TestBed.createComponent(AiPanelComponent);
+
+            aiReady();
+            entry()!.click();
+            cmp.noteFlow.generate();
+            panelHost.detectChanges();
+            fixture.detectChanges();
+
+            cmp.acceptNote();
+            fixture.detectChanges();
+
+            expect(accept).toHaveBeenCalledWith('d1', { fields: { visitReason: '2 gündür kusma', plan: 'Sıvı tedavisi', weightKg: 4.2 }, replaceFields: [] });
+            expect(service.getExaminationForEditById).toHaveBeenCalledTimes(2);
+            expect(TestBed.inject(AiPanelService).content()).toBeNull();
+
+            const el = fixture.nativeElement as HTMLElement;
+
+            expect(el.querySelector('[data-testid="exam-ai-accepted"]')?.textContent).toContain('3 alan AI taslağından muayeneye eklendi.');
+            expect(el.querySelectorAll('[data-testid="ai-provenance-chip"]').length).toBe(3);
+            panelHost.destroy();
+        });
     });
 });

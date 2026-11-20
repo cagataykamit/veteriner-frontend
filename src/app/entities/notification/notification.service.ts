@@ -4,7 +4,7 @@ import type { Router } from '@angular/router';
 import { map, Observable, tap } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
-import { APPOINTMENT_REQUESTS_ROUTE, DATA_EXPORT_ROUTE, PORTAL_INBOX_ROUTE } from '@/app/core/routing/panel-navigation';
+import { APPOINTMENT_REQUESTS_ROUTE, DATA_EXPORT_ROUTE, PORTAL_INBOX_ROUTE, SETTINGS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { type PagedResultDto, type PagedVm, toPagedVm } from '@/app/entities/online-booking/models/online-booking.model';
 import { toOnlineBookingError } from '@/app/entities/online-booking/utils/online-booking-error.utils';
 
@@ -30,7 +30,11 @@ export enum UserNotificationType {
     /** Belgesi kesilmiş ücretin ödemesi iptal edildi; belge kendiliğinden iptal edilmez. */
     EDocumentPaymentVoided = 10,
     /** Ticari e-Fatura alıcı tarafından reddedildi; ücretler yeniden belgelenebilir. */
-    EDocumentRejectedByBuyer = 11
+    EDocumentRejectedByBuyer = 11,
+    /** Kliniğin bu ayki AI kredisinin %80'i kullanıldı; ayda bir kez, klinik yöneticilerine (`AI_HISTORY_SUMMARY_API_CONTRACT.md` §4a). */
+    AiQuotaNearlyUsed = 12,
+    /** Kliniğin AI kredisi bitti; yalnız AI özellikleri ay yenilenene kadar durur. */
+    AiQuotaExhausted = 13
 }
 
 export const USER_NOTIFICATION_TYPE_LABELS: Record<UserNotificationType, string> = {
@@ -45,7 +49,9 @@ export const USER_NOTIFICATION_TYPE_LABELS: Record<UserNotificationType, string>
     [UserNotificationType.EDocumentsDailySummary]: 'Gün sonu e-belge özeti',
     [UserNotificationType.EDocumentsAutoIssuePaused]: 'Otomatik e-belge durdu',
     [UserNotificationType.EDocumentPaymentVoided]: 'Ödemesi iptal edilen e-belge',
-    [UserNotificationType.EDocumentRejectedByBuyer]: 'Alıcı e-Faturayı reddetti'
+    [UserNotificationType.EDocumentRejectedByBuyer]: 'Alıcı e-Faturayı reddetti',
+    [UserNotificationType.AiQuotaNearlyUsed]: 'Yapay zekâ kredisi azaldı',
+    [UserNotificationType.AiQuotaExhausted]: 'Yapay zekâ kredisi bitti'
 };
 
 export interface UserNotificationVm {
@@ -83,6 +89,8 @@ export function notificationTargetUrl(
             return { commands: ['/panel/e-documents'] };
         case 'EDocumentSettings':
             return { commands: ['/panel/settings/e-documents'] };
+        case 'AiUsage':
+            return { commands: [SETTINGS_ROUTE] };
         default:
             return null;
     }

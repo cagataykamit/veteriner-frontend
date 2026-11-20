@@ -102,13 +102,16 @@ export const VetinityPreset = definePreset(Aura, {
         colorScheme: {
             light: {
                 primary: { color: '{primary.600}', contrastColor: '#ffffff', hoverColor: '{primary.700}', activeColor: '{primary.800}' },
-                text: { color: '{surface.900}', hoverColor: '{surface.950}', mutedColor: '{surface.600}', hoverMutedColor: '{surface.700}' }
+                text: { color: '{surface.900}', hoverColor: '{surface.950}', mutedColor: '{surface.600}', hoverMutedColor: '{surface.700}' },
+                /* Yapay zekâ tonu (`--p-ai-*`, Tailwind `ai`): yalnız AI taslağı işareti, başka yerde kullanılmaz (ux/ai-arayuz-tasarim.md). */
+                ai: { color: '#6d4fc2', background: '#f5f2ff', borderColor: '#c9bbf5' }
             },
             dark: {
                 /* Koyu yüzey Aura varsayılanı (zinc, nötr gri) kalır; slate (lacivert tonlu) kullanıcı tarafından istenmedi (2026-11-09). */
                 primary: { color: '{primary.400}', contrastColor: '#042f2e', hoverColor: '{primary.300}', activeColor: '{primary.200}' },
                 /* Aura yer tutucusu (surface.500) koyu alanda 4.07:1 kalıyordu; surface.400 ≈ 7:1 (H19). */
-                formField: { placeholderColor: '{surface.400}' }
+                formField: { placeholderColor: '{surface.400}' },
+                ai: { color: '#c4b5fd', background: '#1e1830', borderColor: '#4c3f78' }
             }
         }
     },

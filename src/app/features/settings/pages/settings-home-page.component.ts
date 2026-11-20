@@ -1,16 +1,20 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { SETTINGS_SECTIONS, visibleGroups } from '@/app/core/routing/panel-navigation';
+import { AiClinicUsageCardComponent } from '@/app/entities/ai/components/ai-clinic-usage-card.component';
 import { NavigationCardsComponent } from '@/app/shared/ui/navigation-cards/navigation-cards.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 
 @Component({
     selector: 'app-settings-home-page',
     standalone: true,
-    imports: [AppPageHeaderComponent, NavigationCardsComponent],
+    imports: [AppPageHeaderComponent, NavigationCardsComponent, AiClinicUsageCardComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Ayarlar" description="Hesap, klinik, iletişim ve tanım ayarları." />
+
+        <!-- Aktif kliniğin yapay zekâ kullanımı (AI-007); AI klinikte açık değilse görünmez. -->
+        <app-ai-clinic-usage-card class="block mb-6 empty:hidden" />
 
         @for (section of sections; track section.label) {
             <h5 class="mt-0 mb-3">{{ section.label }}</h5>

@@ -128,6 +128,7 @@ describe('online randevu servisleri', () => {
             queryParams: { requestId: 'q1' }
         });
         expect(notificationTargetUrl({ targetType: 'Appointment', targetId: 'a1' })).toEqual({ commands: ['/panel/appointments', 'a1'] });
+        expect(notificationTargetUrl({ targetType: 'AiUsage', targetId: 'c1' })).toEqual({ commands: ['/panel/settings'] });
         expect(notificationTargetUrl({ targetType: 'Bilinmeyen', targetId: 'x' })).toBeNull();
     });
 });

@@ -1,3 +1,4 @@
+import { mapAiProvenanceDtosToVm } from '@/app/entities/ai/data/ai.mapper';
 import { HttpParams } from '@angular/common/http';
 import type {
     CareInstructionCreateRequestDto,
@@ -17,7 +18,8 @@ export function mapCareInstructionDtoToVm(dto: CareInstructionDto): CareInstruct
         text: dto.text,
         createdAtUtc: dto.createdAtUtc,
         updatedAtUtc: dto.updatedAtUtc?.trim() || null,
-        rowVersion: dto.rowVersion
+        rowVersion: dto.rowVersion,
+        aiProvenance: mapAiProvenanceDtosToVm(dto.aiProvenance, dto.updatedAtUtc)
     };
 }
 

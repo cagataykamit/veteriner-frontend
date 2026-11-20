@@ -1,3 +1,4 @@
+import { mapAiProvenanceDtosToVm } from '@/app/entities/ai/data/ai.mapper';
 import { parseLabResultStatus } from '@/app/entities/lab-result/utils/lab-result-status.utils';
 import { HttpParams } from '@angular/common/http';
 import type {
@@ -241,7 +242,9 @@ export function mapExaminationDetailDtoToVm(dto: ExaminationDetailDto): Examinat
         finalizedByName: trimmedOrNull(dto.finalizedByName),
         rowVersion: trimmedOrNull(dto.rowVersion),
         createdAtUtc: canonicalDetailCreatedAtUtc(dto),
-        updatedAtUtc: canonicalDetailUpdatedAtUtc(dto)
+        updatedAtUtc: canonicalDetailUpdatedAtUtc(dto),
+        // Muayenenin güncellenme zamanı kesinleştirme gibi işlerle de değişir: "kabulden sonra düzenlendi" çıkarılmaz.
+        aiProvenance: mapAiProvenanceDtosToVm(dto.aiProvenance)
     };
 }
 

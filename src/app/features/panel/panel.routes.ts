@@ -28,6 +28,7 @@ export default [
     { path: 'sales-partners', loadChildren: () => import('../sales-partners/routes/sales-partners.routes') },
     { path: 'trial-metrics', loadChildren: () => import('../trial-metrics/routes/trial-metrics.routes') },
     { path: 'duplicate-payments', loadChildren: () => import('../duplicate-payments/routes/duplicate-payments.routes') },
+    { path: 'ai-admin', loadChildren: () => import('../ai-admin/routes/ai-admin.routes') },
     { path: 'clinic-addresses', loadChildren: () => import('../clinic-addresses/routes/clinic-addresses.routes') },
     { path: 'custom-development-requests', loadChildren: () => import('../custom-development-admin/routes/custom-development-admin.routes') },
     {

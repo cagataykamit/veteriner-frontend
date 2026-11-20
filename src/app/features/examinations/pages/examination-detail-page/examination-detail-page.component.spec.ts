@@ -1,5 +1,5 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import type { Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -103,7 +103,7 @@ describe('ExaminationDetailPageComponent — kayıt sonrası toast', () => {
                 { provide: StockBatchService, useValue: { getByProduct: () => EMPTY } },
                 { provide: VaccinationsService, useValue: { getVaccinations: () => EMPTY } },
                 { provide: TreatmentsService, useValue: { getTreatments: () => EMPTY } },
-                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => true, getClinicId: () => 'c1' } },
                 { provide: RecentlyViewedService, useValue: recentlyViewed },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
             ]
@@ -131,6 +131,20 @@ describe('ExaminationDetailPageComponent — kayıt sonrası toast', () => {
 
         expect(toastAdd).not.toHaveBeenCalled();
         expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('AI-001 ile doldurulan muayenede kaydın başında iz satırı; hasta sahibine açıklama bölümü bu muayeneyi okur', () => {
+        const aiProvenance = [{ draftId: 'd1', feature: 'ExamNoteStructure', edited: true, acceptedByName: 'Dr. Ayşe Kaya', acceptedAtUtc: '2026-11-19T11:36:00Z' }];
+
+        vi.spyOn(TestBed.inject(ExaminationsService), 'getExaminationById').mockReturnValue(of({ ...detailVm, aiProvenance }));
+        const fixture = TestBed.createComponent(ExaminationDetailPageComponent);
+
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(el.querySelector('[data-testid="ai-provenance-note"]')?.textContent).toContain('Serbest nottan AI taslağıyla dolduruldu; Dr. Ayşe Kaya 19.11.2026 14:36 tarihinde kabul etti.');
+        expect(el.querySelector('[data-testid="ai-provenance-chip"]')?.textContent).toContain('AI taslağından · düzenlendi');
+        TestBed.inject(HttpTestingController).expectOne('http://api.test/api/v1/examinations/e1/owner-explanations');
     });
 });
 
