@@ -153,7 +153,7 @@ describe('DateInputComponent', () => {
         input().focus();
         input().click();
         fixture.detectChanges();
-        await wait(400);
+        await expect.poll(() => panel()?.querySelector('button') ?? null).not.toBeNull();
         const today = [...panel()!.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Bugün')!;
 
         expect(today).toBeDefined();

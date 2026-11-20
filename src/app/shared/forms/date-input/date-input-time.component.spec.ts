@@ -25,17 +25,18 @@ describe('DateInputComponent — saat alanı (klinik çalışma saatleri, beklem
     const panel = () => document.querySelector('.p-datepicker-panel') as HTMLElement | null;
     const control = () => fixture.componentInstance.control;
 
+    // Olumlu beklentiler koşulla beklenir (yükte kararlı); kısa sabit bekleme yalnız "değişmemeli" denetimlerinde kalır.
     const open = async (value: string) => {
         control().setValue(value);
         await fixture.whenStable();
         await userEvent.click(input());
-        await wait(300);
-        expect(panel()).not.toBeNull();
+        await expect.poll(() => input().getAttribute('aria-expanded')).toBe('true');
+        await expect.poll(() => panel()).not.toBeNull();
     };
 
-    const arrow = async (label: string) => {
+    const arrow = async (label: string, expected: string) => {
         await userEvent.click(panel()!.querySelector(`button[aria-label="${label}"]`) as HTMLElement);
-        await wait(50);
+        await expect.poll(() => control().value).toBe(expected);
     };
 
     beforeEach(async () => {
@@ -74,26 +75,23 @@ describe('DateInputComponent — saat alanı (klinik çalışma saatleri, beklem
         fixture.componentInstance.defaultTime.set('09:00');
         await open('');
         await userEvent.keyboard('{Enter}');
-        await wait(50);
-        expect(control().value).toBe('09:00');
+        await expect.poll(() => control().value).toBe('09:00');
     });
 
     it('boş alanda Enter panelde görünen saati seçer ve paneli kapatır', async () => {
         await open('');
         await userEvent.keyboard('{Enter}');
-        await wait(300);
-        expect(control().value).toBe('12:00');
-        expect(input().value).toBe('12:00');
+        await expect.poll(() => control().value).toBe('12:00');
+        await expect.poll(() => input().value).toBe('12:00');
         // Kapanma animasyonu yük altında sürebilir: panel ya kalkmış ya da çıkış hâlinde.
-        expect(panel() === null || panel()!.hasAttribute('data-leave-active')).toBe(true);
+        await expect.poll(() => panel() === null || panel()!.hasAttribute('data-leave-active')).toBe(true);
     });
 
     it('oklarla ayarlanan saat her tıklamada forma ve alana yazılır; Enter onu korur', async () => {
         await open('');
-        await arrow('Sonraki saat');
-        await arrow('Sonraki dakika');
-        expect(control().value).toBe('13:01');
-        expect(input().value).toBe('13:01');
+        await arrow('Sonraki saat', '13:00');
+        await arrow('Sonraki dakika', '13:01');
+        await expect.poll(() => input().value).toBe('13:01');
         await userEvent.keyboard('{Enter}');
         await wait(50);
         expect(control().value).toBe('13:01');
@@ -111,11 +109,9 @@ describe('DateInputComponent — saat alanı (klinik çalışma saatleri, beklem
         await fixture.whenStable();
         await userEvent.click(input());
         await userEvent.keyboard('1300');
-        await wait(50);
-        expect(input().value).toBe('13:00');
+        await expect.poll(() => input().value).toBe('13:00');
         await userEvent.tab();
-        await wait(50);
-        expect(control().value).toBe('13:00');
+        await expect.poll(() => control().value).toBe('13:00');
         expect(input().value).toBe('13:00');
     });
 

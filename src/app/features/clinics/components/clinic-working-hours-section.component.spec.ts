@@ -14,8 +14,6 @@ import { ClinicWorkingHoursSectionComponent } from './clinic-working-hours-secti
 const monday: ClinicWorkingHourVm = { dayOfWeek: 1, dayLabel: 'Pazartesi', isClosed: false, opensAt: null, closesAt: null, breakStartsAt: null, breakEndsAt: null };
 
 describe('ClinicWorkingHoursSectionComponent — saat alanları', () => {
-    const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-
     const render = async () => {
         TestBed.configureTestingModule({
             imports: [ClinicWorkingHoursSectionComponent],
@@ -51,21 +49,20 @@ describe('ClinicWorkingHoursSectionComponent — saat alanları', () => {
     it('boş alan alanına uygun saatten açılır, Enter o saati yazar; kaydet açılır', async () => {
         const { el } = await render();
 
-        const pick = async (id: string) => {
+        // Sabit bekleme yok: panelin açıldığını (aria-expanded) ve değerin yazıldığını koşulla bekler; yükte de kararlı.
+        const pick = async (id: string, expected: string) => {
             const field = el.querySelector<HTMLInputElement>(`#${id}`)!;
 
             await userEvent.click(field);
-            await wait(300);
+            await expect.poll(() => field.getAttribute('aria-expanded')).toBe('true');
             await userEvent.keyboard('{Enter}');
-            await wait(300);
-
-            return field.value;
+            await expect.poll(() => field.value).toBe(expected);
         };
 
-        expect(await pick('whOpens0')).toBe('09:00');
-        expect(await pick('whCloses0')).toBe('18:00');
-        expect(await pick('whBreakStart0')).toBe('12:00');
-        expect(await pick('whBreakEnd0')).toBe('13:00');
-        expect(el.querySelector<HTMLButtonElement>('button[severity="secondary"]')?.disabled).toBe(false);
+        await pick('whOpens0', '09:00');
+        await pick('whCloses0', '18:00');
+        await pick('whBreakStart0', '12:00');
+        await pick('whBreakEnd0', '13:00');
+        await expect.poll(() => el.querySelector<HTMLButtonElement>('button[severity="secondary"]')?.disabled).toBe(false);
     });
 });
