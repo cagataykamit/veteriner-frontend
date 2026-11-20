@@ -398,6 +398,8 @@ export const ApiEndpoints = {
         cashSummary: () => `/api/v1/reports/cash-summary`,
         /** Gün sonu açık işler (`Visits.Read`); `from`, `to`, tek klinik zorunlu. */
         endOfDayOpenItems: () => `/api/v1/reports/end-of-day/open-items`,
+        /** Rapor Merkezi ana ekran özeti (ADR-052); `period` = today | week | month, aktif klinik; bölüm izinsizse null (`REPORT_HUB_SUMMARY_API_CONTRACT.md`). */
+        hubSummary: () => `/api/v1/reports/hub-summary`,
         /** İşletme performansı özeti (REPORT-008). */
         performanceSummary: () => `/api/v1/reports/performance-summary`,
         performanceBreakdowns: () => `/api/v1/reports/performance-breakdowns`,
