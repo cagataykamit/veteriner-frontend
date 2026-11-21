@@ -49,6 +49,16 @@ describe('VitalMeasurementsService', () => {
             });
         }));
 
+    it('sunucu zamanı Z olmadan döndürürse UTC kabul edilir (yerel saat sanılıp 3 saat kaymaz)', () =>
+        new Promise<void>((done) => {
+            service.getSeries({ petId: 'p1' }).subscribe((series) => {
+                expect(series.points[0].time).toBe(Date.parse('2026-11-21T10:49:12Z'));
+                expect(series.points[0].measuredAtUtc).toBe('2026-11-21T10:49:12.000Z');
+                done();
+            });
+            http.expectOne((r) => r.url === `${BASE}/series`).flush({ points: [{ source: 'VitalMeasurement', sourceId: 'm1', clinicId: 'c1', measuredAtUtc: '2026-11-21T10:49:12', temperatureC: 39.1 }], truncated: false, omittedSources: [] });
+        }));
+
     it('iptal edilenler: listeden includeCancelled ile okunur, yalnız iptal edilmişler alınır', () =>
         new Promise<void>((done) => {
             service.getCancelled({ petId: 'p1', dateFromUtc: '2026-11-18T06:00:00Z' }).subscribe((points) => {

@@ -19,9 +19,20 @@ import type {
     VitalSeriesVm,
     VitalValues
 } from '@/app/entities/vital-measurement/models/vital-measurement-vm.model';
+import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 
 /** İptal edilenler listesi tek sayfada okunur (sözleşme üst sınırı). */
 const CANCELLED_PAGE_SIZE = 200;
+
+/**
+ * Sunucu UTC anını bazen `Z` olmadan döndürür; tarayıcı bunu yerel saat sanıp 3 saat kaydırır.
+ * An burada bir kez çözülür: `time` grafik ekseni, `measuredAtUtc` `Z`li yazımdır (PUT'a aynen geri gider).
+ */
+function mapInstant(value: string): { measuredAtUtc: string; time: number } {
+    const parsed = parseUtcApiInstantIsoString(value);
+
+    return parsed ? { measuredAtUtc: parsed.toISOString(), time: parsed.getTime() } : { measuredAtUtc: value, time: Number.NaN };
+}
 
 function mapValues(dto: Partial<Record<keyof VitalValues, number | null>>): VitalValues {
     return {
@@ -38,8 +49,7 @@ function mapSeriesPoint(dto: VitalSeriesPointDto): VitalPointVm {
         key: `${dto.source}:${dto.sourceId}`,
         source: dto.source,
         sourceId: dto.sourceId,
-        measuredAtUtc: dto.measuredAtUtc,
-        time: Date.parse(dto.measuredAtUtc),
+        ...mapInstant(dto.measuredAtUtc),
         hospitalizationId: dto.hospitalizationId ?? null,
         examinationId: dto.examinationId ?? null,
         cancelled: false
@@ -60,8 +70,7 @@ function mapCancelledItem(dto: VitalMeasurementListItemDto): VitalPointVm {
         key: `VitalMeasurement:${dto.id}`,
         source: 'VitalMeasurement',
         sourceId: dto.id,
-        measuredAtUtc: dto.measuredAtUtc,
-        time: Date.parse(dto.measuredAtUtc),
+        ...mapInstant(dto.measuredAtUtc),
         hospitalizationId: dto.hospitalizationId ?? null,
         examinationId: dto.examinationId ?? null,
         cancelled: true
@@ -77,7 +86,7 @@ export function mapVitalMeasurementDetailDtoToVm(dto: VitalMeasurementDetailDto)
     return {
         ...mapValues(dto),
         id: dto.id,
-        measuredAtUtc: dto.measuredAtUtc,
+        measuredAtUtc: mapInstant(dto.measuredAtUtc).measuredAtUtc,
         note: dto.note?.trim() || null,
         rowVersion: dto.rowVersion,
         hospitalizationId: dto.hospitalizationId ?? null,

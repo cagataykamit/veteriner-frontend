@@ -302,6 +302,7 @@ describe('VitalMeasurementsSectionComponent', () => {
         await settle();
 
         expect(service.getCancelled).toHaveBeenCalledWith({ petId: 'p1', dateFromUtc: ADMITTED });
+        expect(text('vital-row')).toContain('38,5');
         expect(root().querySelectorAll('[data-testid="vital-row"]')).toHaveLength(4);
 
         await selectPoint(cancelledPoint);

@@ -40,7 +40,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { messageFromHttpError, panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { dateTimeYearRangeValidator } from '@/app/shared/utils/date-input-validation.utils';
-import { formatUtcIsoAsLocalDateTimeDisplay, fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay, fromIstanbulDateTimeLocalInputToUtcIso, parseUtcApiInstantIsoString, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
 
 type VitalRange = '7d' | '1y' | 'all';
 
@@ -117,15 +117,15 @@ function vitalInputText(value: number | null): string {
                                 <span class="text-muted-color"> · Ölçtüğünüz değerleri yazın; boş kalanlar kaydedilmez. Enter kaydeder.</span>
                             }
                         </p>
-                        <div class="grid grid-cols-2 @2xl:grid-cols-4 @5xl:grid-cols-[repeat(4,minmax(0,1fr))_15rem_auto] gap-3 items-start">
+                        <div class="grid grid-cols-2 @2xl:grid-cols-4 @5xl:grid-cols-[repeat(4,minmax(0,1fr))_14rem_auto] gap-3 items-start">
                             @for (h of headers(); track h.def.key) {
                                 <div class="min-w-0">
-                                    <label [for]="uid + '-' + h.def.key" class="block text-sm font-medium text-muted-color mb-2">{{ h.def.label }} ({{ h.def.unit }})</label>
+                                    <label [for]="uid + '-' + h.def.key" class="block truncate text-sm font-medium text-muted-color mb-2" [attr.title]="h.def.label + ' (' + h.def.unit + ')'">{{ h.def.label }} <span class="font-normal">({{ h.def.unit }})</span></label>
                                     <input #valueInput [id]="uid + '-' + h.def.key" type="text" inputmode="decimal" autocomplete="off" class="w-full p-inputtext p-component tabular-nums" [formControlName]="h.def.key" [attr.data-testid]="'vital-input-' + h.def.key" />
                                     @if (valueError(h.def.key); as e) {
                                         <small class="text-danger block">{{ e }}</small>
                                     } @else if (!editing() && h.current) {
-                                        <small class="text-muted-color block tabular-nums">son {{ h.currentText }} · {{ h.current.measuredAtUtc | trDateTime }}</small>
+                                        <small class="text-muted-color block truncate tabular-nums" [attr.title]="h.current.measuredAtUtc | trDateTime">son {{ h.currentText }} · {{ shortWhen(h.current.measuredAtUtc) }}</small>
                                     }
                                 </div>
                             }
@@ -351,7 +351,7 @@ export class VitalMeasurementsSectionComponent {
     protected readonly noteMax = VITAL_NOTE_MAX;
     protected readonly lateReasonMax = VITAL_LATE_REASON_MAX;
     protected readonly backdateDays = VITAL_BACKDATE_DAYS;
-    protected readonly rangeOptions: ReadonlyArray<{ label: string; value: VitalRange }> = [
+    protected readonly rangeOptions: { label: string; value: VitalRange }[] = [
         { label: 'Son 7 gün', value: '7d' },
         { label: '1 yıl', value: '1y' },
         { label: 'Tümü', value: 'all' }
@@ -415,10 +415,13 @@ export class VitalMeasurementsSectionComponent {
         return key ? (this.rows().find((r) => r.key === key) ?? null) : null;
     });
 
+    /** Yatış anı; sunucudan `Z` olmadan gelebildiği için UTC olarak çözülür. */
+    private readonly admittedAt = computed(() => parseUtcApiInstantIsoString(this.admittedAtUtc()));
+
     /** Ortak zaman ekseni: yatışta yatış anından başlar; açık kayıtlarda okuma anına kadar uzar. */
     protected readonly domain = computed<readonly [number, number]>(() => {
         const pts = this.points();
-        const admittedAt = this.admittedAtUtc() ? Date.parse(this.admittedAtUtc()!) : Number.NaN;
+        const admittedAt = this.admittedAt()?.getTime() ?? Number.NaN;
         const first = pts.length ? pts[0].time : this.loadedAt();
         const last = pts.length ? pts[pts.length - 1].time : this.loadedAt();
         const from = this.mode() === 'hospitalization' && !Number.isNaN(admittedAt) ? Math.min(admittedAt, first) : first;
@@ -682,6 +685,11 @@ export class VitalMeasurementsSectionComponent {
         return value === null ? '—' : formatVitalValue(def, value);
     }
 
+    /** Giriş kutusu ipucu için kısa zaman: "21.11 13:47" (yıl, ipucu başlığında tam yazılır). */
+    protected shortWhen(utcIso: string): string {
+        return formatUtcIsoAsLocalDateTimeDisplay(utcIso).replace(/\.\d{4}/, '');
+    }
+
     protected summaryOf(point: VitalPointVm): string {
         return vitalSummary(point);
     }
@@ -731,7 +739,7 @@ export class VitalMeasurementsSectionComponent {
     }
 
     private loadCancelled(): void {
-        const admittedAt = this.mode() === 'hospitalization' ? this.admittedAtUtc() : null;
+        const admittedAt = this.mode() === 'hospitalization' ? (this.admittedAt()?.toISOString() ?? null) : null;
         const days = this.mode() === 'pet' ? RANGE_DAYS[this.range()] : null;
         const dateFromUtc = admittedAt ?? (days === null ? null : new Date(Date.now() - days * DAY_MS).toISOString());
 

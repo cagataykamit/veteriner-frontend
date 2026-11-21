@@ -61,6 +61,8 @@ describe('vital ölçümü kuralları', () => {
         expect(measuredAtError('2026-11-18T05:00:00Z', NOW, '2026-11-18T06:00:00Z')).toBe('Ölçüm zamanı yatıştan önce olamaz.');
         expect(measuredAtError('2026-11-18T06:00:00Z', NOW, '2026-11-18T06:00:00Z')).toBeNull();
         expect(measuredAtError('bozuk', NOW, null)).toBe('Geçerli bir ölçüm zamanı girin.');
+        // Yatış anı sunucudan Z olmadan gelir; UTC sayılır (yerel sanılırsa sınır 3 saat geriye kayardı).
+        expect(measuredAtError('2026-11-18T05:30:00Z', NOW, '2026-11-18T06:00:00')).toBe('Ölçüm zamanı yatıştan önce olamaz.');
     });
 
     it('özet metni zaman çizelgesiyle aynı biçimdedir; boş değer yazılmaz', () => {

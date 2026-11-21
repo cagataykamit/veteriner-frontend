@@ -1,4 +1,5 @@
 import { VITAL_SIGNS, type VitalSignDefinition, type VitalValues } from '@/app/entities/vital-measurement/models/vital-measurement-vm.model';
+import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 
 /** Sözleşme §1, D5, D7: not üst sınırı, geç kayıt penceresi, saat kayması payı, geç kayıt gerekçesi uzunluğu. */
 export const VITAL_NOTE_MAX = 500;
@@ -72,7 +73,7 @@ export function hasAnyVitalValue(values: VitalValues): boolean {
  * `nowMs` çağıran tarafından verilir (test edilebilirlik).
  */
 export function measuredAtError(measuredAtUtc: string, nowMs: number, admittedAtUtc: string | null): string | null {
-    const at = Date.parse(measuredAtUtc);
+    const at = parseUtcApiInstantIsoString(measuredAtUtc)?.getTime() ?? Number.NaN;
 
     if (Number.isNaN(at)) {
         return 'Geçerli bir ölçüm zamanı girin.';
@@ -86,7 +87,8 @@ export function measuredAtError(measuredAtUtc: string, nowMs: number, admittedAt
         return `Ölçüm zamanı en çok ${VITAL_BACKDATE_DAYS} gün geriye girilebilir.`;
     }
 
-    const admittedAt = admittedAtUtc ? Date.parse(admittedAtUtc) : Number.NaN;
+    // Yatış anı sunucudan `Z` olmadan gelebilir; UTC olarak çözülür.
+    const admittedAt = parseUtcApiInstantIsoString(admittedAtUtc)?.getTime() ?? Number.NaN;
 
     return !Number.isNaN(admittedAt) && at < admittedAt ? 'Ölçüm zamanı yatıştan önce olamaz.' : null;
 }
