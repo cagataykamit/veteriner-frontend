@@ -41,6 +41,8 @@ const FIELD_LABELS: Record<string, string> = {
     HeartRateBpm: 'Nabız (/dk)',
     RespiratoryRatePerMin: 'Solunum (/dk)',
     VitalsMeasuredAtUtc: 'Vital ölçüm zamanı',
+    MeasuredAtUtc: 'Ölçüm zamanı',
+    Note: 'Not',
     Status: 'Durum',
     FinalizedAtUtc: 'Kesinleşme zamanı',
     FinalizedByUserId: 'Kesinleştiren',

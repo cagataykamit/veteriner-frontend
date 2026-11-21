@@ -14,6 +14,7 @@ import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/ap
 import type { ExaminationDetailVm, ExaminationFinalizeResultVm, ExaminationRelatedSummaryVm } from '@/app/entities/examination/models/examination-vm.model';
 import { ExaminationAddendaSectionComponent } from '@/app/features/examinations/components/examination-addenda-section.component';
 import { AdministrationsSectionComponent } from '@/app/entities/administration/components/administrations-section.component';
+import { VitalMeasurementsSectionComponent } from '@/app/entities/vital-measurement/components/vital-measurements-section.component';
 import { ExaminationPatientHeaderComponent } from '@/app/features/examinations/components/examination-patient-header.component';
 import { ExaminationPatientContextComponent } from '@/app/features/examinations/components/examination-patient-context.component';
 import { ExaminationProceduresSectionComponent } from '@/app/features/examinations/components/examination-procedures-section.component';
@@ -93,6 +94,7 @@ const RECORD_TEXT_SECTIONS: readonly {
         AppStatusTagComponent,
         ExaminationAddendaSectionComponent,
         AdministrationsSectionComponent,
+        VitalMeasurementsSectionComponent,
         ExaminationFinalizeChecklistComponent,
         ExaminationFinalizeDialogComponent,
         ExaminationPatientContextComponent,
@@ -293,6 +295,11 @@ const RECORD_TEXT_SECTIONS: readonly {
 
                         @if (e.status === 'Finalized') {
                             <app-examination-addenda-section [examinationId]="e.id" [canAdd]="canAddAddendum()" />
+                        }
+
+                        <!-- Yeniden ölçümler ve eğilim (HOSP-004); muayenenin ilk ölçümü kayıttaki vital satırında kalır. -->
+                        @if (e.petId?.trim()) {
+                            <app-vital-measurements-section [petId]="e.petId!" [examinationId]="e.id" [examinationFinalized]="e.status === 'Finalized'" />
                         }
 
                         <!-- AI-003: hasta sahibine açıklama; kesinleşmiş muayenede de hazırlanır (muayene kaydını değiştirmez). -->

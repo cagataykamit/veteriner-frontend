@@ -17,6 +17,7 @@ import type { Mock } from 'vitest';
 import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
 import { PetDetailPageComponent } from './pet-detail-page.component';
 import { ImportedHistoryService } from '@/app/entities/imported-history/services/imported-history.service';
+import { VitalMeasurementsService } from '@/app/entities/vital-measurement/services/vital-measurements.service';
 import { AiService } from '@/app/entities/ai/services/ai.service';
 import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
 
@@ -111,6 +112,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
                 { provide: RecentlyViewedService, useValue: { record: recordRecent } },
                 { provide: AiService, useValue: aiService },
                 { provide: ImportedHistoryService, useValue: { getPetClinicalRecords: () => of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }) } },
+                { provide: VitalMeasurementsService, useValue: { getSeries: () => of({ points: [], truncated: false, examinationsOmitted: false }) } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: AppointmentsService, useValue: { getAppointments: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
                 {
