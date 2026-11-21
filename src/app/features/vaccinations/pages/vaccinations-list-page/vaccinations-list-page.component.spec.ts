@@ -33,7 +33,7 @@ describe('VaccinationsListPageComponent — karttan gelen süzgeç bağlantısı
 
         fixture.detectChanges();
 
-        return { getVaccinations, navigate, cmp: fixture.componentInstance };
+        return { getVaccinations, navigate, cmp: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
     };
 
     beforeEach(() => sessionStorage.removeItem(STATE_KEY));
@@ -95,6 +95,12 @@ describe('VaccinationsListPageComponent — karttan gelen süzgeç bağlantısı
         expect(args.onlyOverdue).toBe(true);
         expect(args.status).toBe('0');
         expect(args.fromDate).toBeUndefined();
+    });
+
+    it('gecikmiş bandı son 1 ay kuralını söyler (kural sunucuda, VaccinationDueRule)', () => {
+        const { el } = setup({ overdue: 'true' });
+
+        expect(el.querySelector('[role="status"]')?.textContent).toContain('son 1 ay içinde vadesi geçmiş');
     });
 });
 

@@ -261,7 +261,7 @@ export const REPORT_HUB_COPY = {
         endOfDay: (n: number) => `${n} işin ücreti bugün kapanmadı`,
         endOfDayHint: 'Gün kapanmadan bakın · Gün sonu',
         endOfDayAction: 'Gün sonunu aç',
-        overdueVaccinations: (n: number) => `${n} aşının zamanı geçti`,
+        overdueVaccinations: (n: number) => `${n} aşının zamanı son 1 ayda geçti`,
         overdueVaccinationsHint: 'Sahiplerine hatırlatın · Aşılar',
         lowStock: (n: number) => `${n} üründe stok asgari seviyenin altında`,
         lowStockHint: 'Sipariş zamanı · Stok durumu'
