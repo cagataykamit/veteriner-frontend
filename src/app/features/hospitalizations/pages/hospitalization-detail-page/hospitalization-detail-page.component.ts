@@ -9,6 +9,7 @@ import { DialogModule } from 'primeng/dialog';
 import { DialogUnsavedChangesDirective } from '@/app/shared/ui/unsaved-changes/dialog-unsaved-changes.directive';
 import { DialogFocusReturnDirective } from '@/app/shared/ui/dialog/dialog-focus-return.directive';
 import { CareInstructionsSectionComponent } from '@/app/entities/care-instruction/components/care-instructions-section.component';
+import { VitalMeasurementsSectionComponent } from '@/app/entities/vital-measurement/components/vital-measurements-section.component';
 import type { HospitalizationDetailVm } from '@/app/entities/hospitalization/models/hospitalization-vm.model';
 import { HospitalizationsService } from '@/app/entities/hospitalization/services/hospitalizations.service';
 import { type HospitalizationDischargeFieldErrors, parseHospitalizationDischargeHttpError } from '@/app/entities/hospitalization/utils/hospitalization-upsert-validation-parse.utils';
@@ -58,6 +59,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         AppErrorStateComponent,
         DateInputComponent,
         CareInstructionsSectionComponent,
+        VitalMeasurementsSectionComponent,
         ReasonConfirmDialogComponent,
         TrDateTimePipe,
         FormSubmitDirective,
@@ -177,8 +179,11 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                 </app-detail-action-bar>
             }
 
-            <!-- Satır ızgarası: yatış notları | taburcu notu (8/4, eşit yükseklik); bakım talimatları tam genişlik. -->
+            <!-- Satır ızgarası: vital ölçümleri tam genişlik; yatış notları | taburcu notu (8/4, eşit yükseklik); bakım talimatları tam genişlik. -->
             <div class="@container flex flex-col gap-4">
+                @if (r.petId) {
+                    <app-vital-measurements-section [petId]="r.petId!" [hospitalizationId]="r.id" [admittedAtUtc]="r.admittedAtUtc" [entryClosed]="!r.isActive" />
+                }
                 <div class="grid grid-cols-12 gap-4">
                     <div class="card mb-0 h-full min-w-0 col-span-12" [class.@4xl:col-span-8]="!!r.dischargeNote">
                         <h5 class="mt-0 mb-3">Yatış notları</h5>

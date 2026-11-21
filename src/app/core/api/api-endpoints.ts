@@ -561,6 +561,16 @@ export const ApiEndpoints = {
         /** GET; PUT = metin düzeltme (`rowVersion` zorunlu). */
         byId: (id: string) => `/api/v1/care-instructions/${encodeURIComponent(id)}`
     },
+    vitalMeasurements: {
+        /** GET (Query: `petId` zorunlu, `clinicId`, `hospitalizationId`, `examinationId`, `dateFromUtc`, `dateToUtc`, `includeCancelled`, `page`, `pageSize`; en yeni üstte) ve POST. */
+        list: () => `/api/v1/vital-measurements`,
+        /** GET eğilim (Query: `petId` zorunlu, `clinicId`, `hospitalizationId`, `fromUtc`, `toUtc`, `limit`); vital ölçümleri ile muayene vitalleri birleşik, artan zaman. */
+        series: () => `/api/v1/vital-measurements/series`,
+        /** GET; PUT = değer/zaman/not düzeltme (`rowVersion` zorunlu). */
+        byId: (id: string) => `/api/v1/vital-measurements/${encodeURIComponent(id)}`,
+        /** POST `{ reason, rowVersion }`: gerekçeli iptal. */
+        cancel: (id: string) => `/api/v1/vital-measurements/${encodeURIComponent(id)}/cancel`
+    },
     clinicalTerms: {
         /** GET (Query: `kind`, `search`, `includeInactive`, `page`, `pageSize`) ve POST `{ kind, name }`. */
         list: () => `/api/v1/clinical-terms`,

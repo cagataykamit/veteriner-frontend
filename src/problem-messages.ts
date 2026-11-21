@@ -6,6 +6,7 @@ import { HOSPITALIZATION_PANEL_PROBLEM_MESSAGES } from '@/app/entities/hospitali
 import { LAB_RESULT_PANEL_PROBLEM_MESSAGES } from '@/app/entities/lab-result/utils/lab-result-error.utils';
 import { VACCINATION_PANEL_PROBLEM_MESSAGES } from '@/app/entities/vaccination/utils/vaccination-error.utils';
 import { VISIT_PANEL_PROBLEM_MESSAGES } from '@/app/entities/visit/utils/visit-error.utils';
+import { VITAL_MEASUREMENT_PANEL_PROBLEM_MESSAGES } from '@/app/entities/vital-measurement/utils/vital-measurement-error.utils';
 import { OWNER_PORTAL_PROBLEM_MESSAGES } from '@/app/features/clients/utils/owner-portal-error.utils';
 import { REMINDER_PANEL_PROBLEM_MESSAGES } from '@/app/features/reminders/utils/reminder-error.utils';
 import { SALE_PANEL_PROBLEM_MESSAGES } from '@/app/features/sales/utils/sale-error.utils';
@@ -26,6 +27,7 @@ export function registerPanelProblemMessages(): void {
         SALE_PANEL_PROBLEM_MESSAGES,
         LAB_RESULT_PANEL_PROBLEM_MESSAGES,
         HOSPITALIZATION_PANEL_PROBLEM_MESSAGES,
+        VITAL_MEASUREMENT_PANEL_PROBLEM_MESSAGES,
         EXAMINATION_FINALIZE_PROBLEM_MESSAGES,
         OWNER_PORTAL_PROBLEM_MESSAGES
     ]);

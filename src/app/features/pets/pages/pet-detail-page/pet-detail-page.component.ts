@@ -7,6 +7,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { EXAMINATIONS_READ_CLAIM, IMAGING_READ_CLAIM, PETS_UPDATE_CLAIM, VACCINATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { PetImagingSectionComponent } from '@/app/entities/imaging/components/pet-imaging-section.component';
+import { VitalMeasurementsSectionComponent } from '@/app/entities/vital-measurement/components/vital-measurements-section.component';
 import { PetImportedRecordsSectionComponent } from '@/app/entities/imported-history/components/pet-imported-records-section.component';
 import { PetCardHeaderComponent } from '@/app/features/pets/components/pet-card-header.component';
 import { PetCardTimelineComponent } from '@/app/features/pets/components/pet-card-timeline.component';
@@ -53,6 +54,7 @@ import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
         PetCardTimelineComponent,
         PetStatusDialogComponent,
         PetImagingSectionComponent,
+        VitalMeasurementsSectionComponent,
         PetImportedRecordsSectionComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
@@ -113,6 +115,9 @@ import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
                         <app-pet-todo-panel [view]="todo()" [retryable]="true" (retry)="reloadOpenItems()" />
                     </div>
                 </div>
+
+                <!-- Vital ve kilo eğilimi (HOSP-004); buradan eklenen ölçüm yatışa ya da muayeneye bağlı değildir. -->
+                <app-vital-measurements-section [petId]="p.id" [entryClosed]="p.status === 'Deceased'" />
 
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 @4xl:col-span-8 min-w-0 flex flex-col gap-4">

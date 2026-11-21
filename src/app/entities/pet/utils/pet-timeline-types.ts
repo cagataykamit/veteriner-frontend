@@ -22,6 +22,8 @@ export const PET_TIMELINE_TYPES: ReadonlyArray<PetTimelineTypeDefinition> = [
     { value: 'Hospitalization', label: 'Yatış', icon: 'pi-building', detailPath: '/panel/hospitalizations' },
     { value: 'Administration', label: 'Uygulama', icon: 'pi-box', detailPath: null },
     { value: 'Imaging', label: 'Görüntüleme', icon: 'pi-image', detailPath: '/panel/imaging' },
+    // Vital ölçümünün ayrı detay sayfası yok; hasta kartındaki ve yatış detayındaki eğilim bölümünde görünür.
+    { value: 'VitalMeasurement', label: 'Vital ölçümü', icon: 'pi-heart', detailPath: null },
     // Eski programdan aktarılan salt okunur kayıt (ADR-048 T1); ayrı detay sayfası yok, hasta sayfasındaki bölümde tam metni görünür.
     { value: 'ImportedClinicalRecord', label: 'Eski program kaydı', icon: 'pi-history', detailPath: null }
 ];
