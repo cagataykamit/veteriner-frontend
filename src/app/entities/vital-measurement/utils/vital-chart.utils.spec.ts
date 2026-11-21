@@ -34,4 +34,10 @@ describe('vital grafik yardımcıları', () => {
         expect(months.map((t) => t.label)).toEqual(['Oca 2026', 'Nis', 'Tem', 'Eki']);
         expect(months[0].time).toBe(Date.parse('2025-12-31T21:00:00Z'));
     });
+
+    it('aralığa hiçbir işaret düşmüyorsa başlangıç anını yazar', () => {
+        const from = Date.parse('2026-11-21T10:48:00Z');
+
+        expect(timeTicks(from, from + 3 * 60_000)).toEqual([{ time: from, label: '13:48' }]);
+    });
 });

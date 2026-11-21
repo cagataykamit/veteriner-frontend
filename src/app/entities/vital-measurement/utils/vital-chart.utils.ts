@@ -79,5 +79,12 @@ export function timeTicks(from: number, to: number): TimeTick[] {
         );
     }
 
+    // Aralığa hiçbir saat/gün/ay başı düşmüyorsa (ör. yeni açılmış yatış) eksen boş kalmasın: başlangıç anı yazılır.
+    if (ticks.length === 0) {
+        const start = new Date(from + ISTANBUL_OFFSET_MS);
+
+        ticks.push({ time: from, label: `${pad(start.getUTCHours())}:${pad(start.getUTCMinutes())}` });
+    }
+
     return ticks;
 }
