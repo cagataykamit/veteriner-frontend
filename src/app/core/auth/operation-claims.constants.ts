@@ -159,6 +159,11 @@ export const CARE_INSTRUCTIONS_READ_CLAIM = 'CareInstructions.Read' as const;
 export const CARE_INSTRUCTIONS_CREATE_CLAIM = 'CareInstructions.Create' as const;
 export const CARE_INSTRUCTIONS_UPDATE_CLAIM = 'CareInstructions.Update' as const;
 
+export const VITAL_MEASUREMENTS_READ_CLAIM = 'VitalMeasurements.Read' as const;
+export const VITAL_MEASUREMENTS_CREATE_CLAIM = 'VitalMeasurements.Create' as const;
+/** Düzenleme ve gerekçeli iptal. */
+export const VITAL_MEASUREMENTS_UPDATE_CLAIM = 'VitalMeasurements.Update' as const;
+
 /** Ürün kategorileri — liste/detay */
 export const PRODUCT_CATEGORIES_READ_CLAIM = 'ProductCategories.Read' as const;
 
