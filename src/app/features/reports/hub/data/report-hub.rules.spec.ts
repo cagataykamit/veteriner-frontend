@@ -126,6 +126,10 @@ describe('report-hub.rules (ADR-052, tasarım B)', () => {
             ['lowStock', 2]
         ]);
         expect(attentionRows(summary(), has(ALL), now)[0].hint).toBe('En eskisi 9 gün önce · HBS takibi — reçeteler');
+        // Sayaç sunucuda son 1 takvim ayı ile sınırlı (VaccinationDueRule); metin bunu söyler.
+        expect(attentionRows(summary({ attention: { ...summary().attention, overdueVaccinationCount: 4 } }), has(ALL), now).find((r) => r.key === 'overdueVaccinations')?.text).toBe(
+            '4 aşının zamanı son 1 ayda geçti'
+        );
         expect(attentionRows(summary(), has([PRESCRIPTIONS_READ_CLAIM]), now).map((r) => r.key)).toEqual(['hbsPrescriptions']);
         expect(attentionRows(null, has(ALL), now)).toEqual([]);
 

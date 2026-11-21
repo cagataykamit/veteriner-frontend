@@ -76,7 +76,7 @@ const RECEIVING_CARE_ONLY = 'true';
             @if (activeOverdueOnly()) {
                 <div class="mb-4 border border-amber-200 dark:border-amber-800 rounded-border p-3 bg-amber-50 dark:bg-amber-950/40" role="status">
                     <p class="m-0 text-sm text-amber-950 dark:text-amber-100">
-                        <span class="font-medium">Geciken aşı takipleri</span> gösteriliyor: durum <span class="font-medium">Planlandı</span>, planlanan uygulama günü bugünden önce olan kayıtlar. Tüm listeyi görmek için
+                        <span class="font-medium">Geciken aşı takipleri</span> gösteriliyor: durum <span class="font-medium">Planlandı</span>, son 1 ay içinde vadesi geçmiş kayıtlar. Vadesi daha eski planlı aşılar burada görünmez, <span class="font-medium">Planlandı</span> durumuyla listede kalır. Tüm listeyi görmek için
                         <span class="font-medium">Temizle</span> kullanın.
                     </p>
                 </div>
