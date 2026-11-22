@@ -40,6 +40,7 @@ export interface SavedFilterSource {
  * Kayıtlı filtreler (REPORT-004): seçilen kayıt uygulanır, ekrandaki filtre seti adla kaydedilir, seçili kayıt silinir.
  * Kayıtlar kullanıcıya özeldir; rapor anahtarı sayfa adresinden türer. Tarih aralığı kaydedilmez (`savedFilterValues`).
  * Rapor dışı ekranlar (takvim, talep listesi; APPT-026) aynı depoyu `filterKey` ile kullanır: `screens.<ekran>`.
+ * Pencereler gövdeye eklenir: takvimde bileşen `z-50` açılır panelin içinde; yerinde kalan karartma menüyü ve üst çubuğu kaplamıyordu.
  */
 @Component({
     selector: 'app-report-saved-filters',
@@ -88,7 +89,7 @@ export interface SavedFilterSource {
                 <p class="text-danger text-sm mt-2 mb-0" role="alert">{{ message }}</p>
             }
 
-            <p-dialog [header]="copy.reportsSavedFilterSave" [modal]="true" [dismissableMask]="!busy() && !nameChanged()" [style]="{ width: 'min(440px, 95vw)' }" [(visible)]="dialogVisible">
+            <p-dialog [header]="copy.reportsSavedFilterSave" [modal]="true" appendTo="body" [dismissableMask]="!busy() && !nameChanged()" [style]="{ width: 'min(440px, 95vw)' }" [(visible)]="dialogVisible">
                 <label for="reportSavedFilterName" class="block text-sm font-medium text-muted-color mb-2">{{ copy.reportsSavedFilterNameLabel }}</label>
                 <input
                     id="reportSavedFilterName"
@@ -114,7 +115,7 @@ export interface SavedFilterSource {
                     </button>
                 </ng-template>
             </p-dialog>
-            <p-confirmdialog [style]="{ width: 'min(450px, 95vw)' }" />
+            <p-confirmdialog appendTo="body" [style]="{ width: 'min(450px, 95vw)' }" />
         }
     `
 })
