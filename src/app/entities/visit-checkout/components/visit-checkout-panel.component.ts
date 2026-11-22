@@ -648,11 +648,18 @@ export class VisitCheckoutPanelComponent {
         const now = new Date().toISOString();
         const header = { clinicName: this.auth.getClinicName() ?? '', dateText: `${this.date(now)} ${this.time(now)}`, clientName: s.clientName, petName: s.petName };
 
+        // Ücret satırı tam tutarla yazılır; bu hesaptan önce alınan kısım ayrı satırda düşülür (satırda kalan tutar fiyat gibi görünmesin).
+        const paidEarlier = (charges: VisitCheckoutChargeDto[]) => sumAmounts(charges.map((c) => c.amount - c.outstandingAmount));
+
         if (this.isSettled()) {
-            return { ...header, charges: (s.charges?.visitCharges ?? []).map((c) => ({ description: c.description, amount: c.amount })), payments: [], creditUsed: 0, creditAdded: 0, remaining: 0, otherDebt: 0 };
+            const visitCharges = s.charges?.visitCharges ?? [];
+
+            return { ...header, charges: visitCharges.map((c) => ({ description: c.description, amount: c.amount })), paidEarlier: paidEarlier(visitCharges), payments: [], creditUsed: 0, creditAdded: 0, remaining: 0, otherDebt: 0 };
         }
 
         const saved = this.savedLineIds();
+        const selectedVisitCharges = this.visitOpenCharges().filter((c) => sel.has(c.chargeId));
+        const selectedOtherCharges = this.otherCharges().filter((c) => sel.has(c.chargeId));
 
         return {
             ...header,
@@ -660,13 +667,10 @@ export class VisitCheckoutPanelComponent {
                 ...this.pendingItems()
                     .filter((i) => this.decisionOf(i.id) === 'convert')
                     .map((i) => ({ description: i.description, amount: this.itemTotal(i) ?? 0 })),
-                ...this.visitOpenCharges()
-                    .filter((c) => sel.has(c.chargeId))
-                    .map((c) => ({ description: c.description, amount: c.outstandingAmount })),
-                ...this.otherCharges()
-                    .filter((c) => sel.has(c.chargeId))
-                    .map((c) => ({ description: `${c.description} (önceki geliş)`, amount: c.outstandingAmount }))
+                ...selectedVisitCharges.map((c) => ({ description: c.description, amount: c.amount })),
+                ...selectedOtherCharges.map((c) => ({ description: c.visitId ? `${c.description} (önceki geliş)` : c.description, amount: c.amount }))
             ],
+            paidEarlier: paidEarlier([...selectedVisitCharges, ...selectedOtherCharges]),
             payments: this.lines()
                 .filter((l) => saved.has(l.id))
                 .map((l) => ({ method: l.method, amount: l.amount ?? 0 })),

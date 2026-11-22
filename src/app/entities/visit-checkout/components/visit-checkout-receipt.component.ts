@@ -7,7 +7,10 @@ export interface VisitCheckoutReceiptData {
     dateText: string;
     clientName: string;
     petName: string;
+    /** Ücretlerin tam tutarı (kalan değil). */
     charges: Array<{ description: string; amount: number }>;
+    /** Bu ücretlerden bu hesaptan önce alınmış kısım (önceki ödemeler). */
+    paidEarlier: number;
     payments: Array<{ method: CheckoutPaymentMethod; amount: number }>;
     creditUsed: number;
     /** Alınanın hesaptan fazla kısmı; müşteri kredisine yazıldı. */
@@ -63,6 +66,10 @@ export interface VisitCheckoutReceiptData {
             <dl class="m-0 border-t border-surface pt-2 grid grid-cols-2 gap-y-1">
                 <dt class="font-semibold">Toplam</dt>
                 <dd class="m-0 text-right font-semibold">{{ money(total()) }}</dd>
+                @if (d.paidEarlier > 0) {
+                    <dt>Önceden ödenen</dt>
+                    <dd class="m-0 text-right" data-testid="receipt-paid-earlier">{{ money(d.paidEarlier) }}</dd>
+                }
                 @if (d.creditUsed > 0) {
                     <dt>Krediden</dt>
                     <dd class="m-0 text-right">{{ money(d.creditUsed) }}</dd>
