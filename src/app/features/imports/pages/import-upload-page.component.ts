@@ -41,6 +41,14 @@ const ROADMAP: readonly { n: number; title: string; text: string }[] = [
     { n: 4, title: 'Onay', text: 'Siz onaylayınca kayıtlar oluşur.' }
 ];
 
+/**
+ * Sunucu notu (`note`) profilin dayanağını destek ekibine anlatır; hazır eşlemesi olmayan programda iç bilgi içerir.
+ * Bu programlarda müşteriye sade açıklama gösterilir, diğerlerinde sunucu notu.
+ */
+const PROFILE_DESCRIPTIONS: Readonly<Partial<Record<ImportSourceProfileCode, string>>> = {
+    Kolayvet: "Kolayvet'ten Excel'e aktardığınız müşteri ve hasta listelerini yükleyin; sütunların karşılığını eşleme adımında onaylarsınız."
+};
+
 const REQUIREMENT_TONE: Readonly<Record<EVetUploadFileDef['requirement'], string>> = {
     zorunlu: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
     önerilir: 'bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300',
@@ -136,7 +144,7 @@ const REQUIREMENT_TONE: Readonly<Record<EVetUploadFileDef['requirement'], string
                                         >
                                             <span class="min-w-0 flex-1">
                                                 <span class="block font-semibold">{{ p.code === 'Generic' ? 'Programım listede yok' : p.displayName }}</span>
-                                                <span class="block text-sm text-muted-color">{{ p.code === 'Generic' ? p.displayName + ' · ' + p.note : p.note }}</span>
+                                                <span class="block text-sm text-muted-color">{{ p.code === 'Generic' ? p.displayName + ' · ' + p.note : profileDescription(p) }}</span>
                                             </span>
                                             <i class="pi pi-angle-right text-muted-color" aria-hidden="true"></i>
                                         </button>
@@ -158,7 +166,7 @@ const REQUIREMENT_TONE: Readonly<Record<EVetUploadFileDef['requirement'], string
                                 <div>
                                     <h2 class="m-0 text-xl sm:text-2xl font-semibold">{{ fileTitle() }}</h2>
                                     @if (selectedProfile(); as p) {
-                                        <p class="m-0 mt-1 text-muted-color" data-testid="import-source-profile-note">{{ p.note }}</p>
+                                        <p class="m-0 mt-1 text-muted-color" data-testid="import-source-profile-note">{{ profileDescription(p) }}</p>
                                         @if (!p.verified && p.mappings.length > 0) {
                                             <p class="m-0 mt-1 text-sm text-amber-700 dark:text-amber-300">Bu programın hazır eşlemesi gerçek dosyayla henüz doğrulanmadı; eşleme adımında kontrol edin.</p>
                                         }
@@ -455,6 +463,10 @@ export class ImportUploadPageComponent implements OnInit {
     protected readonly screen = computed(() => this.screens()[Math.min(this.index(), this.screens().length - 1)]);
     protected readonly currentEVetFile = computed(() => EVET_UPLOAD_FILES.find((f) => f.slot === this.screen()) ?? null);
     protected readonly evetFileIndex = computed(() => EVET_UPLOAD_FILES.findIndex((f) => f.slot === this.screen()));
+
+    protected profileDescription(p: ImportSourceProfileDto): string {
+        return PROFILE_DESCRIPTIONS[p.code] ?? p.note;
+    }
 
     /** Genel yolda başlık: adı bilinen programda "Kolayvet dosyanızı yükleyin". */
     protected readonly fileTitle = computed(() => {
