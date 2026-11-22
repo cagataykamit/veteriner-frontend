@@ -41,6 +41,7 @@ const PANEL_PAGE_TITLES: ReadonlyArray<readonly [string, string]> = [
     ['settings/definitions/product-categories', 'Ürün kategorileri'],
     ['settings/definitions/clinical-snippets', 'Metin parçaları'],
     ['settings/definitions/hospitalization-wards', 'Yatış konumları'],
+    ['settings/definitions/appointment-resources', 'Oda ve cihazlar'],
     ['settings/account', 'Hesabım'],
     ['settings/subscription', 'Abonelik'],
     ['settings/clinics', 'Klinikler'],

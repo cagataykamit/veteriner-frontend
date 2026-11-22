@@ -28,5 +28,6 @@ export default [
     { path: 'examination-templates', loadChildren: () => import('../../examination-templates/routes/examination-templates.routes') },
     { path: 'hospitalization-wards', loadChildren: () => import('../../hospitalization-wards/routes/hospitalization-wards.routes') },
     { path: 'appointment-reasons', loadChildren: () => import('../../appointment-reasons/routes/appointment-reasons.routes') },
+    { path: 'appointment-resources', loadChildren: () => import('../../appointment-resources/routes/appointment-resources.routes') },
     { path: 'vaccination-schedule', loadChildren: () => import('../../vaccination-schedule/routes/vaccination-schedule.routes') }
 ] as Routes;

@@ -133,6 +133,7 @@ export const CLINICAL_SNIPPETS_ROUTE = `${DEFINITIONS_ROUTE}/clinical-snippets`;
 export const EXAMINATION_TEMPLATES_ROUTE = `${DEFINITIONS_ROUTE}/examination-templates`;
 export const HOSPITALIZATION_WARDS_ROUTE = `${DEFINITIONS_ROUTE}/hospitalization-wards`;
 export const APPOINTMENT_REASONS_ROUTE = `${DEFINITIONS_ROUTE}/appointment-reasons`;
+export const APPOINTMENT_RESOURCES_ROUTE = `${DEFINITIONS_ROUTE}/appointment-resources`;
 export const VACCINATION_SCHEDULE_ROUTE = `${DEFINITIONS_ROUTE}/vaccination-schedule`;
 export const ONLINE_BOOKING_SETTINGS_ROUTE = '/panel/settings/online-booking';
 export const APPOINTMENT_REQUESTS_ROUTE = '/panel/appointments/requests';
@@ -502,6 +503,14 @@ export const DEFINITION_ENTRIES: readonly CardEntry[] = [
         description: 'Randevu formunda ve online talepte seçilen nedenler; süre önerisi ve uygun hekimler.'
     },
     {
+        label: 'Oda ve cihazlar',
+        icon: 'pi pi-fw pi-th-large',
+        route: APPOINTMENT_RESOURCES_ROUTE,
+        // Okuma randevu planlama yetkisiyle (APPOINTMENT_RESOURCES_API_CONTRACT.md §1); düzenleme sayfa içinde `Clinics.Update`'e bağlıdır.
+        claims: [CLINICS_UPDATE_CLAIM, CLINICS_READ_CLAIM, APPOINTMENTS_CREATE_CLAIM, APPOINTMENTS_RESCHEDULE_CLAIM],
+        description: 'Randevuya atanan oda ve cihazlar (ameliyathane, röntgen, ultrason); takvimde ayrı sütun, aynı anda kapasite kadar randevu.'
+    },
+    {
         label: 'Aşı takvimi',
         icon: 'pi pi-fw pi-calendar-plus',
         route: VACCINATION_SCHEDULE_ROUTE,
@@ -602,7 +611,7 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 icon: 'pi pi-fw pi-book',
                 route: DEFINITIONS_ROUTE,
                 claims: DEFINITION_ENTRIES.flatMap((e) => e.claims ?? []),
-                description: 'Tür, ırk, ürün kategorisi, tanı/şikâyet sözlüğü, muayene şablonları, metin parçaları ve yatış konumları gibi referans kayıtları.'
+                description: 'Tür, ırk, ürün kategorisi, tanı/şikâyet sözlüğü, muayene şablonları, metin parçaları, yatış konumları, oda ve cihazlar gibi referans kayıtları.'
             }
         ]
     },
