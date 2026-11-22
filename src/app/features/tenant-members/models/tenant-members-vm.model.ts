@@ -5,6 +5,10 @@ export interface TenantMemberListItemVm {
     email: string;
     emailConfirmed: boolean | null;
     createdAtUtc: string | null;
+    /** Davetle atanabilir rol adları (`Veteriner`, `Sekreter`…); eski yanıtta yoksa boş. */
+    roles: string[];
+    /** Bu kurumdaki aktif klinik adları; eski yanıtta yoksa boş. */
+    clinics: string[];
 }
 
 export interface TenantMemberClaimVm {

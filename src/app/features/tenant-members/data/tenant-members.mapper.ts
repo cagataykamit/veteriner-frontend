@@ -86,6 +86,10 @@ function unwrapPagedRoot(raw: unknown): Record<string, unknown> | null {
     return raw;
 }
 
+function stringList(v: unknown): string[] {
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && !!x.trim()).map((x) => x.trim()) : [];
+}
+
 function mapMemberItemDto(raw: unknown): TenantMemberListItemVm | null {
     if (!isRecord(raw)) {
         return null;
@@ -133,7 +137,9 @@ function mapMemberItemDto(raw: unknown): TenantMemberListItemVm | null {
         name,
         email: email ?? '—',
         emailConfirmed,
-        createdAtUtc: createdAtUtc ?? null
+        createdAtUtc: createdAtUtc ?? null,
+        roles: stringList(raw['roles'] ?? raw['Roles']),
+        clinics: stringList(raw['clinics'] ?? raw['Clinics'])
     };
 }
 

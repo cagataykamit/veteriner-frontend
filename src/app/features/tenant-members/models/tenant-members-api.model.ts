@@ -7,6 +7,10 @@ export interface TenantMemberListItemDto {
     /** Alternatif anahtarlar için mapper fallback. */
     isEmailConfirmed?: boolean | null;
     createdAtUtc?: string | null;
+    /** Davetle atanabilir rol adları. */
+    roles?: string[] | null;
+    /** Aktif klinik adları. */
+    clinics?: string[] | null;
 }
 
 export interface TenantMemberListItemDtoPagedResult {
