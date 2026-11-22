@@ -103,6 +103,29 @@ describe('AppointmentDetailPageComponent - Muayene oluştur (ADR-017 K7)', () =>
         expect(fixture.nativeElement.querySelector('[role="alert"]')).not.toBeNull();
     });
 
+
+    /** R-04: bugünkü planlı randevuda birincil eylem "Geldi"; muayene oluştur ikincil olur. Geçmiş ya da kapalı randevuda yoktur. */
+    it('bugünkü planlı randevuda Geldi birincil, Muayene oluştur ikincil; başka günde Geldi yok', () => {
+        const start = new Date(Date.now() + 60 * 60 * 1000);
+
+        appt = { ...APPT, scheduledAtUtc: start.toISOString(), scheduledEndUtc: new Date(start.getTime() + 30 * 60 * 1000).toISOString() };
+        const el = create().nativeElement as HTMLElement;
+        const arrive = el.querySelector('[data-testid="appointment-arrive"]');
+
+        expect(arrive?.classList.contains('p-button-primary')).toBe(true);
+        expect(examButton(el)!.classList.contains('p-button-outlined')).toBe(true);
+
+        TestBed.resetTestingModule();
+        appt = APPT;
+        expect(create().nativeElement.querySelector('[data-testid="appointment-arrive"]')).toBeNull();
+    });
+
+    it('zaman tek satırda: başlangıç, bitiş saati ve süre', () => {
+        const line = create().nativeElement.querySelector('[data-testid="appointment-time-line"]')?.textContent ?? '';
+
+        expect(line).toContain('14.10.2026 12:00');
+        expect(line).toContain('–12:30 · 30 dk');
+    });
     it('Visits.Create yoksa randevu bağlamlı eski bağlantı kalır', () => {
         claims.delete('Visits.Create');
         const fixture = create();
