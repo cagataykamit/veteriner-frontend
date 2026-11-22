@@ -31,6 +31,8 @@ import { fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputVal
 import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE, labResultDateNotTooFarPastValidator, labResultDateTimeLocalMinAllowed } from '@/app/entities/lab-result/utils/lab-result-date-validation.utils';
 import { LAB_RESULT_INCOMPLETE_MESSAGE, LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_MESSAGE, labResultResultFieldsValidator } from '@/app/entities/lab-result/utils/lab-result-form.utils';
+import { createLabResultLineGroup, createLabResultLinesArray, labResultLinesFromForm } from '@/app/entities/lab-result/utils/lab-result-lines-form.utils';
+import { LabResultLinesEditorComponent } from '@/app/entities/lab-result/components/lab-result-lines-editor.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
@@ -55,7 +57,8 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
         DateInputComponent,
         FormSubmitDirective,
         FormErrorSummaryComponent,
-        ReadOnlyReasonDirective
+        ReadOnlyReasonDirective,
+        LabResultLinesEditorComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -70,7 +73,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                 categoryLink="/panel/lab-results"
                 categoryLinkLabel="Listeye dön"
                 [title]="status() === 'Requested' ? 'Lab sonucu gir' : 'Lab sonucunu düzenle'"
-                [description]="status() === 'Requested' ? 'Sonuç tarihi ve metnini girince kayıt Sonuçlandı olur.' : 'Kaydı güncelleyin.'"
+                [description]="status() === 'Requested' ? 'Sonuç tarihini ve sonuç metnini ya da değerleri girince kayıt Sonuçlandı olur.' : 'Kaydı güncelleyin.'"
             />
             <app-pet-alert-banner [petId]="form.controls.petId.value" />
 
@@ -147,6 +150,9 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                             } @else if (form.controls.testName.invalid && form.controls.testName.touched) {
                                 <small class="text-danger">Test adı zorunludur.</small>
                             }
+                        </div>
+                        <div class="col-span-12">
+                            <app-lab-result-lines-editor [lines]="form.controls.lines" />
                         </div>
                         <div class="col-span-12">
                             <label for="resultText" class="block text-sm font-medium text-muted-color mb-2">Sonuç metni</label>
@@ -242,7 +248,8 @@ export class LabResultEditPageComponent implements OnInit, HasUnsavedChanges {
             testName: ['', Validators.required],
             resultText: [''],
             interpretation: [''],
-            notes: ['']
+            notes: [''],
+            lines: createLabResultLinesArray()
         },
         { validators: labResultResultFieldsValidator(() => this.status() === 'Resulted') }
     );
@@ -370,6 +377,12 @@ export class LabResultEditPageComponent implements OnInit, HasUnsavedChanges {
                     },
                     { emitEvent: false }
                 );
+                const lines = this.form.controls.lines;
+
+                lines.clear({ emitEvent: false });
+                x.lines.forEach((l) => lines.push(createLabResultLineGroup(l), { emitEvent: false }));
+                lines.updateValueAndValidity({ emitEvent: false });
+                this.form.updateValueAndValidity({ emitEvent: false });
 
                 if (x.clientId) {
                     this.form.controls.petId.enable({ emitEvent: false });
@@ -459,6 +472,7 @@ export class LabResultEditPageComponent implements OnInit, HasUnsavedChanges {
             interpretation: v.interpretation,
             notes: v.notes,
             examinationId: v.examinationId,
+            lines: labResultLinesFromForm(this.form.controls.lines),
             rowVersion: this.rowVersion
         });
 

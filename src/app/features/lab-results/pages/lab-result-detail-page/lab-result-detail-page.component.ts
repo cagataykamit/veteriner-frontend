@@ -26,6 +26,7 @@ import { StoredFileUploadComponent } from '@/app/shared/files/stored-file-upload
 import { StoredFilesService } from '@/app/shared/files/stored-files.service';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
+import { LabResultLinesTableComponent } from '@/app/entities/lab-result/components/lab-result-lines-table.component';
 
 /** Düzenleme/oluşturma sonrası dönülen sayfada gösterilen kısa onay (query `saved`). */
 const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', created: 'Kayıt oluşturuldu.' };
@@ -49,7 +50,8 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
         StoredFileGalleryComponent,
         StoredFileUploadComponent,
         AppStatusTagComponent,
-        TrDateTimePipe
+        TrDateTimePipe,
+        LabResultLinesTableComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -122,8 +124,15 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
             <app-pet-alert-banner [petId]="r.petId" />
 
 
-            <!-- Satır ızgarası: sonuç + yorum | notlar (8/4, eşit yükseklik); dosyalar tam genişlik. -->
+            <!-- Satır ızgarası: değerler (varsa) tam genişlik; sonuç + yorum | notlar (8/4, eşit yükseklik); dosyalar tam genişlik. -->
             <div class="@container flex flex-col gap-4">
+                @if (r.lines.length > 0) {
+                    <section class="card mb-0" aria-labelledby="lab-lines-title">
+                        <h5 id="lab-lines-title" class="mt-0 mb-1">Değerler</h5>
+                        <p class="mt-0 mb-3 text-sm text-muted-color">İşaret, sonuçla girilen referans aralığına göre hesaplanır. Önceki sonuç, aynı hastada aynı parametrenin aynı birimle son değeridir.</p>
+                        <app-lab-result-lines-table [lines]="r.lines" [petId]="r.petId" />
+                    </section>
+                }
                 <div class="grid grid-cols-12 gap-4">
                     <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-8">
                         <h5 class="mt-0 mb-3">Sonuç</h5>
@@ -131,7 +140,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                         @if (r.resultText) {
                             <p class="mt-0 mb-4 whitespace-pre-wrap">{{ r.resultText }}</p>
                         } @else {
-                            <p class="mt-0 mb-4 field-empty">Sonuç henüz girilmedi.</p>
+                            <p class="mt-0 mb-4 field-empty">{{ r.lines.length > 0 ? 'Metin sonuç yok; değerler yukarıda.' : 'Sonuç henüz girilmedi.' }}</p>
                         }
                         <h6 class="m-0 mb-1 field-label">Yorum</h6>
                         @if (r.interpretation === emptyMark) {

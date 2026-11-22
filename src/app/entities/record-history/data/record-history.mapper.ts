@@ -27,6 +27,7 @@ const FIELD_LABELS: Record<string, string> = {
     Content: 'İçerik',
     Notes: 'Notlar',
     items: 'Reçete kalemleri',
+    lines: 'Lab değer satırları',
     TreatmentDateUtc: 'Tedavi tarihi',
     PrescribedAtUtc: 'Reçete tarihi',
     FollowUpDateUtc: 'Takip tarihi',

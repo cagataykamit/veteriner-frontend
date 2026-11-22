@@ -250,7 +250,7 @@ describe('AppMenu', () => {
             hover(fixture, 'Para');
             hover(fixture, 'Stok');
             expect(panels().length).toBe(1);
-            expect(itemLabels()).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul']);
+            expect(itemLabels()).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul', 'İlaç rehberi']);
         });
 
         it('dokunmatikte panel açılmaz; dokunuş satırın mevcut gezinmesini yapar', () => {
@@ -347,7 +347,7 @@ describe('AppMenu', () => {
             stok.dispatchEvent(enter);
             fixture.detectChanges();
             expect(enter.defaultPrevented, 'satırın gezinmesi yapılmaz').toBe(true);
-            expect(itemLabels()).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul']);
+            expect(itemLabels()).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul', 'İlaç rehberi']);
             expect(stok.getAttribute('aria-expanded')).toBe('true');
             expect(stok.getAttribute('aria-controls')).toBe(panel().id);
             expect(document.activeElement).toBe(stok);

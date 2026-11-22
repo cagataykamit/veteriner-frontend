@@ -40,6 +40,7 @@ const product = (over: Partial<ProductDetailVm> = {}): ProductDetailVm => ({
     isActive: true,
     statusLabel: 'Aktif',
     statusSeverity: 'success',
+    licensedProductId: null,
     ...over
 });
 

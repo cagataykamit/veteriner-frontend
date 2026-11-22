@@ -113,7 +113,7 @@ describe('panel-navigation', () => {
             ['Satışlar', '/panel/sales'],
             ['e-Belgeler', '/panel/e-documents']
         ]);
-        expect(tabs('Stok').map(([l]) => l)).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul']);
+        expect(tabs('Stok').map(([l]) => l)).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul', 'İlaç rehberi']);
         expect(tabs('Kayıtlar').map(([l]) => l)).toEqual(['Muayeneler', 'Tedaviler', 'Reçeteler', 'Aşılar', 'Lab sonuçları', 'Görüntüleme', 'Yatışlar', 'Uygulamalar']);
     });
 

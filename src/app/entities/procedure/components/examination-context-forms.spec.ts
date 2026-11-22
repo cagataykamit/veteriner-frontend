@@ -60,6 +60,7 @@ class StubPetAlertBannerComponent {
 @Component({ selector: 'app-prescription-items-editor', standalone: true, changeDetection: ChangeDetectionStrategy.Eager, template: '' })
 class StubPrescriptionItemsEditorComponent {
     readonly items = input<unknown>(null);
+    readonly petId = input<string | null>(null);
 }
 
 const exam = {

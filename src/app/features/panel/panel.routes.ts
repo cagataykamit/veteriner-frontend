@@ -25,6 +25,7 @@ export default [
     { path: 'stocks', loadChildren: () => import('../inventory/routes/product-stocks.routes') },
     { path: 'stock-movements', loadChildren: () => import('../inventory/routes/stock-movements.routes') },
     { path: 'goods-receipts', loadChildren: () => import('../inventory/routes/goods-receipts.routes') },
+    { path: 'drug-guide', loadChildren: () => import('../drug-guide/routes/drug-guide.routes') },
     { path: 'reports', loadChildren: () => import('../reports/reports.routes') },
     { path: 'sales-partners', loadChildren: () => import('../sales-partners/routes/sales-partners.routes') },
     { path: 'trial-metrics', loadChildren: () => import('../trial-metrics/routes/trial-metrics.routes') },

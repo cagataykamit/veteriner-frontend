@@ -215,6 +215,9 @@ export const BREEDS_UPDATE_CLAIM = 'Breeds.Update' as const;
 /** Tanı/şikâyet sözlüğü — liste/arama (muayene alanlarında seçim) */
 export const CLINICAL_TERMS_READ_CLAIM = 'ClinicalTerms.Read' as const;
 
+/** İlaç rehberi — ruhsatlı ürün kataloğu arama/okuma; her rolde (REF-001) */
+export const DRUG_GUIDE_READ_CLAIM = 'DrugGuide.Read' as const;
+
 /** Sözlüğe kliniğe özel terim ekleme */
 export const CLINICAL_TERMS_CREATE_CLAIM = 'ClinicalTerms.Create' as const;
 

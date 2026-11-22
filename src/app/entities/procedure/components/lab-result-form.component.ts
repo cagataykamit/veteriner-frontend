@@ -27,6 +27,8 @@ import { fromIstanbulDateTimeLocalInputToUtcIso } from '@/app/shared/utils/date.
 import { dateTimeYearRangeValidator, effectiveDateTimeLocalInputMin } from '@/app/shared/utils/date-input-validation.utils';
 import { LAB_RESULT_DATE_TOO_FAR_PAST_MESSAGE, labResultDateNotTooFarPastValidator, labResultDateTimeLocalMinAllowed } from '@/app/entities/lab-result/utils/lab-result-date-validation.utils';
 import { LAB_RESULT_INCOMPLETE_MESSAGE, LAB_RESULT_INTERPRETATION_WITHOUT_RESULT_MESSAGE, labResultResultFieldsValidator } from '@/app/entities/lab-result/utils/lab-result-form.utils';
+import { createLabResultLinesArray, labResultLinesFromForm } from '@/app/entities/lab-result/utils/lab-result-lines-form.utils';
+import { LabResultLinesEditorComponent } from '@/app/entities/lab-result/components/lab-result-lines-editor.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { HAS_UNSAVED_CHANGES, type HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
@@ -37,7 +39,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
     selector: 'app-lab-result-form',
     standalone: true,
     providers: [{ provide: HAS_UNSAVED_CHANGES, useExisting: forwardRef(() => LabResultFormComponent) }],
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, PetAlertBannerComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective, LabResultLinesEditorComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-pet-alert-banner [petId]="form.controls.petId.value" />
@@ -113,6 +115,9 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         } @else if (apiFieldErrors().testName) {
                             <small class="text-danger">{{ apiFieldErrors().testName }}</small>
                         }
+                    </div>
+                    <div class="col-span-12">
+                        <app-lab-result-lines-editor [lines]="form.controls.lines" />
                     </div>
                     <div class="col-span-12">
                         <label for="resultText" class="block text-sm font-medium text-muted-color mb-2">Sonuç metni</label>
@@ -196,7 +201,8 @@ export class LabResultFormComponent implements OnInit, HasUnsavedChanges {
             testName: ['', Validators.required],
             resultText: [''],
             interpretation: [''],
-            notes: ['']
+            notes: [''],
+            lines: createLabResultLinesArray()
         },
         { validators: labResultResultFieldsValidator() }
     );
@@ -317,7 +323,8 @@ export class LabResultFormComponent implements OnInit, HasUnsavedChanges {
             resultText: v.resultText,
             interpretation: v.interpretation,
             notes: v.notes,
-            examinationId: v.examinationId
+            examinationId: v.examinationId,
+            lines: labResultLinesFromForm(this.form.controls.lines)
         });
 
         this.submitting.set(true);

@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
+import { DrugGuideService } from '@/app/entities/drug-guide/services/drug-guide.service';
 import { PrescriptionItemsEditorComponent } from '@/app/entities/prescription/components/prescription-items-editor.component';
 import { createPrescriptionItemGroup, createPrescriptionItemsArray, PRESCRIPTION_ITEMS_MAX, prescriptionItemsFormToInputs } from '@/app/entities/prescription/utils/prescription-items-form.utils';
 
@@ -23,6 +24,8 @@ describe('PrescriptionItemsEditorComponent', () => {
         await TestBed.configureTestingModule({
             imports: [PrescriptionItemsEditorComponent],
             providers: [
+                // Rehber notu (REF-001) bu testlerin konusu değil; boş bilgi döner.
+                { provide: DrugGuideService, useValue: { getProductInfo: () => of([]) } },
                 { provide: ProductService, useValue: { getProducts } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c) } }
             ]

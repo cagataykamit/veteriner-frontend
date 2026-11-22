@@ -7,6 +7,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { PRODUCTS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { ProductListItemVm } from '@/app/entities/inventory/models/product-vm.model';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
+import { ProductDrugInfoNoteComponent } from '@/app/entities/drug-guide/components/product-drug-info-note.component';
 import {
     createPrescriptionItemGroup,
     PRESCRIPTION_ITEM_DOSE_MAX,
@@ -28,7 +29,7 @@ import {
 @Component({
     selector: 'app-prescription-items-editor',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, SelectModule, ProductDrugInfoNoteComponent],
     changeDetection: ChangeDetectionStrategy.Eager,
     template: `
         <div data-testid="prescription-items-editor">
@@ -93,6 +94,7 @@ import {
                             <input [id]="'rx-lot-' + i" type="text" class="w-full p-inputtext p-component" [formControl]="g.controls.lotNumber" [attr.maxlength]="lotMax" data-testid="prescription-item-lot" />
                         </div>
                     </div>
+                    <app-product-drug-info-note [productId]="g.controls.productId.value" [petId]="petId()" />
                     <div class="flex justify-end mt-2">
                         <button pButton type="button" size="small" severity="danger" [text]="true" data-testid="prescription-item-remove" (click)="removeRow(i)"><i class="p-button-icon pi pi-trash"></i>Satırı sil</button>
                     </div>
@@ -106,6 +108,8 @@ import {
 })
 export class PrescriptionItemsEditorComponent implements OnInit {
     readonly items = input.required<FormArray<PrescriptionItemFormGroup>>();
+    /** Hedef tür notu için hasta (REF-001 Dilim 2); boşsa yalnız etken madde gösterilir. */
+    readonly petId = input<string | null>(null);
 
     private readonly productService = inject(ProductService);
     private readonly auth = inject(AuthService);

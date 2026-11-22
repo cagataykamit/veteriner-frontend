@@ -221,7 +221,8 @@ export function mapProductDtoToDetailVm(dto: ProductDto): ProductDetailVm {
         purchasePriceText: formatMoney(num(dto.purchasePrice), 'TRY'),
         isActive,
         statusLabel: productActiveLabel(isActive),
-        statusSeverity: productActiveSeverity(isActive)
+        statusSeverity: productActiveSeverity(isActive),
+        licensedProductId: dto.licensedProductId?.trim() || null
     };
 }
 

@@ -7,6 +7,7 @@ import { AdministrationsService } from '@/app/entities/administration/services/a
 import { AuthService } from '@/app/core/auth/auth.service';
 import type { ProductStockBatchesVm, StockBatchVm } from '@/app/entities/inventory/models/stock-batch-vm.model';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
+import { DrugGuideService } from '@/app/entities/drug-guide/services/drug-guide.service';
 import { StockBatchService } from '@/app/entities/inventory/services/stock-batch.service';
 
 const product = { id: 'pr1', name: 'Serum', sku: 'SRM-1', categoryName: '—', unit: 'şişe', unitPriceText: '—', currency: 'TRY', isActive: true, statusLabel: 'Aktif', statusSeverity: 'success' };
@@ -101,6 +102,8 @@ describe('AdministrationCreateDialogComponent', () => {
                 { provide: AdministrationsService, useValue: service },
                 { provide: StockBatchService, useValue: batches },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1' } },
+                // Rehber notu (REF-001) bu testlerin konusu değil; boş bilgi döner.
+                { provide: DrugGuideService, useValue: { getProductInfo: () => of([]) } },
                 { provide: ProductService, useValue: { getProducts: () => of({ items: [product], page: 1, pageSize: 200, totalItems: 1, totalPages: 1 }) } }
             ]
         }).compileComponents();

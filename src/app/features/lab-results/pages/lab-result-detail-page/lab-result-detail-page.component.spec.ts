@@ -31,7 +31,8 @@ const vm = (status: LabResultStatus): LabResultDetailVm => ({
     updatedAtUtc: null,
     cancelledAtUtc: null,
     cancelReason: null,
-    rowVersion: 'V1'
+    rowVersion: 'V1',
+    lines: []
 });
 
 describe('LabResultDetailPageComponent — başlık eylemleri', () => {
