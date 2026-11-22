@@ -148,6 +148,7 @@ export interface AppointmentRequestListItemVm {
     appointmentId: string | null;
 }
 
+/** Durum geçişi (APPT-024): `fromStatus` boşsa talep oluşturuldu; `actorName` yalnız personel satırında dolar. */
 export interface AppointmentRequestHistoryVm {
     fromStatus: AppointmentRequestStatus | null;
     toStatus: AppointmentRequestStatus;
@@ -180,6 +181,19 @@ export interface AppointmentRequestDetailVm {
     clientMatches: ClientMatchVm[];
     requestedSlotFree: boolean;
     freeVeterinarianUserIds: string[];
+    /** Onaylı talepten oluşan randevunun güncel hali; diğer durumlarda `null`. */
+    appointment: AppointmentRequestAppointmentVm | null;
+}
+
+/**
+ * Oluşan randevu (APPT-024). `status` sunucu `AppointmentStatus` sayısıdır (0 Planlandı, 1 Tamamlandı, 2 İptal, 3 Gelmedi).
+ * `approvedStartUtc` onay anının saatidir; randevu sonradan taşınmış olabilir.
+ */
+export interface AppointmentRequestAppointmentVm {
+    id: string;
+    scheduledAtUtc: string;
+    durationMinutes: number;
+    status: number;
 }
 
 export interface PagedVm<T> {

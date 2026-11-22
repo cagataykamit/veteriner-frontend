@@ -40,10 +40,11 @@ export function appointmentRequestChannelSeverity(channel: AppointmentRequestCha
     return channel !== null && CHANNEL[channel] ? 'info' : 'secondary';
 }
 
-export function appointmentRequestActorLabel(kind: AppointmentRequestActorKind, actorName: string | null): string {
+/** Geçişi yapan (APPT-024): sahip talepteki iletişim adıyla, personel görünen adıyla. */
+export function appointmentRequestActorLabel(kind: AppointmentRequestActorKind, actorName: string | null, contactName?: string | null): string {
     switch (kind) {
         case AppointmentRequestActorKind.Owner:
-            return 'Hasta sahibi';
+            return contactName?.trim() ? `Hasta sahibi · ${contactName.trim()}` : 'Hasta sahibi';
         case AppointmentRequestActorKind.System:
             return 'Sistem';
         default:

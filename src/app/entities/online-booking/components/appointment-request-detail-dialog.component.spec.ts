@@ -49,7 +49,8 @@ const detail = (over: Partial<AppointmentRequestDetailVm['summary']> = {}): Appo
     history: [{ fromStatus: null, toStatus: AppointmentRequestStatus.Pending, actorKind: AppointmentRequestActorKind.Owner, actorUserId: null, actorName: null, note: null, atUtc: '2026-10-30T09:00:00Z' }],
     clientMatches: [{ clientId: 'cl1', fullName: 'Ayşe Yılmaz', phone: '905551234567', email: 'ayse@example.com', pets: [] }],
     requestedSlotFree: true,
-    freeVeterinarianUserIds: ['v1']
+    freeVeterinarianUserIds: ['v1'],
+    appointment: null
 });
 
 describe('AppointmentRequestDetailDialogComponent', () => {
@@ -146,6 +147,28 @@ describe('AppointmentRequestDetailDialogComponent', () => {
         cmp.approve();
 
         expect(requests.approve).toHaveBeenCalledWith('q1', { clientId: null, petId: null, scheduledAtUtc: '2026-11-03T08:00:00Z', veterinarianUserId: 'v1', email: null });
+    });
+
+    it('geçmiş zaman çizelgesi ve oluşan randevunun bağlantısı gösterilir (APPT-024)', async () => {
+        const approved = detail({ status: AppointmentRequestStatus.Approved, clientId: 'cl1', petId: 'p1', appointmentId: 'a1' });
+        await create({
+            ...approved,
+            approvedStartUtc: '2026-11-02T07:00:00Z',
+            history: [
+                ...approved.history,
+                { fromStatus: AppointmentRequestStatus.Pending, toStatus: AppointmentRequestStatus.Approved, actorKind: AppointmentRequestActorKind.Staff, actorUserId: 'u1', actorName: 'Sekreter Elif', note: null, atUtc: '2026-10-30T10:00:00Z' }
+            ],
+            appointment: { id: 'a1', scheduledAtUtc: '2026-11-02T07:00:00Z', durationMinutes: 30, status: 0 }
+        });
+        fixture.detectChanges();
+
+        const events = document.querySelectorAll('[data-testid="request-timeline-event"]');
+        const link = document.querySelector<HTMLAnchorElement>('[data-testid="request-appointment-link"]');
+
+        expect(events.length).toBe(2);
+        expect(events[1].textContent).toContain('Sekreter Elif');
+        expect(link?.getAttribute('href')).toBe('/panel/appointments/a1');
+        expect(link?.getAttribute('target')).toBe('_blank');
     });
 
     it('red gerekçesiz yapılamaz; düzenlenen e-posta red isteğine eklenir', async () => {
