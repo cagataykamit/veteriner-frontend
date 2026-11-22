@@ -1,6 +1,7 @@
 import { HttpParams } from '@angular/common/http';
 import type { TenantInviteCreateRequestDto } from '@/app/entities/tenant-invite/models/tenant-invite-api.model';
 import type { TenantInvitesListQuery } from '@/app/entities/tenant-invite/models/tenant-invite-list-query.model';
+import { tenantRoleLabel } from '@/app/core/auth/tenant-role-labels';
 import type {
     OperationClaimOptionVm,
     TenantInviteCreatedVm,
@@ -255,7 +256,7 @@ export function mapTenantInviteListItemRaw(raw: unknown): TenantInviteListItemVm
         'ClaimName'
     ]);
     const roleId = firstString(raw, ['operationClaimId', 'OperationClaimId']);
-    const roleSummary = roleName?.trim() ? roleName : roleId ? `Rol (${roleId})` : '—';
+    const roleSummary = roleName?.trim() ? tenantRoleLabel(roleName) : roleId ? `Rol (${roleId})` : '—';
     const base: TenantInviteListItemVm = {
         id,
         email,

@@ -42,6 +42,8 @@ type DueVaccine = {
     id: string;
     dueAtUtc: string;
     vaccineName?: string;
+    isNextDue?: boolean;
+    vaccineDefinitionId?: string | null;
 };
 
 const vaccinations = (overdue: DueVaccine[], upcoming: DueVaccine[] = []) => ({
@@ -98,14 +100,14 @@ describe('petIdentityParts', () => {
         breed: 'Tekir',
         gender: 'female',
         birthDate: '2023-10-01',
-        weight: '4.2',
+        weight: '4,2',
         microchipNumber: '900000000000001'
     } as PetDetailVm;
 
     it('muayene kilosu varsa onu, yoksa profil kilosunu kullanır; boş alanları atlar', () => {
-        expect(petIdentityParts(pet, 4.4, NOW)).toEqual(['Kedi', 'Tekir', 'Dişi', '3 yaş', '4.4 kg', 'Çip 900000000000001']);
+        expect(petIdentityParts(pet, 4.4, NOW)).toEqual(['Kedi', 'Tekir', 'Dişi', '3 yaş', '4,4 kg', 'Çip 900000000000001']);
         expect(petIdentityParts({ ...pet, breed: '—', microchipNumber: '—', weight: '—', gender: '—' }, null, NOW)).toEqual(['Kedi', '3 yaş']);
-        expect(petIdentityParts(pet, null, NOW)).toContain('4.2 kg');
+        expect(petIdentityParts(pet, null, NOW)).toContain('4,2 kg');
     });
 });
 
@@ -130,7 +132,7 @@ describe('nextScheduledAppointment', () => {
 
 describe('examinationVitalsLine / examinationAssessmentText', () => {
     it('ölçülen vitalleri birimleriyle birleştirir; hiç yoksa null', () => {
-        expect(examinationVitalsLine({ temperatureC: 38.5, heartRateBpm: 120, respiratoryRatePerMin: null })).toBe('38.5 °C · 120 atım/dk');
+        expect(examinationVitalsLine({ temperatureC: 38.5, heartRateBpm: 120, respiratoryRatePerMin: null })).toBe('38,5 °C · 120 atım/dk');
         expect(examinationVitalsLine({ temperatureC: null, heartRateBpm: null, respiratoryRatePerMin: null })).toBeNull();
     });
 
@@ -177,6 +179,20 @@ describe('buildPetTodo', () => {
         expect(view.items[0].detail).toContain('10 gün geçti');
         expect(view.items[0].action).toEqual({ label: 'Uygula', route: ['/panel/vaccinations', 'v1', 'edit'] });
         expect(view.items[1].title).toContain('Kuduz');
+    });
+
+    it('uygulanmış aşının sonraki dozunda "Uygula" yeni aşı formunu hasta ve aşı dolu açar (tam test 2026-11-22)', () => {
+        const due = vaccinations([{ id: 'v1', dueAtUtc: '2026-10-04T09:00:00Z', isNextDue: true, vaccineDefinitionId: 'def-1' }]);
+
+        expect(buildPetTodo(openItems({ vaccinations: due }), ctx(['Vaccinations.Create', 'VaccineDefinitions.Read'])).items[0].action).toEqual({
+            label: 'Uygula',
+            route: ['/panel/vaccinations/new'],
+            queryParams: { petId: 'p1', clientId: 'c1', vaccineDefinitionId: 'def-1', status: '1' }
+        });
+        expect(buildPetTodo(openItems({ vaccinations: due }), ctx(['Vaccinations.Update', 'VaccineDefinitions.Read'])).items[0].action).toEqual({
+            label: 'Aç',
+            route: ['/panel/vaccinations', 'v1']
+        });
     });
 
     it('geçen gün sayısı İstanbul takvim günüdür, saat farkı değil (ADR-028)', () => {

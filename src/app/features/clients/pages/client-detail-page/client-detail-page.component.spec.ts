@@ -139,6 +139,8 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         expect(el().querySelector('[data-testid="pet-outstanding"]')?.textContent).toContain('300');
         expect(el().querySelector('[data-testid="pet-pending"]')?.textContent).toContain('1 işlem');
         expect(el().textContent).toContain('Ödeme özeti');
+        expect(el().querySelector('[data-testid="payment-count"]')?.textContent?.trim()).toBe('0');
+        expect(el().querySelector('[data-testid="payment-total"]')?.textContent).toContain('₺0');
         expect(el().textContent).toContain('Son muayeneler');
         expect(el().textContent).not.toContain('Genel bilgiler');
         expect(pendingChargesSpy).toHaveBeenCalledTimes(1);

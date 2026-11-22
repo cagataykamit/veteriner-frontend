@@ -58,11 +58,11 @@ describe('PetSummaryCardComponent', () => {
         const el = render(ok, { lastExamination: exam() });
 
         expect(el.textContent).toContain('Klinik özet');
-        expect(section(el, 'weight').textContent).toContain('4.4 kg');
-        expect(section(el, 'weight').querySelector('[data-testid="profile-weight"]')?.textContent).toContain('4.2 kg');
+        expect(section(el, 'weight').textContent).toContain('4,4 kg');
+        expect(section(el, 'weight').querySelector('[data-testid="profile-weight"]')?.textContent).toContain('4,2 kg');
         expect(section(el, 'vaccinations').querySelector('[data-testid="vaccine-overdue"]')).not.toBeNull();
         expect(section(el, 'examination').textContent).toContain('Kontrol');
-        expect(section(el, 'vitals').textContent).toContain('38.6 °C · 140 atım/dk · 30 soluk/dk');
+        expect(section(el, 'vitals').textContent).toContain('38,6 °C · 140 atım/dk · 30 soluk/dk');
         expect(section(el, 'assessment').textContent).toContain('Otitis externa');
     });
 

@@ -41,6 +41,7 @@ describe('JoinInvitePageComponent hukuki onay (ADR-029)', () => {
         cmp = fixture.componentInstance;
         fixture.detectChanges();
         cmp.invitePassword = 'Abc12345!';
+        cmp.inviteFullName = ' Ayşe Yılmaz ';
     }
 
     beforeEach(async () => {
@@ -91,6 +92,7 @@ describe('JoinInvitePageComponent hukuki onay (ADR-029)', () => {
 
         expect(invites.signupAndAccept).toHaveBeenCalledWith('tok', {
             password: 'Abc12345!',
+            fullName: 'Ayşe Yılmaz',
             acceptedLegalDocuments: invite().requiredLegalDocuments
         });
         expect(cmp.successMode()).toBe('signup');
@@ -126,5 +128,18 @@ describe('JoinInvitePageComponent hukuki onay (ADR-029)', () => {
             { documentType: 'DataProcessing', version: '0.1' }
         ]);
         expect(mapPublicInviteDetailsDtoToVm({}, 'tok')?.requiredLegalDocuments).toEqual([]);
+    });
+
+    it('ad-soyad boşsa gönderilmez ve alanın altında yazar (tam test 2026-11-22)', () => {
+        create(invite());
+        cmp.legalConsent.set(true);
+        cmp.inviteFullName = '  ';
+
+        cmp.onSignupAndAccept(cmp.vm()!);
+        fixture.detectChanges();
+
+        expect(invites.signupAndAccept).not.toHaveBeenCalled();
+        expect(cmp.fullNameFieldError()).toBe('Adınızı ve soyadınızı yazın.');
+        expect(host().querySelector('[data-testid="join-full-name"]')?.getAttribute('aria-invalid')).toBe('true');
     });
 });

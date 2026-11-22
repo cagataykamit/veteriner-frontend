@@ -22,11 +22,12 @@ import {
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
+import { TenantRolePipe } from '@/app/shared/pipes/tenant-role.pipe';
 
 @Component({
     selector: 'app-account-summary-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, ToastModule, AppPageHeaderComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, ToastModule, AppPageHeaderComponent, TenantRolePipe],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -112,7 +113,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
                                                 <span
                                                     class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-primary-50 text-primary-800 border border-primary-200/80 dark:bg-primary-900/25 dark:text-primary-200 dark:border-primary-700/50"
                                                 >
-                                                    {{ role }}
+                                                    {{ role | tenantRole }}
                                                 </span>
                                             }
                                         </div>

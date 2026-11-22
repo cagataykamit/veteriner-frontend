@@ -15,7 +15,7 @@ import { ListPageState } from '@/app/shared/list/list-page-state';
 import type { VaccinationListItemVm } from '@/app/entities/vaccination/models/vaccination-vm.model';
 import type { VaccinationsListQuery } from '@/app/entities/vaccination/models/vaccination-query.model';
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
-import { vaccinationStatusLabel, vaccinationStatusSeverity } from '@/app/entities/vaccination/utils/vaccination-status.utils';
+import { parseVaccinationStatusRawToEnum, vaccinationStatusLabel, vaccinationStatusSeverity } from '@/app/entities/vaccination/utils/vaccination-status.utils';
 import { CLEAR_VACCINATIONS_LIST_LINK_QUERY, readVaccinationsListLinkFilters } from '@/app/entities/vaccination/utils/vaccinations-list-link.utils';
 import { canOpenVaccinationEdit } from '@/app/entities/vaccination/utils/vaccination-access.utils';
 import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
@@ -76,7 +76,7 @@ const RECEIVING_CARE_ONLY = 'true';
             @if (activeOverdueOnly()) {
                 <div class="mb-4 border border-amber-200 dark:border-amber-800 rounded-border p-3 bg-amber-50 dark:bg-amber-950/40" role="status">
                     <p class="m-0 text-sm text-amber-950 dark:text-amber-100">
-                        <span class="font-medium">Geciken aşı takipleri</span> gösteriliyor: durum <span class="font-medium">Planlandı</span>, son 1 ay içinde vadesi geçmiş kayıtlar. Vadesi daha eski planlı aşılar burada görünmez, <span class="font-medium">Planlandı</span> durumuyla listede kalır. Tüm listeyi görmek için
+                        <span class="font-medium">Geciken aşı takipleri</span> gösteriliyor: son 1 ay içinde vadesi geçmiş planlı aşılar ve uygulanmış aşıların sonraki dozu (aynı aşı daha sonra uygulanmadıysa). Vadesi daha eski kayıtlar burada görünmez, durumuyla listede kalır. Tüm listeyi görmek için
                         <span class="font-medium">Temizle</span> kullanın.
                     </p>
                 </div>
@@ -179,7 +179,11 @@ const RECEIVING_CARE_ONLY = 'true';
                                 <ng-template #body let-row>
                                     <tr>
                                         <td>{{ row.appliedAtUtc | trDateTime }}</td>
-                                        <td>{{ row.dueAtUtc | trDateTime }}</td>
+                                        <td>{{ row.dueAtUtc | trDateTime }}
+                                            @if (isNextDue(row)) {
+                                                <div class="text-xs text-muted-color" data-testid="next-due">Sonraki doz</div>
+                                            }
+                                        </td>
                                         <td>
                                             {{ row.vaccineName }}
                                             @if (row.administrationId) {
@@ -224,7 +228,7 @@ const RECEIVING_CARE_ONLY = 'true';
                                 <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                                     <div class="text-sm text-muted-color mb-3 min-w-0 space-y-1">
                                         <div><span class="font-medium">Uygulama: </span>{{ row.appliedAtUtc | trDateTime }}</div>
-                                        <div><span class="font-medium">Planlanan uygulama: </span>{{ row.dueAtUtc | trDateTime }}</div>
+                                        <div><span class="font-medium">Planlanan uygulama: </span>{{ row.dueAtUtc | trDateTime }}@if (isNextDue(row)) {<span class="text-xs"> (sonraki doz)</span>}</div>
                                     </div>
                                     <div class="space-y-2 mb-3 min-w-0">
                                         <div class="text-sm">
@@ -369,6 +373,12 @@ export class VaccinationsListPageComponent implements OnInit {
     readonly displayedRows = computed(() => this.rawItems());
 
     readonly statusLabel = vaccinationStatusLabel;
+
+    /** Uygulanmış aşının vadesi sonraki dozdur (gecikmiş listesinde planlı aşıyla birlikte görünür; kural backend `VaccinationDueRule`). */
+    isNextDue(row: { status: number | null; dueAtUtc: string | null }): boolean {
+        return parseVaccinationStatusRawToEnum(row.status) === 1 && !!row.dueAtUtc;
+    }
+
     readonly statusSeverity = vaccinationStatusSeverity;
 
     ngOnInit(): void {

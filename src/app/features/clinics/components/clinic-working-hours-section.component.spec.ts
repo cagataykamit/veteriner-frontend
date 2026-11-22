@@ -14,7 +14,7 @@ import { ClinicWorkingHoursSectionComponent } from './clinic-working-hours-secti
 const monday: ClinicWorkingHourVm = { dayOfWeek: 1, dayLabel: 'Pazartesi', isClosed: false, opensAt: null, closesAt: null, breakStartsAt: null, breakEndsAt: null };
 
 describe('ClinicWorkingHoursSectionComponent — saat alanları', () => {
-    const render = async () => {
+    const render = async (isConfigured = true, updateWorkingHours = vi.fn(), items: ClinicWorkingHourVm[] = [monday]) => {
         TestBed.configureTestingModule({
             imports: [ClinicWorkingHoursSectionComponent],
             providers: [
@@ -24,10 +24,10 @@ describe('ClinicWorkingHoursSectionComponent — saat alanları', () => {
                 {
                     provide: ClinicsService,
                     useValue: {
-                        getWorkingHours: vi.fn().mockReturnValue(of([monday])),
+                        getWorkingHoursState: vi.fn().mockReturnValue(of({ isConfigured, items })),
                         // Kart açılışta "Çalışma saati kısıtı"nı randevu ayarından okur.
                         getAppointmentSettings: vi.fn().mockReturnValue(of({ enforceWorkingHours: true })),
-                        updateWorkingHours: vi.fn()
+                        updateWorkingHours
                     }
                 },
                 { provide: AuthService, useValue: { hasOperationClaim: () => true } },
@@ -64,5 +64,43 @@ describe('ClinicWorkingHoursSectionComponent — saat alanları', () => {
         await pick('whBreakStart0', '12:00');
         await pick('whBreakEnd0', '13:00');
         await expect.poll(() => el.querySelector<HTMLButtonElement>('button[severity="secondary"]')?.disabled).toBe(false);
+    });
+
+    it('kapanış açılıştan önceyse satırda nedenini yazar; kaydet pasif kalır', async () => {
+        const { fixture, el } = await render();
+        const day = fixture.componentInstance.whDays.at(0);
+
+        expect(el.querySelector('[data-testid="whDayError0"]')).toBeNull();
+
+        day.patchValue({ opensAt: '09:00', closesAt: '08:00' });
+        day.markAsDirty();
+        await fixture.whenStable();
+
+        await expect.poll(() => el.querySelector('[data-testid="whDayError0"]')?.textContent?.trim()).toBe('Açılış saati kapanış saatinden önce olmalıdır.');
+        expect(el.querySelector<HTMLButtonElement>('button[severity="secondary"]')?.disabled).toBe(true);
+    });
+
+    it('kayıt yoksa varsayılan saatler değiştirilmeden kaydedilebilir (İlk hafta adımı ve klinik sitesi kayıt ister)', async () => {
+        const defaults = { ...monday, opensAt: '09:00:00', closesAt: '18:00:00' };
+        const update = vi.fn().mockReturnValue(of([defaults]));
+        const { el } = await render(false, update, [defaults]);
+        const save = () => el.querySelector<HTMLButtonElement>('button[severity="secondary"]')!;
+
+        expect(el.querySelector('[data-testid="wh-not-configured"]')).not.toBeNull();
+        await expect.poll(() => save().disabled).toBe(false);
+
+        await userEvent.click(save());
+
+        await expect.poll(() => update.mock.calls.length).toBe(1);
+        expect(update.mock.calls[0][0]).toBe('k1');
+        await expect.poll(() => el.querySelector('[data-testid="wh-not-configured"]')).toBeNull();
+        await expect.poll(() => save().disabled).toBe(true);
+    });
+
+    it('kayıt varken değişiklik olmadan kaydet pasif', async () => {
+        const { el } = await render(true, vi.fn(), [{ ...monday, opensAt: '09:00:00', closesAt: '18:00:00' }]);
+
+        expect(el.querySelector('[data-testid="wh-not-configured"]')).toBeNull();
+        expect(el.querySelector<HTMLButtonElement>('button[severity="secondary"]')?.disabled).toBe(true);
     });
 });

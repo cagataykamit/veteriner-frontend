@@ -26,14 +26,15 @@ describe('ClinicDetailPageComponent — çalışma saatleri ve randevu varsayıl
     beforeEach(async () => {
         const clinics = {
             getClinicById: vi.fn().mockName('ClinicsService.getClinicById'),
-            getWorkingHours: vi.fn().mockName('ClinicsService.getWorkingHours'),
+            getWorkingHoursState: vi.fn().mockName('ClinicsService.getWorkingHoursState'),
             getAppointmentSettings: vi.fn().mockName('ClinicsService.getAppointmentSettings')
         };
 
         clinics.getClinicById.mockReturnValue(of({ id: 'c1', name: 'Merkez Pati', city: 'İstanbul', district: '', isActive: true, phone: '', email: '', address: '', description: '' }));
-        clinics.getWorkingHours.mockReturnValue(
-            of(
-                DAYS.map((dayLabel, dayOfWeek) => ({
+        clinics.getWorkingHoursState.mockReturnValue(
+            of({
+                isConfigured: true,
+                items: DAYS.map((dayLabel, dayOfWeek) => ({
                     dayOfWeek,
                     dayLabel,
                     isClosed: dayOfWeek === 0,
@@ -42,7 +43,7 @@ describe('ClinicDetailPageComponent — çalışma saatleri ve randevu varsayıl
                     breakStartsAt: dayOfWeek === 1 ? '12:00:00' : null,
                     breakEndsAt: dayOfWeek === 1 ? '13:00:00' : null
                 }))
-            )
+            })
         );
         clinics.getAppointmentSettings.mockReturnValue(
             of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 15, allowOverlappingAppointments: false, ownerCancelLinkEnabled: true, waitlistAutoOfferEnabled: true, enforceWorkingHours: true })
@@ -174,7 +175,7 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
         readOnly.set(false);
         clinics = {
             getClinicById: vi.fn().mockName('ClinicsService.getClinicById').mockReturnValue(of(clinic())),
-            getWorkingHours: vi.fn().mockName('ClinicsService.getWorkingHours').mockReturnValue(of(hours())),
+            getWorkingHoursState: vi.fn().mockName('ClinicsService.getWorkingHoursState').mockReturnValue(of({ isConfigured: true, items: hours() })),
             getAppointmentSettings: vi.fn().mockName('ClinicsService.getAppointmentSettings').mockReturnValue(of(settings)),
             updateClinicFromForm: vi.fn().mockName('ClinicsService.updateClinicFromForm'),
             updateWorkingHours: vi.fn().mockName('ClinicsService.updateWorkingHours'),
@@ -191,7 +192,7 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
         await render();
 
         expect(text()).toContain('Klinik bilgileri yükleniyor…');
-        expect(clinics['getWorkingHours']).not.toHaveBeenCalled();
+        expect(clinics['getWorkingHoursState']).not.toHaveBeenCalled();
     });
 
     it('rota kimliği yoksa Geçersiz klinik', async () => {
@@ -213,7 +214,7 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
 
         expect(clinics['getClinicById']).toHaveBeenCalledTimes(2);
         expect(text()).toContain('Klinik ayarları');
-        expect(clinics['getWorkingHours']).toHaveBeenCalledWith('c1');
+        expect(clinics['getWorkingHoursState']).toHaveBeenCalledWith('c1');
         expect(clinics['getAppointmentSettings']).toHaveBeenCalledWith('c1');
     });
 
@@ -231,7 +232,7 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
     });
 
     it('çalışma saatleri ve randevu varsayılanları alınamazsa ayrı hata', async () => {
-        clinics['getWorkingHours'].mockReturnValue(throwError(() => new Error('Saatler alınamadı.')));
+        clinics['getWorkingHoursState'].mockReturnValue(throwError(() => new Error('Saatler alınamadı.')));
         clinics['getAppointmentSettings'].mockReturnValue(throwError(() => new Error('Varsayılanlar alınamadı.')));
         await render();
 
@@ -294,7 +295,9 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
 
         expect(button('Çalışma saatlerini kaydet').disabled).toBe(true);
 
-        (el().querySelector('#whClosed6') as HTMLInputElement).click();
+        // Liste Pazartesi başlar: whClosed5 Cumartesidir.
+        expect(el().querySelector('[data-testid="wh-days"]')?.textContent?.trim().startsWith('Pazartesi')).toBe(true);
+        (el().querySelector('#whClosed5') as HTMLInputElement).click();
         await settle();
         expect(button('Çalışma saatlerini kaydet').disabled).toBe(false);
         await click('Çalışma saatlerini kaydet');
@@ -374,7 +377,7 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
 
         expect(clinics['deactivateClinic']).toHaveBeenCalledWith('c1');
         expect(clinics['getClinicById']).toHaveBeenCalledTimes(2);
-        expect(clinics['getWorkingHours']).toHaveBeenCalledTimes(2);
+        expect(clinics['getWorkingHoursState']).toHaveBeenCalledTimes(2);
         // Her yüklemede iki kart okur: Çalışma Saatleri (kısıt) ve Randevu Varsayılanları.
         expect(clinics['getAppointmentSettings']).toHaveBeenCalledTimes(4);
         expect(text()).toContain('Pasif');

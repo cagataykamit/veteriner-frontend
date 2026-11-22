@@ -198,7 +198,11 @@ describe('SubscriptionPageComponent', () => {
 
             expect(card('Temel')).toContain('₺890 / ay');
             expect(card('Temel')).toContain('3 kullanıcı');
-            expect(card('Temel')).not.toContain('Klinik');
+            // Sınır kutucuklarında yalnız kullanıcı var; klinik sınırı backend'de yok (paket maddeleri ayrı listede).
+            const limitTiles = Array.from(el().querySelectorAll('app-subscription-plan-cards .grid > div .uppercase')).map((t) => t.textContent?.trim());
+
+            expect(limitTiles).not.toContain('Klinik');
+            expect(limitTiles).toContain('Kullanıcı');
             expect(card('Profesyonel')).toContain('₺1.790 / ay');
             expect(card('Kurumsal')).toContain('Kurumsal');
             expect(card('Kurumsal')).not.toContain('₺');
@@ -236,7 +240,10 @@ describe('SubscriptionPageComponent', () => {
             expect(t).toContain('Temel');
             expect(t).toContain('Kurumsal');
             expect(t).toContain('Mevcut');
-            expect(t).toContain('Küçük klinikler için');
+            // Paket metni tanıtım sitesiyle aynı kaynaktan; backend açıklaması (Küçük klinikler için) gösterilmez.
+            expect(t).toContain('Kimin için: Tek şubeli, küçük ekipli klinik');
+            expect(t).toContain("Temel'deki her şey, artı:");
+            expect(t).not.toContain('Küçük klinikler için');
             expect(t).toContain('Yıllık ödemede 12 ay için 10 ay ücreti alınır');
             expect(t).toContain('Bilgi');
             expect(t).toContain('Ödemeler iyzico altyapısı üzerinden güvenli şekilde tamamlanır.');
@@ -271,6 +278,10 @@ describe('SubscriptionPageComponent', () => {
             expect(t).not.toContain('Ödeme dönemi');
             expect(t).not.toContain('Yıllık ödemede 12 ay için 10 ay ücreti alınır');
             expect(buttonLabels()).toContain('Deneme bitiminde bu pakete geç');
+            // Denemede üst pakete geçiş ödemesizdir: "Hemen yükselt" yerine "Bu pakete geç".
+            expect(buttonLabels()).toContain('Bu pakete geç');
+            expect(buttonLabels()).not.toContain('Hemen yükselt');
+            expect(t).toContain('Üst pakete geçiş hemen uygulanır; alt pakete geçiş deneme süreniz bittiğinde geçerli olur.');
         });
 
         it('yönetim yetkisi yoksa plan bilgileri salt gösterilir; bekleyen değişiklik sorgulanmaz', () => {
@@ -470,7 +481,7 @@ describe('SubscriptionPageComponent', () => {
             );
             render();
 
-            click('Hemen yükselt');
+            click('Bu pakete geç');
 
             const notice = el().querySelector('[data-testid=plan-fit-notice]')?.textContent ?? '';
 

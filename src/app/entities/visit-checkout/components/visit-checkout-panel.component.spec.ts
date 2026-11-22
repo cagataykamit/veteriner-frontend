@@ -124,6 +124,23 @@ describe('VisitCheckoutPanelComponent (CHECKOUT-001)', () => {
         expect(el.querySelectorAll('[data-testid="checkout-other-charge"]').length).toBe(1);
     });
 
+    it('müşteri telefonu panelin ortak biçiminde; alınan tutar eksi işaretsiz yazılır', () => {
+        const f = render(summary({ clientPhone: '905321112233' }));
+        const c = f.componentInstance;
+        const el = f.nativeElement as HTMLElement;
+
+        expect(el.textContent).toContain('+90 532 111 22 33');
+
+        c.addLine('cash');
+        c.setLineAmount(c.lines()[0].id, '250');
+        f.detectChanges();
+
+        const totals = el.querySelector('[data-testid="checkout-totals"]')?.textContent ?? '';
+
+        expect(totals).toContain('Alınan');
+        expect(totals).not.toContain('−');
+    });
+
     it('gelişe bağlı olmayan açık ücret "Önceki gelişten kalan" diye etiketlenmez', () => {
         const base = summary();
         const noVisit = { ...base.charges!.otherOpenCharges[0], chargeId: 'old2', visitId: null, visitArrivedAtUtc: null, description: 'Mama', createdAtUtc: '2026-11-01T09:00:00Z' };
@@ -363,5 +380,39 @@ describe('VisitCheckoutPanelComponent (CHECKOUT-001)', () => {
         expect(f.componentInstance.isSettled()).toBe(true);
         expect((f.nativeElement as HTMLElement).querySelector('[data-testid="checkout-settled"]')).not.toBeNull();
         expect(f.componentInstance.receipt().charges).toEqual([{ description: 'Muayene', amount: 600 }]);
+        expect(f.componentInstance.receipt().paidEarlier).toBe(600);
+    });
+
+    it('kısmen ödenmiş ücret fişte tam tutarla yazılır, önceki ödeme ayrı satırdadır', () => {
+        const base = summary();
+        const f = render({
+            ...base,
+            charges: {
+                ...base.charges!,
+                pendingItems: [],
+                visitCharges: [{ chargeId: 'ch1', petId: 'p1', petName: 'Boncuk', description: 'Genel muayene', amount: 750, allocatedAmount: 500, outstandingAmount: 250, createdAtUtc: '2026-11-20T06:50:00Z' }],
+                otherOpenCharges: []
+            }
+        });
+        const receipt = f.componentInstance.receipt();
+
+        expect(receipt.charges).toEqual([{ description: 'Genel muayene', amount: 750 }]);
+        expect(receipt.paidEarlier).toBe(500);
+    });
+
+    it('gelişe bağlı olmayan seçili ücret fişte "(önceki geliş)" diye yazılmaz', () => {
+        const base = summary();
+        const noVisit = { ...base.charges!.otherOpenCharges[0], chargeId: 'old2', visitId: null, visitArrivedAtUtc: null, description: 'Mama' };
+        const f = render({ ...base, charges: { ...base.charges!, pendingItems: [], otherOpenCharges: [base.charges!.otherOpenCharges[0], noVisit] } });
+        const c = f.componentInstance;
+
+        if (!c.selected().has('old1')) {
+            c.toggleCharge('old1');
+        }
+        if (!c.selected().has('old2')) {
+            c.toggleCharge('old2');
+        }
+
+        expect(c.receipt().charges.map((x) => x.description)).toEqual(['Muayene', 'Tırnak kesimi (önceki geliş)', 'Mama']);
     });
 });

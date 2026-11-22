@@ -19,7 +19,7 @@ describe('TenantInvitePanelPageComponent (oluşturulan davet kartı)', () => {
             providers: [
                 provideRouter([]),
                 { provide: AuthService, useValue: { getMyClinics: () => of([{ id: 'c1', name: 'Merkez Klinik' }]), hasOperationClaim: () => true } },
-                { provide: TenantInvitesService, useValue: { listOperationClaims: () => of([{ id: 'r1', name: 'Sekreter' }]), createInvite: () => of(created) } },
+                { provide: TenantInvitesService, useValue: { listOperationClaims: () => of([{ id: 'r1', name: 'Sekreter' }, { id: 'r2', name: 'Veteriner' }]), createInvite: () => of(created) } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: signal(false) } }
             ]
         }).compileComponents();
@@ -77,5 +77,23 @@ describe('TenantInvitePanelPageComponent (oluşturulan davet kartı)', () => {
 
         expect(el.querySelector('form [role="alert"]')?.textContent).toContain('bekleyen bir davet');
         expect(el.querySelector('[data-testid="invite-user-limit-link"]')).toBeNull();
+    });
+
+    it('tek klinik önceden seçili gelir; rol adları Türkçe görünür', () => {
+        const el = fixture.nativeElement as HTMLElement;
+        const roleOptions = Array.from(el.querySelectorAll<HTMLOptionElement>('#inviteRole option')).map((o) => o.textContent?.trim());
+
+        expect(fixture.componentInstance.form.controls.clinicId.value).toBe('c1');
+        expect(roleOptions).toEqual(['Rol seçin', 'Sekreter', 'Hekim']);
+    });
+
+    it('oluşturulan davette bağlantının e-postayla gittiği söylenir', () => {
+        const cmp = fixture.componentInstance;
+
+        cmp.form.setValue({ email: 'ayse@example.com', clinicId: 'c1', operationClaimId: 'r1', expiresAtLocal: '' });
+        cmp.onSubmit();
+        fixture.detectChanges();
+
+        expect((fixture.nativeElement as HTMLElement).textContent).toContain('adresine e-postayla gönderildi');
     });
 });

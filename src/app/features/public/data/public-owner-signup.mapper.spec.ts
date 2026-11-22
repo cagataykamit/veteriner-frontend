@@ -12,7 +12,8 @@ const FORM: PublicOwnerSignupFormValue = {
     discountCode: '',
     startMode: 'example',
     emailVerificationToken: 'jeton',
-    taxIdentityNumber: ' 1234567890 '
+    taxIdentityNumber: ' 1234567890 ',
+    fullName: ' Ayşe Yılmaz '
 };
 
 describe('public-owner-signup.mapper (TRIAL-002)', () => {
@@ -27,6 +28,7 @@ describe('public-owner-signup.mapper (TRIAL-002)', () => {
         expect('discountCode' in body).toBe(false);
         expect(body.emailVerificationToken).toBe('jeton');
         expect(body.taxIdentityNumber).toBe('1234567890');
+        expect(body.fullName).toBe('Ayşe Yılmaz');
     });
 
     it('boş klinik seçiminde bayrak false; ortak kodu varsa gövdeye eklenir', () => {

@@ -17,6 +17,17 @@
     </head>
 
     <body>
+        <script>
+            // Koyu tema ilk boyamadan önce (göz kırpmasın); kural `core/theme/portal-theme.ts`, anahtar aynı.
+            (function () {
+                try {
+                    var theme = localStorage.getItem('vetinity-portal-theme');
+                    if (theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                        document.documentElement.classList.add('portal-dark');
+                    }
+                } catch (e) {}
+            })();
+        </script>
         <portal-root></portal-root>
         <noscript>Vetinity'yi kullanmak için tarayıcınızda JavaScript'i açın.</noscript>
     </body>

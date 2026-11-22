@@ -6,7 +6,7 @@ import { SITE_FONTS } from './site-fonts';
 import { clinicStatus, hoursGroups, nextSlotDays } from './site-hours';
 import { safeHref, safeImageSrc, socialLinks } from './site-links';
 import { buildSiteTokens, colorWarnings } from './site-tokens';
-import { buildSiteVm, memberInitials, whatsappNumber } from './site-vm';
+import { buildSiteVm, displayPhone, memberInitials, whatsappNumber } from './site-vm';
 import record from '../../stock/KAYNAKLAR.json';
 import { isStockPhoto, STOCK_GALLERY, STOCK_LIBRARY, STOCK_PHOTOS, stockArticlePhoto, stockSectionPhoto, stockServicePhoto, stockSharePhoto } from './stock-photos';
 
@@ -158,6 +158,15 @@ describe('buildSiteVm', () => {
         expect(vm.telHref).toBe('tel:+905550000000');
         expect(vm.whatsappHref).toBe('https://wa.me/905550000000');
         expect(vm.mailHref).toBe('mailto:ornek@example.com');
+        expect(vm.phone).toBe('+90 555 000 00 00');
+    });
+
+    it('telefon panel ve portalla aynı biçimde gösterilir; tanınmayan numara olduğu gibi kalır', () => {
+        expect(displayPhone('05439580091')).toBe('+90 543 958 00 91');
+        expect(displayPhone('02321234567')).toBe('+90 232 123 45 67');
+        expect(displayPhone('905321112233')).toBe('+90 532 111 22 33');
+        expect(displayPhone(' 444 1 234 ')).toBe('444 1 234');
+        expect(displayPhone('+49 151 2345 6789')).toBe('+49 151 2345 6789');
     });
 
     it('WhatsApp numarası ülke kodlu ve sıfırsız olur', () => {

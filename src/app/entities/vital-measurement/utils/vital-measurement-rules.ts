@@ -1,4 +1,4 @@
-import { VITAL_SIGNS, type VitalSignDefinition, type VitalValues } from '@/app/entities/vital-measurement/models/vital-measurement-vm.model';
+import { VITAL_SIGNS, type VitalSignDefinition, type VitalSignKey, type VitalValues } from '@/app/entities/vital-measurement/models/vital-measurement-vm.model';
 import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
 
 /** Sözleşme §1, D5, D7: not üst sınırı, geç kayıt penceresi, saat kayması payı, geç kayıt gerekçesi uzunluğu. */
@@ -12,6 +12,31 @@ const DAY_MS = 86_400_000;
 
 export function formatVitalValue(def: VitalSignDefinition, value: number): string {
     return value.toLocaleString('tr-TR', { minimumFractionDigits: def.key === 'temperatureC' ? 1 : 0, maximumFractionDigits: def.decimals });
+}
+
+function vitalSign(key: VitalSignKey): VitalSignDefinition {
+    return VITAL_SIGNS.find((def) => def.key === key)!;
+}
+
+/** Ölçü anahtarıyla sayı gösterimi (Türkçe ondalık: "4,2"); kilo ve ateş hasta başlığında, listelerde ve muayenede aynı biçimdedir. */
+export function formatVitalNumber(key: VitalSignKey, value: number): string {
+    return formatVitalValue(vitalSign(key), value);
+}
+
+/** Birimli gösterim: "4,2 kg", "38,5 °C", "120 atım/dk". */
+export function formatVitalReading(key: VitalSignKey, value: number): string {
+    return `${formatVitalNumber(key, value)} ${vitalSign(key).unit}`;
+}
+
+/** Engellemeyen uyarı: değer olağan aralığın dışındaysa (ör. ateş 45 °C) metin, değilse ya da değer yoksa `null`. */
+export function vitalUsualRangeWarning(key: VitalSignKey, value: number | null | undefined): string | null {
+    const def = vitalSign(key);
+
+    if (value === null || value === undefined || !Number.isFinite(value) || !def.usual || (value >= def.usual.min && value <= def.usual.max)) {
+        return null;
+    }
+
+    return `Olağan dışı değer (olağan ${formatVitalValue(def, def.usual.min)}–${formatVitalValue(def, def.usual.max)} ${def.unit}); doğru girildiğini kontrol edin.`;
 }
 
 /** Sunucuyla aynı yuvarlama (yarım yukarı); kayan nokta hatasına karşı üstel yazımla. */

@@ -47,7 +47,7 @@ export interface PortalBookingSummaryItem {
         }
         .step-summary {
             margin: 0;
-            color: #0b5f5a;
+            color: var(--portal-teal-text, #0b5f5a);
             font-size: 0.9375rem;
             font-weight: 500;
             overflow-wrap: anywhere;
@@ -106,7 +106,7 @@ export class PortalBookingStep {
             padding: 0.75rem 0.375rem;
             border-radius: 0.75rem;
             background: var(--vetinity-bg-soft);
-            color: var(--vetinity-navy);
+            color: var(--portal-strong, var(--vetinity-navy));
             font-size: 0.8125rem;
             font-weight: 500;
             line-height: 1.3;
@@ -114,7 +114,7 @@ export class PortalBookingStep {
         }
         i {
             font-size: 1.125rem;
-            color: #0b6f69;
+            color: var(--portal-teal-text, #0b6f69);
         }
     `,
     template: `
@@ -151,13 +151,13 @@ export class PortalBookingHow {}
             height: 3.5rem;
             border-radius: 999px;
             background: var(--vetinity-bg-soft);
-            color: #0b6f69;
+            color: var(--portal-teal-text, #0b6f69);
             font-size: 1.5rem;
         }
         dl {
             margin: 0;
             border-radius: 0.75rem;
-            background: #f8fafc;
+            background: var(--portal-box-bg, #f8fafc);
             padding: 0.25rem 0.875rem;
         }
         dl > div {
@@ -176,7 +176,7 @@ export class PortalBookingHow {}
         }
         dt i {
             width: 1.25rem;
-            color: #0b6f69;
+            color: var(--portal-teal-text, #0b6f69);
         }
         dd {
             margin: 0 0 0 auto;
@@ -193,7 +193,7 @@ export class PortalBookingHow {}
             font-size: 0.9375rem;
         }
         li::marker {
-            color: #0b6f69;
+            color: var(--portal-teal-text, #0b6f69);
             font-weight: 700;
         }
         .done-phone {

@@ -15,7 +15,7 @@
     height: 2.25rem;
     border-radius: 0.625rem;
     background: var(--vetinity-bg-soft);
-    color: var(--vetinity-navy);
+    color: var(--portal-strong, var(--vetinity-navy));
 }
 
 .request-pet-new {

@@ -327,7 +327,7 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                             <ul class="m-0 pl-4 text-sm text-muted-color flex flex-col gap-1">
                                 @if (isTrialingSubscription(s)) {
                                     <li>Deneme süreniz boyunca plan değişiklikleri ödeme gerektirmez.</li>
-                                    <li>Seçtiğiniz paket deneme süreniz bittiğinde geçerli olur.</li>
+                                    <li>Üst pakete geçiş hemen uygulanır; alt pakete geçiş deneme süreniz bittiğinde geçerli olur.</li>
                                     <li>Deneme seçtiğiniz paketin sınırlarıyla çalışır; aktif klinik ve kullanıcı sayınız pakete sığmalıdır.</li>
                                 } @else {
                                     <li>Ödemeler iyzico altyapısı üzerinden güvenli şekilde tamamlanır.</li>

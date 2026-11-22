@@ -8,6 +8,12 @@ export interface ClinicWorkingHourVm {
     readonly breakEndsAt: string | null;
 }
 
+/** `GET .../working-hours`: `isConfigured=false` iken kayıt yoktur, `items` varsayılan haftadır. */
+export interface ClinicWorkingHoursStateVm {
+    readonly isConfigured: boolean;
+    readonly items: ClinicWorkingHourVm[];
+}
+
 export interface ClinicWorkingHourFormValue {
     dayOfWeek: number;
     dayLabel: string;

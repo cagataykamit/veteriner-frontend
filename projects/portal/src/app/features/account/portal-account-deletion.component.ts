@@ -10,7 +10,7 @@ import { PortalAuthApi } from '@portal/app/core/auth/portal-auth.api';
 import { portalErrorMessage } from '@portal/app/core/errors/portal-errors';
 import { PortalClinicApi } from '@portal/app/features/clinic/portal-clinic.api';
 import { PortalResendTimer } from '@portal/app/features/auth/portal-resend-timer';
-import { telHref } from '@portal/app/shared/format/portal-labels';
+import { formatPortalPhone, telHref } from '@portal/app/shared/format/portal-labels';
 import { normalizeOneTimeCode, portalFieldError, portalOneTimeCodeValidator } from '@portal/app/shared/validation/portal-form-rules';
 
 type DeletionStep = 'info' | 'confirm';
@@ -68,7 +68,7 @@ export class PortalAccountDeletionComponent {
             forkJoin(
                 links.map((l) =>
                     this.clinicApi.clinic(l.linkId).pipe(
-                        map((c): PortalDeletionClinicContact => ({ linkId: l.linkId, name: c.name, phone: c.phone, phoneHref: telHref(c.phone), email: c.email })),
+                        map((c): PortalDeletionClinicContact => ({ linkId: l.linkId, name: c.name, phone: formatPortalPhone(c.phone), phoneHref: telHref(c.phone), email: c.email })),
                         catchError(() => of(nameOnly(l.linkId, l.clinicName)))
                     )
                 )

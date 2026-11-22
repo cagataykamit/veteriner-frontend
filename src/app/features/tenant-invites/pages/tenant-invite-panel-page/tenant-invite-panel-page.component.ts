@@ -22,14 +22,15 @@ import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator } from '@/app/shar
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { TenantRolePipe } from '@/app/shared/pipes/tenant-role.pipe';
 
 @Component({
     selector: 'app-tenant-invite-panel-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, AppPageHeaderComponent, AppLoadingStateComponent, DateInputComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, AppPageHeaderComponent, AppLoadingStateComponent, DateInputComponent, FormSubmitDirective, FormErrorSummaryComponent, TenantRolePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-page-header title="Kullanıcı daveti" description="Kuruma katılım için e-posta daveti oluşturun; davet edilen kullanıcı paket seçmez.">
+        <app-page-header title="Kullanıcı daveti" description="Davet ettiğiniz kişiye katılım bağlantısı e-postayla gönderilir; hesabını açarken ad-soyadını ve parolasını girer, paket seçmez.">
             <a actions routerLink="/panel/settings/invites/list" pButton type="button" class="p-button-secondary"><i class="pi pi-list"></i>Davet listesi</a>
         </app-page-header>
 
@@ -83,7 +84,7 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                             <select id="inviteRole" class="w-full p-inputtext p-component" style="min-height: 2.5rem" formControlName="operationClaimId">
                                 <option value="">Rol seçin</option>
                                 @for (r of operationClaims(); track r.id) {
-                                    <option [value]="r.id">{{ r.name }}</option>
+                                    <option [value]="r.id">{{ r.name | tenantRole }}</option>
                                 }
                             </select>
                             @if (operationClaims().length === 0 && !claimsLoadError()) {
@@ -119,8 +120,8 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                 <div class="card mb-4 border-primary-200 dark:border-primary-800">
                     <h5 class="mt-0 mb-3">Katılım bağlantısı</h5>
                     <p class="text-sm text-muted-color mt-0 mb-2">
-                        Bu bağlantıyı davet ettiğiniz kişiyle paylaşın. Süre:
-                        {{ formatExpires(created.expiresAtUtc) }}
+                        Katılım bağlantısı <strong>{{ created.email }}</strong> adresine e-postayla gönderildi. E-posta ulaşmazsa bu bağlantıyı kendiniz de
+                        paylaşabilirsiniz. Son geçerlilik: {{ formatExpires(created.expiresAtUtc) }}
                     </p>
                     <div class="p-3 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 break-all text-sm font-mono mb-3">
                         {{ joinUrl() }}
@@ -223,6 +224,12 @@ export class TenantInvitePanelPageComponent implements OnInit {
         this.auth.getMyClinics().subscribe({
             next: (list) => {
                 this.clinics.set(list);
+
+                // Tek klinik varsa (klinik yöneticisinde yalnız kendi kliniği) önceden seçili gelir.
+                if (list.length === 1 && !this.form.controls.clinicId.value) {
+                    this.form.controls.clinicId.setValue(list[0].id);
+                }
+
                 this.tenantInvites.listOperationClaims().subscribe({
                     next: (claims) => {
                         this.operationClaims.set(claims);

@@ -188,7 +188,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
         create();
 
         expect(el().textContent).toContain('Pamuk');
-        expect(el().textContent).toContain('Kedi · Tekir · Dişi · 4.4 kg');
+        expect(el().textContent).toContain('Kedi · Tekir · Dişi · 4,4 kg');
         expect(el().querySelector('a[href="/panel/pets/p1/edit"]')).not.toBeNull();
         expect(el().querySelector('[data-testid="todo-overdueVaccine"]')?.textContent).toContain('Karma');
         expect(el().textContent).toContain('Klinik özet');

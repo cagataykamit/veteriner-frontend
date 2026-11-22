@@ -48,10 +48,11 @@ describe('Portal biçimleri (tarih, para, etiket)', () => {
         expect(telHref('—')).toBeNull();
     });
 
-    it('Türkiye telefon numarasını gruplayarak gösterir; tanınmayan biçime dokunmaz', () => {
-        expect(formatPortalPhone('05439580091')).toBe('0543 958 00 91');
-        expect(formatPortalPhone(' 0232-555-12-34 ')).toBe('0232 555 12 34');
+    it('Türkiye telefon numarasını panel ve siteyle aynı biçimde (+90 …) gösterir; tanınmayan biçime dokunmaz', () => {
+        expect(formatPortalPhone('05439580091')).toBe('+90 543 958 00 91');
+        expect(formatPortalPhone(' 0232-555-12-34 ')).toBe('+90 232 555 12 34');
         expect(formatPortalPhone('+90 (543) 958 0091')).toBe('+90 543 958 00 91');
+        expect(formatPortalPhone('5439580091')).toBe('+90 543 958 00 91');
         expect(formatPortalPhone('444 1 234')).toBe('444 1 234');
         expect(formatPortalPhone(null)).toBe('');
     });

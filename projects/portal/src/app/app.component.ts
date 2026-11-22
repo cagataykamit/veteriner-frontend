@@ -5,6 +5,7 @@ import { isEmbeddableRoute, PORTAL_FRAMED } from './core/embed/portal-embed';
 import { isPortalNativePlatform } from './core/native/portal-native';
 import { PortalAppLockScreen } from './core/native/portal-app-lock-screen.component';
 import { PortalNetworkStatus } from './core/network/portal-network-status.service';
+import { PortalTheme } from './core/theme/portal-theme';
 
 /**
  * Kök. Başka bir sitenin çerçevesinde açılınca yalnız gömülebilir rota çizilir (APPT-021, sözleşme §15); diğer sayfalar (giriş,
@@ -53,6 +54,9 @@ export class PortalAppComponent {
     readonly currentUrl = signal('/');
 
     constructor() {
+        // Açık/koyu tema kökte, ilk açılışta uygulanır (cihaz teması ya da Hesabım > Görünüm tercihi).
+        inject(PortalTheme);
+
         if (!this.framed) {
             return;
         }

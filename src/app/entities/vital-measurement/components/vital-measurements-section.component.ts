@@ -24,12 +24,14 @@ import { VITAL_CONCURRENCY_CONFLICT_CODE, VITAL_UPDATE_PROBLEM_OVERRIDES } from 
 import {
     formatVitalValue,
     measuredAtError,
+    parseVitalInput,
     VITAL_BACKDATE_DAYS,
     VITAL_LATE_REASON_MAX,
     VITAL_LATE_REASON_MIN,
     VITAL_NOTE_MAX,
     vitalInputError,
     vitalSummary,
+    vitalUsualRangeWarning,
     vitalValuesFromInputs
 } from '@/app/entities/vital-measurement/utils/vital-measurement-rules';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
@@ -124,6 +126,8 @@ function vitalInputText(value: number | null): string {
                                     <input #valueInput [id]="uid + '-' + h.def.key" type="text" inputmode="decimal" autocomplete="off" class="w-full p-inputtext p-component tabular-nums" [formControlName]="h.def.key" [attr.data-testid]="'vital-input-' + h.def.key" />
                                     @if (valueError(h.def.key); as e) {
                                         <small class="text-danger block">{{ e }}</small>
+                                    } @else if (valueWarning(h.def.key); as w) {
+                                        <small class="text-amber-700 dark:text-amber-300 block" [attr.data-testid]="'vital-warning-' + h.def.key">{{ w }}</small>
                                     } @else if (!editing() && h.current) {
                                         <small class="text-muted-color block truncate tabular-nums" [attr.title]="h.current.measuredAtUtc | trDateTime">son {{ h.currentText }} · {{ shortWhen(h.current.measuredAtUtc) }}</small>
                                     }
@@ -213,8 +217,12 @@ function vitalInputText(value: number | null): string {
                         }
                     </div>
                     <p class="mt-2 mb-0 text-xs text-muted-color flex flex-wrap items-center gap-x-4 gap-y-1">
-                        <span class="inline-flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full bg-primary"></span>Vital ölçümü</span>
-                        <span class="inline-flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full border-2 border-primary"></span>Muayeneden</span>
+                        @if (pointSources().measurement) {
+                            <span class="inline-flex items-center gap-1" data-testid="vital-legend-measurement"><span class="inline-block w-2 h-2 rounded-full bg-primary"></span>Vital ölçümü</span>
+                        }
+                        @if (pointSources().examination) {
+                            <span class="inline-flex items-center gap-1" data-testid="vital-legend-examination"><span class="inline-block w-2 h-2 rounded-full border-2 border-primary"></span>Muayeneden</span>
+                        }
                         @if (series()?.truncated) {
                             <span data-testid="vital-truncated">Çok ölçüm var; yalnız en yenileri gösteriliyor.</span>
                         }
@@ -405,6 +413,8 @@ export class VitalMeasurementsSectionComponent {
 
     /** İptal edilmemiş noktalar, artan zaman (grafikler). */
     readonly points = computed(() => this.series()?.points ?? []);
+    /** Grafik açıklaması yalnız eğilimde bulunan kaynakları sayar (yatışta muayene noktası yoksa "Muayeneden" yazmaz). */
+    readonly pointSources = computed(() => ({ measurement: this.points().some((p) => p.source === 'VitalMeasurement'), examination: this.points().some((p) => p.source === 'Examination') }));
 
     /** Tablo satırları: en yeni üstte; istenirse iptal edilenlerle birlikte. */
     readonly rows = computed(() => [...this.points(), ...(this.showCancelled() ? this.cancelled() : [])].sort((a, b) => b.time - a.time));
@@ -679,6 +689,13 @@ export class VitalMeasurementsSectionComponent {
         const control = this.form.controls[key];
 
         return control.invalid && (control.touched || control.dirty) ? ((control.errors?.['vital'] as string | undefined) ?? null) : null;
+    }
+
+    /** Olağan dışı değerde (ör. ateş 45 °C) engellemeyen uyarı. */
+    protected valueWarning(key: VitalSignKey): string | null {
+        const value = parseVitalInput(this.form.controls[key].value as string);
+
+        return value === null || Number.isNaN(value) ? null : vitalUsualRangeWarning(key, value);
     }
 
     protected valueText(def: VitalSignDefinition, value: number | null): string {

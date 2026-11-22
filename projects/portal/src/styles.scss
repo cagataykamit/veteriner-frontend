@@ -21,6 +21,36 @@
     --portal-bottom-nav-height: 4rem;
 }
 
+/*
+ * Koyu tema (panelle aynı desen: kökte sınıf, PrimeNG `darkModeSelector`). Seçim cihaz temasını izler; Hesap > Görünüm'den
+ * açık ya da koyu sabitlenir (`portal-theme.ts`). Yazı olarak kullanılan lacivert ve bağlantı rengi koyuda `--portal-strong`,
+ * `--portal-link` ile değişir; açıkta bu değişkenler tanımsızdır, kliniğe özel randevu sayfasının marka rengi geçerli kalır.
+ */
+:root.portal-dark {
+    color-scheme: dark;
+    --vetinity-bg-soft: #0e2f2d;
+    --portal-bg: var(--p-surface-950);
+    --portal-surface: var(--p-surface-900);
+    --portal-border: var(--p-surface-700);
+    --portal-text: var(--p-surface-0);
+    --portal-text-muted: var(--p-surface-400);
+    --portal-strong: var(--p-surface-0);
+    --portal-link: var(--p-primary-400);
+    --portal-danger: var(--p-red-400);
+    --portal-teal-text: #7de8e1;
+    --portal-muted-bg: var(--p-surface-800);
+    --portal-muted-text: var(--p-surface-200);
+    --portal-selected-bg: #0e2f2d;
+    --portal-box-bg: var(--p-surface-950);
+    --portal-danger-soft-bg: #3a1511;
+    --portal-danger-soft-border: #7f2a1d;
+    --portal-danger-soft-text: #fecaca;
+    --portal-warn-bg: #2b1e0d;
+    --portal-warn-border: #7c4a14;
+    --portal-warn-strong-bg: #4a2f0c;
+    --portal-warn-text: #fbd38d;
+}
+
 html {
     font-size: 16px;
     -webkit-text-size-adjust: 100%;
@@ -37,7 +67,7 @@ body {
 }
 
 a {
-    color: var(--p-primary-700, #047857);
+    color: var(--portal-link, var(--p-primary-700, #047857));
 }
 
 :focus-visible {
@@ -161,7 +191,7 @@ a {
 
 .portal-field-error {
     font-size: 0.875rem;
-    color: var(--p-red-600, #dc2626);
+    color: var(--portal-danger, var(--p-red-600, #dc2626));
     margin: 0;
 }
 
@@ -212,7 +242,7 @@ a {
     padding: 0 0.5rem;
     background: none;
     border: 0;
-    color: var(--p-primary-700, #047857);
+    color: var(--portal-link, var(--p-primary-700, #047857));
     font: inherit;
     font-weight: 500;
     text-decoration: underline;
@@ -235,7 +265,7 @@ a {
     grid-template-columns: 1fr 1fr;
     gap: 0.25rem;
     padding: 0.25rem;
-    background: #eef2f6;
+    background: var(--portal-muted-bg, #eef2f6);
     border-radius: 0.75rem;
 }
 
@@ -252,7 +282,7 @@ a {
 
 .portal-segmented button.is-active {
     background: var(--portal-surface);
-    color: var(--vetinity-navy);
+    color: var(--portal-strong, var(--vetinity-navy));
     box-shadow: 0 1px 3px rgb(15 23 42 / 0.12);
 }
 
@@ -307,7 +337,7 @@ label.portal-option {
 
 .portal-option:has(input:checked) {
     border-color: var(--vetinity-teal);
-    background: #f2fbfa;
+    background: var(--portal-selected-bg, #f2fbfa);
     box-shadow: inset 0 0 0 1px var(--vetinity-teal);
 }
 
@@ -322,9 +352,9 @@ label.portal-option {
 
 /* Hukuki metin taslak bandı ve belge metni. */
 .portal-draft-band {
-    background: #fef3c7;
-    color: #78350f;
-    border: 1px solid #fcd34d;
+    background: var(--portal-warn-bg, #fef3c7);
+    color: var(--portal-warn-text, #78350f);
+    border: 1px solid var(--portal-warn-border, #fcd34d);
     border-radius: 0.5rem;
     padding: 0.625rem 0.875rem;
     font-size: 0.875rem;
@@ -359,7 +389,7 @@ label.portal-option {
     border: 1px solid var(--portal-border);
     border-radius: 0.5rem;
     padding: 0.75rem;
-    background: #fbfcfd;
+    background: var(--portal-box-bg, #fbfcfd);
 }
 
 .portal-details summary {
@@ -368,7 +398,7 @@ label.portal-option {
     min-height: var(--portal-touch);
     cursor: pointer;
     font-weight: 500;
-    color: var(--p-primary-700, #047857);
+    color: var(--portal-link, var(--p-primary-700, #047857));
 }
 
 .portal-offline-band {
@@ -462,7 +492,7 @@ label.portal-option {
     height: 2.5rem;
     border-radius: 0.75rem;
     background: var(--vetinity-bg-soft);
-    color: var(--vetinity-navy);
+    color: var(--portal-strong, var(--vetinity-navy));
     font-weight: 700;
     font-size: 1.125rem;
 }
@@ -488,7 +518,7 @@ label.portal-option {
     overflow: hidden;
     font-weight: 700;
     font-size: 1.0625rem;
-    color: var(--vetinity-navy);
+    color: var(--portal-strong, var(--vetinity-navy));
     white-space: nowrap;
     text-overflow: ellipsis;
 }

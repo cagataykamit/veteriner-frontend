@@ -68,7 +68,7 @@
             <p class="portal-muted">Portal üzerinden ödeme yapılamaz. {{ phoneHref() ? 'Ödeme için kliniği arayın.' : 'Ödeme kliniğinizde yapılır.' }}</p>
             @if (phoneHref(); as href) {
                 <a class="portal-action-link portal-action-link--primary" [href]="href">
-                    <i class="fa-solid fa-phone" aria-hidden="true"></i> {{ clinic.data()?.phone }}
+                    <i class="fa-solid fa-phone" aria-hidden="true"></i> {{ phoneText() }}
                 </a>
             } @else if (clinic.state() === 'loading') {
                 <portal-skeleton [rows]="1" message="Klinik telefonu yükleniyor…" />

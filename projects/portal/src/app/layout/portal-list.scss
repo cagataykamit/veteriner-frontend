@@ -128,3 +128,32 @@
 .portal-note p {
     margin: 0;
 }
+
+/* Koyu tema: rozet ve not tonları (değişkenler styles.scss :root.portal-dark). */
+.portal-dark {
+    .portal-row--attention {
+        border-color: var(--portal-warn-border);
+        background: var(--portal-warn-bg);
+    }
+
+    .portal-badge,
+    .portal-note {
+        background: var(--portal-muted-bg);
+        color: var(--portal-muted-text);
+    }
+
+    .portal-badge--info {
+        background: #0c2f45;
+        color: #93d5fb;
+    }
+
+    .portal-badge--success {
+        background: var(--vetinity-bg-soft);
+        color: var(--portal-teal-text);
+    }
+
+    .portal-badge--warning {
+        background: var(--portal-warn-strong-bg);
+        color: var(--portal-warn-text);
+    }
+}

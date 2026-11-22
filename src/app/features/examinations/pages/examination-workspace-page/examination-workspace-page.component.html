@@ -167,6 +167,8 @@
                             <input id="weightKg" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="weightKg" />
                             @if (vitalError('weightKg'); as e) {
                                 <small class="text-danger">{{ e }}</small>
+                            } @else if (vitalWarning('weightKg'); as w) {
+                                <small class="text-amber-700 dark:text-amber-300" data-testid="vital-warning-weightKg">{{ w }}</small>
                             }
                         </div>
                         <div class="col-span-6 md:col-span-3">
@@ -174,6 +176,8 @@
                             <input id="temperatureC" type="number" step="any" min="0" class="w-full p-inputtext p-component" formControlName="temperatureC" />
                             @if (vitalError('temperatureC'); as e) {
                                 <small class="text-danger">{{ e }}</small>
+                            } @else if (vitalWarning('temperatureC'); as w) {
+                                <small class="text-amber-700 dark:text-amber-300" data-testid="vital-warning-temperatureC">{{ w }}</small>
                             }
                         </div>
                         <div class="col-span-6 md:col-span-3">
@@ -181,6 +185,8 @@
                             <input id="heartRateBpm" type="number" step="1" min="0" class="w-full p-inputtext p-component" formControlName="heartRateBpm" />
                             @if (vitalError('heartRateBpm'); as e) {
                                 <small class="text-danger">{{ e }}</small>
+                            } @else if (vitalWarning('heartRateBpm'); as w) {
+                                <small class="text-amber-700 dark:text-amber-300" data-testid="vital-warning-heartRateBpm">{{ w }}</small>
                             }
                         </div>
                         <div class="col-span-6 md:col-span-3">
@@ -188,6 +194,8 @@
                             <input id="respiratoryRatePerMin" type="number" step="1" min="0" class="w-full p-inputtext p-component" formControlName="respiratoryRatePerMin" />
                             @if (vitalError('respiratoryRatePerMin'); as e) {
                                 <small class="text-danger">{{ e }}</small>
+                            } @else if (vitalWarning('respiratoryRatePerMin'); as w) {
+                                <small class="text-amber-700 dark:text-amber-300" data-testid="vital-warning-respiratoryRatePerMin">{{ w }}</small>
                             }
                         </div>
                         <div class="col-span-12 md:col-span-6">
