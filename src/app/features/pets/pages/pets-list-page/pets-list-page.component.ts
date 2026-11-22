@@ -114,7 +114,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz hasta yok." [createLabel]="canCreatePet && !ro.mutationBlocked() ? 'İlk hastayı ekle' : null" [createLink]="'/panel/pets/new'" (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"
@@ -125,16 +125,16 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="list.onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '64rem' }"
+                                [tableStyle]="{ 'min-width': '52rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >
                                 <ng-template #header>
                                     <tr>
                                         <th>Ad</th>
+                                        <th>Müşteri</th>
                                         <th>Tür</th>
-                                        <th>Cins</th>
-                                        <th>Renk</th>
+                                        <th>Irk</th>
                                         <th>Kilo (kg)</th>
                                         <th style="width: 8rem">İşlemler</th>
                                     </tr>
@@ -147,9 +147,15 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                                 <span class="ml-2 text-xs font-medium border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5" data-testid="pet-row-deceased">Vefat</span>
                                             }
                                         </td>
+                                        <td>
+                                            @if (row.clientId && row.clientName) {
+                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary no-underline" data-testid="pet-row-client">{{ row.clientName }}</a>
+                                            } @else {
+                                                —
+                                            }
+                                        </td>
                                         <td><span class="mr-1.5" aria-hidden="true">{{ speciesIcon(row.speciesName) }}</span>{{ row.speciesName }}</td>
                                         <td>{{ row.breed }}</td>
-                                        <td>{{ row.colorName }}</td>
                                         <td>{{ row.weight }}</td>
                                         <td>
                                             <div class="flex items-center gap-1">
@@ -176,10 +182,10 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                         }
                                     </div>
                                     <div class="space-y-2 mb-3 min-w-0 text-sm">
-                                        @if (row.clientId) {
+                                        @if (row.clientId && row.clientName) {
                                             <div>
-                                                <span class="text-muted-color font-medium">Sahip: </span>
-                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words"> Müşteri </a>
+                                                <span class="text-muted-color font-medium">Müşteri: </span>
+                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{ row.clientName }}</a>
                                             </div>
                                         }
                                         <div>
@@ -191,18 +197,8 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                                             <span class="break-words">{{ row.breed }}</span>
                                         </div>
                                     </div>
-                                    @if (row.colorName || row.weight) {
-                                        <div class="text-xs text-muted-color mb-3 min-w-0 break-words">
-                                            @if (row.colorName) {
-                                                <span>Renk: {{ row.colorName }}</span>
-                                            }
-                                            @if (row.colorName && row.weight) {
-                                                <span> · </span>
-                                            }
-                                            @if (row.weight) {
-                                                <span>{{ row.weight }} kg</span>
-                                            }
-                                        </div>
+                                    @if (phoneDetailLine(row); as line) {
+                                        <div class="text-xs text-muted-color mb-3 min-w-0 break-words">{{ line }}</div>
                                     }
                                     <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
                                         <app-row-action-button action="detail" [link]="['/panel/pets', row.id]" />
@@ -311,6 +307,13 @@ export class PetsListPageComponent implements OnInit {
     readonly canUpdatePet = this.auth.hasOperationClaim(PETS_UPDATE_CLAIM);
     /** Tür sütunu/satırında tür simgesi. */
     readonly speciesIcon = speciesEmoji;
+
+    /** Telefon kartının alt satırı: bilinen renk ve kilo; boş parça yazılmaz ("—" gösterilmez). */
+    phoneDetailLine(row: PetListItemVm): string {
+        const known = (v: string) => !!v && v !== '—';
+
+        return [known(row.colorName) ? `Renk: ${row.colorName}` : '', known(row.weight) ? `${row.weight} kg` : ''].filter(Boolean).join(' · ');
+    }
 
     readonly displayedRows = computed(() => this.rawItems());
 

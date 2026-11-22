@@ -36,7 +36,7 @@ const client: ClientDetailVm = {
     rowVersion: 'rv1'
 };
 
-const pet = (id: string, name: string, status: PetListItemVm['status'] = 'Active'): PetListItemVm => ({ id, clientId: 'c1', speciesId: 's1', name, speciesName: 'Kedi', breed: 'Tekir', colorName: '—', weight: '—', status });
+const pet = (id: string, name: string, status: PetListItemVm['status'] = 'Active'): PetListItemVm => ({ id, clientId: 'c1', clientName: '', speciesId: 's1', name, speciesName: 'Kedi', breed: 'Tekir', colorName: '—', weight: '—', status });
 
 const paymentSummary: ClientPaymentSummaryVm = {
     clientId: 'c1',

@@ -158,7 +158,7 @@ describe('PetsListPageComponent — durum süzgeci varsayılanı', () => {
 
 /** ADR-026 madde 6: Düzenle, detay sayfasındaki Düzenle ile aynı yetki ve salt okunur koşuluyla satırda Detay'ın yanındadır. */
 describe('PetsListPageComponent — satırda Düzenle', () => {
-    const pet: PetListItemVm = { id: 'p1', clientId: 'c1', speciesId: 's1', name: 'Pamuk', speciesName: 'Kedi', breed: 'Tekir', colorName: '', weight: '', status: 'Active' };
+    const pet: PetListItemVm = { id: 'p1', clientId: 'c1', clientName: 'Ayşe Yılmaz', speciesId: 's1', name: 'Pamuk', speciesName: 'Kedi', breed: 'Tekir', colorName: '', weight: '', status: 'Active' };
 
     function create(claims: string[], mutationBlocked = false): HTMLElement {
         sessionStorage.clear();
@@ -202,6 +202,16 @@ describe('PetsListPageComponent — satırda Düzenle', () => {
 
         expect(readOnly.length).toBe(2);
         expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBe(true);
+    });
+
+    /** M-01: aynı adlı hastalar sahibin adıyla ayrışır; telefon kartında sabit "Müşteri" kelimesi değil ad yazılır. */
+    it('tabloda ve telefon kartında müşteri adı müşteri kartına bağlanır', () => {
+        const el = create([]);
+        const clientLinks = Array.from(el.querySelectorAll('a[href="/panel/clients/c1"]'));
+
+        expect(clientLinks.length, 'tablo + mobil kart').toBe(2);
+        expect(clientLinks.every((a) => a.textContent?.trim() === 'Ayşe Yılmaz')).toBe(true);
+        expect(el.textContent).not.toContain('Renk:');
     });
 });
 
