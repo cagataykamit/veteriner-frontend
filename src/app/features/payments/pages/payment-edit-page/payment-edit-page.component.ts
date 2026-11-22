@@ -47,7 +47,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                 <app-error-state [detail]="loadError()!" [showRetry]="paymentLoadRetryEnabled()" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Ödemeyi Düzenle" description="Ödeme kaydını güncelleyin." />
+            <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" title="Ödemeyi düzenle" description="Ödeme kaydını güncelleyin." />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {

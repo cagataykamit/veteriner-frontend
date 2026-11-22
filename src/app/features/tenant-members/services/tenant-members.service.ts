@@ -71,7 +71,7 @@ export class TenantMembersService {
         return this.api.get<unknown>(ApiEndpoints.tenants.assignableRolePermissionMatrix(tenantId)).pipe(
             map((raw) => mapAssignableRolePermissionMatrixRaw(raw)),
             catchError((err: HttpErrorResponse) =>
-                throwError(() => new Error(messageFromHttpError(err, 'Rol Yetki Özeti yüklenemedi.')))
+                throwError(() => new Error(messageFromHttpError(err, 'Rol yetki özeti yüklenemedi.')))
             )
         );
     }

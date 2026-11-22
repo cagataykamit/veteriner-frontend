@@ -1,29 +1,60 @@
 import type { TenantRoleMatrixPermissionVm } from '@/app/features/tenant-members/models/tenant-members-vm.model';
 
-/** İngilizce grup adı → Türkçe panel etiketi (normalize anahtar: küçük harf, boşluksuz). */
+/**
+ * İngilizce grup adı → Türkçe panel etiketi (normalize anahtar: küçük harf, boşluksuz). Backend `PermissionCatalog` gruplarının
+ * tamamı burada; eksik kalan grup Rol yetki özetinde kod adıyla ("CashCounts") görünüyordu (A-03).
+ */
 const PERMISSION_GROUP_TR: Readonly<Record<string, string>> = {
+    administrations: 'Uygulanan ürünler',
+    ai: 'Yapay zekâ',
+    apikeys: 'API erişimi',
+    appointmentrequests: 'Randevu talepleri',
     appointments: 'Randevular',
     breeds: 'Irklar',
+    careinstructions: 'Bakım talimatları',
+    cashcounts: 'Kasa sayımı',
+    cashmovements: 'Kasa hareketleri',
+    cashregisters: 'Kasalar',
+    charges: 'Ücretler',
     clients: 'Müşteriler',
+    clinicalsnippets: 'Metin parçaları',
+    clinicalterms: 'Tanı ve şikâyet sözlüğü',
     clinics: 'Klinikler',
+    customdevelopmentrequests: 'Size özel geliştirmeler',
     dashboard: 'Panel özeti',
+    dataexport: 'Veri dışa aktarma',
     diagnostics: 'Tanılama',
+    drugguide: 'İlaç rehberi',
+    edocuments: 'e-Belge',
     examinations: 'Muayeneler',
+    examinationtemplates: 'Muayene şablonları',
     hospitalizations: 'Yatışlar',
+    imaging: 'Görüntüleme',
+    imports: 'Veri içe aktarma',
     labresults: 'Laboratuvar',
     outbox: 'Gönderim kuyruğu',
+    ownerportal: 'Hasta sahibi portalı',
     payments: 'Ödemeler',
     permissions: 'Yetkiler',
     pets: 'Hastalar',
     prescriptions: 'Reçeteler',
+    productcategories: 'Ürün kategorileri',
+    products: 'Ürünler',
+    reminders: 'Hatırlatmalar',
+    reports: 'Raporlar',
     roles: 'Roller',
+    sales: 'Satışlar',
     species: 'Türler',
+    stockmovements: 'Stok hareketleri',
     subscriptions: 'Abonelik',
     tenants: 'Kurum',
     test: 'Test',
     treatments: 'Tedaviler',
     users: 'Kullanıcılar',
-    vaccinations: 'Aşılar'
+    vaccinations: 'Aşılar',
+    vaccinedefinitions: 'Aşı tanımları',
+    visits: 'Gelişler',
+    vitalmeasurements: 'Vital ölçümleri'
 };
 
 function normGroupKey(raw: string): string {

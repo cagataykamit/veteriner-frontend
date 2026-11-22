@@ -5,6 +5,8 @@ export interface PetListItemDto {
     id: string;
     tenantId?: string;
     clientId?: string | null;
+    /** Sahibin adı — aynı adlı hastaları listede ayırt etmek için. */
+    clientName?: string | null;
     name?: string | null;
     speciesId?: string | null;
     speciesName?: string | null;

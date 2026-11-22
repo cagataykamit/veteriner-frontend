@@ -114,7 +114,7 @@ describe('ClinicsOverviewPageComponent (TIER-007)', () => {
         await create(overview([]));
 
         expect(get).not.toHaveBeenCalled();
-        expect(text('plan-upgrade-notice')).toContain('Şubeler özeti Kurumsal paketinde var');
+        expect(text('plan-upgrade-notice')).toContain('Klinikler özeti Kurumsal paketinde var');
     });
 
     it('paket bilgisi gelmeden istek göndermez; gelince bir kez yükler', async () => {

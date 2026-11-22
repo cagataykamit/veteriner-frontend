@@ -5,6 +5,8 @@ export interface PetListItemVm {
     id: string;
     /** Liste DTO’sunda varsa; client’a göre filtre için (API ClientId yok sayarsa yedek). */
     clientId: string | null;
+    /** Sahibin adı; eski yanıtta yoksa boş. */
+    clientName: string;
     /** Tür kimliği — aşı tanımı dropdown filtrelemesi vb. */
     speciesId: string | null;
     name: string;

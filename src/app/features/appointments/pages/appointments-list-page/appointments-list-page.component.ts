@@ -150,7 +150,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" [emptyMessage]="emptyMessage()" [createLabel]="canCreateAppointment && !ro.mutationBlocked() ? 'İlk randevuyu oluştur' : null" [createLink]="'/panel/appointments/new'" (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"
@@ -161,7 +161,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="list.onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '78rem' }"
+                                [tableStyle]="{ 'min-width': '60rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >

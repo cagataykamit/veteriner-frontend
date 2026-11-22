@@ -44,7 +44,7 @@ export const PANEL_COPY = {
     /** Tüm raporlarda süzgeç değişince sonuç kendiliğinden yenilenir (kayıt defterleri ve gün sonundaki Filtrele düğmesi isteğe bağlıdır). */
     reportsFixFilterHint: 'Filtreleri (ör. tarih aralığını) düzeltin; sonuç kendiliğinden yenilenir.',
     /** Kayıt defterleri */
-    registerPeriodHint: 'Tarih aralığını seçip Filtrele düğmesine basın. Defterler en çok 366 günlük aralıkla okunur.',
+    registerPeriodHint: 'Tarih aralığını seçip Filtrele düğmesine basın. En çok bir yıllık aralık seçilebilir.',
     registerFormatUnverified: 'Resmî defter biçimine uygunluk doğrulanmamıştır; yasal gereklilikler için mevzuatı kontrol edin.',
     registerPrint: 'Yazdır',
     registerRecordCount: 'kayıt',
@@ -144,11 +144,11 @@ export const PANEL_COPY = {
     outstandingBalancesReportEmptyMessage: 'Borçlu müşteri bulunamadı.',
     outstandingBalancesReportEmptyHint: 'Seçili filtrelere uygun açık bakiye yok. En az tutarı veya aramayı değiştirip tekrar deneyin.',
     /** Kiracı — rol yetki matrisi (salt okunur) */
-    tenantRoleMatrixTitle: 'Rol Yetki Özeti',
+    tenantRoleMatrixTitle: 'Rol yetki özeti',
     tenantRoleMatrixDescription:
         'Bu ekran salt okunur bir özet görünümüdür. Rollerin hangi işlere izin verdiğini gösterir; buradan değiştirilemez.',
-    tenantRoleMatrixLoading: 'Rol Yetki Özeti yükleniyor…',
-    tenantRoleMatrixLoadError: 'Rol Yetki Özeti yüklenemedi.',
+    tenantRoleMatrixLoading: 'Rol yetki özeti yükleniyor…',
+    tenantRoleMatrixLoadError: 'Rol yetki özeti yüklenemedi.',
     tenantRoleMatrixEmptyMessage: 'Bu rol için ayrı yetki bağı tanımlı değil.',
     tenantRoleMatrixEmptyHint: 'Bu ortamda rol yetki bağları tanımlı değil veya henüz uygulanmamış olabilir.',
     tenantRoleMatrixGlobalInfo:

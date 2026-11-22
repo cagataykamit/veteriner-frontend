@@ -125,7 +125,7 @@ function toPetResultFromListItem(i: PetListItemVm): GlobalSearchPetVm {
         name: i.name,
         clientId: i.clientId?.trim() || null,
         summary: [i.speciesName, i.breed].map(present).filter(Boolean).join(' · '),
-        ownerName: '',
+        ownerName: present(i.clientName),
         ownerPhone: '',
         microchip: '',
         deceased: i.status === 'Deceased'

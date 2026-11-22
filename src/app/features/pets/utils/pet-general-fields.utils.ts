@@ -17,7 +17,7 @@ export interface PetGeneralFields {
 export function buildPetGeneralFields(pet: PetDetailVm): PetGeneralFields {
     const fields: PetGeneralField[] = [
         { label: 'Tür', value: pet.speciesName },
-        { label: 'Cins', value: pet.breed },
+        { label: 'Irk', value: pet.breed },
         { label: 'Cinsiyet', value: petGenderLabel(pet.gender) },
         { label: 'Renk', value: pet.colorName },
         { label: 'Desen', value: pet.patternName },

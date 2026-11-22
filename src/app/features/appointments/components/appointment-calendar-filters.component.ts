@@ -85,7 +85,7 @@ interface Option {
                 </div>
             </app-filter-field>
             @if (clinics().length > 1) {
-                <app-filter-field label="Şube" labelId="calFltClinic" width="select">
+                <app-filter-field label="Klinik" labelId="calFltClinic" width="select">
                     <p-select
                         ariaLabelledBy="calFltClinic"
                         inputId="calFltClinicInput"

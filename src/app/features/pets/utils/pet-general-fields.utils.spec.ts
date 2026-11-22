@@ -22,7 +22,7 @@ describe('buildPetGeneralFields', () => {
         const { filled, empty } = buildPetGeneralFields(pet({}));
 
         expect(filled.map((f) => f.label)).toEqual(['Tür', 'Ağırlık', 'Kısırlaştırılmış mı?']);
-        expect(empty.map((f) => f.label)).toEqual(['Cins', 'Cinsiyet', 'Renk', 'Desen', 'Çip numarası', 'Karne / Küpe no', 'Özel protokol no', 'HBS kimlik no']);
+        expect(empty.map((f) => f.label)).toEqual(['Irk', 'Cinsiyet', 'Renk', 'Desen', 'Çip numarası', 'Karne / Küpe no', 'Özel protokol no', 'HBS kimlik no']);
     });
 
     it('hepsi doluysa boş liste yoktur', () => {

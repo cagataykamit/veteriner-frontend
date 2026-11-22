@@ -59,14 +59,14 @@ interface OpenItemRow {
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="end-of-day-page">
-            <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" class="eod-screen-only" title="Gün sonu" description="Günün ücret, tahsilat, kasa sayımı ve açık işlerini tek yerde görün. Günü kilitleme yoktur." />
+            <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" class="eod-screen-only" title="Gün sonu" description="Günün ücret, tahsilat, kasa sayımı ve açık işlerini tek yerde görün." />
 
             <app-report-filter-bar
                 class="eod-screen-only block"
                 [state]="state"
                 idPrefix="eodRep"
                 dateLimit="past"
-                periodHint="Tek gün için başlangıç ve bitiş tarihini aynı seçin; varsayılan bugündür. En çok 366 günlük aralık okunur."
+                periodHint="Tek gün için başlangıç ve bitiş tarihini aynı seçin; varsayılan bugündür. En çok bir yıllık aralık seçilebilir."
                 searchPlaceholder=""
                 [activeBadges]="false"
             >
@@ -424,7 +424,7 @@ export class EndOfDayPageComponent implements OnInit, OnDestroy {
         }
 
         const rows: (OpenItemRow | null)[] = [
-            o.unchargedVisitCount === null ? null : { label: 'Ücretlenmemiş ziyaret', value: String(o.unchargedVisitCount), warn: o.unchargedVisitCount > 0 },
+            o.unchargedVisitCount === null ? null : { label: 'Ücretlenmemiş geliş', value: String(o.unchargedVisitCount), warn: o.unchargedVisitCount > 0 },
             o.awaitingLabCount === null
                 ? null
                 : {
@@ -437,7 +437,7 @@ export class EndOfDayPageComponent implements OnInit, OnDestroy {
                 ? null
                 : {
                       label: 'Borçlu çıkan',
-                      value: `${o.outstandingVisitCount} ziyaret${o.outstandingAmount === null ? '' : ` · ${this.money(o.outstandingAmount)}`}`,
+                      value: `${o.outstandingVisitCount} geliş${o.outstandingAmount === null ? '' : ` · ${this.money(o.outstandingAmount)}`}`,
                       warn: o.outstandingVisitCount > 0,
                       link: this.auth.hasOperationClaim(CHARGES_READ_CLAIM) ? { route: `${REPORTS_ROUTE}/outstanding-balances`, text: 'Borç raporu' } : undefined
                   },

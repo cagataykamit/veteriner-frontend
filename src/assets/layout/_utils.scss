@@ -42,6 +42,58 @@
     }
 }
 
+/*
+ * Liste tablosu (G-01): tablonun kapsayıcısına `list-table`. Tablo kart genişliğine sığmazsa yana kayar, ama son sütun
+ * (işlemler / durum) sağa yapışık kalır; düzenle, iptal gibi eylemlere kaydırmadan ulaşılır. Kaydırılacak içerik
+ * varken yapışık sütunun solunda ince gölge belirir (scroll-state destekleyen tarayıcılarda).
+ * Telefonda kart satırına dönen tablolarda (`table-stack-phone`) yapışma kapalıdır.
+ */
+.list-table {
+    overflow-x: auto;
+
+    // Yatay kaydırma PrimeNG'nin tablo kabında olur; yapışma ve gölge sorgusu ona göre çalışır.
+    .p-datatable-table-container {
+        container-type: scroll-state;
+    }
+
+    @media (min-width: 576px) {
+        // Hücredeki müşteri / hasta bağlantısı satır kırmaz (K-03): "TEST / Mustafa / Aydın" gibi üç satıra bölünmesin.
+        .p-datatable-tbody > tr > td > a {
+            white-space: nowrap;
+        }
+
+        .p-datatable-table > :is(.p-datatable-thead, .p-datatable-tbody) > tr > :last-child {
+            position: sticky;
+            right: 0;
+            z-index: 1;
+        }
+
+        .p-datatable-tbody > tr > td:last-child {
+            background: inherit;
+        }
+
+        @container scroll-state(scrollable: inline-end) {
+            .p-datatable-table > :is(.p-datatable-thead, .p-datatable-tbody) > tr > :last-child {
+                box-shadow:
+                    inset 1px 0 0 var(--surface-border),
+                    -10px 0 10px -6px rgb(0 0 0 / 0.18);
+            }
+        }
+    }
+}
+
+/*
+ * Yerel <select> PrimeNG giriş kutusu sınıfını (`p-inputtext`) taşıyınca tarayıcının açılır oku kayboluyor, alan düz metin
+ * kutusu gibi görünüyordu (A-05, davet formu). Ok burada, tek yerde geri verilir; renk iki temada da ikincil metin tonu.
+ */
+select.p-inputtext {
+    padding-inline-end: 2.25rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2364748b' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+}
+
 /* Native tarih/saat — kompakt input (date: md:max-w-64, datetime-local: md:max-w-96) yanında satır içi hata kaymasını önler */
 input[type='date'] ~ small.text-danger,
 input[type='date'] ~ small.text-amber-600,

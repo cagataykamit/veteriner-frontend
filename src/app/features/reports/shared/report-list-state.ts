@@ -128,6 +128,9 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
 
     readonly clinicOptions = signal<{ label: string; value: string }[]>([{ label: PANEL_COPY.reportsClinicPanelDefault, value: '' }]);
 
+    /** Rapor satırındaki Klinik sütunu yalnız birden çok kliniği olan kullanıcıda anlamlı; tek klinikte hep aynı adı yazar (G-01). */
+    readonly showClinicColumn = computed(() => this.clinicOptions().length > 2);
+
     /**
      * Tablo ilk sonuçla oluşurken yaydığı tembel yükleme olayı yutulur. Sonuç alanı yenilemede tabloyu yeniden kurmadığından
      * bayrak yalnız açılışta kurulur; sonradan kurulursa takılı kalıp kullanıcının bir sonraki sayfa tıklamasını yutar.

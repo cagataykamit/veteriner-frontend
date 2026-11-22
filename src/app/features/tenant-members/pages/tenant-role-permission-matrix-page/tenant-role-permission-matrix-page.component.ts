@@ -54,7 +54,7 @@ type MatrixRowView = TenantRolePermissionMatrixRowVm & { groups: PermissionGroup
                                         <p class="text-xs font-semibold text-muted-color m-0 mb-2">{{ g.title }}</p>
                                         <ul class="list-none p-0 m-0 flex flex-wrap gap-2">
                                             @for (p of g.items; track p.id + permissionDisplayLabel(p)) {
-                                                <li class="text-xs sm:text-sm max-w-[18rem] truncate px-2 py-1 rounded-md bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-600" [attr.title]="permissionTooltipText(p)">
+                                                <li class="text-xs sm:text-sm max-w-full break-words px-2 py-1 rounded-md bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-600" [attr.title]="permissionTooltipText(p)">
                                                     {{ permissionDisplayLabel(p) }}
                                                 </li>
                                             }

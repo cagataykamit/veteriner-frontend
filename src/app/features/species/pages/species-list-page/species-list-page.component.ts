@@ -53,24 +53,20 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <app-list-empty-state [filtered]="false" emptyMessage="Henüz tür tanımı yok." [createLabel]="canCreateSpecies() && !ro.mutationBlocked() ? 'Yeni tür ekle' : null" [createLink]="speciesRoute + '/new'" />
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
-                            <p-table [value]="speciesRows()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20, 50]" [tableStyle]="{ 'min-width': '60rem' }">
+                            <p-table [value]="speciesRows()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20, 50]" [tableStyle]="{ 'min-width': '32rem' }">
                                 <ng-template #header>
                                     <tr>
                                         <th>Ad</th>
-                                        <th>Kod</th>
                                         <th>Durum</th>
-                                        <th>Sıra</th>
                                         <th style="width: 6rem">İşlemler</th>
                                     </tr>
                                 </ng-template>
                                 <ng-template #body let-row>
                                     <tr>
                                         <td class="font-medium">{{ row.name }}</td>
-                                        <td>{{ row.code }}</td>
                                         <td>
                                             <app-status-tag [label]="activeLabel(row.isActive)" [severity]="activeSeverity(row.isActive)" />
                                         </td>
-                                        <td>{{ row.displayOrder }}</td>
                                         <td>
                                             @if (canUpdateSpecies() && !ro.mutationBlocked()) {
                                                 <app-row-action-button action="edit" [link]="[speciesRoute, row.id, 'edit']" />
@@ -91,10 +87,6 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                     <div class="flex flex-wrap items-start justify-between gap-2 gap-y-1 mb-2 min-w-0">
                                         <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">{{ row.name }}</div>
                                         <app-status-tag [label]="activeLabel(row.isActive)" [severity]="activeSeverity(row.isActive)" />
-                                    </div>
-                                    <div class="text-xs text-muted-color mb-3 min-w-0 space-y-0.5">
-                                        <div>Kod: {{ row.code }}</div>
-                                        <div>Sıra: {{ row.displayOrder }}</div>
                                     </div>
                                     <div class="flex justify-end pt-1 border-t border-surface-200 dark:border-surface-700">
                                         @if (canUpdateSpecies() && !ro.mutationBlocked()) {

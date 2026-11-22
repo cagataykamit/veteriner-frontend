@@ -12,7 +12,7 @@ import { injectReturnTarget } from '@/app/shared/utils/return-target.utils';
     imports: [AppPageHeaderComponent, TreatmentFormComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-page-header categoryLink="/panel/treatments" categoryLinkLabel="Tedavi listesine dön" title="Yeni Tedavi" description="Tedavi kaydı oluşturun." />
+        <app-page-header categoryLink="/panel/treatments" categoryLinkLabel="Tedavi listesine dön" title="Yeni tedavi" description="Tedavi kaydı oluşturun." />
         <app-treatment-form [contextParams]="contextParams" (saved)="onSaved($event)" (cancelled)="goBack()" />
     `
 })

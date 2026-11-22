@@ -11,7 +11,7 @@ describe('resolvePanelPageTitle', () => {
     it('en uzun önek kazanır (takvim, rapor)', () => {
         expect(resolvePanelPageTitle('/panel/appointments/calendar')).toBe('Randevu takvimi');
         expect(resolvePanelPageTitle('/panel/appointments/new')).toBe('Randevular');
-        expect(resolvePanelPageTitle('/panel/reports/payments')).toBe('Ödeme Raporu');
+        expect(resolvePanelPageTitle('/panel/reports/payments')).toBe('Ödeme hareketleri');
         expect(resolvePanelPageTitle('/panel/sales/new')).toBe('Hızlı satış');
         expect(resolvePanelPageTitle('/panel/reports')).toBe('Raporlar');
     });

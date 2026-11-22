@@ -43,7 +43,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                 <app-error-state [detail]="loadError()!" [showRetry]="!!currentId()" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" title="Müşteri Düzenle" description="Müşteri kaydını güncelleyin." />
+            <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" title="Müşteriyi düzenle" description="Müşteri kaydını güncelleyin." />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {

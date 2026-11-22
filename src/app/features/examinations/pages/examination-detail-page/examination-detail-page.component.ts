@@ -72,7 +72,7 @@ const RECORD_TEXT_SECTIONS: readonly {
     label: string;
     afterVitals: boolean;
 }[] = [
-    { field: 'visitReason', label: 'Şikâyet / ziyaret sebebi', afterVitals: false },
+    { field: 'visitReason', label: 'Şikâyet / geliş nedeni', afterVitals: false },
     { field: 'anamnesis', label: 'Anamnez', afterVitals: false },
     { field: 'findings', label: 'Klinik bulgular', afterVitals: false },
     { field: 'assessment', label: 'Değerlendirme / tanı', afterVitals: true },
@@ -138,14 +138,14 @@ const RECORD_TEXT_SECTIONS: readonly {
             <app-page-header categoryLink="/panel/examinations" categoryLinkLabel="Muayene listesine dön" />
 
             <!-- Kimlik kartı (müşteri/hasta kartıyla aynı dil): durum rozeti, muayene tarihi (alt başlık), kayıt satırı, hasta/sahip satırı; sağda Düzenle, şablon, geçmiş. Tarih ve durum tek yerde; gösterge şeridi tekrar etmez. -->
-            <app-detail-identity-card icon="pi pi-clipboard" title="Muayene" [subtitle]="e.examinedAtUtc | trDateTime" [meta]="'Oluşturulma: ' + (e.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (e.updatedAtUtc | trDateTime)" ariaLabel="Muayene kimliği" testId="exam-identity-card">
+            <app-detail-identity-card icon="pi pi-clipboard" title="Muayene" [subtitle]="e.examinedAtUtc | trDateTime" [meta]="'Oluşturulma: ' + (e.createdAtUtc | trDateTime) + (e.updatedAtUtc ? ' · Güncellenme: ' + (e.updatedAtUtc | trDateTime) : '')" ariaLabel="Muayene kimliği" testId="exam-identity-card">
                 <span badges data-testid="exam-status">
                     <app-status-tag [label]="statusLabel(e.status)" [severity]="statusSeverity(e.status)" />
                 </span>
                 <app-examination-patient-header [petId]="e.petId" [clientId]="e.clientId" />
                 <ng-container actions>
                     @if (canApplyTemplateNow()) {
-                        <button pButton type="button" class="p-button-text p-button-secondary" data-testid="template-apply-open" (click)="openTemplateDialog(null)"><i class="pi pi-clone"></i>Şablon uygula</button>
+                        <button pButton type="button" class="p-button-outlined p-button-secondary" data-testid="template-apply-open" (click)="openTemplateDialog(null)"><i class="pi pi-clone"></i>Şablon uygula</button>
                     }
                     @if (canUpdateExamination && isEditable(e.status)) {
                         @if (!ro.mutationBlocked()) {
@@ -206,16 +206,16 @@ const RECORD_TEXT_SECTIONS: readonly {
                     @if (visitOpen) {
                         @if (visitOpen.inProgress && canUpdateVisit && !ro.mutationBlocked()) {
                             <button pButton type="button" class="p-button-primary" [disabled]="completingVisit()" (click)="completeOpenVisit()" data-testid="exam-complete-visit">
-                                <i class="p-button-icon" [class]="completingVisit() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Ziyareti tamamla
+                                <i class="p-button-icon" [class]="completingVisit() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Gelişi tamamla
                             </button>
                         }
                         <a [routerLink]="['/panel/today']" pButton type="button" class="p-button-outlined p-button-secondary" data-testid="exam-back-to-today"><i class="pi pi-arrow-left"></i>Bugün'e dön</a>
                     }
                     @if (canCreateCharge) {
                         @if (!ro.mutationBlocked()) {
-                            <a [routerLink]="['/panel/charges/new']" [queryParams]="moneyContext" pButton type="button" class="p-button-primary" data-testid="charge-new-link"><i class="pi pi-plus"></i>Ücret ekle</a>
+                            <a [routerLink]="['/panel/charges/new']" [queryParams]="moneyContext" pButton type="button" class="p-button-outlined p-button-secondary" data-testid="charge-new-link"><i class="pi pi-plus"></i>Ücret ekle</a>
                         } @else {
-                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-lock"></i>Ücret ekle (salt okunur)</button>
+                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Ücret ekle (salt okunur)</button>
                         }
                     }
                     @if (canCreatePayment) {
@@ -448,7 +448,7 @@ export class ExaminationDetailPageComponent implements OnInit, HasUnsavedChanges
     readonly canUpdateVisit = this.auth.hasOperationClaim(VISITS_UPDATE_CLAIM);
     /**
      * Muayenenin bağlı olduğu geliş hâlâ açıksa (Sırada / Muayenede) kimliği ve durumu: kayıttan sonra "Bugün'e dön" ve muayenedeyse
-     * "Ziyareti tamamla" gösterilir; geliş açık unutulup ertesi gün "Önceki günden açık" olarak dönmesin (2026-11-19).
+     * "Gelişi tamamla" gösterilir; geliş açık unutulup ertesi gün "Önceki günden açık" olarak dönmesin (2026-11-19).
      */
     readonly openVisit = signal<{ examinationId: string; visitId: string; inProgress: boolean } | null>(null);
     readonly completingVisit = signal(false);
@@ -715,12 +715,12 @@ export class ExaminationDetailPageComponent implements OnInit, HasUnsavedChanges
             next: () => {
                 this.completingVisit.set(false);
                 this.openVisit.set(null);
-                this.messages.add({ severity: 'success', summary: 'Ziyaret tamamlandı.', life: 3000 });
+                this.messages.add({ severity: 'success', summary: 'Geliş tamamlandı.', life: 3000 });
                 void this.router.navigate(['/panel/today']);
             },
             error: (e: unknown) => {
                 this.completingVisit.set(false);
-                this.messages.add({ severity: 'error', summary: 'Ziyaret tamamlanamadı.', detail: panelHttpFailureMessage(e, 'Ziyaret tamamlanamadı.'), life: 6000 });
+                this.messages.add({ severity: 'error', summary: 'Geliş tamamlanamadı.', detail: panelHttpFailureMessage(e, 'Ziyaret tamamlanamadı.'), life: 6000 });
             }
         });
     }

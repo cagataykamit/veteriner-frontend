@@ -94,7 +94,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz muayene yok." emptyHint="Muayene, hasta geldiğinde Bugün ekranından başlatılır." [createLabel]="'Bugün ekranına git'" [createLink]="'/panel/today'" (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"
@@ -105,7 +105,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="list.onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '65rem' }"
+                                [tableStyle]="{ 'min-width': '60rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >
@@ -114,7 +114,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                         <th>Tarih</th>
                                         <th>Müşteri</th>
                                         <th>Hasta</th>
-                                        <th>Ziyaret sebebi</th>
+                                        <th>Geliş nedeni</th>
                                         <th>Durum</th>
                                         <th style="width: 8rem">İşlemler</th>
                                     </tr>
@@ -184,7 +184,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                         </div>
                                     </div>
                                     <div class="text-sm text-muted-color mb-3 min-w-0 break-words">
-                                        <span class="font-medium">Ziyaret sebebi: </span>{{ row.visitReason }}
+                                        <span class="font-medium">Geliş nedeni: </span>{{ row.visitReason }}
                                         @if (row.status) {
                                             <app-status-tag class="ml-2" [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                         }

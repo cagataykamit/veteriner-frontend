@@ -23,7 +23,8 @@ import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-hea
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
-import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
+import { tenantRoleLabel } from '@/app/core/auth/tenant-role-labels';
 
 const TENANT_MEMBERS_LIST_STATE_KEY = 'panel:tenant-members:listState';
 
@@ -46,13 +47,13 @@ const TENANT_MEMBERS_LIST_STATE_KEY = 'panel:tenant-members:listState';
         AppRowActionButtonComponent,
         ToastModule,
         TenantMemberRemoveDialogComponent,
-        TrDateTimePipe
+        AppStatusTagComponent
     ],
     providers: [MessageService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="top-right" />
-        <app-page-header title="Kurum üyeleri" description="Bu kuruma bağlı kullanıcıların salt okunur listesi.">
+        <app-page-header title="Kurum üyeleri" description="Bu kuruma bağlı kullanıcılar, rolleri ve klinikleri. Rol ya da klinik değiştirmek için üyeyi açın.">
             @if (canManageTenantAccess()) {
                 <a actions routerLink="/panel/settings/members/role-permission-matrix" pButton type="button" class="p-button-secondary p-button-outlined"><i class="pi pi-table"></i>{{ copy.tenantRoleMatrixTitle }}</a>
             }
@@ -75,7 +76,7 @@ const TENANT_MEMBERS_LIST_STATE_KEY = 'panel:tenant-members:listState';
                         <div class="flex flex-col sm:flex-row gap-3 sm:items-end w-full xl:w-auto xl:min-w-[22rem] xl:max-w-2xl">
                             <div class="flex-1 min-w-0">
                                 <label for="tmSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
-                                <app-search-input inputId="tmSearch" placeholder="E-posta…" [(value)]="searchInput" (searchRequested)="applySearch()" />
+                                <app-search-input inputId="tmSearch" placeholder="E-posta ile ara…" [(value)]="searchInput" (searchRequested)="applySearch()" />
                             </div>
                             <div class="flex flex-wrap gap-2 shrink-0">
                                 <button pButton type="button" severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
@@ -85,7 +86,7 @@ const TENANT_MEMBERS_LIST_STATE_KEY = 'panel:tenant-members:listState';
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz kurum üyesi yok." emptyHint="Üye eklemek için davet gönderin." (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"
@@ -96,23 +97,29 @@ const TENANT_MEMBERS_LIST_STATE_KEY = 'panel:tenant-members:listState';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="list.onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '48rem' }"
+                                [tableStyle]="{ 'min-width': '56rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >
                                 <ng-template #header>
                                     <tr>
+                                        <th>Ad</th>
                                         <th>E-posta</th>
-                                        <th>E-posta onayı</th>
-                                        <th>Oluşturulma</th>
+                                        <th>Rol</th>
+                                        <th>Klinik</th>
+                                        <th>Durum</th>
                                         <th style="width: 6rem">İşlemler</th>
                                     </tr>
                                 </ng-template>
                                 <ng-template #body let-row>
                                     <tr>
-                                        <td class="font-medium break-all">{{ row.email }}</td>
-                                        <td>{{ formatConfirmed(row.emailConfirmed) }}</td>
-                                        <td>{{ row.createdAtUtc | trDateTime }}</td>
+                                        <td class="font-medium">
+                                            <a [routerLink]="['/panel/settings/members', row.id]" class="text-primary no-underline">{{ row.name || row.email }}</a>
+                                        </td>
+                                        <td class="break-all">{{ row.email }}</td>
+                                        <td data-testid="member-roles">{{ rolesLabel(row) }}</td>
+                                        <td>{{ clinicsLabel(row) }}</td>
+                                        <td><app-status-tag [label]="confirmLabel(row.emailConfirmed)" [severity]="row.emailConfirmed ? 'success' : 'warn'" /></td>
                                         <td>
                                             <div class="flex items-center gap-1">
                                                 <app-row-action-button action="detail" [link]="['/panel/settings/members', row.id]" />
@@ -129,17 +136,16 @@ const TENANT_MEMBERS_LIST_STATE_KEY = 'panel:tenant-members:listState';
                         <div class="lg:hidden space-y-3">
                             @for (row of displayedRows(); track row.id) {
                                 <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
-                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-2 break-all">
-                                        {{ row.email }}
-                                    </div>
-                                    <div class="space-y-2 text-sm min-w-0">
-                                        <div>
-                                            <span class="text-muted-color font-medium">E-posta onayı: </span>
-                                            {{ formatConfirmed(row.emailConfirmed) }}
+                                    <div class="flex items-start justify-between gap-2 mb-2">
+                                        <div class="min-w-0">
+                                            <a [routerLink]="['/panel/settings/members', row.id]" class="text-sm font-medium text-primary no-underline break-words">{{ row.name || row.email }}</a>
+                                            <div class="text-xs text-muted-color break-all">{{ row.email }}</div>
                                         </div>
-                                        @if (row.createdAtUtc) {
-                                            <div class="text-xs text-muted-color">Oluşturulma: {{ row.createdAtUtc | trDateTime }}</div>
-                                        }
+                                        <app-status-tag [label]="confirmLabel(row.emailConfirmed)" [severity]="row.emailConfirmed ? 'success' : 'warn'" />
+                                    </div>
+                                    <div class="space-y-1 text-sm min-w-0 mb-2">
+                                        <div><span class="text-muted-color font-medium">Rol: </span>{{ rolesLabel(row) }}</div>
+                                        <div><span class="text-muted-color font-medium">Klinik: </span>{{ clinicsLabel(row) }}</div>
                                     </div>
                                     <div class="flex justify-end items-center gap-1 pt-2 border-t border-surface-200 dark:border-surface-700">
                                         <app-row-action-button action="detail" [link]="['/panel/settings/members', row.id]" />
@@ -239,16 +245,18 @@ export class TenantMembersListPageComponent implements OnInit {
 
     readonly displayedRows = computed(() => this.rawItems());
 
-    formatConfirmed(v: boolean | null): string {
-        if (v === true) {
-            return 'Evet';
-        }
+    /** Rol adları Türkçe görünen adlarıyla (`Veteriner` → "Hekim" vb.); rolü yoksa "—". */
+    rolesLabel(row: TenantMemberListItemVm): string {
+        return row.roles.length ? row.roles.map(tenantRoleLabel).join(', ') : '—';
+    }
 
-        if (v === false) {
-            return 'Hayır';
-        }
+    clinicsLabel(row: TenantMemberListItemVm): string {
+        return row.clinics.length ? row.clinics.join(', ') : '—';
+    }
 
-        return '—';
+    /** Durum: hesabın e-postası onaylandı mı (davet kabul edilip giriş yapıldı mı). */
+    confirmLabel(v: boolean | null): string {
+        return v === false ? 'Onay bekliyor' : v === true ? 'Etkin' : '—';
     }
 
     ngOnInit(): void {

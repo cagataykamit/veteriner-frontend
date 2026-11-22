@@ -10,7 +10,7 @@ import { TenantMembersService } from '@/app/features/tenant-members/services/ten
 import { isLastRowAction, rowDangerActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { TenantMembersListPageComponent } from './tenant-members-list-page.component';
 
-const member = (id: string, email: string): TenantMemberListItemVm => ({ id, name: null, email, emailConfirmed: true, createdAtUtc: null });
+const member = (id: string, email: string): TenantMemberListItemVm => ({ id, name: null, email, emailConfirmed: true, createdAtUtc: null, roles: [], clinics: [] });
 
 /** ADR-026 madde 7: üye detayındaki "Üyeyi kurumdan çıkar" ile aynı yetki, koşul ve diyalog. */
 describe('TenantMembersListPageComponent — satırda Kurumdan çıkar', () => {
@@ -77,5 +77,35 @@ describe('TenantMembersListPageComponent — satırda Kurumdan çıkar', () => {
         expect(service.removeMember).toHaveBeenCalledWith('u2');
         expect(dialog.visible()).toBe(false);
         expect(service.getMembers).toHaveBeenCalledTimes(1);
+    });
+});
+
+/** A-02: kimin hekim, kimin sekreter olduğu listede görünür. */
+describe('TenantMembersListPageComponent — ad, rol ve klinik', () => {
+    it('adı, Türkçe rol adını ve klinikleri yazar; rolsüz üyede "—"', () => {
+        const items: TenantMemberListItemVm[] = [
+            { ...member('u1', 'dr.ece@klinik.test'), name: 'Ece Arslan', roles: ['Veteriner'], clinics: ['Merkez Pati', 'Çaycuma'] },
+            { ...member('u2', 'yeni@klinik.test'), emailConfirmed: false }
+        ];
+
+        TestBed.configureTestingModule({
+            imports: [TenantMembersListPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: TenantMembersService, useValue: { getMembers: () => of({ items, page: 1, pageSize: 10, totalItems: 2, totalPages: 1 }) } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => false, getUserId: () => 'x' } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } }
+            ]
+        });
+        const fixture = TestBed.createComponent(TenantMembersListPageComponent);
+
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+        const roles = Array.from(el.querySelectorAll('[data-testid="member-roles"]')).map((c) => c.textContent?.trim());
+
+        expect(el.textContent).toContain('Ece Arslan');
+        expect(roles).toEqual(['Hekim', '—']);
+        expect(el.textContent).toContain('Merkez Pati, Çaycuma');
+        expect(el.textContent).toContain('Onay bekliyor');
     });
 });

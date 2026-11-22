@@ -47,7 +47,7 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                     <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-4" role="status">Hesap salt okunur durumda.</p>
                 }
 
-                <p class="text-sm text-muted-color mt-0 mb-4">Hatırlatmalar etkinse sistem, yaklaşan randevu ve aşılar için e-posta gönderimlerini otomatik olarak kuyruğa alır.</p>
+                <p class="text-sm text-muted-color mt-0 mb-4">Hatırlatmalar açıksa yaklaşan randevu ve aşılar için hasta sahiplerine e-posta kendiliğinden gönderilir.</p>
 
                 @if (updatedAtLabel()) {
                     <p class="text-sm text-muted-color mt-0 mb-4">Son güncelleme: {{ updatedAtLabel() }}</p>

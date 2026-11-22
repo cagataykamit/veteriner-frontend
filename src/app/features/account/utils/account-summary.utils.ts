@@ -21,7 +21,7 @@ export function resolveAccountOptionalName(value: string | null | undefined): st
 }
 
 export function resolveAccountScopeLabel(isTenantWide: boolean): string {
-    return isTenantWide ? 'Tüm organizasyon' : 'Klinik bazlı';
+    return isTenantWide ? 'Tüm kurum' : 'Klinik bazlı';
 }
 
 /** Profil avatarı için en fazla iki harf (displayName veya e-postadan). */

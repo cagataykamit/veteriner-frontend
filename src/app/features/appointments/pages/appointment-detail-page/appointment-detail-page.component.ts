@@ -15,13 +15,14 @@ import { AppointmentCancelDialogComponent, type AppointmentCancelTarget } from '
 import { AppointmentCancelUndoComponent } from '@/app/features/appointments/components/appointment-cancel-undo.component';
 import { WaitlistSlotNoticeComponent } from '@/app/entities/waitlist/components/waitlist-slot-notice.component';
 import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
-import { DETAIL_STATS_GRID_CLASS } from '@/app/shared/ui/detail.classes';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay, toIstanbulDateInputValue, toIstanbulTimeInputValue } from '@/app/shared/utils/date.utils';
+import { istanbulTodayYmd } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
+import { type ArrivalAppointment, VisitArrivalDialogComponent } from '@/app/entities/visit/components/visit-arrival-dialog.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -35,7 +36,7 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
 @Component({
     selector: 'app-appointment-detail-page',
     standalone: true,
-    imports: [AppDetailSubjectLineComponent, CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppointmentNoShowDialogComponent, TrDateTimePipe, WaitlistSlotNoticeComponent, AppointmentCancelDialogComponent, AppointmentCancelUndoComponent],
+    imports: [AppDetailSubjectLineComponent, CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppStatusTagComponent, AppointmentNoShowDialogComponent, TrDateTimePipe, WaitlistSlotNoticeComponent, AppointmentCancelDialogComponent, AppointmentCancelUndoComponent, VisitArrivalDialogComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (showSavedBanner()) {
@@ -59,7 +60,7 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
 
             <!--
                 Kimlik kartı (müşteri/hasta kartıyla aynı dil): tür + durum rozeti, tarih-saat, kayıt satırı, hasta/sahip bağlantıları,
-                iptal/gelmedi uyarısı; sağda Düzenle; altta gösterge şeridi (başlangıç, bitiş, süre).
+                iptal/gelmedi uyarısı; sağda Düzenle. Zaman tek satırda: "23.11.2026 11:15–11:45 · 30 dk" (R-04).
             -->
             <section class="card mb-4 @container" aria-label="Randevu kimliği" data-testid="appointment-card-header">
                 <div class="flex flex-wrap items-start gap-x-5 gap-y-3">
@@ -76,7 +77,7 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                                 </span>
                             }
                         </div>
-                        <p class="m-0 mt-1 text-base font-medium text-surface-900 dark:text-surface-0 tabular-nums">{{ a.scheduledAtUtc | trDateTime }}</p>
+                        <p class="m-0 mt-1 text-base font-medium text-surface-900 dark:text-surface-0 tabular-nums" data-testid="appointment-time-line">{{ timeLine(a) }}</p>
                         <!-- Kayıt zamanları yalnız varsa (randevu ayrıntı ucu bugün bu alanları taşımıyor; boş satır tire göstermesin). -->
                         @if (a.createdAtUtc || a.updatedAtUtc) {
                             <p class="m-0 mt-1 text-sm text-muted-color" data-testid="appointment-record-times">
@@ -115,20 +116,6 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                     </div>
                 </div>
 
-                <dl [class]="statsClass" aria-label="Zaman">
-                    <div>
-                        <dt>Başlangıç</dt>
-                        <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ a.scheduledAtUtc | trDateTime }}</dd>
-                    </div>
-                    <div>
-                        <dt>Bitiş</dt>
-                        <dd class="font-semibold text-surface-900 dark:text-surface-0 tabular-nums">{{ a.scheduledEndUtc | trDateTime }}</dd>
-                    </div>
-                    <div>
-                        <dt>Süre</dt>
-                        <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ a.durationLabel }}</dd>
-                    </div>
-                </dl>
             </section>
 
             @if (startExamError(); as startError) {
@@ -138,18 +125,27 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                 <app-appointment-no-show-dialog [(visible)]="noShowOpen" [appointmentId]="a.id" [mode]="noShowMode()" [subject]="noShowSubject()" (done)="onNoShowDone()" />
             }
 
-            <!-- Eylem şeridi (müşteri/hasta kartıyla aynı): muayene aç, gelmedi ve iptal; kapalı durumda kilitli görünür. -->
-            @if (canCreateExamination || canNoShow || canCancel) {
+            <!--
+                Eylem şeridi (müşteri/hasta kartıyla aynı): geldi, muayene aç, gelmedi ve iptal; kapalı durumda kilitli görünür.
+                Bugünkü planlı randevuda birincil eylem "Geldi" (R-04); sekreter Bugün'e dönmeden kabul eder.
+            -->
+            @if (canArrive && arrivalOpen()) {
+                <app-visit-arrival-dialog [(visible)]="arrivalOpen" [appointment]="arrivalSubject()" (arrived)="onArrived()" />
+            }
+            @if (canCreateExamination || canNoShow || canCancel || canArrive) {
                 <div class="mb-4 py-2 flex flex-wrap gap-2 items-center" role="toolbar" aria-label="Randevu eylemleri" data-testid="appointment-action-bar">
+                    @if (showArrive()) {
+                        <button pButton type="button" class="p-button-primary" (click)="arrivalOpen.set(true)" data-testid="appointment-arrive"><i class="pi pi-sign-in"></i>Geldi</button>
+                    }
                     @if (canCreateExamination && a.clientId?.trim() && a.petId?.trim()) {
                         @if (isCancelledForExam(a.status) || isNoShow(a.status)) {
-                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-ban"></i>Muayene oluştur</button>
+                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-ban"></i>Muayeneye al</button>
                         } @else if (ro.mutationBlocked()) {
-                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-lock"></i>Muayene oluştur (salt okunur)</button>
+                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-lock"></i>Muayeneye al (salt okunur)</button>
                         } @else if (canOpenVisit) {
-                            <button pButton type="button" class="p-button-primary" [disabled]="startingExam()" (click)="startExamination()"><i [class]="startingExam() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>Muayene oluştur</button>
+                            <button pButton type="button" [class]="showArrive() ? 'p-button-outlined p-button-secondary' : 'p-button-primary'" [disabled]="startingExam()" (click)="startExamination()"><i [class]="startingExam() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>Muayeneye al</button>
                         } @else {
-                            <a [routerLink]="['/panel/examinations/new']" [queryParams]="{ clientId: a.clientId, petId: a.petId, appointmentId: a.id }" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Muayene oluştur</a>
+                            <a [routerLink]="['/panel/examinations/new']" [queryParams]="{ clientId: a.clientId, petId: a.petId, appointmentId: a.id }" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Muayene başlat</a>
                         }
                     }
                     @if (canNoShow && !ro.mutationBlocked()) {
@@ -256,12 +252,34 @@ export class AppointmentDetailPageComponent implements OnInit {
     readonly statusLabel = appointmentStatusLabel;
     readonly statusSeverity = appointmentStatusSeverity;
     readonly typeDisplay = appointmentTypeDisplayLabel;
-    readonly statsClass = DETAIL_STATS_GRID_CLASS;
     readonly canRescheduleAppointment = this.auth.hasOperationClaim(APPOINTMENTS_RESCHEDULE_CLAIM);
     readonly canCreateExamination = this.auth.hasOperationClaim(EXAMINATIONS_CREATE_CLAIM);
     /** Geliş açma yetkisi varsa muayene önce geliş (Visit) üzerinden açılır (ADR-017 K7); yoksa randevu bağlamlı eski yol. */
     readonly canOpenVisit = this.auth.hasOperationClaim(VISITS_CREATE_CLAIM);
     readonly startingExam = signal(false);
+    /** "Geldi": geliş açma yetkisi; düğme yalnız bugünkü planlı randevuda ve salt okunur değilken görünür. */
+    readonly canArrive = this.auth.hasOperationClaim(VISITS_CREATE_CLAIM);
+    readonly arrivalOpen = signal(false);
+    readonly showArrive = computed(() => {
+        const a = this.appt();
+
+        return this.canArrive && !this.ro.mutationBlocked() && !!a?.petId && canCancelAppointment(a.status) && toIstanbulDateInputValue(a.scheduledAtUtc) === istanbulTodayYmd();
+    });
+    readonly arrivalSubject = computed<ArrivalAppointment | null>(() => {
+        const a = this.appt();
+
+        return a
+            ? {
+                  appointmentId: a.id,
+                  petName: a.petName,
+                  speciesName: a.speciesName ?? '',
+                  clientId: a.clientId ?? '',
+                  clientName: a.clientName,
+                  appointmentReasonName: null,
+                  responsibleVeterinarianUserId: a.veterinarianUserId
+              }
+            : null;
+    });
     readonly startExamError = signal<string | null>(null);
     readonly isCancelledForExam = isAppointmentCancelledStatus;
     readonly isNoShow = isAppointmentNoShowStatus;
@@ -313,6 +331,17 @@ export class AppointmentDetailPageComponent implements OnInit {
     }
 
     /** Randevunun gelişini açar (açık geliş varsa o döner) ve muayeneyi `visitId` ile açar; Bugün'ün "Muayene aç" akışıyla aynı yol. */
+    /** Tek satır zaman: başlangıç tarih-saati, bitiş saati ve süre. */
+    timeLine(a: AppointmentDetailVm): string {
+        const end = toIstanbulTimeInputValue(a.scheduledEndUtc);
+
+        return [`${formatUtcIsoAsLocalDateTimeDisplay(a.scheduledAtUtc)}${end ? `–${end}` : ''}`, a.durationLabel].filter(Boolean).join(' · ');
+    }
+
+    onArrived(): void {
+        this.loader.reload();
+    }
+
     startExamination(): void {
         const a = this.appt();
 

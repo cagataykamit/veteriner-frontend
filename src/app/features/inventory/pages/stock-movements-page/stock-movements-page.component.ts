@@ -110,10 +110,10 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                 (ngModelChange)="scheduleApply()"
                             />
                         </app-filter-field>
-                        <app-filter-field label="Başlangıç (UTC tarih)" labelFor="smFrom" [active]="isFromActive()" width="date">
+                        <app-filter-field label="Başlangıç" labelFor="smFrom" [active]="isFromActive()" width="date">
                             <app-date-input inputId="smFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" (ngModelChange)="scheduleApply()" />
                         </app-filter-field>
-                        <app-filter-field label="Bitiş (UTC tarih)" labelFor="smTo" [active]="isToActive()" width="date">
+                        <app-filter-field label="Bitiş" labelFor="smTo" [active]="isToActive()" width="date">
                             <app-date-input inputId="smTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" (ngModelChange)="scheduleApply()" />
                         </app-filter-field>
                     </div>
@@ -137,7 +137,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="list.onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '72rem' }"
+                                [tableStyle]="{ 'min-width': '60rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >
@@ -145,7 +145,6 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                     <tr>
                                         <th>Tarih</th>
                                         <th>Ürün</th>
-                                        <th>Klinik</th>
                                         <th>Hareket tipi</th>
                                         <th class="text-right">Miktar</th>
                                         <th class="text-right">Birim maliyet</th>
@@ -163,7 +162,6 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                                 {{ row.productDisplayName }}
                                             }
                                         </td>
-                                        <td>{{ row.clinicName }}</td>
                                         <td>
                                             <app-status-tag [label]="row.movementTypeLabel" [severity]="row.movementTypeSeverity" />
                                         </td>
@@ -189,7 +187,6 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                                 <span class="break-words">{{ row.productDisplayName }}</span>
                                             }
                                         </div>
-                                        <div><span class="text-muted-color font-medium">Klinik: </span>{{ row.clinicName }}</div>
                                         <div class="flex flex-wrap items-center gap-2">
                                             <span class="text-muted-color font-medium">Tip:</span>
                                             <app-status-tag [label]="row.movementTypeLabel" [severity]="row.movementTypeSeverity" />

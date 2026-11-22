@@ -8,7 +8,7 @@
     <app-page-header
         categoryLink="/panel/examinations"
         categoryLinkLabel="Muayene listesine dön"
-        [title]="isEdit ? 'Muayene' : 'Yeni Muayene'"
+        [title]="isEdit ? 'Muayene' : 'Yeni muayene'"
         [description]="isEdit ? 'Klinik notları ve vital değerleri güncelleyin.' : 'Muayene kaydı oluşturun.'"
     >
         <div actions class="flex flex-wrap items-center gap-2">
@@ -133,7 +133,7 @@
                         <app-dictation-hint />
                     </div>
                     <div class="grid grid-cols-12 gap-4">
-                        <app-form-field class="col-span-12" label="Ziyaret sebebi / şikâyet" fieldId="visitReason" [error]="apiFieldErrors().visitReason ? apiFieldErrors().visitReason : form.controls.visitReason.invalid && form.controls.visitReason.touched ? 'Ziyaret sebebi zorunludur.' : null" [required]="true">
+                        <app-form-field class="col-span-12" label="Geliş nedeni / şikâyet" fieldId="visitReason" [error]="apiFieldErrors().visitReason ? apiFieldErrors().visitReason : form.controls.visitReason.invalid && form.controls.visitReason.touched ? 'Ziyaret sebebi zorunludur.' : null" [required]="true">
                             @if (aiFieldEdited('visitReason') !== null) {
                                 <app-ai-provenance-chip fieldLabelExtra [edited]="!!aiFieldEdited('visitReason')" />
                             }

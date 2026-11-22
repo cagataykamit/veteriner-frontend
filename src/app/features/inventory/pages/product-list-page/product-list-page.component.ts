@@ -110,7 +110,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz ürün yok." [createLabel]="canCreateProduct && !ro.mutationBlocked() ? 'İlk ürünü ekle' : null" [createLink]="'/panel/products/new'" (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"

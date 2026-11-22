@@ -137,7 +137,7 @@ const PRODUCT_CATEGORIES_LIST_STATE_KEY = 'panel:inventory:product-categories:li
                     @if (displayedRows().length === 0) {
                         <app-empty-state [message]="emptyListMessage()" [hint]="emptyListHint()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"

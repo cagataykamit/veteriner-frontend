@@ -76,7 +76,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="isSearchActive()" emptyMessage="Henüz müşteri yok." [createLabel]="canCreateClient && !ro.mutationBlocked() ? 'İlk müşteriyi ekle' : null" [createLink]="'/panel/clients/new'" (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"
@@ -94,10 +94,10 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                             >
                                 <ng-template #header>
                                     <tr>
-                                        <th>Ad Soyad</th>
+                                        <th>Ad soyad</th>
                                         <th>Telefon</th>
                                         <th>E-posta</th>
-                                        <th>Kayıt Tarihi</th>
+                                        <th>Kayıt tarihi</th>
                                         <th style="width: 8rem">İşlemler</th>
                                     </tr>
                                 </ng-template>

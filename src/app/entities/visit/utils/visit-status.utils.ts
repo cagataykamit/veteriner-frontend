@@ -458,7 +458,7 @@ export function todaySecondaryActions(item: TodayItemVm, actions: TodayItemActio
     }
 
     if (perms.canUpdateVisit && actions.canEditPreparation) {
-        out.push({ key: 'editPreparation', label: 'Hazırlığı düzenle', icon: 'pi pi-clipboard' });
+        out.push({ key: 'editPreparation', label: 'Geliş nedenini düzenle', icon: 'pi pi-clipboard' });
     }
 
     // Acil işaretli satır hasta adının yanında kırmızı "Acil" etiketi taşır; aç/kapat menüdedir.
@@ -479,7 +479,7 @@ export function todaySecondaryActions(item: TodayItemVm, actions: TodayItemActio
     }
 
     if (perms.canCorrect && actions.canCorrect) {
-        out.push({ key: 'correct', label: 'Düzelt', icon: 'pi pi-pencil' });
+        out.push({ key: 'correct', label: 'Geliş durumunu düzelt', icon: 'pi pi-pencil' });
     }
 
     return out;

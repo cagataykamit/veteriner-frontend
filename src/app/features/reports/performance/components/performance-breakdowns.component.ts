@@ -52,7 +52,7 @@ export function breakdownRows<T>(
         <section class="card mt-4 mb-0" aria-labelledby="perfBreakdownsTitle" data-testid="perf-breakdowns">
             <h5 id="perfBreakdownsTitle" class="mt-0">Kırılımlar</h5>
             @if (planLocked()) {
-                <app-plan-upgrade-notice feature="AdvancedReports" detail="Hekim, hizmet ve ürün, hayvan türü kırılımları ve geliş sayısı; her biri önceki dönemle karşılaştırmalı." />
+                <app-plan-upgrade-notice feature="AdvancedReports" detail="Hekim, hizmet ve ürün, tür kırılımları ve geliş sayısı; her biri önceki dönemle karşılaştırmalı." />
             } @else if (loading()) {
                 <p class="m-0 text-sm text-muted-color">Kırılımlar yükleniyor…</p>
             } @else if (error(); as err) {
@@ -101,7 +101,7 @@ export function breakdownRows<T>(
                     }
                 </div>
                 <small class="block mt-3 text-muted-color">
-                    Net ciro gün sonu raporuyla aynı hesaptır. Hekim: ziyaretin sorumlu hekimi, ziyaretsiz muayenede kesinleştiren; eşleşmeyen satış "Atanmamış". Kalem ücret açıklamasına göredir.
+                    Net ciro gün sonu raporuyla aynı hesaptır. Hekim: gelişin sorumlu hekimi, gelişsiz muayenede kesinleştiren; eşleşmeyen satış "Atanmamış". Kalem ücret açıklamasına göredir.
                 </small>
             }
         </section>
@@ -159,7 +159,7 @@ export class PerformanceBreakdownsComponent {
             },
             c.bySpecies && {
                 key: 'species',
-                title: 'Hayvan türü',
+                title: 'Tür',
                 nameLabel: 'Tür',
                 countLabel: 'Muayene',
                 rows: breakdownRows(c.bySpecies, p?.bySpecies, (r) => ({ key: r.speciesId ?? '-', name: r.name, count: r.examinationCount, amount: r.netChargeAmount }), cmp)

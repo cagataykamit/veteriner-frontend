@@ -26,6 +26,7 @@ import { HOSPITALIZATIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 type ActiveFilterUi = 'all' | 'active' | 'discharged';
 type HospitalizationsListState = {
@@ -43,6 +44,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
     selector: 'app-hospitalizations-list-page',
     standalone: true,
     imports: [
+        AppStatusTagComponent,
         CommonModule,
         FormsModule,
         RouterLink,
@@ -107,7 +109,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz yatış kaydı yok." emptyHint="Yatış, muayene içinden başlatılır." (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"
@@ -118,7 +120,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="list.onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '70rem' }"
+                                [tableStyle]="{ 'min-width': '60rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >
@@ -141,11 +143,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                         <td>{{ row.plannedDischargeAtUtc | trDateTime }}</td>
                                         <td>{{ row.dischargedAtUtc | trDateTime }}</td>
                                         <td>
-                                            @if (row.isActive) {
-                                                <span class="font-medium">Aktif</span>
-                                            } @else {
-                                                Taburcu
-                                            }
+                                            <app-status-tag [label]="row.isActive ? 'Aktif' : 'Taburcu'" [severity]="row.isActive ? 'info' : 'secondary'" />
                                         </td>
                                         <td>
                                             @if (row.clientId) {
@@ -208,9 +206,9 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                     <div class="text-sm text-surface-900 dark:text-surface-0 mb-3 min-w-0 break-words"><span class="text-muted-color font-medium">Neden: </span>{{ row.reason }}</div>
                                     <div class="text-sm mb-3">
                                         @if (row.isActive) {
-                                            <span class="font-medium text-primary">Aktif</span>
+                                            <app-status-tag label="Aktif" severity="info" />
                                         } @else {
-                                            <span class="text-muted-color">Taburcu</span>
+                                            <app-status-tag label="Taburcu" severity="secondary" />
                                         }
                                     </div>
                                     <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">

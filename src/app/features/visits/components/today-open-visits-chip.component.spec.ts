@@ -53,7 +53,7 @@ describe('TodayOpenVisitsChipComponent', () => {
         expect(getOpenItemVisits).toHaveBeenCalledWith('Uncharged');
         expect(c.data()?.items.length).toBe(1);
         expect(c.detail(row({ chargeableWorkCount: 2 }))).toBe('08.10.2026 10:30 · Dr. Ayşe · 2 işlem');
-        expect(c.heading()).toBe('Ücret kaydı olmayan ziyaretler');
+        expect(c.heading()).toBe('Ücret kaydı olmayan gelişler');
     });
 
     it('açık geliş satırı durumunu gösterir; her açılış yeniden yükler', async () => {
@@ -79,7 +79,7 @@ describe('TodayOpenVisitsChipComponent', () => {
         expect(panel.querySelectorAll('[data-testid="open-items-row"]').length).toBe(2);
         expect(panel.querySelectorAll('[data-testid="open-items-complete"]').length).toBe(1);
         expect(panel.querySelector('[data-testid="open-items-correct"]')).toBeNull(); // Visits.Correct yok
-        expect(panel.textContent).toContain('En eski 2 ziyaret gösteriliyor.');
+        expect(panel.textContent).toContain('En eski 2 geliş gösteriliyor.');
         panel.querySelector<HTMLButtonElement>('[data-testid="open-items-complete"]')!.click();
         expect(completed).toEqual(['a']);
     });

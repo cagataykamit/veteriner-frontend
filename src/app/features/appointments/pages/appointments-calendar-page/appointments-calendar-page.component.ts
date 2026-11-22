@@ -117,7 +117,6 @@ const FALLBACK_WEEK: ClinicWorkingHourVm[] = [1, 2, 3, 4, 5, 6].map((dayOfWeek) 
 /** Çalışma saati kısıtı kapalı klinikte telefondaki boş satırlar bu pencerede aranır (gece saatleri boş diye listelenmez). */
 const UNRESTRICTED_GAP_DAY: WorkingDay = { open: DEFAULT_GRID_START, close: DEFAULT_GRID_END, breakStart: null, breakEnd: null };
 const WEEKDAY_SHORT = new Intl.DateTimeFormat('tr-TR', { weekday: 'short', timeZone: 'UTC' });
-const WEEKDAY_LONG = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', timeZone: 'UTC' });
 const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 /**
@@ -552,8 +551,22 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     readonly slotInterval = signal(15);
     /** Klinik çalışma saati kısıtı (randevu ayarı); kapalıysa kapalı gün ve mola gösterilmez, ızgara tüm günü kapsar. */
     readonly enforceWorkingHours = signal(true);
-    /** Kısıt kapalıyken gün ızgarası ilk açılışta buraya kaydırılır. */
-    readonly gridScrollMinute = computed(() => (this.enforceWorkingHours() ? null : DEFAULT_GRID_START));
+    /**
+     * Gün ızgarası ilk açılışta bu saate kaydırılır (R-01): mesai başlangıcı, bugün mesai içindeyse şimdiden bir saat öncesi.
+     * Mesai öncesine düşen bir randevu ızgarayı 01:00'e uzatsa da görünüm boş gece saatleriyle açılmaz. Kısıt kapalıysa mesai 08–20.
+     */
+    readonly gridScrollMinute = computed(() => {
+        const day = this.enforceWorkingHours() ? this.selectedWorking() : UNRESTRICTED_GAP_DAY;
+
+        if (!day) {
+            return null;
+        }
+
+        const now = this.selectedDate() === this.today() ? this.nowMinute() : null;
+        const target = now !== null && now - 60 > day.open && now < day.close ? now - 60 : day.open;
+
+        return Math.floor(target / 60) * 60;
+    });
     /** Her başarılı yüklemede artar; "Boş saat bul" listesini de yeniler. */
     readonly loadCount = signal(0);
 
@@ -721,7 +734,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
             return {
                 dateKey,
                 dayNumber: String(Number(dateKey.slice(8))),
-                weekday: WEEKDAY_LONG.format(new Date(`${dateKey}T12:00:00Z`)),
+                weekday: WEEKDAY_SHORT.format(new Date(`${dateKey}T12:00:00Z`)),
                 today: dateKey === this.today(),
                 closed: !workingDayFor(this.gridHours(), dateKey),
                 items: this.itemsOn(dateKey, this.visibleItems()),
@@ -963,7 +976,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         this.clinicSwitchError.set(null);
         this.auth.selectClinic(clinic.id, clinic.name).subscribe({
             next: () => window.location.replace(this.router.url),
-            error: (e: unknown) => this.clinicSwitchError.set(panelHttpFailureMessage(e, 'Şube değiştirilemedi.'))
+            error: (e: unknown) => this.clinicSwitchError.set(panelHttpFailureMessage(e, 'Klinik değiştirilemedi.'))
         });
     }
 

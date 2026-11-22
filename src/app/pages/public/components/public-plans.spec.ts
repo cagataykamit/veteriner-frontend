@@ -75,7 +75,7 @@ describe('Paket verisi (pricing-plan.utils)', () => {
 
         expect(planCardFeatures('premium').lead).toBe("Profesyonel'deki her şey, artı:");
         expect(labels('premium')).toEqual([
-            'Şubeler özeti',
+            'Klinikler özeti',
             'Çok klinik yönetimi ve klinikler arası yetki',
             'API erişimi',
             'Destek: Özel iletişim, kurulum desteği',
@@ -109,14 +109,14 @@ describe('Paket verisi (pricing-plan.utils)', () => {
             'Kamerayla barkod okutma',
             'Otomatik hatırlatıcılar',
             'Gelişmiş raporlar',
-            'Şubeler özeti',
+            'Klinikler özeti',
             'Çok klinik yönetimi ve klinikler arası yetki',
             'API erişimi',
             'Ücretsiz geçiş desteği',
             'Size özel geliştirmeler'
         ]);
         expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.pro === false).map((r) => r.label)).toEqual([
-            'Şubeler özeti',
+            'Klinikler özeti',
             'Çok klinik yönetimi ve klinikler arası yetki',
             'API erişimi',
             'Ücretsiz geçiş desteği',

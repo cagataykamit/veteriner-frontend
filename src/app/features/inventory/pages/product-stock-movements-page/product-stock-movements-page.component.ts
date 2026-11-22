@@ -118,10 +118,10 @@ type ProductStockMovementsListState = {
                                     (ngModelChange)="scheduleApply()"
                                 />
                             </app-filter-field>
-                            <app-filter-field label="Başlangıç (UTC tarih)" labelFor="psmFrom" [active]="isFromActive()" width="date">
+                            <app-filter-field label="Başlangıç" labelFor="psmFrom" [active]="isFromActive()" width="date">
                                 <app-date-input inputId="psmFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </app-filter-field>
-                            <app-filter-field label="Bitiş (UTC tarih)" labelFor="psmTo" [active]="isToActive()" width="date">
+                            <app-filter-field label="Bitiş" labelFor="psmTo" [active]="isToActive()" width="date">
                                 <app-date-input inputId="psmTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </app-filter-field>
                         </div>
@@ -141,7 +141,7 @@ type ProductStockMovementsListState = {
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="list.onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '72rem' }"
+                                [tableStyle]="{ 'min-width': '60rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >
@@ -149,7 +149,6 @@ type ProductStockMovementsListState = {
                                     <tr>
                                         <th>Tarih</th>
                                         <th>Ürün</th>
-                                        <th>Klinik</th>
                                         <th>Hareket tipi</th>
                                         <th class="text-right">Miktar</th>
                                         <th class="text-right">Birim maliyet</th>
@@ -161,7 +160,6 @@ type ProductStockMovementsListState = {
                                     <tr>
                                         <td class="whitespace-nowrap">{{ row.occurredAtText }}</td>
                                         <td>{{ row.productDisplayName }}</td>
-                                        <td>{{ row.clinicName }}</td>
                                         <td>
                                             <app-status-tag [label]="row.movementTypeLabel" [severity]="row.movementTypeSeverity" />
                                         </td>
@@ -180,7 +178,6 @@ type ProductStockMovementsListState = {
                                     <div class="text-sm font-medium mb-2 whitespace-nowrap">{{ row.occurredAtText }}</div>
                                     <div class="space-y-2 text-sm">
                                         <div><span class="text-muted-color font-medium">Ürün: </span>{{ row.productDisplayName }}</div>
-                                        <div><span class="text-muted-color font-medium">Klinik: </span>{{ row.clinicName }}</div>
                                         <div class="flex flex-wrap items-center gap-2">
                                             <span class="text-muted-color font-medium">Tip:</span>
                                             <app-status-tag [label]="row.movementTypeLabel" [severity]="row.movementTypeSeverity" />

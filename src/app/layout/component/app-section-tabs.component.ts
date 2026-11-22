@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { afterRenderEffect, ChangeDetectionStrategy, Component, computed, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
@@ -10,6 +10,8 @@ import { MenuBadgeService, menuBadgeLabel } from '@/app/layout/service/menu-badg
 /**
  * Birleşik menü öğelerinin (Hastalar, Randevular, Para, Stok, Kayıtlar) sekme çubuğu. Sekmeler mevcut liste sayfalarıdır;
  * çubuk yalnız bu liste adreslerinde ve en az iki sekme yetkiliyken görünür, detay ve form sayfalarında çıkmaz.
+ * Dar ekranda sekmeler satır atlamaz, yatay kayar (G-03): etkin sekme görünür alana getirilir, sağda daha fazla sekme
+ * varken kenarda soluk geçiş belirir.
  */
 @Component({
     selector: 'app-section-tabs',
@@ -18,11 +20,11 @@ import { MenuBadgeService, menuBadgeLabel } from '@/app/layout/service/menu-badg
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (view(); as v) {
-            <nav class="flex flex-wrap gap-1 mb-6 border-b border-surface" aria-label="Bölüm sekmeleri">
+            <nav #tabsNav class="section-tabs flex flex-nowrap gap-1 mb-6 overflow-x-auto" aria-label="Bölüm sekmeleri">
                 @for (tab of v.tabs; track tab.route) {
                     <a
                         [routerLink]="tab.route"
-                        class="px-4 py-2 -mb-px border-b-2 font-medium no-underline touch:flex touch:items-center touch:min-h-(--touch-target)"
+                        class="shrink-0 whitespace-nowrap px-4 py-2 border-b-2 font-medium no-underline touch:flex touch:items-center touch:min-h-(--touch-target)"
                         [class.border-primary]="tab === v.active"
                         [class.text-primary]="tab === v.active"
                         [class.border-transparent]="tab !== v.active"
@@ -39,7 +41,33 @@ import { MenuBadgeService, menuBadgeLabel } from '@/app/layout/service/menu-badg
                         }
                     </a>
                 }
+                <span class="section-tabs-fade" aria-hidden="true"></span>
             </nav>
+        }
+    `,
+    styles: `
+        .section-tabs {
+            /* Alt çizgi kutunun gölgesi: kayan kapta negatif kenar boşluğu dikey kaydırma çubuğu açardı. Etkin sekmenin çizgisi üstüne biner. */
+            box-shadow: inset 0 -1px 0 var(--surface-border);
+            scrollbar-width: none;
+            container-type: scroll-state;
+        }
+
+        .section-tabs-fade {
+            position: sticky;
+            right: 0;
+            flex: none;
+            width: 2rem;
+            margin-left: -2rem;
+            pointer-events: none;
+            background: linear-gradient(to right, transparent, var(--surface-ground));
+            opacity: 0;
+        }
+
+        @container scroll-state(scrollable: inline-end) {
+            .section-tabs-fade {
+                opacity: 1;
+            }
         }
     `
 })
@@ -50,6 +78,7 @@ export class AppSectionTabsComponent {
     protected readonly ro = inject(TenantReadOnlyContextService);
 
     private readonly url = signal(this.router.url);
+    private readonly tabsNav = viewChild<ElementRef<HTMLElement>>('tabsNav');
 
     protected readonly view = computed(() => tabsForUrl(MENU_GROUPS, this.url(), (claim) => this.auth.hasOperationClaim(claim)));
 
@@ -60,6 +89,23 @@ export class AppSectionTabsComponent {
                 takeUntilDestroyed(inject(DestroyRef))
             )
             .subscribe((event) => this.url.set(event.urlAfterRedirects));
+
+        // Etkin sekme kayan çubukta görünmüyorsa yalnız yatayda kaydırılır (sayfa dikeyde oynamaz).
+        afterRenderEffect(() => {
+            this.view();
+            const nav = this.tabsNav()?.nativeElement;
+            const active = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+
+            if (!nav || !active) {
+                return;
+            }
+
+            const left = active.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft;
+
+            if (left < nav.scrollLeft || left + active.offsetWidth > nav.scrollLeft + nav.clientWidth) {
+                nav.scrollLeft = left - (nav.clientWidth - active.offsetWidth) / 2;
+            }
+        });
     }
 
     protected badge(key: MenuBadgeKey | undefined): string | null {

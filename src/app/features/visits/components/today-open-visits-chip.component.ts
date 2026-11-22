@@ -50,7 +50,7 @@ export function chargeLinkParams(row: OpenItemVisitVm): Record<string, string> {
                 <div class="flex items-center justify-between gap-2 mb-1">
                     <span [id]="titleId()" class="font-semibold">{{ heading() }}</span>
                     @if (data(); as d) {
-                        <span class="text-xs text-muted-color">{{ d.totalCount }} ziyaret</span>
+                        <span class="text-xs text-muted-color">{{ d.totalCount }} geliş</span>
                     }
                 </div>
                 <p class="m-0 mb-1 text-xs text-muted-color">{{ hint() }}</p>
@@ -86,7 +86,7 @@ export function chargeLinkParams(row: OpenItemVisitVm): Record<string, string> {
                             }
                         </ul>
                         @if (d.totalCount > d.items.length) {
-                            <p class="m-0 pt-2 text-xs text-muted-color">En eski {{ d.items.length }} ziyaret gösteriliyor.</p>
+                            <p class="m-0 pt-2 text-xs text-muted-color">En eski {{ d.items.length }} geliş gösteriliyor.</p>
                         }
                     }
                 }
@@ -125,7 +125,7 @@ export class TodayOpenVisitsChipComponent {
     private loadSub?: Subscription;
 
     readonly titleId = computed(() => `openItemsPanelTitle-${this.kind()}`);
-    readonly heading = computed(() => (this.kind() === 'Uncharged' ? 'Ücret kaydı olmayan ziyaretler' : 'Önceki günden açık gelişler'));
+    readonly heading = computed(() => (this.kind() === 'Uncharged' ? 'Ücret kaydı olmayan gelişler' : 'Önceki günden açık gelişler'));
     readonly hint = computed(() => (this.kind() === 'Uncharged' ? 'Son 30 gün; işlem yapılmış, ücret yazılmamış. En eski önce.' : 'Bugünden önce gelmiş, tamamlanmamış. En eski önce.'));
 
     detail(r: OpenItemVisitVm): string {

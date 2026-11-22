@@ -20,7 +20,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     imports: [ButtonModule, DialogModule, DialogFocusReturnDirective, AppEmptyStateComponent, AppErrorStateComponent, AppLoadingStateComponent, TrDateTimePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <button pButton type="button" class="p-button-secondary" data-testid="record-history-open" (click)="open()"><i class="pi pi-history"></i>Değişiklikleri gör</button>
+        <button pButton type="button" class="p-button-outlined p-button-secondary" data-testid="record-history-open" (click)="open()"><i class="pi pi-history"></i>Değişiklikleri gör</button>
         <p-dialog header="Değişiklik geçmişi" [modal]="true" [dismissableMask]="true" [style]="{ width: 'min(760px, 95vw)' }" [(visible)]="visible">
             @if (loading()) {
                 <app-loading-state message="Geçmiş yükleniyor…" />

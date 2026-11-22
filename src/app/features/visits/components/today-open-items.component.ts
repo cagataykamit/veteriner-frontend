@@ -87,8 +87,8 @@ export class TodayOpenItemsComponent {
             out.push({
                 key: 'uncharged',
                 icon: 'pi pi-exclamation-circle',
-                text: `Ücret yok: ${s.unchargedVisitCount} ziyaret`,
-                title: 'Son 30 günde işlem yapılmış ama ücret kaydı olmayan ziyaret',
+                text: `Ücret yok: ${s.unchargedVisitCount} geliş`,
+                title: 'Son 30 günde işlem yapılmış ama ücret kaydı olmayan geliş',
                 visits: 'Uncharged',
                 tone: TONE_DANGER
             });
@@ -123,8 +123,8 @@ export class TodayOpenItemsComponent {
             out.push({
                 key: 'outstanding',
                 icon: 'pi pi-wallet',
-                text: `Ödeme bekliyor: ${s.outstandingVisitCount} ziyaret${amount}`,
-                title: 'Tamamlanmış ama ödemesi açık ziyaretler (Borçlu müşteriler raporu)',
+                text: `Ödeme bekliyor: ${s.outstandingVisitCount} geliş${amount}`,
+                title: 'Tamamlanmış ama ödemesi açık gelişler (Borçlu müşteriler raporu)',
                 link: '/panel/reports/outstanding-balances',
                 tone: TONE_WARN
             });

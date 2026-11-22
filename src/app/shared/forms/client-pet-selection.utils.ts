@@ -1,6 +1,7 @@
 import type { ClientListItemVm } from '@/app/entities/client/models/client-vm.model';
 import type { PetListItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
+import { joinPresent } from '@/app/shared/utils/labels.utils';
 
 export interface SelectOption {
     label: string;
@@ -21,7 +22,7 @@ export function trimClientIdControlValue(value: unknown): string {
 /** Client dropdown: ad + telefon. */
 export function clientOptionsFromList(items: ClientListItemVm[]): SelectOption[] {
     return items.map((c) => ({
-        label: `${c.fullName} — ${formatClientPhoneForDisplay(c.phone)}`,
+        label: joinPresent([c.fullName, formatClientPhoneForDisplay(c.phone)], ' — '),
         value: c.id
     }));
 }

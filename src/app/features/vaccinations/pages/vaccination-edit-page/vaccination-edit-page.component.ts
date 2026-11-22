@@ -78,7 +78,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                 <app-error-state [detail]="loadError()!" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header categoryLink="/panel/vaccinations" categoryLinkLabel="Aşı listesine dön" title="Aşıyı Düzenle" description="Aşı kaydını güncelleyin." />
+            <app-page-header categoryLink="/panel/vaccinations" categoryLinkLabel="Aşı listesine dön" title="Aşıyı düzenle" description="Aşı kaydını güncelleyin." />
             <app-pet-alert-banner [petId]="form.controls.petId.value" />
 
             <div class="card">

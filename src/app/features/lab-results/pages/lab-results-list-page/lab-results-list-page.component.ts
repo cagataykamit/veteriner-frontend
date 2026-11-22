@@ -106,7 +106,7 @@ const parseLabResultStatusFilter = (raw: unknown): LabResultStatus | '' =>
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz laboratuvar sonucu yok." emptyHint="Laboratuvar istemleri muayene içinden eklenir." (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"

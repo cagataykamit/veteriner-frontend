@@ -66,7 +66,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
             @if (selectionError()) {
                 <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
-            <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
+            <p class="text-sm text-muted-color mt-0 mb-4">Aktif klinik: {{ activeClinicLabel() }}</p>
             @if (contextFromExamination()) {
                 <p class="text-sm text-muted-color mt-0 mb-4">Bu muayene kaydından bağlam taşındı; müşteri, hasta ve bağlı muayene alanları kilitlidir.</p>
             }

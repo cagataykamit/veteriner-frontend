@@ -28,7 +28,7 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
 
         <app-report-results [state]="state" [emptyMessage]="copy.examinationsReportEmptyMessage" [emptyHint]="copy.examinationsReportEmptyHint">
             <ng-template #rows>
-                <div class="hidden lg:block overflow-x-auto">
+                <div class="hidden lg:block list-table">
                     <p-table
                         [value]="displayedRows()"
                         [paginator]="true"
@@ -39,14 +39,16 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
                         [lazy]="true"
                         [first]="state.first()"
                         (onLazyLoad)="state.onTableLazyLoad($event)"
-                        [tableStyle]="{ 'min-width': '58rem' }"
+                        [tableStyle]="{ 'min-width': '56rem' }"
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="{first} - {last} / {totalRecords}"
                     >
                         <ng-template #header>
                             <tr>
                                 <th>{{ copy.reportsColPrimaryLocalTime }}</th>
-                                <th>{{ copy.reportsColClinic }}</th>
+                                @if (state.showClinicColumn()) {
+                                    <th>{{ copy.reportsColClinic }}</th>
+                                }
                                 <th>{{ copy.labelClient }}</th>
                                 <th>{{ copy.labelPet }}</th>
                                 <th>{{ copy.examinationsReportColLinkedAppointment }}</th>
@@ -56,7 +58,9 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
                         <ng-template #body let-row>
                             <tr>
                                 <td>{{ formatExaminedAt(row.examinedAtUtc) }}</td>
-                                <td>{{ displayClinicLabel(row.clinicLabel) }}</td>
+                                @if (state.showClinicColumn()) {
+                                    <td>{{ displayClinicLabel(row.clinicLabel) }}</td>
+                                }
                                 <td>
                                     @if (row.clientId) {
                                         <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
@@ -90,9 +94,11 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
                     @for (row of displayedRows(); track reportTableRowTrackKey(row, $index)) {
                         <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                             <div class="text-sm text-muted-color mb-2">{{ formatExaminedAt(row.examinedAtUtc) }}</div>
-                            <div class="text-sm mb-1">
-                                <span class="text-muted-color font-medium">{{ copy.reportsColClinic }}: </span>{{ displayClinicLabel(row.clinicLabel) }}
-                            </div>
+                            @if (state.showClinicColumn()) {
+                                <div class="text-sm mb-1">
+                                    <span class="text-muted-color font-medium">{{ copy.reportsColClinic }}: </span>{{ displayClinicLabel(row.clinicLabel) }}
+                                </div>
+                            }
                             <div class="text-sm mb-1">
                                 <span class="text-muted-color font-medium">{{ copy.labelClient }}: </span>
                                 @if (row.clientId) {

@@ -33,7 +33,7 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
     template: `
         <p-toast position="top-right" />
 
-        <app-page-header title="Kurum Bilgileri" description="Kurum adınızı görüntüleyip güncelleyebilirsiniz. Paket ve ödeme işlemleri için Abonelik sayfasını kullanın." />
+        <app-page-header title="Kurum bilgileri" description="Kurum adınızı görüntüleyip güncelleyebilirsiniz. Paket ve ödeme işlemleri için Abonelik sayfasını kullanın." />
 
         @if (loading()) {
             <app-loading-state message="Kurum bilgileri yükleniyor…" />
@@ -44,7 +44,7 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
         } @else if (summary(); as s) {
             <div class="flex flex-col gap-6">
                 <div class="card mb-0">
-                    <h5 class="mt-0 mb-4">Kurum Bilgileri</h5>
+                    <h5 class="mt-0 mb-4">Kurum bilgileri</h5>
                     @if (ro.mutationBlocked()) {
                         <p class="text-amber-700 dark:text-amber-300 text-sm mt-0 mb-3" role="status">Bu kurum salt okunur moddadır; kurum adı güncellenemez.</p>
                     }

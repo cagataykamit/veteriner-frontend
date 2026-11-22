@@ -36,6 +36,12 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
     return v && typeof v === 'object' && v.id ? null : { required: true };
 }
 
+/** Randevudan gelişte pencerenin okuduğu alanlar: Bugün satırı da randevu ayrıntısı da verir. */
+export type ArrivalAppointment = Pick<
+    TodayItemVm,
+    'appointmentId' | 'petName' | 'speciesName' | 'clientId' | 'clientName' | 'appointmentReasonName' | 'responsibleVeterinarianUserId'
+>;
+
 /**
  * Hasta kabulü. `appointment` verilirse randevudan "Geldi" (hasta kilitli); verilmezse randevusuz hızlı geliş
  * (tek alanda hasta araması). Sorumlu hekim iki akışta da opsiyoneldir. Geliş hazırlığı (neden, şablon / paket) ve "sonra ücret ekle"
@@ -145,7 +151,7 @@ function petSelected(c: AbstractControl): ValidationErrors | null {
 export class VisitArrivalDialogComponent {
     readonly visible = model(false);
     /** Doluysa randevudan geliş (hasta kilitli); `null` ise randevusuz geliş. */
-    readonly appointment = input<TodayItemVm | null>(null);
+    readonly appointment = input<ArrivalAppointment | null>(null);
     /** Randevusuz geliş için hasta önceden seçili gelir (hasta detayındaki "Geldi" eylemi). */
     readonly presetPet = input<PetSuggestion | null>(null);
     /** Sunucu yanıtı (yeni ya da mevcut Visit); `created` bayrağı üst bileşenin mesajını belirler. */

@@ -411,6 +411,7 @@ export function mapPetListItemDtoToVm(dto: PetListItemDto): PetListItemVm {
     return {
         id: dto.id,
         clientId: dto.clientId?.trim() ? dto.clientId : null,
+        clientName: dto.clientName?.trim() ?? '',
         speciesId: firstTrimmed(dto.speciesId ?? undefined, readDtoString(dto, ['SpeciesId'])),
         name: str(dto.name),
         speciesName: speciesName(dto.speciesName),

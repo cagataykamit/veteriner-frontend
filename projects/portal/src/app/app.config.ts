@@ -2,7 +2,7 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import { ApplicationConfig, isDevMode, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
-import Aura from '@primeuix/themes/aura';
+import { PortalPreset } from './core/theme/portal-preset';
 import { providePrimeNG } from 'primeng/config';
 import { environment } from '@portal/environments/environment';
 import { PRIMEUI_LICENSE } from '@portal/environments/primeui-license.local';
@@ -20,8 +20,8 @@ export const portalAppConfig: ApplicationConfig = {
         provideRouter(portalRoutes, withComponentInputBinding(), withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
         { provide: PORTAL_API_BASE_URL, useValue: environment.portalApiBaseUrl },
         provideHttpClient(withFetch(), withInterceptors([portalAuthInterceptor])),
-        // Panelle aynı tema (Aura). Koyu tema `portal-dark` sınıfıyla (`core/theme/portal-theme.ts`): cihaz teması ya da Hesabım > Görünüm.
-        providePrimeNG({ theme: { preset: Aura, options: { darkModeSelector: '.portal-dark' } }, license: PRIMEUI_LICENSE || undefined }),
+        // Panelle aynı birincil renk (Aura + logo turkuazı, PO-01). Koyu tema `portal-dark` sınıfıyla (`core/theme/portal-theme.ts`): cihaz teması ya da Hesabım > Görünüm.
+        providePrimeNG({ theme: { preset: PortalPreset, options: { darkModeSelector: '.portal-dark' } }, license: PRIMEUI_LICENSE || undefined }),
         // Yalnız statik varlıklar önbelleğe alınır (`ngsw-config.json`); API yanıtları önbelleklenmez. Mobil pakette kayıtlanmaz.
         provideServiceWorker('ngsw-worker.js', {
             enabled: portalServiceWorkerEnabled(isDevMode(), isPortalNativePlatform()),

@@ -25,6 +25,7 @@ const balance = (openCharges: ClientOpenChargeVm[]): ClientBalanceVm => ({
 const pet = (id: string, name: string): PetListItemVm => ({
     id,
     clientId: 'c1',
+    clientName: '',
     speciesId: 's1',
     name,
     speciesName: 'Kedi',

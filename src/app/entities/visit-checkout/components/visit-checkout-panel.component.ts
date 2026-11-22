@@ -465,7 +465,7 @@ const CARE_SEVERITY = { Waiting: 'warn', InProgress: 'info', Completed: 'success
             }
 
             @if (canIssueDocument) {
-                <app-e-document-issue-dialog [(visible)]="documentOpen" [source]="documentSource()" header="Ziyaret kapandı: e-Belge kes" />
+                <app-e-document-issue-dialog [(visible)]="documentOpen" [source]="documentSource()" header="Geliş kapandı: e-Belge kes" />
             }
         }
     `,

@@ -62,7 +62,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-page-header title="Hatırlatma Geçmişi" description="Gönderilen veya kuyruğa alınan hatırlatmaları takip edin." />
+        <app-page-header title="Hatırlatma geçmişi" description="Gönderilen veya kuyruğa alınan hatırlatmaları takip edin." />
 
         <div class="card">
             @if (loading()) {
@@ -71,7 +71,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                 <app-error-state title="Hatırlatma geçmişi yüklenemedi." [detail]="error()!" (retry)="reload()" />
             } @else {
                 <div class="flex flex-col gap-4">
-                    <div class="grid grid-cols-12 gap-3 items-end pb-3 border-b border-surface-200 dark:border-surface-700">
+                    <div class="flex flex-wrap items-end gap-3 pb-3 border-b border-surface-200 dark:border-surface-700">
                         <app-filter-field label="Tür" [active]="isReminderTypeActive()" width="select">
                             <p-select [options]="reminderTypeOptions" [(ngModel)]="reminderTypeFilter" optionLabel="label" optionValue="value" placeholder="Tümü" class="w-full" [showClear]="true" (ngModelChange)="scheduleApply()" />
                         </app-filter-field>
@@ -94,15 +94,13 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                                 (ngModelChange)="scheduleApply()"
                             />
                         </app-filter-field>
-                        <app-filter-field label="Başlangıç tarihi" labelFor="remLogFrom" [active]="isFromDateActive()" width="date">
+                        <app-filter-field label="Başlangıç" labelFor="remLogFrom" [active]="isFromDateActive()" width="date">
                             <app-date-input inputId="remLogFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                         </app-filter-field>
-                        <app-filter-field label="Bitiş tarihi" labelFor="remLogTo" [active]="isToDateActive()" width="date">
+                        <app-filter-field label="Bitiş" labelFor="remLogTo" [active]="isToDateActive()" width="date">
                             <app-date-input inputId="remLogTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
                         </app-filter-field>
-                        <div class="col-span-12 md:col-span-4 flex flex-wrap gap-2">
-                            <button pButton type="button" size="small" severity="secondary" (click)="clearFilters()"><i class="p-button-icon pi pi-times"></i>Temizle</button>
-                        </div>
+                        <button pButton type="button" severity="secondary" (click)="clearFilters()"><i class="p-button-icon pi pi-times"></i>Temizle</button>
                     </div>
 
                     @if (displayedRows().length === 0) {
@@ -115,7 +113,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
                         }
                     } @else {
                         <div class="hidden lg:block overflow-x-auto">
-                            <p-table [value]="displayedRows()" [paginator]="true" [rows]="pageSize()" [totalRecords]="totalItems()" [lazy]="true" [first]="first()" (onLazyLoad)="list.onTableLazyLoad($event)" [tableStyle]="{ 'min-width': '78rem' }">
+                            <p-table [value]="displayedRows()" [paginator]="true" [rows]="pageSize()" [totalRecords]="totalItems()" [lazy]="true" [first]="first()" (onLazyLoad)="list.onTableLazyLoad($event)" [tableStyle]="{ 'min-width': '60rem' }">
                                 <ng-template #header>
                                     <tr>
                                         <th>Tarih</th>

@@ -164,7 +164,7 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                 <app-detail-action-bar ariaLabel="Yatış eylemleri">
                     @if (r.isActive && canUpdateHospitalization && canDischargeHospitalization) {
                         @if (!ro.mutationBlocked()) {
-                            <button pButton type="button" severity="warn" (click)="openDischargeDialog()"><i class="p-button-icon pi pi-sign-out"></i>Taburcu et</button>
+                            <button pButton type="button" (click)="openDischargeDialog()"><i class="p-button-icon pi pi-sign-out"></i>Taburcu et</button>
                         } @else {
                             <button pButton type="button" severity="secondary" [disabled]="true"><i class="p-button-icon pi pi-lock"></i>Taburcu et (salt okunur)</button>
                         }
