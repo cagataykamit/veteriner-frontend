@@ -115,6 +115,8 @@ export function paymentToPetTimelineItem(
         type: PET_TIMELINE_PAYMENT_TYPE,
         sourceId: p.id,
         eventAtUtc: p.paidAtUtc,
+        // Geçmiş özetinin ödeme satırı klinik kimliği taşımaz; aktif klinikle adından karşılaştırılır.
+        clinicId: null,
         clinicName: p.clinicName,
         title,
         summary: methodLabel,

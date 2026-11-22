@@ -15,6 +15,7 @@ const item = (type: string, id: string, over: Record<string, unknown> = {}) => (
     type,
     sourceId: id,
     eventAtUtc: '2026-10-10T10:00:00Z',
+    clinicId: null,
     clinicName: 'Merkez',
     title: `${type} ${id}`,
     summary: null,

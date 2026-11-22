@@ -12,6 +12,7 @@ const event = (type: string, id: string, eventAtUtc: string) => ({
     type,
     sourceId: id,
     eventAtUtc,
+    clinicId: null,
     clinicName: null,
     title: `${type} ${id}`,
     summary: null,

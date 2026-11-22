@@ -55,6 +55,7 @@ function mapItem(dto: PetTimelineItemDto): PetTimelineItemVm | null {
         type,
         sourceId,
         eventAtUtc: trimOrNull(dto.eventAtUtc),
+        clinicId: trimOrNull(dto.clinicId),
         clinicName: trimOrNull(dto.clinicName),
         title: trimOrNull(dto.title) ?? '—',
         summary: trimOrNull(dto.summary),
