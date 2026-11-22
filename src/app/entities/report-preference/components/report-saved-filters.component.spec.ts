@@ -109,6 +109,21 @@ describe('ReportSavedFiltersComponent — kayıtlı filtreler (REPORT-004)', () 
         expect(c.dialogVisible()).toBe(false);
     });
 
+    it('kaydet penceresi gövdeye eklenir; açılır panel içinde kullanılsa da karartma menüyü kaplar', async () => {
+        const fixture = create();
+
+        fixture.componentInstance.openSave();
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        const dialog = document.body.querySelector('[role="dialog"]');
+
+        expect(dialog).not.toBeNull();
+        expect((fixture.nativeElement as HTMLElement).contains(dialog)).toBe(false);
+        fixture.destroy();
+    });
+
     it('boş filtre setinde, adsızken veya salt okunur kiracıda kaydetmez', () => {
         const c = create().componentInstance;
 
