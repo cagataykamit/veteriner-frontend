@@ -34,11 +34,13 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { catchError, forkJoin, of } from 'rxjs';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { TenantRolePipe } from '@/app/shared/pipes/tenant-role.pipe';
+import { tenantRoleLabel } from '@/app/core/auth/tenant-role-labels';
 
 @Component({
     selector: 'app-tenant-member-detail-page',
     standalone: true,
-    imports: [CommonModule, FormsModule, ButtonModule, ConfirmDialogModule, DialogModule, DialogFocusReturnDirective, ToastModule, AppPageHeaderComponent, AppDetailIdentityCardComponent, AppStatusTagComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, TenantMemberRemoveDialogComponent, TrDateTimePipe],
+    imports: [CommonModule, FormsModule, ButtonModule, ConfirmDialogModule, DialogModule, DialogFocusReturnDirective, ToastModule, AppPageHeaderComponent, AppDetailIdentityCardComponent, AppStatusTagComponent, AppLoadingStateComponent, AppErrorStateComponent, AppEmptyStateComponent, TenantMemberRemoveDialogComponent, TrDateTimePipe, TenantRolePipe],
     providers: [MessageService, ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -111,7 +113,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 >
                                     <option value="">Atanabilir rol seçin</option>
                                     @for (opt of assignableFiltered(); track opt.id) {
-                                        <option [value]="opt.id">{{ opt.name }}</option>
+                                        <option [value]="opt.id">{{ opt.name | tenantRole }}</option>
                                     }
                                 </select>
                             </div>
@@ -134,7 +136,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         <div class="flex flex-wrap gap-2 mb-3">
                             @for (c of m.claims; track c.id + c.name) {
                                 <div class="inline-flex flex-wrap items-center gap-2 max-w-full rounded-full border border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-800/40 px-3 py-1.5 text-sm">
-                                    <span class="font-medium break-words">{{ c.name }}</span>
+                                    <span class="font-medium break-words">{{ c.name | tenantRole }}</span>
                                     @if (canManageTenantAccess() && !m.isCurrentUser && c.canRemove) {
                                         <button
                                             pButton
@@ -189,7 +191,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                             <div class="flex flex-wrap gap-2 mb-4">
                                 @for (rc of m.claims; track rc.id + rc.name) {
                                     <span class="text-xs sm:text-sm px-2 py-1 rounded-md bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-600">
-                                        {{ rc.name }}
+                                        {{ rc.name | tenantRole }}
                                     </span>
                                 }
                             </div>
@@ -485,7 +487,7 @@ export class TenantMemberDetailPageComponent implements OnInit {
     confirmRemoveRole(operationClaimId: string, roleName: string): void {
         this.confirmation.confirm({
             header: 'Rolü kaldır',
-            message: `${roleName} rolü bu üyeden kaldırılsın mı? Üye bu rolün izinlerini kaybeder.`,
+            message: `${tenantRoleLabel(roleName)} rolü bu üyeden kaldırılsın mı? Üye bu rolün izinlerini kaybeder.`,
             icon: 'pi pi-exclamation-triangle',
             acceptLabel: 'Rolü kaldır',
             rejectLabel: 'Vazgeç',

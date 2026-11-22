@@ -21,6 +21,7 @@ import { tenantInviteDisplayStatusSeverity } from '@/app/entities/tenant-invite/
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { tenantRoleLabel } from '@/app/core/auth/tenant-role-labels';
 
 @Component({
     selector: 'app-tenant-invite-detail-page',
@@ -140,7 +141,7 @@ export class TenantInviteDetailPageComponent implements OnInit {
 
     roleLine(d: TenantInviteDetailVm): string {
         if (d.operationClaimName?.trim()) {
-            return d.operationClaimName;
+            return tenantRoleLabel(d.operationClaimName);
         }
 
         if (d.operationClaimId?.trim()) {

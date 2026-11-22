@@ -79,6 +79,14 @@ describe('TenantInvitePanelPageComponent (oluşturulan davet kartı)', () => {
         expect(el.querySelector('[data-testid="invite-user-limit-link"]')).toBeNull();
     });
 
+    it('tek klinik önceden seçili gelir; rol adları Türkçe görünür', () => {
+        const el = fixture.nativeElement as HTMLElement;
+        const roleOptions = Array.from(el.querySelectorAll<HTMLOptionElement>('#inviteRole option')).map((o) => o.textContent?.trim());
+
+        expect(fixture.componentInstance.form.controls.clinicId.value).toBe('c1');
+        expect(roleOptions).toEqual(['Rol seçin', 'Sekreter', 'Hekim']);
+    });
+
     it('oluşturulan davette bağlantının e-postayla gittiği söylenir', () => {
         const cmp = fixture.componentInstance;
 

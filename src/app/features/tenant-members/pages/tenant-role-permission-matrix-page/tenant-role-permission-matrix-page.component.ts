@@ -11,13 +11,14 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { TenantRolePipe } from '@/app/shared/pipes/tenant-role.pipe';
 
 type MatrixRowView = TenantRolePermissionMatrixRowVm & { groups: PermissionGroupPanelVm[] };
 
 @Component({
     selector: 'app-tenant-role-permission-matrix-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent],
+    imports: [CommonModule, RouterLink, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppErrorStateComponent, TenantRolePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [title]="copy.tenantRoleMatrixTitle" [description]="copy.tenantRoleMatrixDescription">
@@ -40,7 +41,7 @@ type MatrixRowView = TenantRolePermissionMatrixRowVm & { groups: PermissionGroup
                     @for (row of displayRowsWithGroups(); track row.roleId) {
                         <div class="rounded-border border border-surface-200 dark:border-surface-700 p-4 bg-surface-0 dark:bg-surface-900">
                             <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
-                                <h5 class="mt-0 mb-0 text-base font-semibold text-surface-900 dark:text-surface-0">{{ row.roleName }}</h5>
+                                <h5 class="mt-0 mb-0 text-base font-semibold text-surface-900 dark:text-surface-0">{{ row.roleName | tenantRole }}</h5>
                                 @if (row.permissions.length > 0) {
                                     <span class="text-xs text-muted-color whitespace-nowrap shrink-0"> {{ copy.tenantRoleMatrixTotalPrefix }} {{ row.permissions.length }} {{ copy.tenantRoleMatrixTotalSuffix }} </span>
                                 }

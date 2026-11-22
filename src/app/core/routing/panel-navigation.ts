@@ -581,7 +581,15 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 planFeature: 'OwnerPortal',
                 description: 'Portalı klinik için açıp kapatma ve hasta sahibine giden bildirimlerin kanalları.'
             },
-            { label: 'Organizasyon Ayarları', icon: 'pi pi-fw pi-building', route: '/panel/settings/organization', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Kurum ve fatura bilgileri.' },
+            {
+                label: 'Organizasyon Ayarları',
+                icon: 'pi pi-fw pi-building',
+                route: '/panel/settings/organization',
+                // Kurum ve fatura bilgisi işletme yöneticisinde; klinik yöneticisi davet ve üye yönetir ama bu sayfayı değiştiremez.
+                claims: [TENANT_MANAGEMENT_CLAIM, SUBSCRIPTIONS_MANAGE_CLAIM],
+                requireAllClaims: true,
+                description: 'Kurum ve fatura bilgileri.'
+            },
             { label: 'Kurum üyeleri', icon: 'pi pi-fw pi-users', route: '/panel/settings/members', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Üyeler ve rolleri.' },
             { label: 'Davetler', icon: 'pi pi-fw pi-list', route: '/panel/settings/invites/list', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Gönderilen davetler.' },
             { label: 'Davet oluştur', icon: 'pi pi-fw pi-user-plus', route: '/panel/settings/invites', claims: [TENANT_MANAGEMENT_CLAIM], description: 'Kuruma yeni üye davet edin.' }

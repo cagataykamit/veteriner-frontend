@@ -22,11 +22,12 @@ import { DATETIME_LOCAL_INPUT_MIN, dateTimeYearRangeValidator } from '@/app/shar
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
+import { TenantRolePipe } from '@/app/shared/pipes/tenant-role.pipe';
 
 @Component({
     selector: 'app-tenant-invite-panel-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, AppPageHeaderComponent, AppLoadingStateComponent, DateInputComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, ButtonModule, InputTextModule, AppPageHeaderComponent, AppLoadingStateComponent, DateInputComponent, FormSubmitDirective, FormErrorSummaryComponent, TenantRolePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Kullanıcı daveti" description="Davet ettiğiniz kişiye katılım bağlantısı e-postayla gönderilir; hesabını açarken ad-soyadını ve parolasını girer, paket seçmez.">
@@ -83,7 +84,7 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                             <select id="inviteRole" class="w-full p-inputtext p-component" style="min-height: 2.5rem" formControlName="operationClaimId">
                                 <option value="">Rol seçin</option>
                                 @for (r of operationClaims(); track r.id) {
-                                    <option [value]="r.id">{{ r.name }}</option>
+                                    <option [value]="r.id">{{ r.name | tenantRole }}</option>
                                 }
                             </select>
                             @if (operationClaims().length === 0 && !claimsLoadError()) {
@@ -223,6 +224,7 @@ export class TenantInvitePanelPageComponent implements OnInit {
         this.auth.getMyClinics().subscribe({
             next: (list) => {
                 this.clinics.set(list);
+
                 // Tek klinik varsa (klinik yöneticisinde yalnız kendi kliniği) önceden seçili gelir.
                 if (list.length === 1 && !this.form.controls.clinicId.value) {
                     this.form.controls.clinicId.setValue(list[0].id);
