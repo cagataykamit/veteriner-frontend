@@ -1,5 +1,6 @@
 import { afterRenderEffect, ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output, signal } from '@angular/core';
 import type { VaccinationCalendarItemVm } from '@/app/entities/vaccination/models/vaccination-calendar.model';
+import type { AppointmentResourceType } from '@/app/entities/appointment-resource/models/appointment-resource.model';
 import { appointmentStatusLabel } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { CalendarBubbleDirective, type CalendarBubbleData } from '@/app/features/appointments/components/calendar-bubble';
 import type { VaccinePick } from '@/app/features/appointments/components/calendar-vaccine-strip.component';
@@ -8,10 +9,18 @@ import { appointmentBubble, vaccinationBubble, waitingLabel } from '@/app/featur
 import { appointmentTone, type CalendarTone, type CareMark, initials, toneCardClass, vaccineTone } from '@/app/features/appointments/pages/appointments-calendar-page/calendar-tone.utils';
 import { toIstanbulTimeInputValue } from '@/app/shared/utils/date.utils';
 
-/** Gün panosunda hekim sütunu (ya da "Hekim seçilmedi" / hekimsiz klinikte "Randevular"). */
+/** Kaynak sütununun odası ya da cihazı (ADR-053 K8). */
+export interface DayBoardColumnResource {
+    id: string;
+    type: AppointmentResourceType;
+}
+
+/** Gün panosunda hekim sütunu (ya da "Hekim seçilmedi" / hekimsiz klinikte "Randevular"); "Oda ve cihaz" görünümünde kaynak sütunu. */
 export interface DayBoardColumn {
     key: string;
     vetId: string | null;
+    /** Kaynak görünümünde sütunun odası ya da cihazı; boş hücre bu kaynakla yeni randevu açar. */
+    resource?: DayBoardColumnResource | null;
     title: string;
     blocks: CalendarBlock[];
     /** İptal olmayan randevu sayısı ve henüz bitmemiş (planlı) olanlar. */
@@ -38,6 +47,7 @@ export interface DayBoardVaccines {
 export interface CalendarSlotPick {
     dateKey: string;
     vetId: string | null;
+    resource?: DayBoardColumnResource | null;
     minute: number;
 }
 
@@ -118,7 +128,13 @@ const MANY_COLUMNS = 4;
                             </div>
                         } @else {
                             <div class="flex items-center gap-2.5 px-3 py-2 border-l border-surface-100 dark:border-surface-800 min-w-0" [attr.data-testid]="'calendar-column-' + c.col.key">
-                                <span class="w-8 h-8 shrink-0 rounded-full grid place-items-center text-xs font-bold bg-primary text-primary-contrast" aria-hidden="true">{{ badge(c.col) }}</span>
+                                <span class="w-8 h-8 shrink-0 rounded-full grid place-items-center text-xs font-bold bg-primary text-primary-contrast" aria-hidden="true"
+                                    >@if (c.col.resource; as r) {
+                                        <i class="pi !text-sm" [class]="r.type === 'Room' ? 'pi-building' : 'pi-wrench'"></i>
+                                    } @else {
+                                        {{ badge(c.col) }}
+                                    }</span
+                                >
                                 <span class="min-w-0">
                                     <span class="flex items-center gap-2 font-semibold min-w-0"
                                         ><span class="truncate">{{ c.col.title }}</span>
@@ -185,7 +201,7 @@ const MANY_COLUMNS = 4;
                                             [style.top.px]="y(m)"
                                             [style.height.px]="rowPx()"
                                             [attr.aria-label]="'Yeni randevu ' + c.col.title + ' ' + clock(m)"
-                                            (click)="slotPick.emit({ dateKey: dateKey(), vetId: c.col.vetId, minute: m })"
+                                            (click)="slotPick.emit({ dateKey: dateKey(), vetId: c.col.vetId, resource: c.col.resource ?? null, minute: m })"
                                         >
                                             <span class="hidden group-hover:inline-flex group-focus:inline-flex items-center gap-1 px-2 pt-0.5 text-xs text-primary font-medium"
                                                 ><i class="pi pi-plus !text-[10px]" aria-hidden="true"></i>{{ clock(m) }}</span

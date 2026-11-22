@@ -19,6 +19,11 @@ export interface AppointmentCalendarItemDto {
     notes?: string | null;
     /** Takvim durumu (sözleşme §8.3); iptal ve gelmedi randevuda boş. */
     state?: string | null;
+    /** Oda ve cihaz (APPOINTMENT_RESOURCES_API_CONTRACT.md §4); takvimin "Oda ve cihaz" sütunları. */
+    roomResourceId?: string | null;
+    roomResourceName?: string | null;
+    equipmentResourceId?: string | null;
+    equipmentResourceName?: string | null;
 }
 
 export interface AppointmentCalendarQuery {

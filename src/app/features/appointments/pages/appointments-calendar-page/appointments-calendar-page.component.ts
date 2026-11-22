@@ -44,6 +44,8 @@ import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { panelBookingHours } from '@/app/entities/clinic/data/clinic-working-hours.mapper';
 import type { ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
+import type { AppointmentResourceVm } from '@/app/entities/appointment-resource/models/appointment-resource.model';
+import { AppointmentResourcesService } from '@/app/entities/appointment-resource/services/appointment-resources.service';
 import type { TodayItemVm, VeterinarianVm } from '@/app/entities/visit/models/visit-vm.model';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -66,7 +68,7 @@ import {
 import { AppointmentRequestsCalendarLayerComponent } from '@/app/entities/online-booking/components/appointment-requests-calendar-layer.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { istanbulTodayYmd } from '@/app/features/appointments/utils/appointment-schedule-validation.utils';
-import { AppointmentCalendarGridComponent, type CalendarSlotPick, type DayBoardColumn, type DayBoardVaccines } from '@/app/features/appointments/components/appointment-calendar-grid.component';
+import { AppointmentCalendarGridComponent, type CalendarSlotPick, type DayBoardColumn, type DayBoardColumnResource, type DayBoardVaccines } from '@/app/features/appointments/components/appointment-calendar-grid.component';
 import { AppointmentCalendarWeekComponent, type WeekDayColumn } from '@/app/features/appointments/components/appointment-calendar-week.component';
 import { TODAY_ROUTE } from '@/app/core/routing/panel-navigation';
 import { parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
@@ -85,6 +87,7 @@ import {
     layoutBlocks,
     minutesOf,
     monthGridWeeks,
+    resourceIdsOf,
     rowStepMinutes,
     toBlockTimes,
     weekDateKeys,
@@ -93,9 +96,12 @@ import {
 } from './calendar-grid.utils';
 
 type CalendarViewMode = 'day' | 'week' | 'month';
+/** Gün görünümünün sütunları (ADR-053 K8): hekim ya da oda ve cihaz. */
+type CalendarColumnMode = 'vets' | 'resources';
 type CalendarPreset = 'overdue-appointments' | 'upcoming-24h' | 'today-cancelled';
 
 const UNASSIGNED = 'yok';
+const NO_RESOURCE = 'kaynak-yok';
 /** Randevu türü "Aşılama" (backend `AppointmentType.Vaccination`). */
 const VACCINATION_APPOINTMENT_TYPE = 1;
 /** Çalışma saatleri alınamazsa ızgara bu haftayla çizilir (pazartesi–cumartesi 08–20). */
@@ -120,6 +126,7 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
  * kırmızı. Telefonda günün ajandası. Görünüm ve gün adreste (`?view=week&date=yyyy-MM-dd`); `preset` listeleri değişmedi.
  * Aşı katmanı (2026-11-16): planlı/sonraki/uygulanan aşılar günün üst şeridinde; randevu sayılmaz (çakışma, boş saat ve sayaçlara girmez).
  * Kartın üzerine gelince ayrıntı balonu; randevuya tıklayınca ayrıntı sayfadan çıkmadan pencerede.
+ * Oda ve cihaz (ADR-053 K8): gün görünümünde sütunlar hekim yerine kaynaklar olabilir (`?columns=resources`); kapasite aşımı çakışmadır.
  */
 @Component({
     selector: 'app-appointments-calendar-page',
@@ -306,7 +313,14 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                                 }
                             }
                         </p>
-                        @if (vetBarShown()) {
+                        @if (resourceColumnsAvailable()) {
+                            <!-- Sütun seçimi (ADR-053 K8): hekim ya da oda ve cihaz; klinikte aktif kaynak yoksa görünmez. Seçim adreste (columns=resources). -->
+                            <div class="ml-auto inline-flex rounded-lg border border-surface bg-surface-50 dark:bg-surface-800 p-0.5 text-[12.5px]" role="group" aria-label="Sütunlar" data-testid="calendar-column-mode">
+                                <button type="button" class="px-2.5 py-1 rounded-md cursor-pointer" [class]="columnSegClass('vets')" [attr.aria-pressed]="!resourceMode()" (click)="changeColumnMode('vets')">Hekim</button>
+                                <button type="button" class="px-2.5 py-1 rounded-md cursor-pointer" [class]="columnSegClass('resources')" [attr.aria-pressed]="resourceMode()" (click)="changeColumnMode('resources')" data-testid="calendar-column-resources">Oda ve cihaz</button>
+                            </div>
+                        }
+                        @if (vetBarShown() && !resourceMode()) {
                             <div class="ml-auto flex items-center gap-1.5 overflow-x-auto text-[12.5px]" data-testid="calendar-vet-bar">
                                 @if (canOnlyMine()) {
                                     <button
@@ -482,6 +496,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     private readonly appointments = inject(AppointmentsService);
     private readonly clinics = inject(ClinicsService);
     private readonly visits = inject(VisitsService);
+    private readonly resourcesService = inject(AppointmentResourcesService);
     private readonly auth = inject(AuthService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
@@ -517,6 +532,13 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     calendarDirty = false;
 
     readonly viewMode = signal<CalendarViewMode>('day');
+    readonly columnMode = signal<CalendarColumnMode>('vets');
+    /** Kliniğin oda ve cihazları (aktif/pasif); kaynak sütunları ve kapasite. */
+    readonly resources = signal<AppointmentResourceVm[]>([]);
+    readonly resourceColumnsAvailable = computed(() => this.resources().some((r) => r.isActive));
+    /** Gün görünümünde kaynak sütunları gösteriliyor mu (seçili ve klinikte aktif kaynak var). */
+    readonly resourceMode = computed(() => this.columnMode() === 'resources' && this.resourceColumnsAvailable());
+    private readonly resourceCapacity = computed(() => new Map(this.resources().map((r) => [r.id, r.capacity])));
     readonly selectedDate = signal(istanbulTodayYmd());
     readonly today = signal(istanbulTodayYmd());
     readonly nowMinute = signal<number | null>(null);
@@ -540,7 +562,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     readonly rowStep = computed(() => rowStepMinutes(this.slotInterval()));
     readonly gridHours = computed(() => panelBookingHours(this.hours().length ? this.hours() : FALLBACK_WEEK, this.enforceWorkingHours()));
     readonly weekKeys = computed(() => weekDateKeys(this.selectedDate()));
-    readonly conflicts = computed(() => conflictIds(this.items()));
+    readonly conflicts = computed(() => conflictIds(this.items(), this.resourceCapacity()));
     readonly presetGroupedByDate = computed(() => groupCalendarItemsByDay(this.items()));
 
     /** Hekim sırası (renk ve sütun sırası): klinik hekimleri, ardından listede olmayan ama randevusu olan hekimler. */
@@ -623,21 +645,32 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         return shown.length ? shown : this.chipVetIds();
     });
 
-    /** Gün panosu sütunları: açık hekimler, varsa "Hekim seçilmedi"; hekimsiz klinikte tek sütun. */
+    /** Gün panosu sütunları: açık hekimler, varsa "Hekim seçilmedi"; hekimsiz klinikte tek sütun. Kaynak görünümünde oda ve cihazlar. */
     readonly dayColumns = computed<DayBoardColumn[]>(() => {
         const items = this.selectedDayItems();
         const ids = this.conflicts();
         const names = new Map(this.vets().map((v) => [v.userId, v.name]));
         const unassigned = items.filter((i) => !i.veterinarianUserId);
-        const column = (key: string, vetId: string | null, title: string, own: AppointmentCalendarItemVm[]): DayBoardColumn => ({
+        const column = (key: string, vetId: string | null, title: string, own: AppointmentCalendarItemVm[], resource: DayBoardColumnResource | null = null): DayBoardColumn => ({
             key,
             vetId,
+            resource,
             title,
             blocks: layoutBlocks(own),
             count: own.filter((i) => appointmentTone(i) !== 'off').length,
             left: own.filter((i) => i.state === 'DueToday' || i.state === 'Upcoming').length,
             conflictCount: own.filter((i) => ids.has(i.id)).length
         });
+
+        if (this.resourceMode()) {
+            // Aktif kaynaklar ve o gün randevusu olan pasif kaynaklar; hem oda hem cihazı olan randevu iki sütunda görünür.
+            const columns = this.resources()
+                .filter((r) => r.isActive || items.some((i) => resourceIdsOf(i).includes(r.id)))
+                .map((r) => column('kaynak-' + r.id, null, r.name, items.filter((i) => resourceIdsOf(i).includes(r.id)), { id: r.id, type: r.type }));
+            const none = items.filter((i) => resourceIdsOf(i).length === 0);
+
+            return none.length ? [...columns, column(NO_RESOURCE, null, 'Oda/cihaz yok', none)] : columns;
+        }
 
         if (this.filters().vet === NO_VET) {
             return [column(UNASSIGNED, null, 'Hekim seçilmedi', unassigned)];
@@ -906,6 +939,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
             const view = params.get('view');
 
             this.viewMode.set(!preset && (view === 'week' || view === 'month') ? view : 'day');
+            this.columnMode.set(params.get('columns') === 'resources' ? 'resources' : 'vets');
             this.selectedDate.set(!preset && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : istanbulTodayYmd());
             this.reload();
         });
@@ -937,6 +971,17 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         if (this.viewMode() !== mode) {
             this.navigate({ view: mode });
         }
+    }
+
+    changeColumnMode(mode: CalendarColumnMode): void {
+        if (this.columnMode() !== mode) {
+            this.columnMode.set(mode);
+            this.navigate({});
+        }
+    }
+
+    columnSegClass(mode: CalendarColumnMode): string {
+        return (mode === 'resources') === this.resourceMode() ? 'bg-primary text-primary-contrast font-semibold shadow-sm' : 'text-muted-color hover:text-color';
     }
 
     previous(): void {
@@ -1186,7 +1231,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     }
 
     onSlotPick(pick: CalendarSlotPick): void {
-        this.createAppointment({ date: pick.dateKey, time: clockLabel(pick.minute), vet: pick.vetId });
+        this.createAppointment({ date: pick.dateKey, time: clockLabel(pick.minute), vet: pick.vetId, resource: pick.resource ?? null });
     }
 
     onAgendaGapPick(minute: number): void {
@@ -1210,14 +1255,24 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         this.dialog.set({ id, mode: 'edit' });
     }
 
-    /** Boş hücre / boş saat: tarih, saat ve hekim dolu form; üstteki düğme boş form açar (form ilk uygun saati önerir). */
-    createAppointment(prefill?: { date: string; time: string; vet: string | null }): void {
+    /** Boş hücre / boş saat: tarih, saat ve hekim (kaynak sütununda oda ya da cihaz) dolu form; üstteki düğme boş form açar (form ilk uygun saati önerir). */
+    createAppointment(prefill?: { date: string; time: string; vet: string | null; resource?: DayBoardColumnResource | null }): void {
         if (!this.canPick()) {
             return;
         }
 
+        const resource = prefill?.resource;
+
         void this.router.navigate(['/panel/appointments/new'], {
-            queryParams: prefill ? { date: prefill.date, time: prefill.time, vet: prefill.vet ?? undefined } : undefined
+            queryParams: prefill
+                ? {
+                      date: prefill.date,
+                      time: prefill.time,
+                      vet: prefill.vet ?? undefined,
+                      room: resource?.type === 'Room' ? resource.id : undefined,
+                      equipment: resource?.type === 'Equipment' ? resource.id : undefined
+                  }
+                : undefined
         });
     }
 
@@ -1334,7 +1389,12 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         const date = params.date === undefined ? (this.selectedDate() === istanbulTodayYmd() ? null : this.selectedDate()) : params.date;
 
         void this.router.navigate(['/panel/appointments/calendar'], {
-            queryParams: { view: view === 'day' ? undefined : view, date: date ?? undefined, ...calendarFiltersToQueryParams(this.filters()) },
+            queryParams: {
+                view: view === 'day' ? undefined : view,
+                date: date ?? undefined,
+                columns: this.columnMode() === 'resources' ? 'resources' : undefined,
+                ...calendarFiltersToQueryParams(this.filters())
+            },
             ...(replaceUrl ? { replaceUrl } : {})
         });
     }
@@ -1348,6 +1408,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         this.auth.getMyClinics().subscribe({ next: (c) => this.myClinics.set(c.filter((x) => x.isActive !== false)), error: () => this.myClinics.set([]) });
 
         this.visits.getVeterinarians(this.clinicId).subscribe({ next: (v) => this.vets.set(v), error: () => this.vets.set([]) });
+        this.resourcesService.list(this.clinicId).subscribe({ next: (r) => this.resources.set(r), error: () => this.resources.set([]) });
         this.clinics.getWorkingHours(this.clinicId).subscribe({ next: (h) => this.hours.set(h), error: () => this.hours.set([]) });
         this.clinics.getAppointmentSettings(this.clinicId).subscribe({
             next: (s) => {

@@ -6,7 +6,7 @@ import { addGregorianDaysToYmd, toIstanbulDateInputValue, toIstanbulTimeInputVal
 /**
  * Saat ızgaralı takvimin saf hesapları (B1). Saatler İstanbul duvar saatidir (çalışma saatleri ve randevu formu ile aynı); dakika
  * gece yarısından sayılır. Çakışma kuralı backend ile aynıdır: iptal olmayan randevular aynı hekimde ya da aynı hastada üst üste
- * binerse çakışır (hekimsiz randevu yalnız hasta üzerinden).
+ * binerse çakışır (hekimsiz randevu yalnız hasta üzerinden); oda ve cihazda aynı anda kapasiteden fazla randevu çakışmadır (ADR-053 K4).
  */
 
 export interface CalendarBlock {
@@ -60,8 +60,11 @@ export function isCancelled(item: AppointmentCalendarItemVm): boolean {
     return isAppointmentCancelledStatus(item.status);
 }
 
-/** Aynı hekimde ya da aynı hastada üst üste binen, iptal olmayan randevuların kimlikleri. */
-export function conflictIds(items: readonly AppointmentCalendarItemVm[]): Set<string> {
+/**
+ * Aynı hekimde ya da aynı hastada üst üste binen, iptal olmayan randevuların kimlikleri; oda ve cihazda kapasite aşımı da (kapasite
+ * bilinmiyorsa 1). Sunucu kapasite aşımını kabul etmez; takvimde ancak kapasite sonradan düşürülmüşse görünür.
+ */
+export function conflictIds(items: readonly AppointmentCalendarItemVm[], resourceCapacity: ReadonlyMap<string, number> = new Map()): Set<string> {
     const ids = new Set<string>();
     const live = items
         .filter((i) => !isCancelled(i))
@@ -82,7 +85,43 @@ export function conflictIds(items: readonly AppointmentCalendarItemVm[]): Set<st
         }
     }
 
+    for (const x of live) {
+        for (const resourceId of resourceIdsOf(x.item)) {
+            const others = live.filter((o) => o !== x && o.t.dateKey === x.t.dateKey && resourceIdsOf(o.item).includes(resourceId) && o.t.start < x.t.end && x.t.start < o.t.end);
+
+            if (peakUsage(others.map((o) => o.t), x.t.start, x.t.end) >= (resourceCapacity.get(resourceId) ?? 1)) {
+                ids.add(x.item.id);
+                others.forEach((o) => ids.add(o.item.id));
+            }
+        }
+    }
+
     return ids;
+}
+
+/** Randevunun oda ve cihazı (dolu olanlar). */
+export function resourceIdsOf(item: AppointmentCalendarItemVm): string[] {
+    return [item.roomResourceId, item.equipmentResourceId].filter((id): id is string => !!id);
+}
+
+/** Aralık içinde aynı anda kullanan en çok randevu (backend `AppointmentResource.PeakUsage` ile aynı; bitiş anı dahil değil). */
+function peakUsage(busy: readonly { start: number; end: number }[], start: number, end: number): number {
+    const edges = busy
+        .filter((b) => b.start < end && start < b.end)
+        .flatMap((b) => [
+            { at: Math.max(b.start, start), delta: 1 },
+            { at: Math.min(b.end, end), delta: -1 }
+        ])
+        .sort((a, b) => a.at - b.at || a.delta - b.delta);
+    let current = 0;
+    let peak = 0;
+
+    for (const e of edges) {
+        current += e.delta;
+        peak = Math.max(peak, current);
+    }
+
+    return peak;
 }
 
 /** Bir sütundaki randevuları üst üste binenler yan yana gelecek şekilde şeritlere dağıtır. */

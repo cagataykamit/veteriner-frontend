@@ -106,7 +106,11 @@ export function mapAppointmentCalendarItemDtoToVm(dto: AppointmentCalendarItemDt
         veterinarianName: toText(dto.veterinarianName),
         reasonName: dto.reasonName?.trim() ? dto.reasonName.trim() : null,
         notes: dto.notes?.trim() ? dto.notes.trim() : null,
-        state: CALENDAR_ITEM_STATES.find((s) => s === dto.state) ?? null
+        state: CALENDAR_ITEM_STATES.find((s) => s === dto.state) ?? null,
+        roomResourceId: dto.roomResourceId?.trim() || null,
+        roomResourceName: dto.roomResourceName?.trim() || null,
+        equipmentResourceId: dto.equipmentResourceId?.trim() || null,
+        equipmentResourceName: dto.equipmentResourceName?.trim() || null
     };
 }
 

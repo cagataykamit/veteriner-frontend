@@ -226,7 +226,9 @@ export function appointmentBubble(item: AppointmentCalendarItemVm, clinicName: s
         time: item.timeRangeLabel,
         title: item.reasonName ? `${item.appointmentTypeLabel} (${item.reasonName})` : item.appointmentTypeLabel,
         subject: `${item.clientName} – ${item.petName}`,
-        place: `${clinicName || 'Klinik'} – ${item.veterinarianUserId ? item.veterinarianName : 'Hekim seçilmedi'}`,
+        place: [`${clinicName || 'Klinik'} – ${item.veterinarianUserId ? item.veterinarianName : 'Hekim seçilmedi'}`, item.roomResourceName, item.equipmentResourceName]
+            .filter((p) => !!p)
+            .join(' · '),
         notes: item.notes,
         status: item.statusLabel,
         tone: toneBarClass(appointmentTone(item))
