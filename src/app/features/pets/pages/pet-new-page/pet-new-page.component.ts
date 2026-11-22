@@ -162,7 +162,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="microchipNumber" class="block text-sm font-medium text-muted-color mb-2">Çip numarası</label>
-                        <input id="microchipNumber" pInputText class="w-full" formControlName="microchipNumber" maxlength="50" inputmode="numeric" autocomplete="off" (input)="onMicrochipInput()" />
+                        <input id="microchipNumber" pInputText class="w-full" formControlName="microchipNumber" maxlength="50" inputmode="numeric" autocomplete="off" (input)="onMicrochipInput($any($event.target).value)" />
                         @if (apiFieldErrors().microchipNumber) {
                             <small class="text-danger">{{ apiFieldErrors().microchipNumber }}</small>
                         } @else if (form.controls.microchipNumber.invalid && form.controls.microchipNumber.touched) {
@@ -267,12 +267,12 @@ export class PetNewPageComponent implements OnInit, HasUnsavedChanges {
         return petMicrochipFormatWarning(this.form.controls.microchipNumber.value);
     }
 
-    onMicrochipInput(): void {
-        const control = this.form.controls.microchipNumber;
-        const digits = sanitizePetMicrochipInput(control.value);
+    /** Alanın o anki metni okunur: dinleyici sırası (form erişimcisi önce ya da sonra) sonucu değiştirmez. */
+    onMicrochipInput(text: string): void {
+        const digits = sanitizePetMicrochipInput(text);
 
-        if (digits !== control.value) {
-            control.setValue(digits);
+        if (digits !== text) {
+            this.form.controls.microchipNumber.setValue(digits);
         }
     }
 
