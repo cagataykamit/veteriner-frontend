@@ -71,6 +71,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 <label class="block text-xs text-muted-color mb-1" [for]="'whBreakEnd' + idx"><span class="sr-only">{{ row.get('dayLabel')?.value }} </span>Mola bitiş</label>
                                 <app-date-input type="time" formControlName="breakEndsAt" defaultTime="13:00" [inputId]="'whBreakEnd' + idx" />
                             </div>
+                            @if (dayErrorMessage(row); as dayErr) {
+                                <small class="col-span-12 text-danger" role="alert" [attr.data-testid]="'whDayError' + idx">{{ dayErr }}</small>
+                            }
                         </div>
                     }
                 </div>
@@ -134,6 +137,11 @@ export class ClinicWorkingHoursSectionComponent {
 
     trackWhRow(_i: number, row: AbstractControl): number {
         return (row as FormGroup).get('dayOfWeek')?.value ?? _i;
+    }
+
+    /** Değişen gün satırındaki kural hatası; geçersiz formda kaydet düğmesi pasif olduğu için neden satırda yazılır. */
+    dayErrorMessage(row: AbstractControl): string | null {
+        return row.dirty || row.touched ? clinicWorkingDayErrorMessage(row.errors) : null;
     }
 
     canSaveWorkingHours(): boolean {

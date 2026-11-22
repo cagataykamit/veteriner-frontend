@@ -65,4 +65,18 @@ describe('ClinicWorkingHoursSectionComponent — saat alanları', () => {
         await pick('whBreakEnd0', '13:00');
         await expect.poll(() => el.querySelector<HTMLButtonElement>('button[severity="secondary"]')?.disabled).toBe(false);
     });
+
+    it('kapanış açılıştan önceyse satırda nedenini yazar; kaydet pasif kalır', async () => {
+        const { fixture, el } = await render();
+        const day = fixture.componentInstance.whDays.at(0);
+
+        expect(el.querySelector('[data-testid="whDayError0"]')).toBeNull();
+
+        day.patchValue({ opensAt: '09:00', closesAt: '08:00' });
+        day.markAsDirty();
+        await fixture.whenStable();
+
+        await expect.poll(() => el.querySelector('[data-testid="whDayError0"]')?.textContent?.trim()).toBe('Açılış saati kapanış saatinden önce olmalıdır.');
+        expect(el.querySelector<HTMLButtonElement>('button[severity="secondary"]')?.disabled).toBe(true);
+    });
 });
