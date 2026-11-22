@@ -52,6 +52,16 @@ export function formatWeekdayDayMonthDisplay(value: string | Date | null | undef
     return dayMonth === '—' ? dayMonth : `${formatInstantInIstanbul(value, { weekday: 'long' }, locale)}, ${dayMonth}`;
 }
 
+/** Ay adıyla tarih: "20 Kasım 2026" (zaman çizelgesi gün başlığı). Değer yoksa "—". */
+export function formatDayMonthYearDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
+    return formatInstantInIstanbul(value, { day: 'numeric', month: 'long', year: 'numeric' }, locale);
+}
+
+/** Gün adı: "Cuma". Değer yoksa "—". */
+export function formatWeekdayDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
+    return formatInstantInIstanbul(value, { weekday: 'long' }, locale);
+}
+
 export function formatTimeDisplay(value: string | Date | null | undefined, locale = DEFAULT_LOCALE): string {
     return formatInstantInIstanbul(value, TIME_OPTIONS, locale);
 }

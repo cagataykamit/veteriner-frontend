@@ -4,6 +4,7 @@ import { of, Subject, throwError } from 'rxjs';
 import type { PetTimelinePageVm, PetTimelineQuery } from '@/app/entities/pet/models/pet-timeline-vm.model';
 import type { PetHistoryPaymentItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
+import { AuthService } from '@/app/core/auth/auth.service';
 import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import { PET_CARD_TIMELINE_LIMIT, PetCardTimelineComponent } from './pet-card-timeline.component';
 
@@ -12,6 +13,7 @@ const event = (type: string, id: string, eventAtUtc: string) => ({
     type,
     sourceId: id,
     eventAtUtc,
+    clinicId: null,
     clinicName: null,
     title: `${type} ${id}`,
     summary: null,
@@ -53,6 +55,7 @@ describe('PetCardTimelineComponent', () => {
             imports: [PetCardTimelineComponent],
             providers: [
                 provideRouter([]),
+                { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez' } },
                 {
                     provide: PetsService,
                     useValue: {

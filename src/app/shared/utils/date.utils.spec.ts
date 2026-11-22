@@ -6,7 +6,9 @@ import {
     formatTimeDisplay,
     formatUtcIsoAsLocalDateDisplay,
     formatUtcIsoAsLocalDateTimeDisplay,
+    formatDayMonthYearDisplay,
     formatWeekdayDayMonthDisplay,
+    formatWeekdayDisplay,
     istanbulDateRangeToUtcIso
 } from './date.utils';
 
@@ -33,6 +35,12 @@ describe('date.utils — İstanbul görüntüleme', () => {
     it('gün adı, gün ve ay adı İstanbul gününe göre (Bugün başlığı)', () => {
         expect(formatWeekdayDayMonthDisplay('2026-11-18T22:08:00Z')).toBe('Perşembe, 19 Kasım');
         expect(formatWeekdayDayMonthDisplay(null)).toBe('—');
+    });
+
+    it('ay adıyla tarih ve gün adı İstanbul gününe göre (zaman çizelgesi gün başlığı)', () => {
+        expect(formatDayMonthYearDisplay('2026-11-19T22:08:00Z')).toBe('20 Kasım 2026');
+        expect(formatWeekdayDisplay('2026-11-19T22:08:00Z')).toBe('Cuma');
+        expect(formatDayMonthYearDisplay(null)).toBe('—');
     });
 
     it('boş ve geçersiz değer "—"', () => {

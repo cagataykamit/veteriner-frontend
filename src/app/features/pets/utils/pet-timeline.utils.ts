@@ -1,7 +1,7 @@
 import type { PetTimelineItemVm, PetTimelineType } from '@/app/entities/pet/models/pet-timeline-vm.model';
 import { careStatusLabel } from '@/app/entities/visit/utils/visit-status.utils';
 import type { VisitCareStatus } from '@/app/entities/visit/models/visit-vm.model';
-import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
+import { formatDayMonthYearDisplay, formatWeekdayDisplay, parseUtcApiInstantIsoString, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 import { PET_TIMELINE_TYPES, type PetTimelineTypeDefinition } from '@/app/entities/pet/utils/pet-timeline-types';
 
 /** Saat bilgisi taşımayan (yalnız tarihli) türler; satırda saat gösterilmez. */
@@ -54,31 +54,162 @@ export function petTimelineAppointmentLink(item: PetTimelineItemVm): string[] | 
     return item.type === 'Visit' && item.relatedAppointmentId ? ['/panel/appointments', item.relatedAppointmentId] : null;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-    Active: 'Yatışta',
-    Discharged: 'Taburcu',
-    Applied: 'Uygulandı',
-    Requested: 'İstendi',
-    Resulted: 'Sonuçlandı',
-    Cancelled: 'İptal',
-    Draft: 'Taslak',
-    Finalized: 'Kesinleşti'
+/**
+ * Tür rengi: simge kutusu (`tile`, `text` ile birlikte) ve satırdaki tür etiketi (`text`); açık ve koyu tema.
+ * Aktarılan kayıt ve bilinmeyen tür nötr gridir (aktarılan kaydın alt türü yalnız başlıkta yazar). Renk sınıflarının tek yeri burasıdır.
+ */
+export interface PetTimelineTypeTone {
+    readonly text: string;
+    readonly tile: string;
+}
+
+const NEUTRAL_TONE: PetTimelineTypeTone = { text: 'text-surface-500 dark:text-surface-400', tile: 'bg-surface-100 dark:bg-surface-800' };
+const TREATMENT_TONE: PetTimelineTypeTone = { text: 'text-amber-700 dark:text-amber-300', tile: 'bg-amber-50 dark:bg-amber-400/15' };
+
+const TYPE_TONES: Readonly<Record<string, PetTimelineTypeTone>> = {
+    Visit: { text: 'text-surface-700 dark:text-surface-200', tile: 'bg-surface-100 dark:bg-surface-800' },
+    Examination: { text: 'text-primary-700 dark:text-primary-300', tile: 'bg-primary-50 dark:bg-primary-400/15' },
+    Treatment: TREATMENT_TONE,
+    Prescription: TREATMENT_TONE,
+    Administration: TREATMENT_TONE,
+    LabResult: { text: 'text-violet-700 dark:text-violet-300', tile: 'bg-violet-50 dark:bg-violet-400/15' },
+    Vaccination: { text: 'text-indigo-700 dark:text-indigo-300', tile: 'bg-indigo-50 dark:bg-indigo-400/15' },
+    Hospitalization: { text: 'text-rose-700 dark:text-rose-300', tile: 'bg-rose-50 dark:bg-rose-400/15' },
+    Imaging: { text: 'text-sky-700 dark:text-sky-300', tile: 'bg-sky-50 dark:bg-sky-400/15' },
+    VitalMeasurement: { text: 'text-fuchsia-700 dark:text-fuchsia-300', tile: 'bg-fuchsia-50 dark:bg-fuchsia-400/15' },
+    [PET_TIMELINE_PAYMENT_TYPE]: { text: 'text-green-700 dark:text-green-300', tile: 'bg-green-50 dark:bg-green-400/15' }
 };
 
-const CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress', 'Completed']);
+export function petTimelineTypeTone(type: string): PetTimelineTypeTone {
+    return TYPE_TONES[type] ?? NEUTRAL_TONE;
+}
+
+/** Satırdaki tür etiketi: aktarılan kaydın türü başlıkta yazdığından etiket yalnız kaynağı söyler. */
+export function petTimelineRowTypeLabel(type: string): string {
+    return type === 'ImportedClinicalRecord' ? 'Eski programdan' : petTimelineTypeLabel(type);
+}
+
+/** Durum tonu: olağan sonuç soluk (`quiet`), bekleyen/süren dikkat (`warn`), iptal (`danger`). */
+export type PetTimelineStatusTone = 'quiet' | 'warn' | 'danger';
+
+export interface PetTimelineStatus {
+    readonly label: string;
+    readonly tone: PetTimelineStatusTone;
+}
+
+const STATUSES: Readonly<Record<string, PetTimelineStatus>> = {
+    Active: { label: 'Yatışta', tone: 'warn' },
+    Discharged: { label: 'Taburcu', tone: 'quiet' },
+    Applied: { label: 'Uygulandı', tone: 'quiet' },
+    Requested: { label: 'İstendi', tone: 'warn' },
+    Resulted: { label: 'Sonuçlandı', tone: 'quiet' },
+    Cancelled: { label: 'İptal', tone: 'danger' },
+    Draft: { label: 'Taslak', tone: 'warn' },
+    Finalized: { label: 'Kesinleşti', tone: 'quiet' }
+};
+
+const CARE_STATUS_TONES: Readonly<Record<string, PetTimelineStatusTone>> = { Waiting: 'warn', InProgress: 'warn', Completed: 'quiet' };
 
 /** Bilinmeyen durum ham metin gösterilmez (null) — yanlış etiket yerine etiketsiz bırakılır. */
-export function petTimelineStatusLabel(item: PetTimelineItemVm): string | null {
+export function petTimelineStatus(item: PetTimelineItemVm): PetTimelineStatus | null {
     // Uygulamanın Active/Voided durumu yatışınkiyle karışmasın; iptal ortak "iptal" etiketiyle gösterilir.
     if (!item.status || item.type === 'Administration' || item.type === 'Imaging') {
         return null;
     }
 
-    if (item.type === 'Visit' && CARE_STATUSES.has(item.status)) {
-        return careStatusLabel(item.status as VisitCareStatus);
+    const careTone = item.type === 'Visit' ? CARE_STATUS_TONES[item.status] : undefined;
+
+    if (careTone) {
+        return { label: careStatusLabel(item.status as VisitCareStatus), tone: careTone };
     }
 
-    return STATUS_LABELS[item.status] ?? null;
+    return STATUSES[item.status] ?? null;
+}
+
+/** Aktif klinik bağlamı (oturumdan). */
+export interface PetTimelineActiveClinic {
+    readonly id: string | null;
+    readonly name: string | null;
+}
+
+/**
+ * Klinik adı yalnız kayıt aktif klinikten başka bir klinikteyse yazılır. Kimliği olmayan satır (geçmiş özetinden gelen ödeme)
+ * adından karşılaştırılır; aktif klinik yoksa (kliniksiz oturum) ad her satırda görünür.
+ */
+export function petTimelineOtherClinicName(item: PetTimelineItemVm, active: PetTimelineActiveClinic): string | null {
+    if (!item.clinicName) {
+        return null;
+    }
+
+    const same =
+        item.clinicId && active.id
+            ? item.clinicId.toLowerCase() === active.id.toLowerCase()
+            : !!active.name && item.clinicName.toLocaleLowerCase('tr') === active.name.trim().toLocaleLowerCase('tr');
+
+    return same ? null : item.clinicName;
+}
+
+/** Aynı İstanbul gününün kayıtları; liste yeniden eskiye sıralı geldiğinden gün sırası korunur. */
+export interface PetTimelineDayGroup {
+    /** `yyyy-MM-dd` (İstanbul); tarihsiz kayıtlarda boş. */
+    readonly key: string;
+    /** "20 Kasım 2026" */
+    readonly title: string;
+    /** "Cuma · 2 gün önce" */
+    readonly detail: string;
+    readonly items: PetTimelineItemVm[];
+}
+
+const DAY_MS = 24 * 60 * 60_000;
+
+export function groupPetTimelineByDay(items: readonly PetTimelineItemVm[], now: Date = new Date()): PetTimelineDayGroup[] {
+    const today = toIstanbulDateInputValue(now.toISOString());
+    const days = new Map<string, PetTimelineItemVm[]>();
+
+    for (const item of items) {
+        const key = toIstanbulDateInputValue(item.eventAtUtc);
+        const list = days.get(key);
+
+        if (list) {
+            list.push(item);
+        } else {
+            days.set(key, [item]);
+        }
+    }
+
+    return [...days].map(([key, list]) => {
+        const at = list[0].eventAtUtc;
+
+        return {
+            key,
+            title: key ? formatDayMonthYearDisplay(at) : 'Tarihsiz',
+            detail: key ? `${formatWeekdayDisplay(at)} · ${relativeDayLabel(key, today)}` : '',
+            items: list
+        };
+    });
+}
+
+/** Günün bugüne uzaklığı: "bugün", "dün", "5 gün önce", "3 hafta önce", "4 ay önce", "2 yıl önce". */
+function relativeDayLabel(day: string, today: string): string {
+    const days = Math.round((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${day}T00:00:00Z`)) / DAY_MS);
+
+    if (days < 0) {
+        return days === -1 ? 'yarın' : `${-days} gün sonra`;
+    }
+
+    if (days <= 1) {
+        return days === 0 ? 'bugün' : 'dün';
+    }
+
+    if (days < 14) {
+        return `${days} gün önce`;
+    }
+
+    if (days < 60) {
+        return `${Math.floor(days / 7)} hafta önce`;
+    }
+
+    return days < 365 ? `${Math.floor(days / 30)} ay önce` : `${Math.floor(days / 365)} yıl önce`;
 }
 
 /** İptal edilmiş aşı ve yanlış işaretli geliş ortak etiketi. */
@@ -115,6 +246,8 @@ export function paymentToPetTimelineItem(
         type: PET_TIMELINE_PAYMENT_TYPE,
         sourceId: p.id,
         eventAtUtc: p.paidAtUtc,
+        // Geçmiş özetinin ödeme satırı klinik kimliği taşımaz; aktif klinikle adından karşılaştırılır.
+        clinicId: null,
         clinicName: p.clinicName,
         title,
         summary: methodLabel,

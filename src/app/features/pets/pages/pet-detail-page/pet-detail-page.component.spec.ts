@@ -108,7 +108,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
             providers: [
                 provideRouter([]),
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'p1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
-                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'k1' } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'k1', getClinicName: () => null } },
                 { provide: RecentlyViewedService, useValue: { record: recordRecent } },
                 { provide: AiService, useValue: aiService },
                 { provide: ImportedHistoryService, useValue: { getPetClinicalRecords: () => of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }) } },

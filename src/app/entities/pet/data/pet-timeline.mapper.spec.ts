@@ -28,7 +28,7 @@ describe('mapPetTimelinePageDtoToVm', () => {
     it('olayı eşler; linkRef yoksa türden/kaynak kimliğinden türetir; kimliksiz satırı atar', () => {
         const page = mapPetTimelinePageDtoToVm({
             items: [
-                { type: 'Treatment', sourceId: 't1', eventAtUtc: '2026-10-10T10:00:00Z', title: 'Serum', relatedExaminationId: 'e1', isVoided: false },
+                { type: 'Treatment', sourceId: 't1', eventAtUtc: '2026-10-10T10:00:00Z', clinicId: ' c1 ', title: 'Serum', relatedExaminationId: 'e1', isVoided: false },
                 { type: 'Prescription', sourceId: 'rx1', title: 'Antibiyotik', relatedTreatmentId: ' t1 ' },
                 { type: 'Visit', title: 'Geliş' },
                 { type: 'Vaccination', sourceId: 'v1', title: 'Kuduz', status: 'Cancelled', isVoided: true, linkRef: { type: 'Vaccination', id: 'v1' } }
@@ -38,7 +38,8 @@ describe('mapPetTimelinePageDtoToVm', () => {
         });
 
         expect(page.items.length).toBe(3);
-        expect(page.items[0]).toEqual(expect.objectContaining({ key: 'Treatment:t1', linkType: 'Treatment', linkId: 't1', relatedExaminationId: 'e1' }));
+        expect(page.items[0]).toEqual(expect.objectContaining({ key: 'Treatment:t1', clinicId: 'c1', linkType: 'Treatment', linkId: 't1', relatedExaminationId: 'e1' }));
+        expect(page.items[1].clinicId).toBeNull();
         expect(page.items[0].relatedTreatmentId).toBeNull();
         expect(page.items[1].relatedTreatmentId).toBe('t1');
         expect(page.items[2].isVoided).toBe(true);

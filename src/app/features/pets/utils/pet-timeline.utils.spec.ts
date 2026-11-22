@@ -7,12 +7,16 @@ import {
     petTimelineEventLink,
     petTimelineExaminationLink,
     petTimelineOmittedTypesLabel,
-    petTimelineStatusLabel,
+    petTimelineStatus,
     petTimelineTreatmentLink,
     petTimelineTypeIcon,
     petTimelineTypeLabel,
     petTimelineIsDateOnly,
-    PET_CARD_TIMELINE_FILTERS
+    PET_CARD_TIMELINE_FILTERS,
+    groupPetTimelineByDay,
+    petTimelineOtherClinicName,
+    petTimelineRowTypeLabel,
+    petTimelineTypeTone
 } from './pet-timeline.utils';
 
 describe('pet-timeline.utils görüntüleme', () => {
@@ -22,6 +26,7 @@ describe('pet-timeline.utils görüntüleme', () => {
             type: 'Imaging',
             sourceId: 'i1',
             eventAtUtc: '2026-10-22T07:30:00Z',
+            clinicId: null,
             clinicName: null,
             title: 'Röntgen',
             summary: 'Toraks LL',
@@ -38,7 +43,7 @@ describe('pet-timeline.utils görüntüleme', () => {
         expect(petTimelineTypeLabel('Imaging')).toBe('Görüntüleme');
         expect(petTimelineTypeIcon('Imaging')).toBe('pi-image');
         expect(petTimelineEventLink(item)).toEqual(['/panel/imaging', 'i1']);
-        expect(petTimelineStatusLabel(item)).toBeNull();
+        expect(petTimelineStatus(item)).toBeNull();
     });
 });
 
@@ -47,6 +52,7 @@ const event = (id: string, eventAtUtc: string): PetTimelineItemVm => ({
     type: 'Examination',
     sourceId: id,
     eventAtUtc,
+    clinicId: null,
     clinicName: null,
     title: id,
     summary: null,
@@ -102,8 +108,8 @@ describe('pet timeline yardımcıları', () => {
 
         expect(page.items[0]).toEqual(expect.objectContaining({ summary: '1.5 şişe', addedAfterFinalization: true, relatedExaminationId: 'e1' }));
         expect(page.items[1].addedAfterFinalization).toBe(false);
-        expect(petTimelineStatusLabel(page.items[0])).toBeNull();
-        expect(petTimelineStatusLabel(page.items[1])).toBeNull();
+        expect(petTimelineStatus(page.items[0])).toBeNull();
+        expect(petTimelineStatus(page.items[1])).toBeNull();
         expect(petTimelineEventLink(page.items[0])).toBeNull();
         expect(petTimelineExaminationLink(page.items[0])).toEqual(['/panel/examinations', 'e1']);
     });
@@ -145,8 +151,8 @@ describe('pet timeline yardımcıları', () => {
     });
 
     it('durum etiketi Türkçe; bilinmeyen durum etiketsiz; bilinmeyen tür genel simge', () => {
-        expect(petTimelineStatusLabel(base[0])).toBe('Muayenede');
-        expect(petTimelineStatusLabel(base[3])).toBeNull();
+        expect(petTimelineStatus(base[0])).toEqual({ label: 'Muayenede', tone: 'warn' });
+        expect(petTimelineStatus(base[3])).toBeNull();
         expect(petTimelineTypeIcon('Appointment')).toBe('pi-circle');
         expect(petTimelineTypeIcon('Vaccination')).toBe('pi-shield');
     });
@@ -159,5 +165,84 @@ describe('pet timeline yardımcıları', () => {
         expect(petTimelineIsDateOnly('ImportedClinicalRecord')).toBe(true);
         expect(petTimelineIsDateOnly('Examination')).toBe(false);
         expect(PET_CARD_TIMELINE_FILTERS.find((f) => f.value === 'examination')?.types).toContain('ImportedClinicalRecord');
+    });
+});
+
+describe('pet-timeline.utils A düzeni (gün grubu, tür rengi, durum tonu, klinik adı)', () => {
+    const at = (id: string, eventAtUtc: string | null, over: Partial<PetTimelineItemVm> = {}): PetTimelineItemVm => ({ ...event(id, eventAtUtc ?? ''), eventAtUtc, ...over });
+    const now = new Date('2026-11-22T09:00:00Z');
+
+    it('kayıtlar İstanbul gününe göre sıra korunarak gruplanır; başlık ay adıyla, ayrıntı gün adı ve göreli gün', () => {
+        const groups = groupPetTimelineByDay(
+            [
+                at('e1', '2026-11-20T11:10:00Z'),
+                at('e2', '2026-11-19T21:30:00Z'),
+                at('e3', '2026-11-19T20:30:00Z'),
+                at('e4', '2026-11-22T06:00:00Z'),
+                at('e5', null)
+            ],
+            now
+        );
+
+        expect(groups.map((g) => [g.key, g.items.map((i) => i.sourceId)])).toEqual([
+            ['2026-11-20', ['e1', 'e2']],
+            ['2026-11-19', ['e3']],
+            ['2026-11-22', ['e4']],
+            ['', ['e5']]
+        ]);
+        expect(groups[0].title).toBe('20 Kasım 2026');
+        expect(groups[0].detail).toBe('Cuma · 2 gün önce');
+        expect(groups[2].detail).toBe('Pazar · bugün');
+        expect(groups[3]).toEqual(expect.objectContaining({ title: 'Tarihsiz', detail: '' }));
+    });
+
+    it('göreli gün: dün, hafta, ay ve yıl', () => {
+        const detail = (eventAtUtc: string) => groupPetTimelineByDay([at('x', eventAtUtc)], now)[0].detail;
+
+        expect(detail('2026-11-21T09:00:00Z')).toBe('Cumartesi · dün');
+        expect(detail('2026-11-01T09:00:00Z')).toBe('Pazar · 3 hafta önce');
+        expect(detail('2026-08-29T09:00:00Z')).toBe('Cumartesi · 2 ay önce');
+        expect(detail('2024-05-03T09:00:00Z')).toBe('Cuma · 2 yıl önce');
+    });
+
+    it('her türün kendi rengi var; tedavi, reçete ve uygulama aynı aile; aktarılan kayıt ve bilinmeyen tür nötr gri', () => {
+        expect(petTimelineTypeTone('Vaccination').text).toContain('indigo');
+        expect(petTimelineTypeTone('Prescription')).toBe(petTimelineTypeTone('Treatment'));
+        expect(petTimelineTypeTone('Administration')).toBe(petTimelineTypeTone('Treatment'));
+        expect(petTimelineTypeTone('Payment').tile).toContain('dark:');
+        expect(petTimelineTypeTone('ImportedClinicalRecord')).toBe(petTimelineTypeTone('Appointment'));
+        expect(petTimelineTypeTone('ImportedClinicalRecord').text).toContain('surface');
+        expect(new Set(['Visit', 'Examination', 'Treatment', 'LabResult', 'Vaccination', 'Hospitalization', 'Imaging', 'Payment'].map((t) => petTimelineTypeTone(t).text)).size).toBe(8);
+    });
+
+    it('satır tür etiketi: eski program kaydı "Eski programdan"; diğerleri tür adı', () => {
+        expect(petTimelineRowTypeLabel('ImportedClinicalRecord')).toBe('Eski programdan');
+        expect(petTimelineRowTypeLabel('LabResult')).toBe('Laboratuvar');
+    });
+
+    it('durum tonu: olağan sonuç soluk, bekleyen/süren dikkat, iptal tehlike', () => {
+        const tone = (type: string, status: string) => petTimelineStatus(at('s', '2026-11-20T10:00:00Z', { type, status }))?.tone;
+
+        expect(tone('Vaccination', 'Applied')).toBe('quiet');
+        expect(tone('Examination', 'Finalized')).toBe('quiet');
+        expect(tone('Visit', 'Completed')).toBe('quiet');
+        expect(tone('Hospitalization', 'Discharged')).toBe('quiet');
+        expect(tone('LabResult', 'Resulted')).toBe('quiet');
+        expect(tone('LabResult', 'Requested')).toBe('warn');
+        expect(tone('Examination', 'Draft')).toBe('warn');
+        expect(tone('Hospitalization', 'Active')).toBe('warn');
+        expect(tone('Visit', 'Waiting')).toBe('warn');
+        expect(tone('Vaccination', 'Cancelled')).toBe('danger');
+    });
+
+    it('klinik adı yalnız kayıt aktif klinikten başkasındaysa; kimliksiz ödeme adından karşılaştırılır; aktif klinik yoksa görünür', () => {
+        const active = { id: 'C1', name: 'Merkez' };
+
+        expect(petTimelineOtherClinicName(at('a', null, { clinicId: 'c1', clinicName: 'Merkez' }), active)).toBeNull();
+        expect(petTimelineOtherClinicName(at('b', null, { clinicId: 'c2', clinicName: 'Şube' }), active)).toBe('Şube');
+        expect(petTimelineOtherClinicName(at('c', null, { clinicId: null, clinicName: 'MERKEZ' }), active)).toBeNull();
+        expect(petTimelineOtherClinicName(at('d', null, { clinicId: null, clinicName: 'Şube' }), active)).toBe('Şube');
+        expect(petTimelineOtherClinicName(at('e', null, { clinicId: 'c2', clinicName: null }), active)).toBeNull();
+        expect(petTimelineOtherClinicName(at('f', null, { clinicId: 'c1', clinicName: 'Merkez' }), { id: null, name: null })).toBe('Merkez');
     });
 });

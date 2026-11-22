@@ -8,6 +8,8 @@ export interface PetTimelineItemVm {
     type: string;
     sourceId: string;
     eventAtUtc: string | null;
+    /** Kaydın kliniği; satırda klinik adı yalnız aktif klinikten farklıysa görünür. */
+    clinicId: string | null;
     clinicName: string | null;
     title: string;
     summary: string | null;
