@@ -100,7 +100,7 @@ export class AppSectionTabsComponent {
                 return;
             }
 
-            const left = active.offsetLeft - nav.offsetLeft;
+            const left = active.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft;
 
             if (left < nav.scrollLeft || left + active.offsetWidth > nav.scrollLeft + nav.clientWidth) {
                 nav.scrollLeft = left - (nav.clientWidth - active.offsetWidth) / 2;
