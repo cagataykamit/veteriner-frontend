@@ -27,6 +27,10 @@ describe('lab değer satırı formu', () => {
         expect(g.controls.value.hasError('labLineNumber')).toBe(true);
     });
 
+    it('kayıtlı ondalık değer formda virgülle gösterilir', () => {
+        expect(createLabResultLineGroup({ parameterName: 'ALT', value: 152.5, unit: null, referenceLow: 0.25, referenceHigh: null }).getRawValue()).toEqual(expect.objectContaining({ value: '152,5', referenceLow: '0,25', referenceHigh: '' }));
+    });
+
     it('alt sınır üst sınırdan büyükse satır geçersiz', () => {
         const g = createLabResultLineGroup({ parameterName: 'ALT', value: 5, unit: null, referenceLow: 100, referenceHigh: 10 });
 

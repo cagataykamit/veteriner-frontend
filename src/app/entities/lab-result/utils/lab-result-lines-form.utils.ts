@@ -44,8 +44,9 @@ function labRangeValidator(): ValidatorFn {
     };
 }
 
+/** Türkçe girişle tutarlı: ondalık virgülle gösterilir (çözümleme ikisini de kabul eder). */
 function numberText(n: number | null): string {
-    return n === null ? '' : String(n);
+    return n === null ? '' : String(n).replace('.', ',');
 }
 
 export function createLabResultLineGroup(line?: LabResultLineInput): LabResultLineFormGroup {

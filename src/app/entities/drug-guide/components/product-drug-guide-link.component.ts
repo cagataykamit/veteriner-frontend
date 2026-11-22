@@ -118,7 +118,8 @@ export class ProductDrugGuideLinkComponent {
 
     openPicker(): void {
         this.error.set(null);
-        this.term = this.productName();
+        // Öneri adla: kart adı çoğu zaman ek kelime taşır (ör. "(deneme)"), ilk kelimeyle aramak eşleşmeyi bulur.
+        this.term = this.productName().trim().split(/\s+/)[0] ?? '';
         this.picking.set(true);
         this.search();
     }

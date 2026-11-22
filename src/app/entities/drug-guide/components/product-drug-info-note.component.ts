@@ -18,13 +18,7 @@ import { DrugGuideService } from '@/app/entities/drug-guide/services/drug-guide.
             <div class="mt-1 text-sm" data-testid="product-drug-info">
                 <p class="m-0 text-muted-color">Etken madde: {{ ingredientNames(i) }}</p>
                 @if (i.notLicensedForPetSpecies) {
-                    <p class="m-0 mt-1 text-amber-700 dark:text-amber-300" role="status" data-testid="product-species-note">
-                        <i class="pi pi-info-circle text-xs mr-1" aria-hidden="true"></i>Bu ürün ruhsatında {{ i.petSpeciesName ?? 'bu tür' }} için kayıtlı değil
-                        @if (i.targetSpecies.length > 0) {
-                            <span> (ruhsattaki türler: {{ i.targetSpecies.join(', ') }})</span>
-                        }
-                        .
-                    </p>
+                    <p class="m-0 mt-1 text-amber-700 dark:text-amber-300" role="status" data-testid="product-species-note"><i class="pi pi-info-circle text-xs mr-1" aria-hidden="true"></i>{{ speciesNote(i) }}</p>
                 }
             </div>
         }
@@ -52,6 +46,13 @@ export class ProductDrugInfoNoteComponent {
         ),
         { initialValue: null as ProductDrugInfoVm | null }
     );
+
+    /** Bilgi notu (ADR-049 K4); engellemez, doz ya da tedavi önermez. */
+    speciesNote(i: ProductDrugInfoVm): string {
+        const listed = i.targetSpecies.length > 0 ? ` (ruhsattaki türler: ${i.targetSpecies.join(', ')})` : '';
+
+        return `Bu ürün ruhsatında ${i.petSpeciesName ?? 'bu tür'} için kayıtlı değil${listed}.`;
+    }
 
     ingredientNames(i: ProductDrugInfoVm): string {
         return i.activeIngredients.map((a) => a.name).join(', ');

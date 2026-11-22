@@ -54,7 +54,7 @@ describe('ProductDrugInfoNoteComponent', () => {
 
         expect(service.getProductInfo).toHaveBeenCalledWith(['p1'], 'pet1');
         expect(el.textContent).toContain('Etken madde: Amoksisilin, Klavulanik asit');
-        expect(el.querySelector('[data-testid="product-species-note"]')?.textContent).toContain('Bu ürün ruhsatında Kedi için kayıtlı değil');
+        expect(el.querySelector('[data-testid="product-species-note"]')?.textContent).toContain('Bu ürün ruhsatında Kedi için kayıtlı değil (ruhsattaki türler: Köpek).');
     });
 
     it('tür ruhsattaysa ya da bilinmiyorsa not yok', () => {
@@ -101,7 +101,7 @@ describe('ProductDrugGuideLinkComponent', () => {
         (el.querySelector('[data-testid="drug-guide-link-open"]') as HTMLButtonElement).click();
         fixture.detectChanges();
 
-        expect(service.searchProducts).toHaveBeenCalledWith(expect.objectContaining({ search: 'Klinik tablet', field: 'Product' }));
+        expect(service.searchProducts).toHaveBeenCalledWith(expect.objectContaining({ search: 'Klinik', field: 'Product' }));
         (el.querySelector('[data-testid="drug-guide-link-pick"]') as HTMLButtonElement).click();
         fixture.detectChanges();
 
