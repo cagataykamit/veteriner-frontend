@@ -11,7 +11,8 @@ import type { ProductStockVm } from '@/app/entities/inventory/models/product-sto
 import { ProductService } from '@/app/entities/inventory/services/product.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { PRODUCTS_DEACTIVATE_CLAIM, PRODUCTS_UPDATE_CLAIM, STOCK_MOVEMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { DRUG_GUIDE_READ_CLAIM, PRODUCTS_DEACTIVATE_CLAIM, PRODUCTS_UPDATE_CLAIM, STOCK_MOVEMENTS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { ProductDrugGuideLinkComponent } from '@/app/entities/drug-guide/components/product-drug-guide-link.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppDetailActionBarComponent } from '@/app/shared/ui/detail-action-bar/app-detail-action-bar.component';
 import { AppDetailIdentityCardComponent } from '@/app/shared/ui/detail-identity-card/app-detail-identity-card.component';
@@ -38,7 +39,8 @@ import { ConfirmationService } from 'primeng/api';
         AppErrorStateComponent,
         AppStatusTagComponent,
         ProductClinicStocksComponent,
-        ProductStockOperationDialogComponent
+        ProductStockOperationDialogComponent,
+        ProductDrugGuideLinkComponent
     ],
     providers: [ConfirmationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -152,6 +154,11 @@ import { ConfirmationService } from 'primeng/api';
                     </div>
                 </div>
 
+                <!-- İlaç rehberi bağı (REF-001 Dilim 2): hizmet dışındaki ürünlerde, rehberi okuyabilene. -->
+                @if (canReadDrugGuide && p.kind !== 'Service') {
+                    <app-product-drug-guide-link [productId]="p.id" [productName]="p.name" [licensedProductId]="p.licensedProductId" [canEdit]="canUpdateProduct && !ro.mutationBlocked()" />
+                }
+
                 @if (isStockTracked(p)) {
                     <app-product-clinic-stocks
                         [productId]="p.id"
@@ -185,6 +192,7 @@ export class ProductDetailPageComponent implements OnInit {
     readonly canUpdateProduct = this.auth.hasOperationClaim(PRODUCTS_UPDATE_CLAIM);
     readonly canDeactivateProduct = this.auth.hasOperationClaim(PRODUCTS_DEACTIVATE_CLAIM);
     readonly canCreateStockMovement = this.auth.hasOperationClaim(STOCK_MOVEMENTS_CREATE_CLAIM);
+    readonly canReadDrugGuide = this.auth.hasOperationClaim(DRUG_GUIDE_READ_CLAIM);
 
     readonly emptyMark = '—';
     protected readonly tileGridClass = DETAIL_TILE_GRID_CLASS;

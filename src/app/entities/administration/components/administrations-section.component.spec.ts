@@ -8,6 +8,7 @@ import type { AdministrationsPagedVm, AdministrationVm } from '@/app/entities/ad
 import { AdministrationsService } from '@/app/entities/administration/services/administrations.service';
 import { StockBatchService } from '@/app/entities/inventory/services/stock-batch.service';
 import { ProductService } from '@/app/entities/inventory/services/product.service';
+import { DrugGuideService } from '@/app/entities/drug-guide/services/drug-guide.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 
 const row: AdministrationVm = {
@@ -59,6 +60,8 @@ describe('AdministrationsSectionComponent', () => {
             providers: [
                 provideRouter([]),
                 { provide: AdministrationsService, useValue: service },
+                // Rehber notu (REF-001) bu testlerin konusu değil; boş bilgi döner.
+                { provide: DrugGuideService, useValue: { getProductInfo: () => of([]) } },
                 { provide: ProductService, useValue: { getProducts: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
                 { provide: StockBatchService, useValue: { getByProduct: () => EMPTY } },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.has(c), getClinicId: () => 'c1' } },

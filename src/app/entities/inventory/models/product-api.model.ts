@@ -30,6 +30,8 @@ export interface ProductDto {
     vatRate?: number | string | null;
     /** Birim alış fiyatı (₺), bilgi amaçlı: stok değeri ve ücret hesabı okumaz. */
     purchasePrice?: number | string | null;
+    /** İsteğe bağlı ilaç rehberi bağı (REF-001; LICENSED_DRUG_GUIDE_API_CONTRACT.md §4). */
+    licensedProductId?: string | null;
 }
 
 export interface ProductDtoPagedResult {

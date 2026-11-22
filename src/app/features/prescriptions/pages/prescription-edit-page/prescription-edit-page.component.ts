@@ -187,7 +187,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                             }
                         </div>
                         <div class="col-span-12">
-                            <app-prescription-items-editor [items]="form.controls.items" />
+                            <app-prescription-items-editor [items]="form.controls.items" [petId]="form.controls.petId.value" />
                         </div>
                         <div class="col-span-12">
                             <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>

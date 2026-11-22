@@ -65,4 +65,6 @@ export interface ProductDetailVm {
     isActive: boolean;
     statusLabel: string;
     statusSeverity: StatusTagSeverity;
+    /** İlaç rehberi bağı; bağsızsa null. */
+    licensedProductId: string | null;
 }

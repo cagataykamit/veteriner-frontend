@@ -21,6 +21,7 @@ import { ProductService } from '@/app/entities/inventory/services/product.servic
 import { STOCKED_PRODUCT_INLINE_CREATE } from '@/app/entities/inventory/components/quick-product-dialog.component';
 import { InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
 import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
+import { ProductDrugInfoNoteComponent } from '@/app/entities/drug-guide/components/product-drug-info-note.component';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { REASON_MAX, REASON_MIN, reasonLength } from '@/app/shared/forms/reason-length.validator';
@@ -40,7 +41,7 @@ const NOTES_MAX_LENGTH = 2000;
 @Component({
     selector: 'app-administration-create-dialog',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, SelectModule, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, FormSubmitDirective, FormErrorSummaryComponent],
+    imports: [CommonModule, ReactiveFormsModule, DialogModule, DialogUnsavedChangesDirective, DialogFocusReturnDirective, ButtonModule, SelectModule, DateInputComponent, AdministrationBatchFieldComponent, AdministrationRouteSiteFieldsComponent, InlineCreateDirective, InlineCreateOptionComponent, FormSubmitDirective, FormErrorSummaryComponent, ProductDrugInfoNoteComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-dialog [appUnsavedChanges]="form.dirty" [header]="(prefill() ? 'Tekrar uygula' : 'Uygulama kaydet') + (lateEntry() ? ' (sonradan ekleme)' : '')" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
@@ -90,6 +91,7 @@ const NOTES_MAX_LENGTH = 2000;
                         @if (productsError()) {
                             <small class="text-danger block">{{ productsError() }}</small>
                         }
+                        <app-product-drug-info-note [productId]="form.controls.productId.value" [petId]="petId()" />
                     </div>
                     <div class="col-span-12 sm:col-span-6">
                         <label for="ad-quantity" class="block text-sm font-medium text-muted-color mb-2">
