@@ -473,7 +473,7 @@ export class TodayPageComponent implements OnInit {
                       severity: 'info',
                       summary: 'Açık geliş kaydı zaten var.',
                       // Sunucu mevcut gelişin hazırlığını değiştirmez (sözleşme §3); düzeltme satır menüsünden yapılır.
-                      detail: this.canUpdateVisit ? 'Yeni kayıt açılmadı; mevcut kayıt listede. Hazırlık değişmedi; gerekirse satırdaki ⋯ → Hazırlığı düzenle.' : 'Yeni kayıt açılmadı; mevcut kayıt listede.',
+                      detail: this.canUpdateVisit ? 'Yeni kayıt açılmadı; mevcut kayıt listede. Hazırlık değişmedi; gerekirse satırdaki ⋯ → Geliş nedenini düzenle.' : 'Yeni kayıt açılmadı; mevcut kayıt listede.',
                       life: 6000
                   }
         );

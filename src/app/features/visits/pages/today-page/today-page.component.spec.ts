@@ -1078,7 +1078,7 @@ describe('TodayPageComponent', () => {
             const f = await create(['Visits.Read', 'Visits.Create', 'Visits.Update'], { date: 'd', activeHospitalizations: [], items: [] });
 
             f.componentInstance.onArrived({ created: false, visit: { ...visitVm } });
-            expect(vi.mocked(toasts).mock.lastCall![0].detail).toContain('Hazırlığı düzenle');
+            expect(vi.mocked(toasts).mock.lastCall![0].detail).toContain('Geliş nedenini düzenle');
         });
     });
 

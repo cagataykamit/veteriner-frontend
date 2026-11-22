@@ -8,7 +8,7 @@ import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
- * Bugün "⋯ → Hazırlığı düzenle" (`Visits.Update`, sözleşme §4.5): geliş nedeni ve şablon / paket tam yazılır; boş bırakılan alan
+ * Bugün "⋯ → Geliş nedenini düzenle" (`Visits.Update`, sözleşme §4.5): geliş nedeni ve şablon / paket tam yazılır; boş bırakılan alan
  * temizlenir. Yetki ve açık geliş denetimi çağıran sayfadadır (sunucu da tamamlanmış gelişte `Visits.NotOpen` döner).
  */
 @Component({
@@ -17,7 +17,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     imports: [DialogModule, DialogFocusReturnDirective, ButtonModule, VisitPreparationFieldsComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <p-dialog header="Hazırlığı düzenle" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
+        <p-dialog header="Geliş nedenini düzenle" [modal]="true" [dismissableMask]="!submitting()" [closable]="!submitting()" [style]="{ width: 'min(560px, 95vw)' }" [(visible)]="visible">
             @if (item(); as it) {
                 <p class="mt-0 mb-4">
                     <span class="font-medium">{{ it.petName }}</span> · {{ it.clientName }}
