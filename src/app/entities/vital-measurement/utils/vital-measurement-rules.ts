@@ -28,6 +28,17 @@ export function formatVitalReading(key: VitalSignKey, value: number): string {
     return `${formatVitalNumber(key, value)} ${vitalSign(key).unit}`;
 }
 
+/** Engellemeyen uyarı: değer olağan aralığın dışındaysa (ör. ateş 45 °C) metin, değilse ya da değer yoksa `null`. */
+export function vitalUsualRangeWarning(key: VitalSignKey, value: number | null | undefined): string | null {
+    const def = vitalSign(key);
+
+    if (value === null || value === undefined || !Number.isFinite(value) || !def.usual || (value >= def.usual.min && value <= def.usual.max)) {
+        return null;
+    }
+
+    return `Olağan dışı değer (olağan ${formatVitalValue(def, def.usual.min)}–${formatVitalValue(def, def.usual.max)} ${def.unit}); doğru girildiğini kontrol edin.`;
+}
+
 /** Sunucuyla aynı yuvarlama (yarım yukarı); kayan nokta hatasına karşı üstel yazımla. */
 function roundTo(value: number, decimals: number): number {
     return Number(`${Math.round(Number(`${value}e${decimals}`))}e-${decimals}`);

@@ -52,6 +52,7 @@ import { AI_FEATURE_EXAM_NOTE } from '@/app/entities/ai/models/ai-vm.model';
 import { AiService } from '@/app/entities/ai/services/ai.service';
 import { injectAiDraftFlow } from '@/app/entities/ai/services/ai-draft-flow';
 import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
+import { vitalUsualRangeWarning } from '@/app/entities/vital-measurement/utils/vital-measurement-rules';
 import { examNoteAcceptSummary, type ExamNoteFieldKey, type ExamNoteFormValues, parseExamNoteDraftContent } from '@/app/entities/ai/utils/exam-note-draft.utils';
 
 /** Tarayıcı taslağı (B3): muayene formu, serbest oluşturmada hasta seçimi ve düzenlemede taslağın alındığı kayıt sürümü. */
@@ -408,6 +409,11 @@ export class ExaminationWorkspacePageComponent implements OnInit, HasUnsavedChan
         }
 
         return this.apiFieldErrors()[key] ?? null;
+    }
+
+    /** Olağan dışı değer (ör. ateş 45 °C) için engellemeyen uyarı; kayıt yine yapılabilir. */
+    vitalWarning(key: VitalKey): string | null {
+        return vitalUsualRangeWarning(key, this.form.controls[key].value);
     }
 
     /** Sunucudan (yeniden) yükler; formu kayıttaki değerlerle doldurur. */

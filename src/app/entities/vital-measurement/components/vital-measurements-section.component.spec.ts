@@ -189,6 +189,32 @@ describe('VitalMeasurementsSectionComponent', () => {
         expect(root().textContent).toContain('Ateş 25,0–45,0 °C arasında olmalı.');
     });
 
+    it('olağan dışı ama geçerli değerde (45 °C) uyarır, kaydı engellemez', async () => {
+        await setup();
+        component().form.controls.temperatureC.setValue('45');
+        await settle();
+
+        expect(text('vital-warning-temperatureC')).toContain('Olağan dışı değer (olağan 35,0–42,0 °C)');
+
+        component().onSubmit();
+        await settle();
+
+        expect(service.create).toHaveBeenCalledTimes(1);
+        expect(service.create.mock.calls[0][0]).toMatchObject({ temperatureC: 45 });
+    });
+
+    it('grafik açıklaması yalnız eğilimdeki kaynakları yazar: muayene noktası yoksa "Muayeneden" yok', async () => {
+        await setup();
+        expect(has('vital-legend-examination')).toBe(true);
+
+        TestBed.resetTestingModule();
+        service.getSeries.mockReturnValue(of(seriesOf([m1, m2])));
+        await setup();
+
+        expect(has('vital-legend-measurement')).toBe(true);
+        expect(has('vital-legend-examination')).toBe(false);
+    });
+
     it('geçerli ölçümü yatışa bağlı kaydeder: değerler yuvarlanır, boş zaman şimdidir; yeni ölçüm seçilir', async () => {
         await setup();
         const before = Date.now();
