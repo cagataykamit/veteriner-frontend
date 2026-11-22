@@ -169,13 +169,12 @@ describe('ImportUploadPageComponent', () => {
         expect(sentKeys()).toEqual(['requestId', 'customersFile', 'vaccinationsFile', 'encoding', 'delimiter', 'clinicId', 'name']);
     });
 
-    it('Kolayvet: genel yoldan gider; başlıkta program adı, sunucunun iç notu yerine sade açıklama ve "sourceProfile" ile', () => {
+    it('Kolayvet: genel yoldan gider; başlıkta program adı, profil notu ve "sourceProfile" ile', () => {
         create();
         choose('Kolayvet');
 
         expect(text()).toContain('Kolayvet dosyanızı yükleyin');
-        expect(q('import-source-profile-note')?.textContent).toContain("Kolayvet'ten Excel'e aktardığınız");
-        expect(text()).not.toContain('Kolayvet dışa aktarımı');
+        expect(q('import-source-profile-note')?.textContent).toBe('Kolayvet dışa aktarımı');
 
         page.setXlsx(file('kolayvet.xlsx'));
         fixture.detectChanges();
