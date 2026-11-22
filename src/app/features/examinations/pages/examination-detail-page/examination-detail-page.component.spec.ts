@@ -550,7 +550,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         expect(vi.mocked(service.getExaminationRelatedSummary).mock.calls.length).toBe(relatedBefore + 1);
     });
 
-    describe('bağlı geliş açıkken Bugün\'e dön / Ziyareti tamamla', () => {
+    describe('bağlı geliş açıkken Bugün\'e dön / Gelişi tamamla', () => {
         const linked = { ...detailVm, visitId: 'visit-1' };
         const visitsMock = (careStatus: string) => ({
             getVisitById: vi.fn().mockReturnValue(of({ id: 'visit-1', careStatus, isVoided: false, preparedExaminationTemplateId: null })),
