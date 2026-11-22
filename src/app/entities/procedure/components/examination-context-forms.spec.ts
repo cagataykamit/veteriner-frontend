@@ -163,6 +163,19 @@ describe('Muayeneden hızlı lab istemi ve reçete (EXAM-010)', () => {
         expect(saved).toEqual(['rx-1']);
     });
 
+    it('reçete: hasta kartından gelen müşteri ve hasta ön dolar, kilitlenmez (lab formuyla aynı)', () => {
+        configure();
+        const fixture = TestBed.createComponent(PrescriptionFormComponent);
+
+        fixture.componentRef.setInput('contextParams', convertToParamMap({ clientId: 'client-1', petId: 'pet-1' }));
+        fixture.detectChanges();
+        const c = fixture.componentInstance;
+
+        expect(getExaminationById).not.toHaveBeenCalled();
+        expect(c.form.getRawValue()).toEqual(expect.objectContaining({ clientId: 'client-1', petId: 'pet-1' }));
+        expect(c.form.controls.clientId.enabled && c.form.controls.petId.enabled).toBe(true);
+    });
+
     it('bağlam muayeneyle uyuşmazsa alanlar kilitlenmez ve uyarı verilir (yanlış hastaya kayıt açılmaz)', () => {
         configure();
         const fixture = TestBed.createComponent(LabResultFormComponent);

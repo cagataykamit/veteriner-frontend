@@ -30,7 +30,12 @@ import { PetsService } from '@/app/entities/pet/services/pets.service';
 import type { TreatmentDetailVm, TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
-import { parseExaminationCreateRouteContext, parseTreatmentPrescriptionRouteContext, type TreatmentPrescriptionRouteContext } from '@/app/shared/panel/examination-create-route-context.utils';
+import {
+    parseExaminationCreateRouteContext,
+    parseTreatmentPrescriptionRouteContext,
+    prefillPetFromRoute,
+    type TreatmentPrescriptionRouteContext
+} from '@/app/shared/panel/examination-create-route-context.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { PetAlertBannerComponent } from '@/app/entities/pet/components/pet-alert-banner.component';
 import { dateOnlyInputToIstanbulStartUtcIso, fromIstanbulDateTimeLocalInputToUtcIso, toIstanbulDateTimeLocalInputValue } from '@/app/shared/utils/date.utils';
@@ -590,6 +595,8 @@ export class PrescriptionFormComponent implements OnInit, HasUnsavedChanges {
         }
 
         this.tryApplyExaminationRouteContext();
+        // Hasta bağlamı (`clientId` + `petId`, başka bağlam yokken; ör. hasta kartından): lab ve görüntüleme formlarıyla aynı.
+        prefillPetFromRoute(this.contextParams(), this.form.controls.clientId, this.form.controls.petId);
     }
 
     /** Kopya kaynağı oluşturma formunu doldurur (RECORD-004); kayıt hekim kaydedince normal oluşturma ucundan yapılır. */
