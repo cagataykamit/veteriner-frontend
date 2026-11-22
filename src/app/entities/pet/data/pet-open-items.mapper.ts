@@ -30,7 +30,13 @@ function mapRows<TDto extends { id?: string | null }, TVm>(rows: TDto[] | null |
 }
 
 function mapVaccination(id: string, dto: PetOpenVaccinationDto): PetOpenVaccinationVm {
-    return { id, vaccineName: trimOrNull(dto.vaccineName) ?? '—', dueAtUtc: trimOrNull(dto.dueAtUtc) };
+    return {
+        id,
+        vaccineName: trimOrNull(dto.vaccineName) ?? '—',
+        dueAtUtc: trimOrNull(dto.dueAtUtc),
+        isNextDue: dto.isNextDue === true,
+        vaccineDefinitionId: trimOrNull(dto.vaccineDefinitionId)
+    };
 }
 
 function mapVaccinations(dto: PetOpenVaccinationsDto): PetOpenVaccinationsVm {

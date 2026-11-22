@@ -13,7 +13,7 @@ import type { PetDetailVm, PetHistoryAppointmentItemVm } from '@/app/entities/pe
 import { petGenderLabel } from '@/app/entities/pet/utils/pet-status.utils';
 import { parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { upcomingScheduledAppointmentsLinkQuery } from '@/app/entities/appointment/utils/appointments-list-link.utils';
-import { canOpenVaccinationEdit } from '@/app/entities/vaccination/utils/vaccination-access.utils';
+import { canOpenVaccinationEdit, canOpenVaccinationCreate } from '@/app/entities/vaccination/utils/vaccination-access.utils';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay, parseUtcApiInstantIsoString, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
@@ -232,8 +232,18 @@ export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: Pet
         });
     }
 
-    // "Uygula" aşı düzenleme rotasına gider; o rotanın yetki koşulu (aşı kataloğu okuma dahil) aynen uygulanır.
+    // "Uygula": planlı aşıda düzenleme rotası, uygulanmış aşının sonraki dozunda yeni aşı formu (hasta ve aşı dolu; takvimle aynı);
+    // rotaların yetki koşulu (aşı kataloğu okuma dahil) aynen uygulanır.
     const canApplyVaccine = !ctx.mutationBlocked && canOpenVaccinationEdit(ctx.hasClaim);
+    const canApplyNextDose = !ctx.mutationBlocked && canOpenVaccinationCreate(ctx.hasClaim);
+    const applyAction = (v: PetOpenVaccinationVm): PetTodoAction | null =>
+        v.isNextDue
+            ? canApplyNextDose
+                ? { label: 'Uygula', route: ['/panel/vaccinations/new'], queryParams: { petId: ctx.petId, ...(ctx.clientId ? { clientId: ctx.clientId } : {}), ...(v.vaccineDefinitionId ? { vaccineDefinitionId: v.vaccineDefinitionId } : {}), status: '1' } }
+                : null
+            : canApplyVaccine
+              ? { label: 'Uygula', route: ['/panel/vaccinations', v.id, 'edit'] }
+              : null;
 
     const todayYmd = toIstanbulDateInputValue(now.toISOString());
 
@@ -249,7 +259,7 @@ export function buildPetTodo(openItems: PetCardSection<PetOpenItemsVm>, ctx: Pet
             icon: 'pi pi-shield',
             title: `${overdue ? 'Gecikmiş aşı' : 'Yaklaşan aşı'}: ${v.vaccineName}`,
             detail: `Vade ${formatUtcIsoAsLocalDateDisplay(v.dueAtUtc)}${overdue && lateDays > 0 ? ` · ${lateDays} gün geçti` : ''}`,
-            action: canApplyVaccine ? { label: 'Uygula', route: ['/panel/vaccinations', v.id, 'edit'] } : { label: 'Aç', route: ['/panel/vaccinations', v.id] }
+            action: applyAction(v) ?? { label: 'Aç', route: ['/panel/vaccinations', v.id] }
         };
     };
 

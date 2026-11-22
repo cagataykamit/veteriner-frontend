@@ -6,6 +6,9 @@ export interface PetOpenVaccinationDto {
     vaccineName?: string | null;
     dueAtUtc?: string | null;
     clinicId?: string | null;
+    /** Uygulanmış aşının sonraki dozu (planlı kayıt değil); uygulama yeni aşı kaydıyla yapılır. */
+    isNextDue?: boolean | null;
+    vaccineDefinitionId?: string | null;
 }
 
 export interface PetOpenVaccinationsDto {

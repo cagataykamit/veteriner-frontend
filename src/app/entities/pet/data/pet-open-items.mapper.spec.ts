@@ -9,7 +9,7 @@ describe('mapPetOpenItemsDtoToVm', () => {
             asOfUtc: '2026-10-14T09:00:00Z',
             vaccinations: {
                 state: 'Ok',
-                data: { overdue: [{ id: 'v1', vaccineName: 'Karma', dueAtUtc: '2026-10-01T00:00:00Z' }, { id: null, vaccineName: 'X' }], upcoming: [{ id: 'v2', vaccineName: 'Kuduz', dueAtUtc: '2026-11-01T00:00:00Z' }] }
+                data: { overdue: [{ id: 'v1', vaccineName: 'Karma', dueAtUtc: '2026-10-01T00:00:00Z' }, { id: null, vaccineName: 'X' }], upcoming: [{ id: 'v2', vaccineName: 'Kuduz', dueAtUtc: '2026-11-01T00:00:00Z', isNextDue: true, vaccineDefinitionId: 'def-1' }] }
             },
             labResults: {
                 state: 'Ok',
@@ -27,7 +27,10 @@ describe('mapPetOpenItemsDtoToVm', () => {
         expect(vm.clientId).toBe('c1');
         expect(vm.vaccinations).toEqual({
             state: 'Ok',
-            data: { overdue: [{ id: 'v1', vaccineName: 'Karma', dueAtUtc: '2026-10-01T00:00:00Z' }], upcoming: [{ id: 'v2', vaccineName: 'Kuduz', dueAtUtc: '2026-11-01T00:00:00Z' }] }
+            data: {
+                overdue: [{ id: 'v1', vaccineName: 'Karma', dueAtUtc: '2026-10-01T00:00:00Z', isNextDue: false, vaccineDefinitionId: null }],
+                upcoming: [{ id: 'v2', vaccineName: 'Kuduz', dueAtUtc: '2026-11-01T00:00:00Z', isNextDue: true, vaccineDefinitionId: 'def-1' }]
+            }
         });
         expect(vm.labResults.data?.awaitingInterpretation[0]).toEqual({ id: 'l2', testName: 'Biyokimya', requestedAtUtc: '2026-10-10T08:00:00Z', resultDateUtc: '2026-10-11T08:00:00Z' });
         expect(vm.pendingCharges.data).toEqual({ count: 3, totalAmount: 360, unpricedCount: 1, currency: 'TRY' });

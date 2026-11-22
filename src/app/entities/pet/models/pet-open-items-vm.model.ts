@@ -1,10 +1,13 @@
 import type { PetSummarySectionVm } from '@/app/entities/pet/models/pet-summary-vm.model';
 
-/** Planlı aşı; gecikmiş/yaklaşan ayrımı ve 30 günlük pencere sunucudadır. */
+/** Vadeli aşı (planlı ya da uygulanmış aşının sonraki dozu); gecikmiş/yaklaşan ayrımı ve 30 günlük pencere sunucudadır. */
 export interface PetOpenVaccinationVm {
     id: string;
     vaccineName: string;
     dueAtUtc: string | null;
+    /** `true`: uygulanmış aşının sonraki dozu; "Uygula" yeni aşı formunu (hasta ve aşı dolu) açar. */
+    isNextDue: boolean;
+    vaccineDefinitionId: string | null;
 }
 
 export interface PetOpenVaccinationsVm {

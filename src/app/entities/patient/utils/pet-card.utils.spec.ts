@@ -42,6 +42,8 @@ type DueVaccine = {
     id: string;
     dueAtUtc: string;
     vaccineName?: string;
+    isNextDue?: boolean;
+    vaccineDefinitionId?: string | null;
 };
 
 const vaccinations = (overdue: DueVaccine[], upcoming: DueVaccine[] = []) => ({
@@ -177,6 +179,20 @@ describe('buildPetTodo', () => {
         expect(view.items[0].detail).toContain('10 gün geçti');
         expect(view.items[0].action).toEqual({ label: 'Uygula', route: ['/panel/vaccinations', 'v1', 'edit'] });
         expect(view.items[1].title).toContain('Kuduz');
+    });
+
+    it('uygulanmış aşının sonraki dozunda "Uygula" yeni aşı formunu hasta ve aşı dolu açar (tam test 2026-11-22)', () => {
+        const due = vaccinations([{ id: 'v1', dueAtUtc: '2026-10-04T09:00:00Z', isNextDue: true, vaccineDefinitionId: 'def-1' }]);
+
+        expect(buildPetTodo(openItems({ vaccinations: due }), ctx(['Vaccinations.Create', 'VaccineDefinitions.Read'])).items[0].action).toEqual({
+            label: 'Uygula',
+            route: ['/panel/vaccinations/new'],
+            queryParams: { petId: 'p1', clientId: 'c1', vaccineDefinitionId: 'def-1', status: '1' }
+        });
+        expect(buildPetTodo(openItems({ vaccinations: due }), ctx(['Vaccinations.Update', 'VaccineDefinitions.Read'])).items[0].action).toEqual({
+            label: 'Aç',
+            route: ['/panel/vaccinations', 'v1']
+        });
     });
 
     it('geçen gün sayısı İstanbul takvim günüdür, saat farkı değil (ADR-028)', () => {
