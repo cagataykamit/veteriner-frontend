@@ -8,7 +8,7 @@ import {
     petTimelineEventLink,
     petTimelineExaminationLink,
     petTimelineIsDateOnly,
-    petTimelineStatusLabel,
+    petTimelineStatus,
     petTimelineTreatmentLink,
     petTimelineTypeIcon,
     petTimelineTypeLabel
@@ -31,8 +31,8 @@ import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
             <div class="flex flex-wrap items-baseline gap-x-2">
                 <span class="text-muted-color text-sm">{{ isDateOnly(item().type) ? (item().eventAtUtc | trDate) : (item().eventAtUtc | trDateTime) }}</span>
                 <span class="text-muted-color text-sm">· {{ typeLabel(item().type) }}</span>
-                @if (statusLabel(item()); as status) {
-                    <span class="text-sm" data-testid="status">· {{ status }}</span>
+                @if (status(item()); as s) {
+                    <span class="text-sm" data-testid="status">· {{ s.label }}</span>
                 }
                 @if (item().addedAfterFinalization) {
                     <span class="text-sm font-medium text-amber-700 dark:text-amber-400" data-testid="late-entry">· {{ lateEntryLabel }}</span>
@@ -75,7 +75,7 @@ export class PetTimelineItemComponent {
     readonly lateEntryLabel = ADMINISTRATION_LATE_ENTRY_LABEL;
     readonly icon = petTimelineTypeIcon;
     readonly typeLabel = petTimelineTypeLabel;
-    readonly statusLabel = petTimelineStatusLabel;
+    readonly status = petTimelineStatus;
     readonly eventLink = petTimelineEventLink;
     readonly examinationLink = petTimelineExaminationLink;
     readonly treatmentLink = petTimelineTreatmentLink;
