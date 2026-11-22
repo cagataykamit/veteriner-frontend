@@ -18,6 +18,7 @@ export function mapPublicOwnerSignupFormToRequest(form: PublicOwnerSignupFormVal
         ...(discountCode ? { discountCode } : {}),
         startWithExampleClinic: form.startMode === 'example',
         emailVerificationToken: form.emailVerificationToken,
-        ...(taxIdentityNumber ? { taxIdentityNumber } : {})
+        ...(taxIdentityNumber ? { taxIdentityNumber } : {}),
+        fullName: form.fullName.trim()
     };
 }

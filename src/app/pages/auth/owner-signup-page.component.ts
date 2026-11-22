@@ -38,6 +38,17 @@ import { clearPendingDiscountCode, DISCOUNT_CODE_QUERY_PARAM, discountNoteText, 
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 const PLAN_REQUIRED_MESSAGE = 'Bir paket seçin.';
+const MISSING_FIELDS_MESSAGE = 'Eksik alanları doldurun; ilgili alanın altında yazıyor.';
+
+/** Alanın yanında gösterilen zorunlu alan hataları (şifre ve vergi numarasının kendi hata alanı vardır). */
+type SignupField = 'plan' | 'tenantName' | 'clinicName' | 'clinicCity' | 'fullName';
+const FIELD_REQUIRED_MESSAGES: Readonly<Record<SignupField, string>> = {
+    plan: PLAN_REQUIRED_MESSAGE,
+    tenantName: 'Klinik / işletme adını yazın.',
+    clinicName: 'İlk klinik adını yazın.',
+    clinicCity: 'Şehri yazın.',
+    fullName: 'Adınızı ve soyadınızı yazın.'
+};
 const EMAIL_REQUIRED_MESSAGE = TRIAL_SIGNUP_CODE_MESSAGES['SignupEmail.VerificationRequired'];
 /** Kaydın reddettiği e-posta doğrulaması: bileşen baştan başlar (`TRIAL_SIGNUP_ABUSE_API_CONTRACT.md` §5). */
 const EMAIL_RESET_CODES = new Set(['SignupEmail.VerificationRequired', 'SignupIdentity.DuplicateEmail', 'Users.DuplicateEmail']);
@@ -133,24 +144,57 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
                                             </button>
                                         }
                                     </div>
+                                    @if (fieldError('plan'); as error) {
+                                        <small class="text-danger block mt-2" role="alert" data-testid="signup-plan-error">{{ error }}</small>
+                                    }
                                     <p class="text-sm text-muted-color m-0 mt-2">Her paket 14 gün ücretsiz denenir, kart bilgisi istenmez.</p>
                                     <a routerLink="/paketler" class="public-brand-link no-underline text-sm">Paketleri karşılaştırın</a>
                                 </div>
 
                                 <div>
                                     <label for="tenantName" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Klinik / işletme adı *</label>
-                                    <input pInputText id="tenantName" type="text" class="w-full" [(ngModel)]="tenantName" autocomplete="organization" />
+                                    <input pInputText id="tenantName" type="text" class="w-full" [(ngModel)]="tenantName" (ngModelChange)="clearFieldError('tenantName')" [attr.aria-invalid]="fieldError('tenantName') ? true : null" autocomplete="organization" />
+                                    @if (fieldError('tenantName'); as error) {
+                                        <small class="text-danger block mt-1" role="alert">{{ error }}</small>
+                                    }
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label for="clinicName" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">İlk klinik adı *</label>
-                                        <input pInputText id="clinicName" type="text" class="w-full" [(ngModel)]="clinicName" autocomplete="organization" />
+                                        <input pInputText id="clinicName" type="text" class="w-full" [(ngModel)]="clinicName" (ngModelChange)="clearFieldError('clinicName')" [attr.aria-invalid]="fieldError('clinicName') ? true : null" autocomplete="organization" />
+                                        @if (fieldError('clinicName'); as error) {
+                                            <small class="text-danger block mt-1" role="alert">{{ error }}</small>
+                                        }
                                     </div>
                                     <div>
                                         <label for="clinicCity" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Şehir *</label>
-                                        <input pInputText id="clinicCity" type="text" class="w-full" [(ngModel)]="clinicCity" autocomplete="address-level2" />
+                                        <input pInputText id="clinicCity" type="text" class="w-full" [(ngModel)]="clinicCity" (ngModelChange)="clearFieldError('clinicCity')" [attr.aria-invalid]="fieldError('clinicCity') ? true : null" autocomplete="address-level2" />
+                                        @if (fieldError('clinicCity'); as error) {
+                                            <small class="text-danger block mt-1" role="alert">{{ error }}</small>
+                                        }
                                     </div>
+                                </div>
+
+                                <div>
+                                    <label for="fullName" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Adınız soyadınız *</label>
+                                    <input
+                                        pInputText
+                                        id="fullName"
+                                        type="text"
+                                        class="w-full"
+                                        maxlength="120"
+                                        [(ngModel)]="fullName"
+                                        (ngModelChange)="clearFieldError('fullName')"
+                                        [attr.aria-invalid]="fieldError('fullName') ? true : null"
+                                        aria-describedby="fullNameHint"
+                                        autocomplete="name"
+                                        data-testid="signup-full-name"
+                                    />
+                                    <small id="fullNameHint" class="block text-muted-color mt-1">Hekim listelerinde ve kesinleştirilen muayenelerde bu ad görünür.</small>
+                                    @if (fieldError('fullName'); as error) {
+                                        <small class="text-danger block mt-1" role="alert">{{ error }}</small>
+                                    }
                                 </div>
 
                                 <div>
@@ -210,11 +254,14 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
                                     </div>
                                 </fieldset>
 
-                                <p class="text-sm text-muted-color m-0">Bu adımda ödeme alınmaz; deneme süresi kurum aboneliğinde başlatılır. Paket değişimi ve ödeme sonraki fazda eklenecektir.</p>
+                                <p class="text-sm text-muted-color m-0">Bu adımda ödeme alınmaz; deneme süresi kurum aboneliğinde başlatılır.</p>
 
                                 <app-legal-consent-checkbox inputId="signupLegalConsent" [documents]="legalDocumentTypes()" [disabled]="submitting()" [(checked)]="legalConsent" />
 
                                 <button pButton type="button" class="w-full public-auth-submit" [disabled]="submitting() || !legalConsent()" (click)="submit()">@if (submitting()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Hesabı oluştur</button>
+                                @if (!legalConsent()) {
+                                    <small class="block text-muted-color -mt-4" data-testid="signup-consent-hint">Hesabı oluşturmak için yukarıdaki metinleri onaylayın.</small>
+                                }
 
                                 @if (formError()) {
                                     <div class="rounded-sm border-l-[3px] border-l-red-400/75 bg-red-500/[0.06] py-2 px-3 dark:border-l-red-500/45 dark:bg-red-500/[0.08]" role="alert" aria-live="assertive">
@@ -280,6 +327,23 @@ export class OwnerSignupPageComponent implements OnInit {
     clinicCity = '';
     password = '';
     taxIdentityNumber = '';
+    fullName = '';
+
+    /** Zorunlu alan hataları alanın altında gösterilir (genel hata kutusu yalnız özet verir). */
+    readonly fieldErrors = signal<Partial<Record<SignupField, string>>>({});
+
+    fieldError(field: SignupField): string | null {
+        return this.fieldErrors()[field] ?? null;
+    }
+
+    clearFieldError(field: SignupField): void {
+        if (this.fieldErrors()[field]) {
+            const next = { ...this.fieldErrors() };
+
+            delete next[field];
+            this.fieldErrors.set(next);
+        }
+    }
 
     /** Doğrulanan e-posta ve kayıt jetonu (TRIAL-001); doğrulanmadan kayıt gönderilmez. */
     readonly emailVerification = signal<SignupEmailVerification | null>(null);
@@ -337,10 +401,7 @@ export class OwnerSignupPageComponent implements OnInit {
 
     selectPlan(plan: PricingPlanDef): void {
         this.selectedPlan.set(plan);
-
-        if (this.formError() === PLAN_REQUIRED_MESSAGE) {
-            this.formError.set(null);
-        }
+        this.clearFieldError('plan');
     }
 
     submit(): void {
@@ -352,24 +413,22 @@ export class OwnerSignupPageComponent implements OnInit {
         this.passwordFieldError.set(null);
 
         const plan = this.selectedPlan();
-
-        if (!plan) {
-            this.formError.set(PLAN_REQUIRED_MESSAGE);
-
-            return;
-        }
-
         const tenantName = this.tenantName?.trim() ?? '';
         const clinicName = this.clinicName?.trim() ?? '';
         const clinicCity = this.clinicCity?.trim() ?? '';
+        const fullName = this.fullName?.trim() ?? '';
         const password = this.password ?? '';
+        const values: Record<SignupField, unknown> = { plan, tenantName, clinicName, clinicCity, fullName };
+        const missing = (Object.keys(FIELD_REQUIRED_MESSAGES) as SignupField[]).filter((field) => !values[field]);
 
-        if (!tenantName || !clinicName || !clinicCity || !password) {
-            this.formError.set('Tüm zorunlu alanları doldurun.');
+        this.fieldErrors.set(Object.fromEntries(missing.map((field) => [field, FIELD_REQUIRED_MESSAGES[field]])));
 
-            if (!password) {
-                this.passwordFieldError.set(validateStrongPasswordValue(''));
-            }
+        if (!password) {
+            this.passwordFieldError.set(validateStrongPasswordValue(''));
+        }
+
+        if (!plan || missing.length > 0 || !password) {
+            this.formError.set(MISSING_FIELDS_MESSAGE);
 
             return;
         }
@@ -426,7 +485,8 @@ export class OwnerSignupPageComponent implements OnInit {
             discountCode: this.discountCode(),
             startMode: this.startMode(),
             emailVerificationToken: verification.token,
-            taxIdentityNumber
+            taxIdentityNumber,
+            fullName
         });
 
         this.submitting.set(true);

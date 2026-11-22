@@ -18,6 +18,8 @@ export interface PublicOwnerSignupRequestDto {
     emailVerificationToken: string;
     /** VKN (10) ya da TCKN (11 hane); bir numarayla tek deneme. Zorunluluğu `GET /public/owner-signup/settings` söyler. */
     taxIdentityNumber?: string;
+    /** Yöneticinin ad-soyadı; hekim listelerinde ve kesinleştiren alanında görünür (yoksa e-postanın baş kısmı). */
+    fullName?: string;
 }
 
 /** Kayıtta kullanılan ortak kodu özeti; ortak bilgisi içermez. */

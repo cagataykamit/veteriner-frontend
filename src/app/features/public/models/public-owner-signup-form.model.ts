@@ -22,4 +22,6 @@ export interface PublicOwnerSignupFormValue {
     readonly emailVerificationToken: string;
     /** VKN ya da TCKN; boşsa gönderilmez (zorunluluk sunucu ayarında). */
     readonly taxIdentityNumber: string;
+    /** Ad-soyad (zorunlu alan). */
+    readonly fullName: string;
 }

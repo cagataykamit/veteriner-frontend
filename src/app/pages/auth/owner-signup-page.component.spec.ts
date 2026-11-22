@@ -76,6 +76,7 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         cmp.tenantName = 'Pati Kurum';
         cmp.clinicName = 'Pati Klinik';
         cmp.clinicCity = 'Ankara';
+        cmp.fullName = 'Ayşe Yılmaz';
         cmp.onEmailVerified({ email: 'sahip@example.com', token: 'jeton' });
         cmp.taxIdentityNumber = '1234567890';
         cmp.password = 'Abc12345!';
@@ -271,7 +272,9 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
             fresh.componentInstance.submit();
 
             expect(signup.signup).not.toHaveBeenCalled();
-            expect(fresh.componentInstance.formError()).toBe('Bir paket seçin.');
+            expect(fresh.componentInstance.fieldError('plan')).toBe('Bir paket seçin.');
+            fresh.detectChanges();
+            expect((fresh.nativeElement as HTMLElement).querySelector('[data-testid="signup-plan-error"]')?.textContent?.trim()).toBe('Bir paket seçin.');
         });
 
         it('üç paket seçenek olarak gösterilir; tıklanan paket seçilir ve gövdeye gider', () => {
@@ -294,11 +297,45 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         it('paket seçilince "Bir paket seçin" mesajı kalkar', () => {
             cmp.selectedPlan.set(null);
             cmp.submit();
-            expect(cmp.formError()).toBe('Bir paket seçin.');
+            expect(cmp.fieldError('plan')).toBe('Bir paket seçin.');
 
             cmp.selectPlan(PRICING_PLAN_DEFS[1]);
 
-            expect(cmp.formError()).toBeNull();
+            expect(cmp.fieldError('plan')).toBeNull();
+        });
+    });
+
+    describe('ad-soyad ve alan hataları (tam test 2026-11-22)', () => {
+        it('ad-soyad gövdeye kırpılarak gider', () => {
+            cmp.legalConsent.set(true);
+            cmp.fullName = '  Ayşe Yılmaz ';
+            signup.signup.mockReturnValue(of(RESULT));
+
+            cmp.submit();
+
+            expect((signup.signup.mock.calls[0][0] as PublicOwnerSignupRequestDto).fullName).toBe('Ayşe Yılmaz');
+        });
+
+        it('eksik alanın hatası alanın altında yazar, yazınca kalkar', () => {
+            cmp.legalConsent.set(true);
+            cmp.fullName = '';
+            cmp.clinicCity = ' ';
+
+            cmp.submit();
+            fixture.detectChanges();
+
+            expect(signup.signup).not.toHaveBeenCalled();
+            expect(cmp.fieldError('fullName')).toBe('Adınızı ve soyadınızı yazın.');
+            expect(cmp.fieldError('clinicCity')).toBe('Şehri yazın.');
+            expect(cmp.fieldError('tenantName')).toBeNull();
+            expect(host().querySelector('#fullName')?.getAttribute('aria-invalid')).toBe('true');
+
+            cmp.clearFieldError('fullName');
+            expect(cmp.fieldError('fullName')).toBeNull();
+        });
+
+        it('iç geliştirme notu gösterilmez', () => {
+            expect(host().textContent).not.toContain('sonraki fazda');
         });
     });
 });

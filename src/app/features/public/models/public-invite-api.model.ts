@@ -18,5 +18,7 @@ export interface PublicInviteDetailsDto {
 /** POST /api/v1/public/invites/{token}/signup-and-accept */
 export interface PublicInviteSignupAndAcceptRequestDto {
     password: string;
+    /** Katılan personelin ad-soyadı; hekim listelerinde görünür. */
+    fullName: string;
     acceptedLegalDocuments: LegalDocumentVersionDto[];
 }

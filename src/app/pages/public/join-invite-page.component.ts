@@ -127,6 +127,22 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
                         }
 
                         @if (!auth.isAuthenticated() && inv.requiresSignup && !inv.isExpired && inv.canJoin) {
+                            <label for="invFullName" class="block text-sm font-medium mb-2">Adınız soyadınız</label>
+                            <input
+                                pInputText
+                                id="invFullName"
+                                type="text"
+                                class="w-full mb-1"
+                                maxlength="120"
+                                autocomplete="name"
+                                [(ngModel)]="inviteFullName"
+                                [attr.aria-invalid]="fullNameFieldError() ? true : null"
+                                data-testid="join-full-name"
+                            />
+                            <p class="text-xs text-muted-color m-0 mb-3">Hekim listelerinde ve kayıtlarda bu ad görünür.</p>
+                            @if (fullNameFieldError()) {
+                                <p class="text-danger text-sm m-0 mb-3" role="alert">{{ fullNameFieldError() }}</p>
+                            }
                             <label for="invPw" class="block text-sm font-medium mb-2">Şifre belirleyin</label>
                             <p class="text-xs text-muted-color m-0 mb-2">{{ passwordPolicyHint }}</p>
                             <p-password
@@ -203,6 +219,8 @@ export class JoinInvitePageComponent implements OnInit {
     readonly legalConsent = signal(false);
 
     invitePassword = '';
+    inviteFullName = '';
+    readonly fullNameFieldError = signal<string | null>(null);
 
     legalDocumentTypes(inv: PublicInviteVm) {
         return inv.requiredLegalDocuments.map((d) => d.documentType);
@@ -283,12 +301,20 @@ export class JoinInvitePageComponent implements OnInit {
     onSignupAndAccept(inv: PublicInviteVm): void {
         this.actionError.set(null);
         this.passwordFieldError.set(null);
+        this.fullNameFieldError.set(null);
+        const fullName = this.inviteFullName?.trim() ?? '';
         const pw = this.invitePassword ?? '';
         const passwordPolicyError = validateStrongPasswordValue(pw);
 
+        if (!fullName) {
+            this.fullNameFieldError.set('Adınızı ve soyadınızı yazın.');
+        }
+
         if (passwordPolicyError) {
             this.passwordFieldError.set(passwordPolicyError);
+        }
 
+        if (!fullName || passwordPolicyError) {
             return;
         }
 
@@ -300,7 +326,7 @@ export class JoinInvitePageComponent implements OnInit {
 
         this.actionLoading.set(true);
         this.invites
-            .signupAndAccept(inv.inviteToken, { password: pw, acceptedLegalDocuments: inv.requiredLegalDocuments })
+            .signupAndAccept(inv.inviteToken, { password: pw, fullName, acceptedLegalDocuments: inv.requiredLegalDocuments })
             .pipe(finalize(() => this.actionLoading.set(false)))
             .subscribe({
                 next: () => this.successMode.set('signup'),
