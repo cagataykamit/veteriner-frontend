@@ -137,7 +137,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="list.onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '72rem' }"
+                                [tableStyle]="{ 'min-width': '60rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >
@@ -145,7 +145,6 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                     <tr>
                                         <th>Tarih</th>
                                         <th>Ürün</th>
-                                        <th>Klinik</th>
                                         <th>Hareket tipi</th>
                                         <th class="text-right">Miktar</th>
                                         <th class="text-right">Birim maliyet</th>
@@ -163,7 +162,6 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                                 {{ row.productDisplayName }}
                                             }
                                         </td>
-                                        <td>{{ row.clinicName }}</td>
                                         <td>
                                             <app-status-tag [label]="row.movementTypeLabel" [severity]="row.movementTypeSeverity" />
                                         </td>
@@ -189,7 +187,6 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                                 <span class="break-words">{{ row.productDisplayName }}</span>
                                             }
                                         </div>
-                                        <div><span class="text-muted-color font-medium">Klinik: </span>{{ row.clinicName }}</div>
                                         <div class="flex flex-wrap items-center gap-2">
                                             <span class="text-muted-color font-medium">Tip:</span>
                                             <app-status-tag [label]="row.movementTypeLabel" [severity]="row.movementTypeSeverity" />

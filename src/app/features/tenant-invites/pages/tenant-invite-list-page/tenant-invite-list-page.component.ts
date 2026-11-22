@@ -84,7 +84,7 @@ const TENANT_INVITES_LIST_STATE_KEY = 'panel:tenant-invites:listState';
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz davet yok." [createLabel]="canManageTenantAccess() ? 'Davet oluştur' : null" [createLink]="'/panel/settings/invites'" (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"

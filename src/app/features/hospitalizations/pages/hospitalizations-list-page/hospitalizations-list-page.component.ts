@@ -107,7 +107,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz yatış kaydı yok." emptyHint="Yatış, muayene içinden başlatılır." (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"
@@ -118,7 +118,7 @@ const HOSPITALIZATIONS_LIST_STATE_KEY = 'panel:hospitalizations:listState';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="list.onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '70rem' }"
+                                [tableStyle]="{ 'min-width': '60rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >

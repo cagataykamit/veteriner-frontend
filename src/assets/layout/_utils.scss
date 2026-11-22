@@ -42,6 +42,41 @@
     }
 }
 
+/*
+ * Liste tablosu (G-01): tablonun kapsayıcısına `list-table`. Tablo kart genişliğine sığmazsa yana kayar, ama son sütun
+ * (işlemler / durum) sağa yapışık kalır; düzenle, iptal gibi eylemlere kaydırmadan ulaşılır. Kaydırılacak içerik
+ * varken yapışık sütunun solunda ince gölge belirir (scroll-state destekleyen tarayıcılarda).
+ * Telefonda kart satırına dönen tablolarda (`table-stack-phone`) yapışma kapalıdır.
+ */
+.list-table {
+    overflow-x: auto;
+
+    // Yatay kaydırma PrimeNG'nin tablo kabında olur; yapışma ve gölge sorgusu ona göre çalışır.
+    .p-datatable-table-container {
+        container-type: scroll-state;
+    }
+
+    @media (min-width: 576px) {
+        .p-datatable-table > :is(.p-datatable-thead, .p-datatable-tbody) > tr > :last-child {
+            position: sticky;
+            right: 0;
+            z-index: 1;
+        }
+
+        .p-datatable-tbody > tr > td:last-child {
+            background: inherit;
+        }
+
+        @container scroll-state(scrollable: inline-end) {
+            .p-datatable-table > :is(.p-datatable-thead, .p-datatable-tbody) > tr > :last-child {
+                box-shadow:
+                    inset 1px 0 0 var(--surface-border),
+                    -10px 0 10px -6px rgb(0 0 0 / 0.18);
+            }
+        }
+    }
+}
+
 /* Native tarih/saat — kompakt input (date: md:max-w-64, datetime-local: md:max-w-96) yanında satır içi hata kaymasını önler */
 input[type='date'] ~ small.text-danger,
 input[type='date'] ~ small.text-amber-600,

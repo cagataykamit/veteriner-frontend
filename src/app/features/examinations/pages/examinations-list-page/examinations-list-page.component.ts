@@ -94,7 +94,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz muayene yok." emptyHint="Muayene, hasta geldiğinde Bugün ekranından başlatılır." [createLabel]="'Bugün ekranına git'" [createLink]="'/panel/today'" (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"
@@ -105,7 +105,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="list.onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '65rem' }"
+                                [tableStyle]="{ 'min-width': '60rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >

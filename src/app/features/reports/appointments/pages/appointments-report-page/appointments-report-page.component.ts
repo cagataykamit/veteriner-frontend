@@ -45,7 +45,7 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
                 }
             </ng-template>
             <ng-template #rows>
-                <div class="hidden lg:block overflow-x-auto">
+                <div class="hidden lg:block list-table">
                     <p-table
                         [value]="displayedRows()"
                         [paginator]="true"
@@ -56,14 +56,16 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
                         [lazy]="true"
                         [first]="state.first()"
                         (onLazyLoad)="state.onTableLazyLoad($event)"
-                        [tableStyle]="{ 'min-width': '76rem' }"
+                        [tableStyle]="{ 'min-width': '60rem' }"
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="{first} - {last} / {totalRecords}"
                     >
                         <ng-template #header>
                             <tr>
                                 <th>{{ copy.reportsColPrimaryLocalTime }}</th>
-                                <th>{{ copy.reportsColClinic }}</th>
+                                @if (state.showClinicColumn()) {
+                                    <th>{{ copy.reportsColClinic }}</th>
+                                }
                                 <th>{{ copy.labelClient }}</th>
                                 <th>{{ copy.labelPet }}</th>
                                 <th>{{ copy.appointmentsReportColStatus }}</th>
@@ -74,7 +76,9 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
                         <ng-template #body let-row>
                             <tr>
                                 <td>{{ formatScheduledAt(row.scheduledAtUtc) }}</td>
-                                <td>{{ displayClinicLabel(row.clinicLabel) }}</td>
+                                @if (state.showClinicColumn()) {
+                                    <td>{{ displayClinicLabel(row.clinicLabel) }}</td>
+                                }
                                 <td>
                                     @if (row.clientId) {
                                         <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
@@ -108,9 +112,11 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
                                 <div class="text-sm text-muted-color">{{ formatScheduledAt(row.scheduledAtUtc) }}</div>
                                 <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                             </div>
-                            <div class="text-sm mb-1">
-                                <span class="text-muted-color font-medium">{{ copy.reportsColClinic }}: </span>{{ displayClinicLabel(row.clinicLabel) }}
-                            </div>
+                            @if (state.showClinicColumn()) {
+                                <div class="text-sm mb-1">
+                                    <span class="text-muted-color font-medium">{{ copy.reportsColClinic }}: </span>{{ displayClinicLabel(row.clinicLabel) }}
+                                </div>
+                            }
                             <div class="text-sm mb-1">
                                 <span class="text-muted-color font-medium">{{ copy.labelClient }}: </span>
                                 @if (row.clientId) {

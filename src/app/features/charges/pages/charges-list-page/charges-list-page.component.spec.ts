@@ -79,23 +79,28 @@ describe('ChargesListPageComponent', () => {
         expect(fixture.nativeElement.textContent).toContain('Ücret kaydedildi.');
     });
 
-    it('satırı TRY biçimiyle gösterir (birim fiyat ve tutar)', async () => {
+    it('satırı TRY biçimiyle gösterir; miktar × birim fiyat açıklamanın altında (G-01)', async () => {
         await setup();
         const text = fixture.nativeElement.textContent as string;
 
         expect(text).toContain('Genel muayene');
         expect(text).toContain('Ali Veli');
-        expect(text).toContain('375,50');
+        expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="charge-quantity"]')?.textContent).toContain('2 × ₺375,50');
         expect(text).toContain('751,00');
     });
 
-    it('Ödenen ve Kalan sütunları: kısmi ödemede kalan tutar gösterilir', async () => {
+    it('tek adetlik ücrette miktar satırı yazılmaz', async () => {
+        charges.getCharges.mockReturnValue(of(page([{ ...row, quantity: 1, unitPrice: 751 }])));
+        await setup();
+        expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="charge-quantity"]')).toBeNull();
+    });
+
+    it('Kalan sütunu: kısmi ödemede kalan tutar gösterilir (Ödenen sütunu yok; tutar − kalan)', async () => {
         await setup();
         const text = fixture.nativeElement.textContent as string;
 
-        expect(text).toContain('Ödenen');
+        expect(text).not.toContain('Ödenen');
         expect(text).toContain('Kalan');
-        expect(text).toContain('₺200,00');
         expect(text).toContain('₺551,00');
         expect(text).not.toContain('Ödendi');
     });

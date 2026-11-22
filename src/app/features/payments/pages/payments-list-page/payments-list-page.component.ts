@@ -116,7 +116,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz ödeme yok." [createLabel]="canCreatePayment && !ro.mutationBlocked() ? 'Ödeme al' : null" [createLink]="'/panel/payments/new'" (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"
@@ -127,7 +127,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="list.onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '62rem' }"
+                                [tableStyle]="{ 'min-width': '56rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >
@@ -136,7 +136,6 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                         <th>Müşteri</th>
                                         <th>Hasta</th>
                                         <th class="text-right">Tutar</th>
-                                        <th>Para birimi</th>
                                         <th>Yöntem</th>
                                         <th>Kasa</th>
                                         <th>Ödeme tarihi</th>
@@ -160,7 +159,6 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                             }
                                         </td>
                                         <td class="text-right whitespace-nowrap font-medium">{{ row.amount | money: row.currency || 'TRY' }}</td>
-                                        <td>{{ row.currency }}</td>
                                         <td class="whitespace-nowrap">{{ methodLabel(row.method) }}</td>
                                         <td class="whitespace-nowrap" data-testid="payment-row-cash-register">{{ row.cashRegisterName ?? '—' }}</td>
                                         <td class="whitespace-nowrap">{{ formatPaidAtUtc(row.paidAtUtc) }}</td>
@@ -208,7 +206,6 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                                     </div>
                                     <div class="text-sm font-medium mb-2 min-w-0 break-words">
                                         {{ row.amount | money: row.currency || 'TRY' }}
-                                        <span class="text-muted-color font-normal"> {{ row.currency }}</span>
                                     </div>
                                     <div class="text-sm text-muted-color mb-3 min-w-0"><span class="font-medium">Yöntem: </span>{{ methodLabel(row.method) }}@if (row.cashRegisterName) {<span> · <span class="font-medium">Kasa: </span>{{ row.cashRegisterName }}</span>}</div>
                                     <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">

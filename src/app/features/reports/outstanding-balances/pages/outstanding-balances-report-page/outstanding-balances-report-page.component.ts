@@ -41,7 +41,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
                 </div>
             </ng-template>
             <ng-template #rows>
-                <div class="hidden lg:block overflow-x-auto">
+                <div class="hidden lg:block list-table">
                     <p-table
                         [value]="displayedRows()"
                         [paginator]="true"

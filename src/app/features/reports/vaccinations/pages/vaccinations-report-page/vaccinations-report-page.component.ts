@@ -38,7 +38,7 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
 
         <app-report-results [state]="state" [summaryLine]="true" [emptyMessage]="copy.vaccinationsReportEmptyMessage" [emptyHint]="copy.vaccinationsReportEmptyHint">
             <ng-template #rows>
-                <div class="hidden lg:block overflow-x-auto">
+                <div class="hidden lg:block list-table">
                     <p-table
                         [value]="displayedRows()"
                         [paginator]="true"
@@ -49,7 +49,7 @@ import { reportTableRowTrackKey } from '@/app/shared/utils/report-row-track.util
                         [lazy]="true"
                         [first]="state.first()"
                         (onLazyLoad)="state.onTableLazyLoad($event)"
-                        [tableStyle]="{ 'min-width': '68rem' }"
+                        [tableStyle]="{ 'min-width': '58rem' }"
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="{first} - {last} / {totalRecords}"
                     >

@@ -39,7 +39,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             } @else if (rows().length === 0) {
                 <app-empty-state [message]="copy.clinicsListEmptyMessage" [hint]="copy.clinicsListEmptyHint" />
             } @else {
-                <div class="hidden lg:block overflow-x-auto">
+                <div class="hidden lg:block list-table">
                     <p-table [value]="rows()" [tableStyle]="{ 'min-width': '52rem' }">
                         <ng-template #header>
                             <tr>

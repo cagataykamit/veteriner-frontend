@@ -131,7 +131,7 @@ const PRODUCT_STOCK_CSV_HEADERS = ['Ürün', 'SKU', 'Kategori', 'Klinik', 'Kulla
                     @if (displayedRows().length === 0) {
                         <app-empty-state [message]="emptyListMessage()" [hint]="emptyListHint()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"
@@ -151,7 +151,6 @@ const PRODUCT_STOCK_CSV_HEADERS = ['Ürün', 'SKU', 'Kategori', 'Klinik', 'Kulla
                                         <th>Ürün</th>
                                         <th>SKU</th>
                                         <th>Kategori</th>
-                                        <th>Klinik</th>
                                         <th class="text-right">Kullanılabilir</th>
                                         <th class="text-right">Süresi geçmiş</th>
                                         <th class="text-right">Minimum</th>
@@ -165,7 +164,6 @@ const PRODUCT_STOCK_CSV_HEADERS = ['Ürün', 'SKU', 'Kategori', 'Klinik', 'Kulla
                                         <td class="font-medium max-w-[14rem] break-words">{{ row.productName }}</td>
                                         <td>{{ row.productSkuText }}</td>
                                         <td>{{ row.productCategoryName }}</td>
-                                        <td>{{ row.clinicName }}</td>
                                         <td class="text-right whitespace-nowrap">{{ row.availableText }}</td>
                                         <td class="text-right whitespace-nowrap">
                                             @if (row.hasExpired) {
@@ -198,7 +196,6 @@ const PRODUCT_STOCK_CSV_HEADERS = ['Ürün', 'SKU', 'Kategori', 'Klinik', 'Kulla
                                     <div class="text-base font-semibold text-surface-900 dark:text-surface-0 mb-1 break-words">{{ row.productName }}</div>
                                     <div class="text-sm text-muted-color mb-2">SKU: {{ row.productSkuText }}</div>
                                     <div class="text-sm text-muted-color mb-2 break-words">Kategori: {{ row.productCategoryName }}</div>
-                                    <div class="text-sm text-muted-color mb-2 break-words">Klinik: {{ row.clinicName }}</div>
                                     <div class="text-sm mb-2">
                                         Kullanılabilir: <span class="font-medium">{{ row.availableText }}</span>
                                         @if (row.hasExpired) {

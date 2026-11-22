@@ -92,7 +92,7 @@ const TREATMENTS_LIST_STATE_KEY = 'panel:treatments:listState';
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz tedavi kaydı yok." emptyHint="Tedaviler muayene içinden eklenir." (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"

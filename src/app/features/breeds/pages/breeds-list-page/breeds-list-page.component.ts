@@ -78,7 +78,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                     @if (breedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz ırk tanımı yok." [createLabel]="canCreateBreed() && !ro.mutationBlocked() ? 'Yeni ırk ekle' : null" [createLink]="breedsRoute + '/new'" (clear)="clearSearch()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table [value]="breedRows()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20, 50]" [tableStyle]="{ 'min-width': '56rem' }">
                                 <ng-template #header>
                                     <tr>

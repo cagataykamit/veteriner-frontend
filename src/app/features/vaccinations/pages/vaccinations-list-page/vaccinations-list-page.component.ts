@@ -149,7 +149,7 @@ const RECEIVING_CARE_ONLY = 'true';
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz aşı kaydı yok." emptyHint="Aşılar muayene sırasında ya da hasta sayfasından eklenir." (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"
@@ -160,14 +160,13 @@ const RECEIVING_CARE_ONLY = 'true';
                                 [lazy]="true"
                                 [first]="first()"
                                 (onLazyLoad)="list.onTableLazyLoad($event)"
-                                [tableStyle]="{ 'min-width': '76rem' }"
+                                [tableStyle]="{ 'min-width': '60rem' }"
                                 [showCurrentPageReport]="true"
                                 currentPageReportTemplate="{first} - {last} / {totalRecords}"
                             >
                                 <ng-template #header>
                                     <tr>
-                                        <th>Uygulama</th>
-                                        <th>Planlanan uygulama</th>
+                                        <th>Tarih</th>
                                         <th>Aşı</th>
                                         <th>Hasta</th>
                                         <th>Müşteri</th>
@@ -178,8 +177,14 @@ const RECEIVING_CARE_ONLY = 'true';
                                 </ng-template>
                                 <ng-template #body let-row>
                                     <tr>
-                                        <td>{{ row.appliedAtUtc | trDateTime }}</td>
-                                        <td>{{ row.dueAtUtc | trDateTime }}
+                                        <!-- Uygulandıysa uygulama, değilse planlanan tarih; ayrı "Uygulama" sütunu planlı aşılarda boş kalıyordu. -->
+                                        <td class="whitespace-nowrap">
+                                            @if (row.appliedAtUtc) {
+                                                {{ row.appliedAtUtc | trDateTime }}
+                                            } @else {
+                                                {{ row.dueAtUtc | trDateTime }}
+                                                <div class="text-xs text-muted-color">Planlanan</div>
+                                            }
                                             @if (isNextDue(row)) {
                                                 <div class="text-xs text-muted-color" data-testid="next-due">Sonraki doz</div>
                                             }

@@ -85,7 +85,7 @@ const TENANT_MEMBERS_LIST_STATE_KEY = 'panel:tenant-members:listState';
                     @if (displayedRows().length === 0) {
                         <app-list-empty-state [filtered]="hasActiveFilters()" emptyMessage="Henüz kurum üyesi yok." emptyHint="Üye eklemek için davet gönderin." (clear)="resetFilters()" />
                     } @else {
-                        <div class="hidden lg:block overflow-x-auto">
+                        <div class="hidden lg:block list-table">
                             <p-table
                                 [value]="displayedRows()"
                                 [paginator]="true"

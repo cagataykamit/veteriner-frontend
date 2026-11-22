@@ -44,7 +44,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
                 </div>
             </ng-template>
             <ng-template #rows>
-                <div class="hidden lg:block overflow-x-auto">
+                <div class="hidden lg:block list-table">
                     <p-table
                         [value]="displayedRows()"
                         [paginator]="true"
@@ -55,18 +55,19 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
                         [lazy]="true"
                         [first]="state.first()"
                         (onLazyLoad)="state.onTableLazyLoad($event)"
-                        [tableStyle]="{ 'min-width': '72rem' }"
+                        [tableStyle]="{ 'min-width': '60rem' }"
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="{first} - {last} / {totalRecords}"
                     >
                         <ng-template #header>
                             <tr>
                                 <th>{{ copy.reportsColPrimaryLocalTime }}</th>
-                                <th>{{ copy.reportsColClinic }}</th>
+                                @if (state.showClinicColumn()) {
+                                    <th>{{ copy.reportsColClinic }}</th>
+                                }
                                 <th>{{ copy.labelClient }}</th>
                                 <th>{{ copy.labelPet }}</th>
                                 <th class="text-right">Tutar</th>
-                                <th>Para birimi</th>
                                 <th>{{ copy.paymentsReportColMethod }}</th>
                                 <th>{{ copy.reportsColNotes }}</th>
                                 <th style="width: 6rem"></th>
@@ -75,7 +76,9 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
                         <ng-template #body let-row>
                             <tr>
                                 <td>{{ formatPaidAt(row.paidAtUtc) }}</td>
-                                <td>{{ displayClinicLabel(row.clinicLabel) }}</td>
+                                @if (state.showClinicColumn()) {
+                                    <td>{{ displayClinicLabel(row.clinicLabel) }}</td>
+                                }
                                 <td>
                                     @if (row.clientId) {
                                         <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline">{{ row.clientName }}</a>
@@ -91,7 +94,6 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
                                     }
                                 </td>
                                 <td class="text-right font-medium">{{ row.amount | money: row.currency || 'TRY' }}</td>
-                                <td>{{ row.currency }}</td>
                                 <td>{{ methodLabel(row.method) }}</td>
                                 <td class="max-w-[14rem] truncate" [title]="row.notes">{{ row.notes }}</td>
                                 <td>
@@ -106,9 +108,11 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
                     @for (row of displayedRows(); track reportTableRowTrackKey(row, $index)) {
                         <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
                             <div class="text-sm text-muted-color mb-2">{{ formatPaidAt(row.paidAtUtc) }}</div>
-                            <div class="text-sm mb-1">
-                                <span class="text-muted-color font-medium">{{ copy.reportsColClinic }}: </span>{{ displayClinicLabel(row.clinicLabel) }}
-                            </div>
+                            @if (state.showClinicColumn()) {
+                                <div class="text-sm mb-1">
+                                    <span class="text-muted-color font-medium">{{ copy.reportsColClinic }}: </span>{{ displayClinicLabel(row.clinicLabel) }}
+                                </div>
+                            }
                             <div class="text-sm mb-1">
                                 <span class="text-muted-color font-medium">{{ copy.labelClient }}: </span>
                                 @if (row.clientId) {
@@ -125,7 +129,7 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
                                     <span class="break-words">{{ row.petName }}</span>
                                 }
                             </div>
-                            <div class="font-medium mb-1">{{ row.amount | money: row.currency || 'TRY' }} {{ row.currency }}</div>
+                            <div class="font-medium mb-1">{{ row.amount | money: row.currency || 'TRY' }}</div>
                             <div class="text-sm text-muted-color mb-2">{{ copy.paymentsReportColMethod }}: {{ methodLabel(row.method) }}</div>
                             @if (row.notes && row.notes !== '—') {
                                 <div class="text-sm text-muted-color break-words mb-2">{{ row.notes }}</div>

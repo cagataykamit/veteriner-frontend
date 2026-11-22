@@ -75,7 +75,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             } @else if (!loading() && rows().length === 0) {
                 <app-empty-state message="Ücret kaydı yok." hint="Filtreyi temizleyin veya yeni ücret ekleyin." />
             } @else {
-                <div class="overflow-x-auto table-stack-phone">
+                <div class="list-table table-stack-phone">
                     <p-table
                         size="small"
                         [value]="rows()"
@@ -90,7 +90,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                         [showCurrentPageReport]="true"
                         currentPageReportTemplate="{first} - {last} / {totalRecords}"
                         (onLazyLoad)="onLazyLoad($event)"
-                        [tableStyle]="{ 'min-width': '66rem' }"
+                        [tableStyle]="{ 'min-width': '56rem' }"
                     >
                         <ng-template #header>
                             <tr class="whitespace-nowrap">
@@ -98,10 +98,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 <th>Müşteri</th>
                                 <th>Hasta</th>
                                 <th>Açıklama</th>
-                                <th class="text-right">Miktar</th>
-                                <th class="text-right">Birim fiyat</th>
                                 <th class="text-right">Tutar</th>
-                                <th class="text-right">Ödenen</th>
                                 <th class="text-right">Kalan</th>
                                 @if (hasRowActions) {
                                     <th>İşlemler</th>
@@ -125,17 +122,17 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                     @if (row.isImported) {
                                         <app-status-tag label="Devir" severity="secondary" title="Eski programdan aktarılan açık bakiye; ciroya ve kasaya girmez" data-testid="charge-imported-tag" />
                                     }
-                                    <div class="max-w-[10rem] max-sm:max-w-none max-sm:whitespace-normal max-sm:break-words truncate" [title]="row.description">{{ row.description }}</div>
-                                </td>
-                                <td class="text-right table-stack-phone-hide">{{ row.quantity }}</td>
-                                <td class="text-right whitespace-nowrap table-stack-phone-hide">{{ row.unitPrice | money: row.currency || 'TRY' }}</td>
+                                    <div class="max-w-[11rem] max-sm:max-w-none max-sm:whitespace-normal max-sm:break-words truncate" [title]="row.description">{{ row.description }}</div>
+                                    <!-- Miktar ve birim fiyat ayrı sütun yerine açıklamanın altında; tek adetlikte yazılmaz. -->
+                                    @if (row.quantity !== 1) {
+                                        <div class="text-xs text-muted-color whitespace-nowrap" data-testid="charge-quantity">{{ row.quantity }} × {{ row.unitPrice | money: row.currency || 'TRY' }}</div>
+                                    }
                                 <td class="text-right whitespace-nowrap font-medium" data-label="Tutar">
                                     {{ row.amount | money: row.currency || 'TRY' }}
                                     @if (row.eDocumentId) {
                                         <a routerLink="/panel/e-documents" [queryParams]="{ clientId: row.clientId }" class="block text-xs font-normal no-underline text-primary" title="Bu ücretin e-belgesi var; düzeltmek için önce belgeyi iptal edin.">Belgeli</a>
                                     }
                                 </td>
-                                <td class="text-right whitespace-nowrap" data-label="Ödenen">{{ row.allocatedAmount | money: row.currency || 'TRY' }}</td>
                                 <td class="text-right whitespace-nowrap" data-label="Kalan">
                                     @if (row.outstandingAmount === 0) {
                                         <app-status-tag label="Ödendi" severity="success" />
@@ -153,7 +150,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                                     <a [routerLink]="['/panel/payments/new']" [queryParams]="paymentQueryParams(row)" pButton size="small" class="p-button-sm mr-1"><i class="pi pi-wallet"></i>Ödeme al</a>
                                                 }
                                                 @if (canIssueDocument && !row.eDocumentId && !row.isImported) {
-                                                    <button pButton type="button" size="small" [text]="true" class="mr-1" (click)="openDocument(row)" [attr.data-testid]="'charge-edoc-' + row.id"><i class="p-button-icon pi pi-file-export"></i>Belge kes</button>
+                                                    <app-row-action-button action="document" (pressed)="openDocument(row)" [testId]="'charge-edoc-' + row.id" />
                                                 }
                                                 @if (canCorrect && !row.eDocumentId) {
                                                     <app-row-action-button action="edit" label="Düzelt" (pressed)="openCorrection(row)" />
