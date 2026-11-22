@@ -4,6 +4,11 @@ export const PET_MICROCHIP_STANDARD_LENGTH = 15;
 export const PET_MICROCHIP_FORMAT_WARNING =
     'Mikroçip numarası genellikle 15 rakamdan oluşur; HBS kaydı için numarayı kontrol edin. Kayıt yine de yapılabilir.';
 
+/** Çip alanı yalnız rakam alır (yazarken ve yapıştırınca); uzunluk alanın üst sınırı ve 15 hane uyarısıyla denetlenir. */
+export function sanitizePetMicrochipInput(value: string | null | undefined): string {
+    return (value ?? '').replace(/\D/g, '');
+}
+
 /**
  * Çip no biçim uyarısı (ADR-036 Dilim 1): engelleme değil, yalnız uyarı. Boş veya 15 rakam ise uyarı yok;
  * API biçim zorlamaz (`INVOICING_IDENTITY_API_CONTRACT.md` §4). Kural yalnızca burada yaşar.

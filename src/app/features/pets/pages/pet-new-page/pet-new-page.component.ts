@@ -25,7 +25,7 @@ import { createSpeciesByName } from '@/app/entities/species/utils/species-inline
 import { type InlineCreateConfig, InlineCreateDirective } from '@/app/shared/forms/inline-create/inline-create.directive';
 import { InlineCreateOptionComponent } from '@/app/shared/forms/inline-create/inline-create-option.component';
 import { type PetCreateFieldErrors, type PetCreateFormFieldKey, parsePetCreateHttpError } from '@/app/entities/pet/utils/pet-create-validation-parse.utils';
-import { petMicrochipFormatWarning } from '@/app/features/pets/utils/pet-microchip.utils';
+import { petMicrochipFormatWarning, sanitizePetMicrochipInput } from '@/app/features/pets/utils/pet-microchip.utils';
 import { PET_GENDER_FORM_OPTIONS } from '@/app/entities/pet/utils/pet-status.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { trimClientIdControlValue, type SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
@@ -162,7 +162,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="microchipNumber" class="block text-sm font-medium text-muted-color mb-2">Çip numarası</label>
-                        <input id="microchipNumber" pInputText class="w-full" formControlName="microchipNumber" maxlength="50" />
+                        <input id="microchipNumber" pInputText class="w-full" formControlName="microchipNumber" maxlength="50" inputmode="numeric" autocomplete="off" (input)="onMicrochipInput()" />
                         @if (apiFieldErrors().microchipNumber) {
                             <small class="text-danger">{{ apiFieldErrors().microchipNumber }}</small>
                         } @else if (form.controls.microchipNumber.invalid && form.controls.microchipNumber.touched) {
@@ -265,6 +265,15 @@ export class PetNewPageComponent implements OnInit, HasUnsavedChanges {
     /** 15 hane dışı çip no için engellemeyen uyarı (ADR-036). */
     microchipWarning(): string | null {
         return petMicrochipFormatWarning(this.form.controls.microchipNumber.value);
+    }
+
+    onMicrochipInput(): void {
+        const control = this.form.controls.microchipNumber;
+        const digits = sanitizePetMicrochipInput(control.value);
+
+        if (digits !== control.value) {
+            control.setValue(digits);
+        }
     }
 
     constructor() {
