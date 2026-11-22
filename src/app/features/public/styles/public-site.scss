@@ -1356,6 +1356,15 @@ $ps: '.public-page.public-site';
     color: var(--ps-bg);
 }
 
+/*
+ * Önerilen paket başlığı (T-01): başlık bandıyla aynı ters renk çifti, vurgu rengine kaydırılmış zemin. Koyu temada bant açık
+ * (krem) olduğundan eski sabit koyu teal zemin, koyu metinle 1,5:1 kalıyordu; bu kural iki temada da bandı izler.
+ */
+#{$ps} .public-plan-compare-head th.public-plan-compare-col--recommended {
+    background: color-mix(in srgb, var(--ps-ink) 75%, var(--ps-accent));
+    color: var(--ps-bg);
+}
+
 #{$ps} .public-plan-compare-head th:first-child {
     border-top-left-radius: 27px;
 }
