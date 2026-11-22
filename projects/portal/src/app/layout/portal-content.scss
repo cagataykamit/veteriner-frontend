@@ -128,11 +128,16 @@
     overflow-wrap: anywhere;
 }
 
-/* Koyu ton: beyaz metinle WCAG AA kontrastı (marka turkuazı beyaz metinde yetersiz kalır). */
+/* Ana eylem: PrimeNG birincil düğmeyle aynı renk çifti (tek ana renk, PO-01; `core/theme/portal-preset.ts`). */
 .portal-action-link--primary {
-    background: #0b6f69;
-    border-color: #0b6f69;
-    color: #ffffff;
+    background: var(--p-primary-color);
+    border-color: var(--p-primary-color);
+    color: var(--p-primary-contrast-color);
+}
+
+.portal-action-link--primary:hover {
+    background: var(--p-primary-hover-color);
+    border-color: var(--p-primary-hover-color);
 }
 
 /* Koyu tema: açık tondaki sabit renklerin karşılığı (değişkenler styles.scss :root.portal-dark). */
@@ -162,6 +167,6 @@
     }
 
     .portal-action-link--primary {
-        color: #ffffff;
+        color: var(--p-primary-contrast-color);
     }
 }
