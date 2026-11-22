@@ -56,14 +56,14 @@ export function rateLimitUserMessage(err: HttpErrorResponse): string {
 
 /** Kiracıda abonelik yok / yazma engeli — create (müşteri, hayvan, …) sırasında backend `detail` veya `extensions.code`. */
 const SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE =
-    'Kurum aboneliği bulunamadığı için yeni kayıt oluşturulamıyor. Hesap → Abonelik bölümünden paketinizi etkinleştirebilirsiniz; bu sayfaya erişiminiz yoksa kurum yöneticinizle iletişime geçin.';
+    'Kurum aboneliği bulunamadığı için yeni kayıt oluşturulamıyor. Ayarlar → Abonelik bölümünden paketinizi etkinleştirebilirsiniz; bu sayfaya erişiminiz yoksa kurum yöneticinizle iletişime geçin.';
 
 /** Abonelik / tenant yazma kilidi — backend `ProblemDetails` + `extensions.code`. */
 const SUBSCRIPTION_WRITE_USER_MESSAGES: Record<string, string> = {
     'Subscriptions.TenantReadOnly':
-        'Kurum aboneliği salt okunur durumda. Yeni kayıt oluşturmak için aboneliğinizi yenileyin. Yöneticiyseniz Hesap → Abonelik üzerinden devam edebilirsiniz.',
+        'Kurum aboneliği salt okunur durumda. Yeni kayıt oluşturmak için aboneliğinizi yenileyin. Yöneticiyseniz Ayarlar → Abonelik üzerinden devam edebilirsiniz.',
     'Subscriptions.TenantCancelled':
-        'Bu işletmenin aboneliği iptal edildiği için yazma işlemleri kapalıdır. Yöneticiyseniz Hesap → Abonelik ekranından durumu yönetin.',
+        'Bu işletmenin aboneliği iptal edildiği için yazma işlemleri kapalıdır. Yöneticiyseniz Ayarlar → Abonelik ekranından durumu yönetin.',
     'Subscriptions.NotFound': SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE,
     /** Kiracı bağlamında abonelik satırı yok (yazma guard) — müşteri oluşturma vb. */
     'Subscriptions.TenantSubscriptionNotFound': SUBSCRIPTION_TENANT_MISSING_GUARD_MESSAGE,

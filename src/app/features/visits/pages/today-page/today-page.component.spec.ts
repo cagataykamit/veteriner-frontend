@@ -92,8 +92,12 @@ describe('TodayPageComponent', () => {
     let toasts: Mock;
     let requestList: Mock;
 
+    /** Salt okunur kiracı (abonelik kilidi); varsayılan yazmaya açık. */
+    let tenantReadOnly = false;
+
     beforeEach(() => {
         requestList = vi.fn().mockReturnValue(of({ items: [], totalCount: 0, page: 1, pageSize: 5 }));
+        tenantReadOnly = false;
     });
 
     const create = async (claims: string[], today: TodayVm, vetUserId: string | null = null): Promise<ComponentFixture<TodayPageComponent>> => {
@@ -117,7 +121,7 @@ describe('TodayPageComponent', () => {
                 provideRouter([]),
                 { provide: VisitsService, useValue: visits },
                 { provide: AuthService, useValue: { hasOperationClaim: (c: string) => claims.includes(c), getClinicId: () => 'c1', getUserId: () => 'u1', getAccessToken: () => null } },
-                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false, lockedPlanFeature: () => null, planFeatureReady: () => true } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => tenantReadOnly, lockedPlanFeature: () => null, planFeatureReady: () => true } },
                 // Bekleme listesi bilgisi (TIER-018): bu testlerde boşalan saat yok.
                 { provide: WaitlistService, useValue: { today: () => of({ waitingCount: 0, releasedSlots: [] }) } },
                 { provide: ClientsService, useValue: { getClients: () => of({ items: [] }) } },
@@ -944,6 +948,20 @@ describe('TodayPageComponent', () => {
         expect(examination?.textContent).toContain('Yeni muayene');
         expect(examination?.classList).toContain('p-button-secondary');
         expect(el.querySelector('app-page-header')?.textContent).toContain('Randevusuz geliş');
+    });
+
+    it('salt okunurda Yeni randevu, Yeni muayene ve Hızlı satış pasif düğmedir, bağlantı değildir', async () => {
+        tenantReadOnly = true;
+        const f = await create(['Visits.Read', 'Visits.Create', 'Appointments.Create', 'Examinations.Create', 'Sales.Create'], { date: 'd', activeHospitalizations: [], items: [] });
+        const el = f.nativeElement as HTMLElement;
+
+        for (const id of ['today-new-appointment', 'today-new-examination', 'today-quick-sale']) {
+            const shortcut = el.querySelector<HTMLButtonElement>(`[data-testid="${id}"]`);
+
+            expect(shortcut?.tagName).toBe('BUTTON');
+            expect(shortcut?.disabled).toBe(true);
+        }
+        expect(el.querySelector('a[href="/panel/sales/new"]')).toBeNull();
     });
 
     it('muayeneye geçiş: visitId ile hasta bağlamı query olarak taşınır', async () => {
