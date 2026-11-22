@@ -31,7 +31,9 @@ const APPT: AppointmentDetailVm = {
     updatedAtUtc: null,
     reasonId: null,
     veterinarianUserId: null,
-    ownerConfirmedAtUtc: null
+    ownerConfirmedAtUtc: null,
+    roomResourceId: null,
+    equipmentResourceId: null
 };
 
 describe('AppointmentDetailPageComponent - Muayene oluştur (ADR-017 K7)', () => {

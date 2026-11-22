@@ -14,6 +14,9 @@ export interface CreateAppointmentRequest {
     notes?: string;
     reasonId?: string | null;
     veterinarianUserId?: string | null;
+    /** Oda ve cihaz (ADR-053; APPOINTMENT_RESOURCES_API_CONTRACT.md §2). */
+    roomResourceId?: string | null;
+    equipmentResourceId?: string | null;
 }
 
 export interface UpdateAppointmentRequest {
@@ -29,4 +32,7 @@ export interface UpdateAppointmentRequest {
     notes?: string;
     reasonId?: string | null;
     veterinarianUserId?: string | null;
+    /** Oda ve cihaz (ADR-053; APPOINTMENT_RESOURCES_API_CONTRACT.md §2). */
+    roomResourceId?: string | null;
+    equipmentResourceId?: string | null;
 }

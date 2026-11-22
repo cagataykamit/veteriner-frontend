@@ -76,6 +76,9 @@ export interface AppointmentDetailDto {
     /** Randevu nedeni ve hekimi (ADR-042 K2/K3). */
     reasonId?: string | null;
     veterinarianUserId?: string | null;
+    /** Oda ve cihaz (ADR-053; APPOINTMENT_RESOURCES_API_CONTRACT.md §2). */
+    roomResourceId?: string | null;
+    equipmentResourceId?: string | null;
     /** Sahip hatırlatma bağlantısıyla geleceğini onayladı (TIER-019); durumu değiştirmez. */
     ownerConfirmedAtUtc?: string | null;
 }
@@ -95,6 +98,9 @@ export interface AppointmentCreateRequestDto {
     durationMinutes?: number | null;
     reasonId?: string | null;
     veterinarianUserId?: string | null;
+    /** Oda ve cihaz (ADR-053; APPOINTMENT_RESOURCES_API_CONTRACT.md §2). */
+    roomResourceId?: string | null;
+    equipmentResourceId?: string | null;
 }
 
 /** PUT /appointments body (güncelleme) — id + status zorunlu. */
@@ -111,6 +117,9 @@ export interface AppointmentUpdateRequestDto {
     /** PUT tam günceller: gönderilmezse sunucuda boşalır; düzenleme formu mevcut değeri geri gönderir. */
     reasonId?: string | null;
     veterinarianUserId?: string | null;
+    /** Oda ve cihaz (ADR-053; APPOINTMENT_RESOURCES_API_CONTRACT.md §2). */
+    roomResourceId?: string | null;
+    equipmentResourceId?: string | null;
 }
 
 /** `POST /appointments/{id}/cancel` yanıtı: "Geri al" bu süre kadar gösterilir (süre sunucuda tek yerde). */

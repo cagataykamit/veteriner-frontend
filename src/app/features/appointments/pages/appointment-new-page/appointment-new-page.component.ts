@@ -43,6 +43,7 @@ import { APPOINTMENT_TYPE_DEFAULT, APPOINTMENT_TYPE_WRITE_OPTIONS } from '@/app/
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments/components/appointment-reason-vet-fields.component';
+import { AppointmentResourceFieldsComponent } from '@/app/features/appointments/components/appointment-resource-fields.component';
 import { FocusFirstFieldDirective } from '@/app/shared/ui/focus-first-field/focus-first-field.directive';
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
@@ -65,7 +66,7 @@ interface AppointmentSlot {
 @Component({
     selector: 'app-appointment-new-page',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AppointmentReasonVetFieldsComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective, AppointmentSlotPickerComponent],
+    imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, SelectModule, AppPageHeaderComponent, ClientSearchComponent, PetSearchComponent, DateInputComponent, AppointmentReasonVetFieldsComponent, AppointmentResourceFieldsComponent, FocusFirstFieldDirective, FormFieldComponent, FormSubmitDirective, FormErrorSummaryComponent, ReadOnlyReasonDirective, AppointmentSlotPickerComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header categoryLink="/panel/appointments" categoryLinkLabel="Randevu listesine dön" title="Yeni randevu" description="Randevu kaydı oluşturun." />
@@ -138,6 +139,9 @@ interface AppointmentSlot {
                     </app-form-field>
                     <div class="col-span-12">
                         <app-appointment-reason-vet-fields [clinicId]="activeClinicId" [preselectSelf]="true" [reasonControl]="form.controls.reasonId" [vetControl]="form.controls.veterinarianUserId" (durationSuggested)="form.controls.durationMinutes.setValue($event)" />
+                    </div>
+                    <div class="col-span-12">
+                        <app-appointment-resource-fields [clinicId]="activeClinicId" [roomControl]="form.controls.roomResourceId" [equipmentControl]="form.controls.equipmentResourceId" />
                     </div>
                     <div class="col-span-12">
                         <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
@@ -226,7 +230,9 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
         appointmentType: this.fb.control<number | null>(APPOINTMENT_TYPE_DEFAULT, Validators.required),
         notes: this.fb.nonNullable.control('', Validators.maxLength(APPOINTMENT_NOTES_MAX_LENGTH)),
         reasonId: this.fb.control<string | null>(null),
-        veterinarianUserId: this.fb.control<string | null>(null)
+        veterinarianUserId: this.fb.control<string | null>(null),
+        roomResourceId: this.fb.control<string | null>(null),
+        equipmentResourceId: this.fb.control<string | null>(null)
     });
 
     constructor() {
@@ -386,7 +392,9 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
             appointmentType,
             notes: v.notes,
             reasonId: v.reasonId,
-            veterinarianUserId: v.veterinarianUserId
+            veterinarianUserId: v.veterinarianUserId,
+            roomResourceId: v.roomResourceId,
+            equipmentResourceId: v.equipmentResourceId
         });
 
         this.submitting.set(true);
@@ -491,7 +499,7 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
     /**
      * Takvimde boş hücre / boş saat: `date` (yyyy-MM-dd), `time` (HH:mm) ve `vet` (hekim kimliği) formu doldurur. Tarih geldiyse "ilk
      * uygun saat" önerisi yapılmaz; saat, o günün seçeneklerinde yoksa saat seçimi boş kalır. Takvimdeki aşıdan "Randevu ver":
-     * `type` (randevu türü sayısı) ve `notes` da gelir.
+     * `type` (randevu türü sayısı) ve `notes` da gelir. Kaynak sütunundan `room` ya da `equipment` (kaynak kimliği).
      */
     private prefillScheduleFromRoute(query: ParamMap): void {
         const date = query.get('date')?.trim() ?? '';
@@ -518,6 +526,18 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
 
         if (vet) {
             this.form.controls.veterinarianUserId.setValue(vet);
+        }
+
+        // Takvimin "Oda ve cihaz" görünümünde boş hücre: sütunun kaynağı (ADR-053 K8).
+        const room = query.get('room')?.trim();
+        const equipment = query.get('equipment')?.trim();
+
+        if (room) {
+            this.form.controls.roomResourceId.setValue(room);
+        }
+
+        if (equipment) {
+            this.form.controls.equipmentResourceId.setValue(equipment);
         }
     }
 

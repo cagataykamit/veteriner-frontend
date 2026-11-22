@@ -34,6 +34,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppointmentReasonVetFieldsComponent } from '@/app/features/appointments/components/appointment-reason-vet-fields.component';
+import { AppointmentResourceFieldsComponent } from '@/app/features/appointments/components/appointment-resource-fields.component';
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
 import { FormErrorSummaryComponent } from '@/app/shared/forms/form-field/form-error-summary.component';
 import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.directive';
@@ -57,6 +58,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
         DateInputComponent,
         AppStatusTagComponent,
         AppointmentReasonVetFieldsComponent,
+        AppointmentResourceFieldsComponent,
         FormFieldComponent, FormSubmitDirective,
         FormErrorSummaryComponent,
         ReadOnlyReasonDirective
@@ -139,6 +141,9 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                             <app-appointment-reason-vet-fields [clinicId]="activeClinicId" [reasonControl]="form.controls.reasonId" [vetControl]="form.controls.veterinarianUserId" [keepReasonId]="loadedReasonId()" (durationSuggested)="form.controls.durationMinutes.setValue($event)" />
                         </div>
                         <div class="col-span-12">
+                            <app-appointment-resource-fields [clinicId]="activeClinicId" [roomControl]="form.controls.roomResourceId" [equipmentControl]="form.controls.equipmentResourceId" [keepIds]="loadedResourceIds()" />
+                        </div>
+                        <div class="col-span-12">
                             <label for="notes" class="block text-sm font-medium text-muted-color mb-2">Notlar</label>
                             <textarea id="notes" rows="3" class="w-full p-inputtext p-component" formControlName="notes"></textarea>
                             @if (apiFieldErrors().notes) {
@@ -187,6 +192,8 @@ export class AppointmentEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly closed = output<void>();
     /** Yüklenen randevunun nedeni (pasif olsa da seçenekte kalır). */
     readonly loadedReasonId = signal<string | null>(null);
+    /** Mevcut randevunun oda ve cihazı: pasifleşmiş olsa da seçenekte kalır (PUT tam yazımdır, silinmesin). */
+    readonly loadedResourceIds = signal<(string | null)[]>([]);
 
     readonly loading = signal(true);
     readonly loadError = signal<string | null>(null);
@@ -229,7 +236,9 @@ export class AppointmentEditPageComponent implements OnInit, HasUnsavedChanges {
         status: this.fb.control<number | null>(null, Validators.required),
         notes: this.fb.nonNullable.control('', Validators.maxLength(APPOINTMENT_NOTES_MAX_LENGTH)),
         reasonId: this.fb.control<string | null>(null),
-        veterinarianUserId: this.fb.control<string | null>(null)
+        veterinarianUserId: this.fb.control<string | null>(null),
+        roomResourceId: this.fb.control<string | null>(null),
+        equipmentResourceId: this.fb.control<string | null>(null)
     });
 
     constructor() {
@@ -314,11 +323,14 @@ export class AppointmentEditPageComponent implements OnInit, HasUnsavedChanges {
                         status: x.status,
                         notes: x.notes,
                         reasonId: x.reasonId,
-                        veterinarianUserId: x.veterinarianUserId
+                        veterinarianUserId: x.veterinarianUserId,
+                        roomResourceId: x.roomResourceId,
+                        equipmentResourceId: x.equipmentResourceId
                     },
                     { emitEvent: false }
                 );
                 this.loadedReasonId.set(x.reasonId);
+                this.loadedResourceIds.set([x.roomResourceId, x.equipmentResourceId]);
 
                 if (x.clientId) {
                     this.form.controls.petId.enable({ emitEvent: false });
@@ -400,7 +412,9 @@ export class AppointmentEditPageComponent implements OnInit, HasUnsavedChanges {
             status: statusNum,
             notes: v.notes,
             reasonId: v.reasonId,
-            veterinarianUserId: v.veterinarianUserId
+            veterinarianUserId: v.veterinarianUserId,
+            roomResourceId: v.roomResourceId,
+            equipmentResourceId: v.equipmentResourceId
         });
 
         this.submitting.set(true);

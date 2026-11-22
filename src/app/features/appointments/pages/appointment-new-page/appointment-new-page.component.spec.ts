@@ -125,6 +125,13 @@ describe('AppointmentNewPageComponent — varsayılanlar (H1)', () => {
         expect(cmp.form.controls.veterinarianUserId.value).toBe('v2');
     });
 
+    it('takvimin kaynak sütunundan gelen oda ya da cihaz formu doldurur', () => {
+        const cmp = create([0, 1, 2, 3, 4, 5, 6].map((d) => day(d)), { date: '2026-11-18', time: '14:00', room: 'r1', equipment: 'e1' });
+
+        expect(cmp.form.controls.roomResourceId.value).toBe('r1');
+        expect(cmp.form.controls.equipmentResourceId.value).toBe('e1');
+    });
+
     it('tür Muayene seçili gelir', () => {
         const cmp = create([0, 1, 2, 3, 4, 5, 6].map((d) => day(d)));
 
