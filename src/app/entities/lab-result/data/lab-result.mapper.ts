@@ -1,6 +1,8 @@
 import { HttpParams } from '@angular/common/http';
 import type {
+    LabParameterHistoryPointDto,
     LabResultDetailDto,
+    LabResultLineDto,
     LabResultListItemDto,
     LabResultListItemDtoPagedResult,
     LabResultWriteRequestDto
@@ -8,7 +10,14 @@ import type {
 import type { CreateLabResultRequest } from '@/app/entities/lab-result/models/lab-result-create.model';
 import type { LabResultsListQuery } from '@/app/entities/lab-result/models/lab-result-query.model';
 import { parseLabResultStatus } from '@/app/entities/lab-result/utils/lab-result-status.utils';
-import type { LabResultDetailVm, LabResultEditVm, LabResultListItemVm } from '@/app/entities/lab-result/models/lab-result-vm.model';
+import type {
+    LabParameterHistoryPointVm,
+    LabResultDetailVm,
+    LabResultEditVm,
+    LabResultLineInput,
+    LabResultLineVm,
+    LabResultListItemVm
+} from '@/app/entities/lab-result/models/lab-result-vm.model';
 import { dateOnlyInputToIstanbulEndUtcIso, dateOnlyInputToIstanbulStartUtcIso } from '@/app/shared/utils/date.utils';
 
 const EM = '—';
@@ -134,7 +143,38 @@ export function mapLabResultDetailDtoToVm(dto: LabResultDetailDto): LabResultDet
         cancelledAtUtc: firstTrimmed(dto.cancelledAtUtc),
         cancelReason: firstTrimmed(dto.cancelReason),
         rowVersion: firstTrimmed(dto.rowVersion) ?? '',
-        addedAfterFinalization: dto.addedAfterFinalization === true
+        addedAfterFinalization: dto.addedAfterFinalization === true,
+        lines: sortedLines(dto).map(mapLabResultLineDtoToVm)
+    };
+}
+
+function sortedLines(dto: LabResultDetailDto): LabResultLineDto[] {
+    return [...(dto.lines ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+export function mapLabResultLineDtoToVm(dto: LabResultLineDto): LabResultLineVm {
+    return {
+        parameterName: dto.parameterName,
+        value: dto.value,
+        unit: firstTrimmed(dto.unit),
+        referenceLow: dto.referenceLow ?? null,
+        referenceHigh: dto.referenceHigh ?? null,
+        flag: dto.flag ?? null,
+        previous: dto.previous ? { labResultId: dto.previous.labResultId, resultDateUtc: dto.previous.resultDateUtc, value: dto.previous.value, flag: dto.previous.flag ?? null } : null,
+        trend: dto.trend ?? null
+    };
+}
+
+export function mapLabParameterHistoryPointDtoToVm(dto: LabParameterHistoryPointDto): LabParameterHistoryPointVm {
+    return {
+        labResultId: dto.labResultId,
+        resultDateUtc: dto.resultDateUtc,
+        testName: dto.testName,
+        value: dto.value,
+        unit: firstTrimmed(dto.unit),
+        referenceLow: dto.referenceLow ?? null,
+        referenceHigh: dto.referenceHigh ?? null,
+        flag: dto.flag ?? null
     };
 }
 
@@ -153,7 +193,14 @@ export function mapLabResultDetailDtoToEditVm(dto: LabResultDetailDto): LabResul
         resultText: firstTrimmed(dto.resultText, readDtoString(dto, ['ResultText'])) ?? '',
         interpretation: firstTrimmed(dto.interpretation, readDtoString(dto, ['Interpretation'])) ?? '',
         notes: firstTrimmed(dto.notes, readDtoString(dto, ['Notes', 'Note'])) ?? '',
-        rowVersion: firstTrimmed(dto.rowVersion, readDtoString(dto, ['RowVersion'])) ?? ''
+        rowVersion: firstTrimmed(dto.rowVersion, readDtoString(dto, ['RowVersion'])) ?? '',
+        lines: sortedLines(dto).map((l) => ({
+            parameterName: l.parameterName,
+            value: l.value,
+            unit: firstTrimmed(l.unit),
+            referenceLow: l.referenceLow ?? null,
+            referenceHigh: l.referenceHigh ?? null
+        }))
     };
 }
 
@@ -245,11 +292,12 @@ export function mapCreateLabResultToApiBody(req: CreateLabResultRequest): LabRes
         throw new Error('LAB_RESULT_WRITE_TEST_NAME_REQUIRED');
     }
 
-    // Sonuç tarihi ve metni birlikte verilir ya da birlikte verilmez (ikisi de yok → `Requested` istem).
+    // Sonuç (metin ya da değer satırı) ve tarihi birlikte verilir ya da birlikte verilmez (ikisi de yok → `Requested` istem).
     const resultDateUtc = req.resultDateUtc?.trim() ?? '';
     const resultText = req.resultText?.trim() ?? '';
+    const hasResult = !!resultText || (req.lines?.length ?? 0) > 0;
 
-    if (!resultDateUtc !== !resultText) {
+    if (!resultDateUtc !== !hasResult) {
         throw new Error('LAB_RESULT_WRITE_RESULT_INCOMPLETE');
     }
 
@@ -274,6 +322,16 @@ export function mapCreateLabResultToApiBody(req: CreateLabResultRequest): LabRes
         dto.rowVersion = rowVersion;
     }
 
+    if (req.lines) {
+        dto.lines = req.lines.map((l) => ({
+            parameterName: l.parameterName.trim(),
+            value: l.value,
+            unit: l.unit?.trim() ? l.unit.trim() : null,
+            referenceLow: l.referenceLow,
+            referenceHigh: l.referenceHigh
+        }));
+    }
+
     return dto;
 }
 
@@ -287,10 +345,12 @@ export interface LabResultUpsertFormAdapterInput {
     notes?: string | null;
     examinationId?: string | null;
     rowVersion?: string;
+    lines?: LabResultLineInput[];
 }
 
 export function mapLabResultUpsertFormToCreateRequest(input: LabResultUpsertFormAdapterInput): CreateLabResultRequest {
     return {
+        lines: input.lines,
         clinicId: input.clinicId.trim(),
         petId: input.petId.trim(),
         resultDateUtc: input.resultDateUtc?.trim() ?? null,

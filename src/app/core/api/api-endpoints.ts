@@ -440,6 +440,8 @@ export const ApiEndpoints = {
         list: () => `/api/v1/lab-results`,
         byId: (id: string) => `/api/v1/lab-results/${encodeURIComponent(id)}`,
         cancel: (id: string) => `/api/v1/lab-results/${encodeURIComponent(id)}/cancel`,
+        /** Query: `petId`, `parameter`, `clinicId` (LAB_RESULT_LINES_API_CONTRACT.md §4). */
+        parameterHistory: () => `/api/v1/lab-results/parameter-history`,
         /** Dosya uçlarının sahip kökü (`/files`, `/files/{fileId}/content`, `/files/{fileId}/access-url`; IMAGING_API_CONTRACT.md §5). */
         filesOwner: (id: string) => `/api/v1/lab-results/${encodeURIComponent(id)}`
     },

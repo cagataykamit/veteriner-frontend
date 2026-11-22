@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
@@ -7,14 +7,15 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import {
     mapCreateLabResultToApiBody,
     mapLabResultDetailDtoToEditVm,
+    mapLabParameterHistoryPointDtoToVm,
     mapLabResultDetailDtoToVm,
     mapPagedLabResultsToVm,
     labResultsQueryToHttpParams
 } from '@/app/entities/lab-result/data/lab-result.mapper';
-import type { LabResultCancelRequestDto, LabResultDetailDto, LabResultListItemDtoPagedResult } from '@/app/entities/lab-result/models/lab-result-api.model';
+import type { LabParameterHistoryPointDto, LabResultCancelRequestDto, LabResultDetailDto, LabResultListItemDtoPagedResult } from '@/app/entities/lab-result/models/lab-result-api.model';
 import type { CreateLabResultRequest } from '@/app/entities/lab-result/models/lab-result-create.model';
 import type { LabResultsListQuery } from '@/app/entities/lab-result/models/lab-result-query.model';
-import type { LabResultDetailVm, LabResultEditVm, LabResultListItemVm } from '@/app/entities/lab-result/models/lab-result-vm.model';
+import type { LabParameterHistoryPointVm, LabResultDetailVm, LabResultEditVm, LabResultListItemVm } from '@/app/entities/lab-result/models/lab-result-vm.model';
 import { messageFromHttpError, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 
 export interface LabResultsPagedVm {
@@ -139,6 +140,21 @@ export class LabResultsService {
         );
     }
 
+    /** Hastada bir parametrenin değerleri, yeniden eskiye (aktif klinik kapsamında; LAB_RESULT_LINES_API_CONTRACT §4). */
+    getParameterHistory(petId: string, parameter: string): Observable<LabParameterHistoryPointVm[]> {
+        let params = new HttpParams().set('petId', petId).set('parameter', parameter);
+        const clinicId = this.auth.getClinicId()?.trim();
+
+        if (clinicId) {
+            params = params.set('clinicId', clinicId);
+        }
+
+        return this.api.get<LabParameterHistoryPointDto[]>(ApiEndpoints.labResults.parameterHistory(), params).pipe(
+            map((rows) => (rows ?? []).map(mapLabParameterHistoryPointDtoToVm)),
+            catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Parametre geçmişi yüklenemedi.'))))
+        );
+    }
+
     /** Gerekçeli iptal (`LabResults.Update`); `rowVersion`: ekranın açıldığı sürüm. Hatalar Türkçe `Error` olarak iletilir. */
     cancelLabResult(id: string, reason: string, rowVersion: string): Observable<void> {
         const body: LabResultCancelRequestDto = { reason: reason.trim(), rowVersion };
@@ -160,7 +176,7 @@ const WRITE_BODY_ERRORS: Record<string, string> = {
     LAB_RESULT_WRITE_CLINIC_ID_REQUIRED: 'Aktif klinik kimliği eksik. Lütfen yeniden giriş yapın.',
     LAB_RESULT_WRITE_PET_ID_REQUIRED: 'Hasta seçimi zorunludur.',
     LAB_RESULT_WRITE_TEST_NAME_REQUIRED: 'Test adı zorunludur.',
-    LAB_RESULT_WRITE_RESULT_INCOMPLETE: 'Sonuç tarihi ve sonuç metni birlikte girilmelidir.'
+    LAB_RESULT_WRITE_RESULT_INCOMPLETE: 'Sonuç tarihi ile sonuç metni ya da değer satırı birlikte girilmelidir.'
 };
 
 function labResultWriteBodyError(e: unknown, fallback: string): Error {
