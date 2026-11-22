@@ -12,6 +12,7 @@ describe('PortalTheme (açık/koyu tema)', () => {
 
         return theme;
     };
+
     const rootIsDark = () => document.documentElement.classList.contains(PORTAL_DARK_CLASS);
 
     beforeEach(() => {

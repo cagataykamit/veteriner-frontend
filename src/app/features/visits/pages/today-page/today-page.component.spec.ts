@@ -961,6 +961,7 @@ describe('TodayPageComponent', () => {
             expect(shortcut?.tagName).toBe('BUTTON');
             expect(shortcut?.disabled).toBe(true);
         }
+
         expect(el.querySelector('a[href="/panel/sales/new"]')).toBeNull();
     });
 
