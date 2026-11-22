@@ -79,7 +79,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             @if (joinUrl()) {
                 <div class="card mb-0">
                     <h5 class="mt-0 mb-2">Katılım bağlantısı</h5>
-                    <p class="text-sm text-muted-color mt-0 mb-2">Davet hâlâ geçerliyse bu bağlantı kullanılabilir.</p>
+                    <p class="text-sm text-muted-color mt-0 mb-2">Bu bağlantı davet edilen kişiye e-postayla gönderildi; davet hâlâ geçerliyse kendiniz de paylaşabilirsiniz.</p>
                     <div class="p-3 rounded-lg bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 break-all text-sm font-mono">
                         {{ joinUrl() }}
                     </div>
@@ -195,7 +195,7 @@ export class TenantInviteDetailPageComponent implements OnInit {
                 addTracedToast(this.messages, 'TenantInviteDetailPage', this.router.url, {
                     severity: 'success',
                     summary: 'Tamam',
-                    detail: 'Davet yeniden gönderildi.'
+                    detail: 'Yeni katılım bağlantısı e-postayla gönderildi; önceki bağlantı artık geçersiz.'
                 });
                 this.load(id);
             },
