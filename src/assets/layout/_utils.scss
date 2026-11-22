@@ -57,6 +57,11 @@
     }
 
     @media (min-width: 576px) {
+        // Hücredeki müşteri / hasta bağlantısı satır kırmaz (K-03): "TEST / Mustafa / Aydın" gibi üç satıra bölünmesin.
+        .p-datatable-tbody > tr > td > a {
+            white-space: nowrap;
+        }
+
         .p-datatable-table > :is(.p-datatable-thead, .p-datatable-tbody) > tr > :last-child {
             position: sticky;
             right: 0;

@@ -16,11 +16,12 @@ import { formatClinicPhoneForDisplay } from '@/app/entities/clinic/utils/clinic-
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
+import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 
 @Component({
     selector: 'app-clinics-list-page',
     standalone: true,
-    imports: [CommonModule, RouterLink, TableModule, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent],
+    imports: [CommonModule, RouterLink, TableModule, ButtonModule, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent, AppRowActionButtonComponent, AppStatusTagComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header title="Klinikler" description="Kurumunuza kayıtlı kliniklerin listesi ve ayarları.">
@@ -59,9 +60,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                                 <td class="text-sm break-all max-w-[12rem]">{{ row.email || '—' }}</td>
                                 <td>
                                     @if (row.isActive === true) {
-                                        <span class="text-green-700 dark:text-green-400 text-sm">Aktif</span>
+                                        <app-status-tag label="Aktif" severity="success" />
                                     } @else if (row.isActive === false) {
-                                        <span class="text-muted-color text-sm">Pasif</span>
+                                        <app-status-tag label="Pasif" severity="secondary" />
                                     } @else {
                                         <span class="text-muted-color text-sm">—</span>
                                     }
@@ -83,9 +84,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                             <div class="text-sm text-muted-color mb-1 break-all">E-posta: {{ row.email || '—' }}</div>
                             <div class="text-sm mb-3">
                                 @if (row.isActive === true) {
-                                    <span class="text-green-700 dark:text-green-400">Aktif</span>
+                                    <app-status-tag label="Aktif" severity="success" />
                                 } @else if (row.isActive === false) {
-                                    <span class="text-muted-color">Pasif</span>
+                                    <app-status-tag label="Pasif" severity="secondary" />
                                 } @else {
                                     <span class="text-muted-color">—</span>
                                 }
