@@ -14,6 +14,7 @@ import { petGenderLabel } from '@/app/entities/pet/utils/pet-status.utils';
 import { parseAppointmentStatusRawToEnum } from '@/app/entities/appointment/utils/appointment-status.utils';
 import { upcomingScheduledAppointmentsLinkQuery } from '@/app/entities/appointment/utils/appointments-list-link.utils';
 import { canOpenVaccinationEdit } from '@/app/entities/vaccination/utils/vaccination-access.utils';
+import { formatVitalNumber, formatVitalReading } from '@/app/entities/vital-measurement/utils/vital-measurement-rules';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalDateTimeDisplay, parseUtcApiInstantIsoString, toIstanbulDateInputValue } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
@@ -68,7 +69,7 @@ export function petAgeLabel(birthDate: string | null | undefined, now: Date = ne
 export function petIdentityParts(pet: PetDetailVm, measuredWeightKg: number | null, now: Date = new Date()): string[] {
     const filled = (v: string | null | undefined): v is string => !!v && !!v.trim() && v.trim() !== '—';
     const gender = petGenderLabel(pet.gender);
-    const weight = measuredWeightKg !== null ? String(measuredWeightKg) : pet.weight;
+    const weight = measuredWeightKg !== null ? formatVitalNumber('weightKg', measuredWeightKg) : pet.weight;
 
     return [
         pet.speciesName,
@@ -95,9 +96,9 @@ export function nextScheduledAppointment<T extends Pick<PetHistoryAppointmentIte
 /** Son muayenenin vital satırı (kilo ayrı gösterilir); hiç ölçüm yoksa `null`. Birimler muayene detayıyla aynı. */
 export function examinationVitalsLine(e: Pick<ExaminationDetailVm, 'temperatureC' | 'heartRateBpm' | 'respiratoryRatePerMin'>): string | null {
     const parts = [
-        e.temperatureC !== null ? `${e.temperatureC} °C` : null,
-        e.heartRateBpm !== null ? `${e.heartRateBpm} atım/dk` : null,
-        e.respiratoryRatePerMin !== null ? `${e.respiratoryRatePerMin} soluk/dk` : null
+        e.temperatureC !== null ? formatVitalReading('temperatureC', e.temperatureC) : null,
+        e.heartRateBpm !== null ? formatVitalReading('heartRateBpm', e.heartRateBpm) : null,
+        e.respiratoryRatePerMin !== null ? formatVitalReading('respiratoryRatePerMin', e.respiratoryRatePerMin) : null
     ].filter((p): p is string => p !== null);
 
     return parts.length ? parts.join(' · ') : null;

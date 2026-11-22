@@ -11,6 +11,7 @@ import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatm
 import { TreatmentsService } from '@/app/entities/treatment/services/treatments.service';
 import type { VaccinationListItemVm } from '@/app/entities/vaccination/models/vaccination-vm.model';
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
+import { formatVitalReading } from '@/app/entities/vital-measurement/utils/vital-measurement-rules';
 import { DetailRelatedSummariesService } from '@/app/entities/patient/services/detail-related-summaries.service';
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
@@ -57,7 +58,7 @@ interface OverdueVaccinations {
                         @switch (summary()?.state) {
                             @case ('ok') {
                                 @if (weight(); as w) {
-                                    <span class="font-medium">{{ w.weightKg }} kg</span>
+                                    <span class="font-medium">{{ vital('weightKg', w.weightKg) }}</span>
                                     <span class="text-muted-color">
                                         @if (w.source === 'examination') {
                                             · {{ w.measuredAtUtc | trDate }}
@@ -182,6 +183,7 @@ export class ExaminationPatientContextComponent {
     private readonly auth = inject(AuthService);
 
     readonly petId = input<string | null>(null);
+    protected readonly vital = formatVitalReading;
     /** Son muayeneler listesinden çıkarılacak açık muayene. */
     readonly excludeExaminationId = input<string | null>(null);
 

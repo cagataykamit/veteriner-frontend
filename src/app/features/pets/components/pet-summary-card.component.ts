@@ -6,6 +6,7 @@ import type { ExaminationDetailVm } from '@/app/entities/examination/models/exam
 import type { PetSummaryVm } from '@/app/entities/pet/models/pet-summary-vm.model';
 import { examinationAssessmentText, examinationVitalsLine, type PetCardSection } from '@/app/entities/patient/utils/pet-card.utils';
 import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
+import { formatVitalReading } from '@/app/entities/vital-measurement/utils/vital-measurement-rules';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { TrDatePipe, TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { DETAIL_TILE_GRID_CLASS } from '@/app/shared/ui/detail.classes';
@@ -55,7 +56,7 @@ const FOLLOW_UP_LIMIT = 3;
                         <dt>Son kilo (muayeneden)</dt>
                         <dd>
                             @if (s.latestWeight.data; as w) {
-                                <span class="font-semibold">{{ w.weightKg }} kg</span>
+                                <span class="font-semibold">{{ vital('weightKg', w.weightKg) }}</span>
                                 <span class="text-muted-color text-sm"> · {{ w.measuredAtUtc | trDateTime }}</span>
                                 @if (w.examinationId) {
                                     <a [routerLink]="['/panel/examinations', w.examinationId]" class="text-primary no-underline text-sm ml-2 touch:touch-hit">Muayene →</a>
@@ -66,7 +67,7 @@ const FOLLOW_UP_LIMIT = 3;
                                 <ng-container *ngTemplateOutlet="notOk; context: { $implicit: s.latestWeight.state, label: 'Kilo bilgisi' }" />
                             }
                             @if (s.profileWeightKg !== null) {
-                                <div class="text-muted-color text-sm" data-testid="profile-weight">Profil kilosu: {{ s.profileWeightKg }} kg (tarihsiz)</div>
+                                <div class="text-muted-color text-sm" data-testid="profile-weight">Profil kilosu: {{ vital('weightKg', s.profileWeightKg) }} (tarihsiz)</div>
                             }
                         </dd>
                     </div>
@@ -214,6 +215,7 @@ const FOLLOW_UP_LIMIT = 3;
     `
 })
 export class PetSummaryCardComponent {
+    protected readonly vital = formatVitalReading;
     readonly summary = input<PetSummaryVm | null>(null);
     readonly loading = input(false);
     /** Özet ucunun tamamı başarısız olduysa mesaj (bölüm bazlı `Unavailable` ayrıdır). */

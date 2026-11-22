@@ -15,6 +15,7 @@ import type {
 import type { PetUpsertFormValue } from '@/app/entities/pet/forms/pet-upsert-form.model';
 import type { CreatePetRequest } from '@/app/entities/pet/models/pet-create.model';
 import { parseDecimalFormInput } from '@/app/shared/utils/decimal-form.utils';
+import { formatVitalNumber } from '@/app/entities/vital-measurement/utils/vital-measurement-rules';
 import type { PetsListQuery } from '@/app/entities/pet/models/pet-query.model';
 import type {
     PetDetailVm,
@@ -405,7 +406,7 @@ export function mapCreatePetToApiBody(req: CreatePetRequest): PetCreateRequestDt
 
 export function mapPetListItemDtoToVm(dto: PetListItemDto): PetListItemVm {
     const weightStr =
-        dto.weight != null && !Number.isNaN(Number(dto.weight)) ? String(dto.weight) : EM;
+        dto.weight != null && !Number.isNaN(Number(dto.weight)) ? formatVitalNumber('weightKg', Number(dto.weight)) : EM;
 
     return {
         id: dto.id,
@@ -468,7 +469,7 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
     const ap = dto.appointmentsSummary;
 
     const weightStr =
-        dto.weight != null && !Number.isNaN(Number(dto.weight)) ? String(dto.weight) : EM;
+        dto.weight != null && !Number.isNaN(Number(dto.weight)) ? formatVitalNumber('weightKg', Number(dto.weight)) : EM;
 
     return {
         petAlerts,

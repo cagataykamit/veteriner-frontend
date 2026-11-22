@@ -1,6 +1,7 @@
 import { Component, inject, input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import type { ImportedClinicalRecordDto } from '@/app/entities/imported-history/models/imported-history.model';
 import { ImportedHistoryService } from '@/app/entities/imported-history/services/imported-history.service';
+import { formatVitalReading } from '@/app/entities/vital-measurement/utils/vital-measurement-rules';
 import { formatImportedDate, importedRecordFields, importedRecordSummary, importedRecordTypeLabel } from '@/app/entities/imported-history/utils/imported-history.utils';
 
 const PAGE_SIZE = 10;
@@ -50,13 +51,13 @@ const PAGE_SIZE = 10;
                                             <dt class="text-muted-color">Ölçümler</dt>
                                             <dd class="m-0">
                                                 @if (r.weightKg !== null) {
-                                                    <span>Kilo {{ r.weightKg }} kg</span>
+                                                    <span>Kilo {{ vital('weightKg', r.weightKg) }}</span>
                                                 }
                                                 @if (r.weightKg !== null && r.temperatureC !== null) {
                                                     <span> · </span>
                                                 }
                                                 @if (r.temperatureC !== null) {
-                                                    <span>Ateş {{ r.temperatureC }} °C</span>
+                                                    <span>Ateş {{ vital('temperatureC', r.temperatureC) }}</span>
                                                 }
                                             </dd>
                                         </div>
@@ -80,6 +81,7 @@ const PAGE_SIZE = 10;
 })
 export class PetImportedRecordsSectionComponent implements OnInit {
     readonly petId = input.required<string>();
+    protected readonly vital = formatVitalReading;
 
     private readonly service = inject(ImportedHistoryService);
 
