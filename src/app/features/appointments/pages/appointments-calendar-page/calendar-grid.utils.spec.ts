@@ -30,6 +30,10 @@ const item = (id: string, hm: string, duration: number, extra: Partial<Appointme
         reasonName: null,
         notes: null,
         state: 'DueToday',
+        roomResourceId: null,
+        roomResourceName: null,
+        equipmentResourceId: null,
+        equipmentResourceName: null,
         ...extra
     };
 };

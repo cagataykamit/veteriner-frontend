@@ -479,6 +479,16 @@ export const ApiEndpoints = {
         deactivate: (clinicId: string, reasonId: string) =>
             `/api/v1/clinics/${encodeURIComponent(clinicId)}/appointment-reasons/${encodeURIComponent(reasonId)}/deactivate`
     },
+    /** Oda ve cihazlar (ADR-053; Veteriner `docs/APPOINTMENT_RESOURCES_API_CONTRACT.md` §1): GET randevu planlama yetkisi, yazma `Clinics.Update`. */
+    appointmentResources: {
+        list: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/appointment-resources`,
+        byId: (clinicId: string, resourceId: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/appointment-resources/${encodeURIComponent(resourceId)}`,
+        activate: (clinicId: string, resourceId: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/appointment-resources/${encodeURIComponent(resourceId)}/activate`,
+        deactivate: (clinicId: string, resourceId: string) =>
+            `/api/v1/clinics/${encodeURIComponent(clinicId)}/appointment-resources/${encodeURIComponent(resourceId)}/deactivate`
+    },
     /** Klinik web sitesi yönetimi (Veteriner `docs/CLINIC_SITE_API_CONTRACT.md` §2, ADR-045). */
     clinicSite: {
         root: (clinicId: string) => `/api/v1/clinics/${encodeURIComponent(clinicId)}/site`,

@@ -29,6 +29,11 @@ export interface AppointmentCalendarItemVm {
     notes: string | null;
     /** Takvim durumu (sözleşme §6.1, §8.3): renk bu alandan; iptal ve gelmedi randevuda `null`. */
     state: CalendarItemState | null;
+    /** Oda ve cihaz (ADR-053); yoksa `null`. Takvimin kaynak görünümü sütunları bu kimliklerden çizer. */
+    roomResourceId: string | null;
+    roomResourceName: string | null;
+    equipmentResourceId: string | null;
+    equipmentResourceName: string | null;
 }
 
 export interface AppointmentCalendarDayGroupVm {

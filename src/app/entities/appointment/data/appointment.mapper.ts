@@ -356,6 +356,8 @@ export function mapAppointmentDetailDtoToVm(dto: AppointmentDetailDto): Appointm
         updatedAtUtc: dto.updatedAtUtc ?? null,
         reasonId: dto.reasonId?.trim() || null,
         veterinarianUserId: dto.veterinarianUserId?.trim() || null,
+        roomResourceId: dto.roomResourceId?.trim() || null,
+        equipmentResourceId: dto.equipmentResourceId?.trim() || null,
         ownerConfirmedAtUtc: dto.ownerConfirmedAtUtc?.trim() || null
     };
 }
@@ -380,7 +382,9 @@ export function mapAppointmentDetailDtoToEditVm(dto: AppointmentDetailDto): Appo
         status: readAppointmentStatusEnumFromDto(dto),
         notes: canonicalNotesDetail(dto),
         reasonId: dto.reasonId?.trim() || null,
-        veterinarianUserId: dto.veterinarianUserId?.trim() || null
+        veterinarianUserId: dto.veterinarianUserId?.trim() || null,
+        roomResourceId: dto.roomResourceId?.trim() || null,
+        equipmentResourceId: dto.equipmentResourceId?.trim() || null
     };
 }
 
@@ -394,6 +398,9 @@ export interface AppointmentUpsertFormAdapterInput {
     notes?: string;
     reasonId?: string | null;
     veterinarianUserId?: string | null;
+    /** Oda ve cihaz (ADR-053; APPOINTMENT_RESOURCES_API_CONTRACT.md §2). */
+    roomResourceId?: string | null;
+    equipmentResourceId?: string | null;
 }
 
 export function mapAppointmentUpsertFormToCreateRequest(input: AppointmentUpsertFormAdapterInput): CreateAppointmentRequest {
@@ -406,7 +413,9 @@ export function mapAppointmentUpsertFormToCreateRequest(input: AppointmentUpsert
         status: input.status ?? undefined,
         notes: input.notes?.trim() || undefined,
         reasonId: input.reasonId?.trim() || null,
-        veterinarianUserId: input.veterinarianUserId?.trim() || null
+        veterinarianUserId: input.veterinarianUserId?.trim() || null,
+        roomResourceId: input.roomResourceId?.trim() || null,
+        equipmentResourceId: input.equipmentResourceId?.trim() || null
     };
 }
 
@@ -422,7 +431,9 @@ export function mapCreateAppointmentToApiBody(req: CreateAppointmentRequest): Ap
         ...(statusParsed === null ? {} : { status: statusParsed }),
         notes: req.notes?.trim() ? req.notes.trim() : null,
         reasonId: req.reasonId?.trim() || null,
-        veterinarianUserId: req.veterinarianUserId?.trim() || null
+        veterinarianUserId: req.veterinarianUserId?.trim() || null,
+        roomResourceId: req.roomResourceId?.trim() || null,
+        equipmentResourceId: req.equipmentResourceId?.trim() || null
     };
 
     return clinicId ? { ...base, clinicId } : base;
@@ -445,7 +456,9 @@ export function mapAppointmentUpsertFormToUpdateRequest(id: string, input: Appoi
         status: statusParsed,
         notes: input.notes?.trim() || undefined,
         reasonId: input.reasonId?.trim() || null,
-        veterinarianUserId: input.veterinarianUserId?.trim() || null
+        veterinarianUserId: input.veterinarianUserId?.trim() || null,
+        roomResourceId: input.roomResourceId?.trim() || null,
+        equipmentResourceId: input.equipmentResourceId?.trim() || null
     };
 }
 
@@ -466,7 +479,9 @@ export function mapUpdateAppointmentToApiBody(req: UpdateAppointmentRequest): Ap
         status: statusParsed,
         notes: req.notes?.trim() ? req.notes.trim() : null,
         reasonId: req.reasonId?.trim() || null,
-        veterinarianUserId: req.veterinarianUserId?.trim() || null
+        veterinarianUserId: req.veterinarianUserId?.trim() || null,
+        roomResourceId: req.roomResourceId?.trim() || null,
+        equipmentResourceId: req.equipmentResourceId?.trim() || null
     };
 
     return clinicId ? { ...base, clinicId } : base;

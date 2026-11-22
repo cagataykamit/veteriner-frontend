@@ -14,6 +14,8 @@ import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { AppointmentReasonsService, OnlineBookingService } from '@/app/entities/online-booking/services/online-booking.service';
 import { ReportPreferencesService } from '@/app/entities/report-preference/services/report-preferences.service';
 import { AppointmentsCalendarPageComponent } from './appointments-calendar-page.component';
+import type { AppointmentResourceVm } from '@/app/entities/appointment-resource/models/appointment-resource.model';
+import { AppointmentResourcesService } from '@/app/entities/appointment-resource/services/appointment-resources.service';
 
 /** İstanbul 16.11.2026 (pazartesi) hh:mm. */
 const at = (hm: string, day = 16): string => {
@@ -45,6 +47,10 @@ const appt = (id: string, hm: string, vet: string | null, extra: Partial<Appoint
     reasonName: null,
     notes: null,
     state: 'DueToday',
+    roomResourceId: null,
+    roomResourceName: null,
+    equipmentResourceId: null,
+    equipmentResourceName: null,
     ...extra
 });
 
@@ -80,6 +86,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
     let myClinics: { id: string; name: string }[];
     let selectClinic: Mock;
     let listSavedFilters: Mock;
+    let resources: AppointmentResourceVm[];
 
     beforeEach(() => {
         claims = new Set([APPOINTMENTS_CREATE_CLAIM]);
@@ -87,6 +94,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
         // Başarıda sayfa yeniden yüklenir; testte yanıt gelmez.
         selectClinic = vi.fn().mockReturnValue(NEVER);
         todayVisits = [];
+        resources = [];
         localStorage.removeItem('vetinity.calendar.filters');
         localStorage.removeItem('vetinity.calendar.dayVets');
     });
@@ -122,6 +130,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
                     }
                 },
                 { provide: AppointmentReasonsService, useValue: { list: () => of([]) } },
+                { provide: AppointmentResourcesService, useValue: { list: () => of(resources) } },
                 { provide: OnlineBookingService, useValue: { availability: () => of([]) } },
                 { provide: VaccinationsService, useValue: { getCalendarVaccinations, getCalendarSummary: getVaccineSummary } },
                 {
@@ -149,6 +158,47 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
         expect(getCalendarAppointments).toHaveBeenCalledWith(
             expect.objectContaining({ dateFromUtc: '2026-11-15T21:00:00.000Z', dateToUtc: '2026-11-22T21:00:00.000Z', status: undefined, appointmentTypes: [], states: [], withoutVeterinarian: false })
         );
+    });
+
+    it('oda ve cihaz: kaynak yoksa sütun seçimi görünmez; seçilince sütunlar kaynaklar, kaynaksız randevu ayrı sütunda, boş hücre odayla yeni randevu', () => {
+        const items = [appt('a', '09:00', 'v1', { roomResourceId: 'r1', roomResourceName: 'Ameliyathane', equipmentResourceId: 'e1' }), appt('b', '10:00', 'v2')];
+
+        expect(create(items).el.querySelector('[data-testid="calendar-column-mode"]')).toBeNull();
+        TestBed.resetTestingModule();
+
+        resources = [
+            { id: 'r1', clinicId: 'c1', name: 'Ameliyathane', type: 'Room', capacity: 1, sortOrder: 0, isActive: true },
+            { id: 'e1', clinicId: 'c1', name: 'Ultrason', type: 'Equipment', capacity: 1, sortOrder: 0, isActive: true },
+            { id: 'r2', clinicId: 'c1', name: 'Eski oda', type: 'Room', capacity: 1, sortOrder: 1, isActive: false }
+        ];
+        const { el, cmp } = create(items, { columns: 'resources' });
+
+        expect(el.querySelector('[data-testid="calendar-column-mode"]')).not.toBeNull();
+        expect(el.querySelector('[data-testid="calendar-vet-bar"]')).toBeNull();
+        expect(cmp.dayColumns().map((c) => c.title)).toEqual(['Ameliyathane', 'Ultrason', 'Oda/cihaz yok']);
+        expect(cmp.dayColumns()[0].blocks.map((b) => b.item.id)).toEqual(['a']);
+        expect(cmp.dayColumns()[1].blocks.map((b) => b.item.id)).toEqual(['a']);
+
+        el.querySelector<HTMLButtonElement>('[aria-label="Yeni randevu Ameliyathane 14:00"]')!.click();
+        expect(navigate).toHaveBeenCalledWith(['/panel/appointments/new'], { queryParams: { date: '2026-11-16', time: '14:00', room: 'r1' } });
+
+        cmp.changeColumnMode('vets');
+        expect(navigate).toHaveBeenCalledWith(['/panel/appointments/calendar'], { queryParams: expect.objectContaining({ columns: undefined }) });
+    });
+
+    it('oda ve cihaz: kapasitesi 1 olan kaynakta üst üste binen randevular çakışma; kapasite 2 iken değil', () => {
+        resources = [
+            { id: 'r1', clinicId: 'c1', name: 'Ameliyathane', type: 'Room', capacity: 1, sortOrder: 0, isActive: true },
+            { id: 'r2', clinicId: 'c1', name: 'Serum', type: 'Room', capacity: 2, sortOrder: 1, isActive: true }
+        ];
+        const { cmp } = create([
+            appt('a', '14:00', 'v1', { roomResourceId: 'r1' }),
+            appt('b', '14:15', 'v2', { roomResourceId: 'r1' }),
+            appt('c', '15:00', 'v1', { roomResourceId: 'r2' }),
+            appt('d', '15:15', 'v2', { roomResourceId: 'r2' })
+        ]);
+
+        expect([...cmp.conflicts()].sort()).toEqual(['a', 'b']);
     });
 
     it('aynı hekimde üst üste binen randevular çakışma olarak işaretlenir; farklı hekimler işaretlenmez', () => {

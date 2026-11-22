@@ -24,7 +24,9 @@ const APPT: AppointmentEditVm = {
     status: 3,
     notes: 'Kontrol',
     reasonId: 'r1',
-    veterinarianUserId: 'v1'
+    veterinarianUserId: 'v1',
+    roomResourceId: 'room1',
+    equipmentResourceId: null
 };
 
 describe('AppointmentEditPageComponent - durum salt okunur', () => {
@@ -76,7 +78,7 @@ describe('AppointmentEditPageComponent - durum salt okunur', () => {
         expect(payload.durationMinutes).toBe(30);
     });
 
-    it('kaydette mevcut neden ve hekim korunur (PUT tam güncelleme; boş gönderilirse sunucuda silinir)', () => {
+    it('kaydette mevcut neden, hekim ve oda korunur (PUT tam güncelleme; boş gönderilirse sunucuda silinir)', () => {
         const fixture = create();
 
         fixture.componentInstance.onSubmit();
@@ -85,5 +87,7 @@ describe('AppointmentEditPageComponent - durum salt okunur', () => {
 
         expect(payload.reasonId).toBe('r1');
         expect(payload.veterinarianUserId).toBe('v1');
+        expect(payload.roomResourceId).toBe('room1');
+        expect(payload.equipmentResourceId).toBeNull();
     });
 });
