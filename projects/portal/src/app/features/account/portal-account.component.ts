@@ -7,12 +7,13 @@ import { PortalSessionService } from '@portal/app/core/auth/portal-session.servi
 import { portalErrorMessage } from '@portal/app/core/errors/portal-errors';
 import { PortalNotificationPreferencesComponent } from '@portal/app/features/notifications/portal-notification-preferences.component';
 import { PortalAppLockSetting } from './portal-app-lock-setting.component';
+import { PortalThemeSetting } from './portal-theme-setting.component';
 
-/** Hesabım: oturum bilgisi, klinik değiştirme, bildirim tercihleri (§10), uygulama kilidi (yalnız mobil uygulama), veri talebine geçiş (§11), çıkış, tüm cihazlardan çıkış (sözleşme §5.7) ve hesap silmeye geçiş (§5.10). */
+/** Hesabım: oturum bilgisi, klinik değiştirme, bildirim tercihleri (§10), görünüm (açık/koyu tema), uygulama kilidi (yalnız mobil uygulama), veri talebine geçiş (§11), çıkış, tüm cihazlardan çıkış (sözleşme §5.7) ve hesap silmeye geçiş (§5.10). */
 @Component({
     selector: 'portal-account',
     standalone: true,
-    imports: [RouterLink, ButtonModule, MessageModule, PortalNotificationPreferencesComponent, PortalAppLockSetting],
+    imports: [RouterLink, ButtonModule, MessageModule, PortalNotificationPreferencesComponent, PortalThemeSetting, PortalAppLockSetting],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="portal-stack">
@@ -30,6 +31,8 @@ import { PortalAppLockSetting } from './portal-app-lock-setting.component';
             }
 
             <portal-notification-preferences />
+
+            <portal-theme-setting />
 
             <portal-app-lock-setting />
 

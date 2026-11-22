@@ -25,7 +25,7 @@ import { hasCredit, hasOutstanding, PortalBalance, PortalBalanceApi, PortalPayme
             font-size: 1.75rem;
             font-weight: 700;
             line-height: 1.2;
-            color: var(--vetinity-navy);
+            color: var(--portal-strong, var(--vetinity-navy));
             margin: 0;
         }
     `

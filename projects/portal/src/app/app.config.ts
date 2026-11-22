@@ -20,7 +20,7 @@ export const portalAppConfig: ApplicationConfig = {
         provideRouter(portalRoutes, withComponentInputBinding(), withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
         { provide: PORTAL_API_BASE_URL, useValue: environment.portalApiBaseUrl },
         provideHttpClient(withFetch(), withInterceptors([portalAuthInterceptor])),
-        // Panelle aynı tema (Aura). Koyu tema Dilim 1'de yok: seçici hiç eklenmez, işletim sistemi teması uygulanmaz.
+        // Panelle aynı tema (Aura). Koyu tema `portal-dark` sınıfıyla (`core/theme/portal-theme.ts`): cihaz teması ya da Hesabım > Görünüm.
         providePrimeNG({ theme: { preset: Aura, options: { darkModeSelector: '.portal-dark' } }, license: PRIMEUI_LICENSE || undefined }),
         // Yalnız statik varlıklar önbelleğe alınır (`ngsw-config.json`); API yanıtları önbelleklenmez. Mobil pakette kayıtlanmaz.
         provideServiceWorker('ngsw-worker.js', {

@@ -39,7 +39,7 @@ interface RequestsView {
             padding: 0.375rem 0;
             border-radius: 0.75rem;
             background: var(--vetinity-bg-soft);
-            color: var(--vetinity-navy);
+            color: var(--portal-strong, var(--vetinity-navy));
             line-height: 1.15;
         }
         .req-date strong {
@@ -49,8 +49,8 @@ interface RequestsView {
             font-size: 0.75rem;
         }
         .req-date--muted {
-            background: #eef2f6;
-            color: #475569;
+            background: var(--portal-muted-bg, #eef2f6);
+            color: var(--portal-text-muted);
         }
         .req-body {
             flex: 1 1 auto;
@@ -66,13 +66,13 @@ interface RequestsView {
         .req-cancel {
             align-self: flex-start;
             padding-left: 0;
-            color: #b42318;
+            color: var(--portal-danger, #b42318);
         }
         .req-confirm {
             gap: 0.75rem;
             padding: 0.75rem;
             border-radius: 0.625rem;
-            background: #fff5f2;
+            background: var(--portal-danger-soft-bg, #fff5f2);
         }
         .req-confirm p {
             margin: 0;
