@@ -145,11 +145,11 @@ describe('EndOfDayPageComponent', () => {
     it('özet kartları, açık işler ve dökümdeki iptal/düzeltme işaretleri görünür', () => {
         const text = create().nativeElement.textContent as string;
 
-        for (const label of ['Brüt ücret', 'İptal edilen ücret', 'Net ücret', 'İptal edilen tahsilat', 'Net tahsilat', 'Doğrudan satış tahsilatı', 'Ücretlenmemiş ziyaret', 'Bekleyen lab', 'Borçlu çıkan', 'Tamamlanmamış geliş']) {
+        for (const label of ['Brüt ücret', 'İptal edilen ücret', 'Net ücret', 'İptal edilen tahsilat', 'Net tahsilat', 'Doğrudan satış tahsilatı', 'Ücretlenmemiş geliş', 'Bekleyen lab', 'Borçlu çıkan', 'Tamamlanmamış geliş']) {
             expect(text).toContain(label);
         }
 
-        expect(text).toContain('1 ziyaret');
+        expect(text).toContain('1 geliş');
         expect(text).toContain('Tahsilat iptali');
         expect(text).toContain('Gerekçe: Hatalı giriş');
         expect(text).toContain('Ayşe Demir');
@@ -167,7 +167,7 @@ describe('EndOfDayPageComponent', () => {
         openItems = { unchargedVisitCount: null, outstandingVisitCount: null, outstandingAmount: null, awaitingLabCount: 0, incompleteVisitCount: 1 };
         const text = create().nativeElement.textContent as string;
 
-        expect(text).not.toContain('Ücretlenmemiş ziyaret');
+        expect(text).not.toContain('Ücretlenmemiş geliş');
         expect(text).not.toContain('Borçlu çıkan');
         expect(text).toContain('Bekleyen lab');
         expect(text).toContain('Tamamlanmamış geliş');

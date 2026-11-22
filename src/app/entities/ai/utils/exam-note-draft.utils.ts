@@ -11,7 +11,7 @@ export type ExamNoteFieldKey = ExamNoteTextKey | 'vitals';
 
 /** Formdaki sırayla; etiketler muayene formundakilerle aynı. */
 export const EXAM_NOTE_TEXT_FIELDS: ReadonlyArray<{ readonly key: ExamNoteTextKey; readonly label: string; readonly rows: number }> = [
-    { key: 'visitReason', label: 'Ziyaret sebebi / şikâyet', rows: 2 },
+    { key: 'visitReason', label: 'Geliş nedeni / şikâyet', rows: 2 },
     { key: 'anamnesis', label: 'Anamnez', rows: 3 },
     { key: 'findings', label: 'Klinik bulgular', rows: 2 },
     { key: 'assessment', label: 'Değerlendirme / tanı', rows: 2 },

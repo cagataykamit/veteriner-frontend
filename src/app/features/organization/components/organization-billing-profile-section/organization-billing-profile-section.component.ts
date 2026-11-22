@@ -35,7 +35,7 @@ const BILLING_PROFILE_HIDDEN_UI_FIELDS = new Set<OrganizationBillingProfileFormF
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card mb-0">
-            <h5 class="mt-0 mb-2">Firma / Fatura Bilgileri</h5>
+            <h5 class="mt-0 mb-2">Firma ve fatura bilgileri</h5>
             <p class="text-sm text-muted-color mt-0 mb-4">Kurum adı Vetinity içinde görünen addır. Aşağıdaki bilgiler fatura ve e-belge süreçleri için kullanılacaktır.</p>
 
             @if (loading()) {

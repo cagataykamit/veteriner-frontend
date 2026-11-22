@@ -345,10 +345,10 @@ export class ProductStocksPageComponent implements OnInit {
         const nm = this.auth.getClinicName()?.trim();
 
         if (nm) {
-            return `Stoklar aktif klinik bağlamına göre listelenir. Aktif klinik: ${nm}.`;
+            return `${nm} kliniğinin stokları gösteriliyor.`;
         }
 
-        return 'Stoklar aktif klinik bağlamına göre listelenir.';
+        return 'Seçili kliniğin stokları gösteriliyor.';
     }
 
     emptyListMessage(): string {

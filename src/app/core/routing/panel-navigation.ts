@@ -177,21 +177,21 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
                 description: 'Dönemin cirosu, tahsilatı ve iş hacmi; önceki dönemle karşılaştırma.'
             },
             {
-                label: 'Şubeler özeti',
+                label: 'Klinikler özeti',
                 icon: 'pi pi-fw pi-sitemap',
                 route: `${REPORTS_ROUTE}/clinics-overview`,
                 // İşletme performansıyla aynı yönetici düzeyi koşulu; paket kilidi (Kurumsal) sayfada gösterilir.
                 claims: [VISITS_CORRECT_CLAIM],
                 planFeature: 'ClinicsOverview',
-                description: 'Tüm şubelerin cirosu, tahsilatı, açık alacağı ve iş yükü yan yana.'
+                description: 'Tüm kliniklerin cirosu, tahsilatı, açık alacağı ve iş yükü yan yana.'
             }
         ]
     },
     {
-        label: 'Randevu ve ziyaret',
+        label: 'Randevu ve geliş',
         entries: [
             {
-                label: 'Randevu Raporu',
+                label: 'Randevu hareketleri',
                 icon: 'pi pi-fw pi-calendar-plus',
                 route: `${REPORTS_ROUTE}/appointments`,
                 claims: [APPOINTMENTS_READ_CLAIM],
@@ -203,14 +203,14 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
         label: 'Klinik',
         entries: [
             {
-                label: 'Muayene Raporu',
+                label: 'Muayene raporu',
                 icon: 'pi pi-fw pi-file-edit',
                 route: `${REPORTS_ROUTE}/examinations`,
                 claims: [EXAMINATIONS_READ_CLAIM],
                 description: 'Yapılan muayeneler.'
             },
             {
-                label: 'Aşı Raporu',
+                label: 'Aşı raporu',
                 icon: 'pi pi-fw pi-shield',
                 route: `${REPORTS_ROUTE}/vaccinations`,
                 claims: [VACCINATIONS_READ_CLAIM],
@@ -237,14 +237,14 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
                 description: 'Kasa hareketleri, kasaya giriş/çıkış, kasalar arası aktarım ve kasa tanımları.'
             },
             {
-                label: 'Ödeme Raporu',
+                label: 'Ödeme hareketleri',
                 icon: 'pi pi-fw pi-file-export',
                 route: `${REPORTS_ROUTE}/payments`,
                 claims: [PAYMENTS_READ_CLAIM],
                 description: 'Tahsilatlar ve ödeme yöntemine göre toplam.'
             },
             {
-                label: 'Borç Raporu',
+                label: 'Borç raporu',
                 icon: 'pi pi-fw pi-wallet',
                 route: `${REPORTS_ROUTE}/outstanding-balances`,
                 claims: [CHARGES_READ_CLAIM],
@@ -594,7 +594,7 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 description: 'Portalı klinik için açıp kapatma ve hasta sahibine giden bildirimlerin kanalları.'
             },
             {
-                label: 'Organizasyon Ayarları',
+                label: 'Kurum ayarları',
                 icon: 'pi pi-fw pi-building',
                 route: '/panel/settings/organization',
                 // Kurum ve fatura bilgisi işletme yöneticisinde; klinik yöneticisi davet ve üye yönetir ama bu sayfayı değiştiremez.
@@ -611,7 +611,7 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
         label: 'İletişim',
         entries: [
             { label: 'Hatırlatmalar', icon: 'pi pi-fw pi-bell', route: '/panel/settings/reminders', claims: [REMINDERS_READ_CLAIM], description: 'Hatırlatma ayarları.' },
-            { label: 'Hatırlatma Geçmişi', icon: 'pi pi-fw pi-history', route: '/panel/settings/reminders/logs', claims: [REMINDERS_READ_CLAIM], description: 'Gönderilen hatırlatmaların kaydı.' }
+            { label: 'Hatırlatma geçmişi', icon: 'pi pi-fw pi-history', route: '/panel/settings/reminders/logs', claims: [REMINDERS_READ_CLAIM], description: 'Gönderilen hatırlatmaların kaydı.' }
         ]
     },
     {

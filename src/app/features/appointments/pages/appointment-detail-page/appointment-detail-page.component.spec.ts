@@ -63,7 +63,7 @@ describe('AppointmentDetailPageComponent - Muayene oluştur (ADR-017 K7)', () =>
         return fixture;
     };
 
-    const examButton = (el: HTMLElement) => Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Muayene oluştur'));
+    const examButton = (el: HTMLElement) => Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.includes('Muayeneye al'));
 
     beforeEach(() => {
         appt = APPT;

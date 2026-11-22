@@ -561,8 +561,8 @@ describe('TodayPageComponent', () => {
             });
             const strip = (f.nativeElement as HTMLElement).querySelector('[data-testid="open-items-strip"]')!.textContent ?? '';
 
-            expect(strip).toContain('Ücret yok: 3 ziyaret');
-            expect(strip).toContain('Ödeme bekliyor: 2 ziyaret');
+            expect(strip).toContain('Ücret yok: 3 geliş');
+            expect(strip).toContain('Ödeme bekliyor: 2 geliş');
             expect(strip).toContain('Önceki günden açık geliş: 1');
             expect(strip).not.toContain('Lab bekliyor');
 
@@ -572,7 +572,7 @@ describe('TodayPageComponent', () => {
             // Liste sayfası olmayan iki sayı da tıklanır: ziyaret listesini açan çip (OPEN_ITEMS_API_CONTRACT §10).
             const strip$ = (f.nativeElement as HTMLElement).querySelector('[data-testid="open-items-strip"]')!;
 
-            expect(strip$.querySelector('button[data-testid="open-items-chip-Uncharged"]')?.textContent).toContain('Ücret yok: 3 ziyaret');
+            expect(strip$.querySelector('button[data-testid="open-items-chip-Uncharged"]')?.textContent).toContain('Ücret yok: 3 geliş');
             expect(strip$.querySelector('button[data-testid="open-items-chip-Incomplete"]')?.textContent).toContain('Önceki günden açık geliş: 1');
         });
 

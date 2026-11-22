@@ -143,7 +143,7 @@ describe('report-hub.rules (ADR-052, tasarım B)', () => {
         const hits = (q: string) => reports.filter((r) => reportMatches(r, q)).map((r) => r.label);
 
         expect(hits('narkotik')).toEqual(['Narkotik ve Psikotropik Defteri']);
-        expect(hits('borc')).toEqual(['Borç Raporu']);
+        expect(hits('borc')).toEqual(['Borç raporu']);
         expect(hits('   ')).toEqual([]);
     });
 });

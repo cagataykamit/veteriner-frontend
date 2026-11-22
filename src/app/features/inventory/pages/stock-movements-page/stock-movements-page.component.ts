@@ -110,10 +110,10 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                                 (ngModelChange)="scheduleApply()"
                             />
                         </app-filter-field>
-                        <app-filter-field label="Başlangıç (UTC tarih)" labelFor="smFrom" [active]="isFromActive()" width="date">
+                        <app-filter-field label="Başlangıç" labelFor="smFrom" [active]="isFromActive()" width="date">
                             <app-date-input inputId="smFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" (ngModelChange)="scheduleApply()" />
                         </app-filter-field>
-                        <app-filter-field label="Bitiş (UTC tarih)" labelFor="smTo" [active]="isToActive()" width="date">
+                        <app-filter-field label="Bitiş" labelFor="smTo" [active]="isToActive()" width="date">
                             <app-date-input inputId="smTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" (ngModelChange)="scheduleApply()" />
                         </app-filter-field>
                     </div>

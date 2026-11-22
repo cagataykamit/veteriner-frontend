@@ -674,7 +674,7 @@
 }
 <!-- Ziyaret kapanınca e-Belge önerisi: belge kesme izni yeter (sekreterde Düzelt izni yok). -->
 @if (canIssueDocument) {
-    <app-e-document-issue-dialog [(visible)]="documentOpen" [source]="documentSource()" header="Ziyaret kapandı: e-Belge kes" />
+    <app-e-document-issue-dialog [(visible)]="documentOpen" [source]="documentSource()" header="Geliş kapandı: e-Belge kes" />
 }
 @if (canCheckout) {
     <p-drawer

@@ -118,10 +118,10 @@ type ProductStockMovementsListState = {
                                     (ngModelChange)="scheduleApply()"
                                 />
                             </app-filter-field>
-                            <app-filter-field label="Başlangıç (UTC tarih)" labelFor="psmFrom" [active]="isFromActive()" width="date">
+                            <app-filter-field label="Başlangıç" labelFor="psmFrom" [active]="isFromActive()" width="date">
                                 <app-date-input inputId="psmFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </app-filter-field>
-                            <app-filter-field label="Bitiş (UTC tarih)" labelFor="psmTo" [active]="isToActive()" width="date">
+                            <app-filter-field label="Bitiş" labelFor="psmTo" [active]="isToActive()" width="date">
                                 <app-date-input inputId="psmTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" (ngModelChange)="scheduleApply()" />
                             </app-filter-field>
                         </div>

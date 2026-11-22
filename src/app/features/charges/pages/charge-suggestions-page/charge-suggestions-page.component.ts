@@ -236,7 +236,7 @@ export class ChargeSuggestionsPageComponent implements OnInit {
         const s = this.scope();
 
         if (s.visitId) {
-            return 'Seçili ziyaretin kalemleri';
+            return 'Seçili gelişin kalemleri';
         }
 
         if (s.examinationId) {

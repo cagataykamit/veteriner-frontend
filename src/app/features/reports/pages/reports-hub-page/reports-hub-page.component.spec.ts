@@ -132,26 +132,26 @@ describe('ReportsHubPageComponent — tasarım B (ADR-052) ve favoriler (REPORT-
         const root = el(render());
 
         expect(root.querySelector('[data-testid="hub-load-error"]')).not.toBeNull();
-        expect(root.textContent).toContain('Ödeme Raporu');
+        expect(root.textContent).toContain('Ödeme hareketleri');
         expect(root.querySelector('[data-testid="figure-value"]')).toBeNull();
     });
 
     it('favoriler en üstte, eklenme sırasıyla; izni olmayan rapor favoride olsa da görünmez', () => {
         const root = el(render(['payments', 'registers.vaccines', 'appointments']));
 
-        expect(favoriteLabels(root)).toEqual(['Ödeme Raporu', 'Randevu Raporu']);
-        expect(starFor(root, 'Ödeme Raporu').getAttribute('aria-pressed')).toBe('true');
+        expect(favoriteLabels(root)).toEqual(['Ödeme hareketleri', 'Randevu hareketleri']);
+        expect(starFor(root, 'Ödeme hareketleri').getAttribute('aria-pressed')).toBe('true');
     });
 
     it('yıldız favoriye ekler ve kısayol satırına taşır', () => {
         const fixture = render([]);
 
         expect(favoriteLabels(el(fixture))).toEqual([]);
-        starFor(el(fixture), 'Randevu Raporu').click();
+        starFor(el(fixture), 'Randevu hareketleri').click();
         fixture.detectChanges();
 
         expect(preferences.addFavorite).toHaveBeenCalledWith('appointments');
-        expect(favoriteLabels(el(fixture))).toEqual(['Randevu Raporu']);
+        expect(favoriteLabels(el(fixture))).toEqual(['Randevu hareketleri']);
     });
 
     it('favoriden çıkarma başarısızsa önceki duruma döner ve uyarı gösterir', () => {

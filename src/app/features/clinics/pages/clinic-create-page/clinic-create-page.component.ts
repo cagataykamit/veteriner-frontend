@@ -35,7 +35,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
         <app-page-header
             categoryLink="/panel/settings/clinics"
             categoryLinkLabel="Klinik listesine dön"
-            title="Yeni Klinik"
+            title="Yeni klinik"
             description="Kurumunuza yeni bir klinik kaydı oluşturun. Ad ve şehir zorunludur; iletişim ve profil alanları isteğe bağlıdır."
         />
 

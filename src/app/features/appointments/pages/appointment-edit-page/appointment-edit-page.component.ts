@@ -73,7 +73,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
             </div>
         } @else {
             @if (!embeddedId()) {
-                <app-page-header [categoryLink]="backLink()" [categoryLinkLabel]="backLabel()" title="Randevuyu Düzenle" description="Randevu kaydını güncelleyin." />
+                <app-page-header [categoryLink]="backLink()" [categoryLinkLabel]="backLabel()" title="Randevuyu düzenle" description="Randevu kaydını güncelleyin." />
             }
 
             <div class="card">
@@ -83,7 +83,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                 @if (selectionError()) {
                     <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
                 }
-                <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
+                <p class="text-sm text-muted-color mt-0 mb-4">Aktif klinik: {{ activeClinicLabel() }}</p>
                 <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
                     <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">

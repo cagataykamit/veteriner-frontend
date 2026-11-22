@@ -16,7 +16,7 @@ const FEATURE_TITLES: Readonly<Record<PlanFeatureCode, string>> = {
     AdvancedReports: 'Gelişmiş raporlar',
     VaccinationWizard: 'Otomatik aşı sihirbazı',
     MobileBarcode: 'Kamerayla barkod okutma',
-    ClinicsOverview: 'Şubeler özeti',
+    ClinicsOverview: 'Klinikler özeti',
     CashManagement: 'Kasa yönetimi',
     ExternalApi: 'API erişimi',
     CustomDevelopment: 'Size özel geliştirmeler',

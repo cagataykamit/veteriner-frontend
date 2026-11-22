@@ -74,7 +74,7 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
             <app-page-header categoryLink="/panel/payments" categoryLinkLabel="Ödeme listesine dön" />
 
             <!-- Kimlik kartı: tutar başlık, ödeme zamanı, kanal, müşteri/hasta; sağda Düzenle ve gerekçeli İptal et (salt okunurda gösterilmez; tek eylem için şerit açılmaz); gösterge şeridi (tutar, kanal, zaman, randevu, muayene). -->
-            <app-detail-identity-card icon="pi pi-wallet" [title]="moneyLine(p)" [subtitle]="formatPaidAtUtc(p.paidAtUtc)" [meta]="'Kanal: ' + methodLabel(p.method) + ' · Para birimi: ' + p.currency" ariaLabel="Ödeme kimliği" testId="payment-identity-card">
+            <app-detail-identity-card icon="pi pi-wallet" [title]="moneyLine(p)" [subtitle]="formatPaidAtUtc(p.paidAtUtc)" [meta]="'Yöntem: ' + methodLabel(p.method)" ariaLabel="Ödeme kimliği" testId="payment-identity-card">
                 <app-detail-subject-line [petId]="p.petId" [petName]="p.petName" [clientId]="p.clientId" [clientName]="p.clientName" />
                 <ng-container actions>
                     @if (canUpdatePayment && !ro.mutationBlocked()) {
@@ -100,7 +100,7 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
                     </div>
                 }
                 <div stat>
-                    <dt>Kanal</dt>
+                    <dt>Yöntem</dt>
                     <dd class="font-semibold text-surface-900 dark:text-surface-0">{{ methodLabel(p.method) }}</dd>
                 </div>
                 @if (p.cashRegisterName) {

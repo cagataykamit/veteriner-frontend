@@ -233,7 +233,7 @@ describe('ChargeSuggestionsPageComponent', () => {
         const { harness } = await open(['Charges.Read'], [suggestion()], '/panel/charges/pending?visitId=v1');
 
         expect(service.getPending).toHaveBeenCalledWith(expect.objectContaining({ visitId: 'v1', pageSize: 200 }));
-        expect(text(harness)).toContain('Seçili ziyaretin kalemleri');
+        expect(text(harness)).toContain('Seçili gelişin kalemleri');
     });
 
     it('kalem yoksa boş durum', async () => {

@@ -142,7 +142,7 @@ export class EDocumentSettingsPageComponent implements OnInit {
     readonly ro = inject(TenantReadOnlyContextService);
 
     protected readonly modeOptions: { value: EDocumentAutoIssueMode; label: string; hint: string }[] = [
-        { value: 'Off', label: 'Kapalı', hint: 'Belge elle kesilir; ödeme ekranında ve ziyaret kapanışında öneri gelir.' },
+        { value: 'Off', label: 'Kapalı', hint: 'Belge elle kesilir; ödeme ekranında ve geliş kapanışında öneri gelir.' },
         { value: 'OnPayment', label: 'Ödeme alınınca', hint: 'Ücret tamamen ödendiğinde belge bir dakika içinde kesilir.' },
         { value: 'EndOfDay', label: 'Gün sonunda', hint: 'O gün tamamen ödenen ücretlerin belgeleri gün sonu saatinde kesilir.' }
     ];

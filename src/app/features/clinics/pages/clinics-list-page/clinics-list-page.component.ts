@@ -25,9 +25,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     template: `
         <app-page-header title="Klinikler" description="Kurumunuza kayıtlı kliniklerin listesi ve ayarları.">
             @if (canCreateClinic() && !ro.mutationBlocked()) {
-                <a actions routerLink="/panel/settings/clinics/new" pButton type="button" class="p-button-primary"><i class="pi" [class.pi-plus]="!ro.lockedPlanFeature('MultiClinic')" [class.pi-lock]="ro.lockedPlanFeature('MultiClinic')"></i>Yeni Klinik</a>
+                <a actions routerLink="/panel/settings/clinics/new" pButton type="button" class="p-button-primary"><i class="pi" [class.pi-plus]="!ro.lockedPlanFeature('MultiClinic')" [class.pi-lock]="ro.lockedPlanFeature('MultiClinic')"></i>Yeni klinik</a>
             } @else if (canCreateClinic() && ro.mutationBlocked()) {
-                <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni Klinik (salt okunur)</button>
+                <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni klinik (salt okunur)</button>
             }
         </app-page-header>
 

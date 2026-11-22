@@ -76,7 +76,7 @@ import { TenantRolePipe } from '@/app/shared/pipes/tenant-role.pipe';
                                 }
                             </div>
 
-                            <a pButton severity="secondary" class="shrink-0 w-full sm:w-auto" routerLink="/panel/settings/account/change-password"><i class="p-button-icon pi pi-lock"></i>Şifre Değiştir</a>
+                            <a pButton severity="secondary" class="shrink-0 w-full sm:w-auto" routerLink="/panel/settings/account/change-password"><i class="p-button-icon pi pi-lock"></i>Şifre değiştir</a>
                         </div>
                     </div>
 
@@ -88,7 +88,7 @@ import { TenantRolePipe } from '@/app/shared/pipes/tenant-role.pipe';
                         } @else if (summary(); as s) {
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50/50 dark:bg-surface-800/30 p-4 min-w-0">
-                                    <div class="text-sm text-muted-color mb-1">Organizasyon</div>
+                                    <div class="text-sm text-muted-color mb-1">Kurum</div>
                                     <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">
                                         {{ optionalName(s.tenantName) }}
                                     </div>

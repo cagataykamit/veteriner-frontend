@@ -76,7 +76,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                 <app-error-state [detail]="loadError()!" [showRetry]="petLoadRetryEnabled()" (retry)="reload()" />
             </div>
         } @else {
-            <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" title="Hastayı Düzenle" description="Hasta kaydını güncelleyin." />
+            <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" title="Hastayı düzenle" description="Hasta kaydını güncelleyin." />
 
             <div class="card">
                 @if (ro.mutationBlocked()) {

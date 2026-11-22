@@ -72,7 +72,7 @@ const RECORD_TEXT_SECTIONS: readonly {
     label: string;
     afterVitals: boolean;
 }[] = [
-    { field: 'visitReason', label: 'Şikâyet / ziyaret sebebi', afterVitals: false },
+    { field: 'visitReason', label: 'Şikâyet / geliş nedeni', afterVitals: false },
     { field: 'anamnesis', label: 'Anamnez', afterVitals: false },
     { field: 'findings', label: 'Klinik bulgular', afterVitals: false },
     { field: 'assessment', label: 'Değerlendirme / tanı', afterVitals: true },
@@ -715,12 +715,12 @@ export class ExaminationDetailPageComponent implements OnInit, HasUnsavedChanges
             next: () => {
                 this.completingVisit.set(false);
                 this.openVisit.set(null);
-                this.messages.add({ severity: 'success', summary: 'Ziyaret tamamlandı.', life: 3000 });
+                this.messages.add({ severity: 'success', summary: 'Geliş tamamlandı.', life: 3000 });
                 void this.router.navigate(['/panel/today']);
             },
             error: (e: unknown) => {
                 this.completingVisit.set(false);
-                this.messages.add({ severity: 'error', summary: 'Ziyaret tamamlanamadı.', detail: panelHttpFailureMessage(e, 'Ziyaret tamamlanamadı.'), life: 6000 });
+                this.messages.add({ severity: 'error', summary: 'Geliş tamamlanamadı.', detail: panelHttpFailureMessage(e, 'Ziyaret tamamlanamadı.'), life: 6000 });
             }
         });
     }

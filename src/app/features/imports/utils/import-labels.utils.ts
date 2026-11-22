@@ -396,7 +396,7 @@ const ROLLBACK_REASON_LABELS: Readonly<Record<string, string>> = {
     HasAdministration: 'Aşıya bağlı uygulama kaydı var',
     VaccinationModified: 'Aşı sonradan düzenlenmiş',
     HasAppointments: 'Bağlı randevu var',
-    HasVisits: 'Bağlı geliş (ziyaret) var',
+    HasVisits: 'Bağlı geliş var',
     HasExaminations: 'Bağlı muayene var',
     HasTreatments: 'Bağlı tedavi var',
     HasPrescriptions: 'Bağlı reçete var',

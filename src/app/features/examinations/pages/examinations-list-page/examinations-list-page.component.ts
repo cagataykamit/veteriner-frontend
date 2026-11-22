@@ -114,7 +114,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                         <th>Tarih</th>
                                         <th>Müşteri</th>
                                         <th>Hasta</th>
-                                        <th>Ziyaret sebebi</th>
+                                        <th>Geliş nedeni</th>
                                         <th>Durum</th>
                                         <th style="width: 8rem">İşlemler</th>
                                     </tr>
@@ -184,7 +184,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
                                         </div>
                                     </div>
                                     <div class="text-sm text-muted-color mb-3 min-w-0 break-words">
-                                        <span class="font-medium">Ziyaret sebebi: </span>{{ row.visitReason }}
+                                        <span class="font-medium">Geliş nedeni: </span>{{ row.visitReason }}
                                         @if (row.status) {
                                             <app-status-tag class="ml-2" [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
                                         }

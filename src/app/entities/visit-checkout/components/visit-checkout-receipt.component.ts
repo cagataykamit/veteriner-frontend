@@ -21,7 +21,7 @@ export interface VisitCheckoutReceiptData {
 }
 
 /**
- * Ziyaret ve tahsilat özeti (CHECKOUT-001 K10): satış fişi deseni, A5 yazdırılır, resmî belge değildir. Yazdırmada mevcut `.sale-receipt`
+ * Geliş ve tahsilat özeti (CHECKOUT-001 K10): satış fişi deseni, A5 yazdırılır, resmî belge değildir. Yazdırmada mevcut `.sale-receipt`
  * kuralı kullanılır (`_print.scss`); yeni baskı stili yok.
  */
 @Component({

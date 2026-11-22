@@ -18,7 +18,7 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 
 /**
- * Klinik ayarlarındaki "Randevu Varsayılanları" kartı: varsayılan süre, başlangıç aralığı, çakışma izni ve hatırlatmadaki
+ * Klinik ayarlarındaki "Randevu varsayılanları" kartı: varsayılan süre, başlangıç aralığı, çakışma izni ve hatırlatmadaki
  * "iptal et" bağlantısı (TIER-019), bekleme listesine otomatik teklif (TIER-018; pakette yoksa gizli). Yalnız
  * `Clinics.Update` olan kullanıcıya gösterilir (sayfa koşulu). `reloadKey` değişince yeniden yüklenir.
  */

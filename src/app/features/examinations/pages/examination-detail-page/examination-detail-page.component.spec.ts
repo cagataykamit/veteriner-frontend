@@ -460,7 +460,7 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const record = el.querySelector('[data-testid="exam-record"]')!;
 
         expect(record.querySelector('[data-testid="record-empty-sections"]')?.textContent).toContain('Anamnez, Klinik bulgular, Değerlendirme / tanı, Plan / tedavi planı, Ek notlar');
-        expect(Array.from(record.querySelectorAll('h6')).map((h) => h.textContent?.trim())).toEqual(['Şikâyet / ziyaret sebebi', 'Vital']);
+        expect(Array.from(record.querySelectorAll('h6')).map((h) => h.textContent?.trim())).toEqual(['Şikâyet / geliş nedeni', 'Vital']);
         expect(record.querySelector('[data-testid="vital-row"]')?.textContent).toContain('Ölçülmemiş');
         expect(record.querySelector('app-empty-state')).toBeNull();
     });

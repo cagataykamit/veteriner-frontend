@@ -64,7 +64,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
             @if (selectionError()) {
                 <p class="text-danger mt-0 mb-4" role="alert">{{ selectionError() }}</p>
             }
-            <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
+            <p class="text-sm text-muted-color mt-0 mb-4">Aktif klinik: {{ activeClinicLabel() }}</p>
             @if (copySourceTitle(); as source) {
                 <p class="text-sm text-muted-color mt-0 mb-4" role="status" data-testid="prescription-copy-notice">"{{ source }}" reçetesinden kopyalandı; kopya yalnız aynı hasta için yazılır. Tarih, parti/seri no, HBS bilgisi ve muayene bağı kopyalanmaz. Gözden geçirip kaydedin.</p>
             }

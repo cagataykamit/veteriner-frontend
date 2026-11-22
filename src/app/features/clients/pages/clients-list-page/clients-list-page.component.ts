@@ -94,10 +94,10 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                             >
                                 <ng-template #header>
                                     <tr>
-                                        <th>Ad Soyad</th>
+                                        <th>Ad soyad</th>
                                         <th>Telefon</th>
                                         <th>E-posta</th>
-                                        <th>Kayıt Tarihi</th>
+                                        <th>Kayıt tarihi</th>
                                         <th style="width: 8rem">İşlemler</th>
                                     </tr>
                                 </ng-template>

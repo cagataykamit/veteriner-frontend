@@ -80,7 +80,7 @@ function resolveChangePasswordErrorMessage(err: unknown): string {
         <div class="flex justify-center w-full">
             <div class="w-full max-w-4xl bg-surface-0 dark:bg-surface-900 rounded-2xl shadow-md border border-surface-200 dark:border-surface-700 px-6 py-8 md:px-12 md:py-10">
                 <div class="text-center max-w-2xl mx-auto">
-                    <h1 class="text-surface-900 dark:text-surface-0 text-lg font-semibold m-0">Şifre Değiştir</h1>
+                    <h1 class="text-surface-900 dark:text-surface-0 text-lg font-semibold m-0">Şifre değiştir</h1>
                     <p class="text-muted-color mt-3 mb-0">Hesabınızın giriş şifresini güncelleyin. Oturumunuz açık kalır.</p>
                     <p class="text-muted-color text-sm mt-3 mb-0">
                         {{ passwordPolicyRequirement }}

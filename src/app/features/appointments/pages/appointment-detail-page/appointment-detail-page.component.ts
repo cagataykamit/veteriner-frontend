@@ -139,13 +139,13 @@ import { AppDetailSubjectLineComponent } from '@/app/shared/ui/detail-subject-li
                     }
                     @if (canCreateExamination && a.clientId?.trim() && a.petId?.trim()) {
                         @if (isCancelledForExam(a.status) || isNoShow(a.status)) {
-                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-ban"></i>Muayene oluştur</button>
+                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-ban"></i>Muayeneye al</button>
                         } @else if (ro.mutationBlocked()) {
-                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-lock"></i>Muayene oluştur (salt okunur)</button>
+                            <button pButton type="button" [disabled]="true" class="p-button-primary"><i class="pi pi-lock"></i>Muayeneye al (salt okunur)</button>
                         } @else if (canOpenVisit) {
-                            <button pButton type="button" [class]="showArrive() ? 'p-button-outlined p-button-secondary' : 'p-button-primary'" [disabled]="startingExam()" (click)="startExamination()"><i [class]="startingExam() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>Muayene oluştur</button>
+                            <button pButton type="button" [class]="showArrive() ? 'p-button-outlined p-button-secondary' : 'p-button-primary'" [disabled]="startingExam()" (click)="startExamination()"><i [class]="startingExam() ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"></i>Muayeneye al</button>
                         } @else {
-                            <a [routerLink]="['/panel/examinations/new']" [queryParams]="{ clientId: a.clientId, petId: a.petId, appointmentId: a.id }" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Muayene oluştur</a>
+                            <a [routerLink]="['/panel/examinations/new']" [queryParams]="{ clientId: a.clientId, petId: a.petId, appointmentId: a.id }" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Muayene başlat</a>
                         }
                     }
                     @if (canNoShow && !ro.mutationBlocked()) {

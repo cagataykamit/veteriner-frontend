@@ -976,7 +976,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         this.clinicSwitchError.set(null);
         this.auth.selectClinic(clinic.id, clinic.name).subscribe({
             next: () => window.location.replace(this.router.url),
-            error: (e: unknown) => this.clinicSwitchError.set(panelHttpFailureMessage(e, 'Şube değiştirilemedi.'))
+            error: (e: unknown) => this.clinicSwitchError.set(panelHttpFailureMessage(e, 'Klinik değiştirilemedi.'))
         });
     }
 

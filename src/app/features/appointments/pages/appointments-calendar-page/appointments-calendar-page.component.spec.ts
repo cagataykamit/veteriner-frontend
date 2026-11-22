@@ -410,7 +410,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
 
         cmp.filtersOpen.set(true);
         fixture.detectChanges();
-        expect(el.textContent).toContain('Şube');
+        expect(el.querySelector('#calFltClinic')?.textContent ?? el.textContent).toContain('Klinik');
         cmp.switchClinic({ id: 'c2', name: 'Şube 2' });
         expect(selectClinic).toHaveBeenCalledWith('c2', 'Şube 2');
     });

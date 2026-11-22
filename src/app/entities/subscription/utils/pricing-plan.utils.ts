@@ -190,7 +190,7 @@ export const PRICING_FEATURE_ROWS: readonly PricingFeatureRowDef[] = [
     { group: 'Hasta sahibi', label: 'Portaldan randevu talebi', detail: 'Kendi hayvanını seçerek', plans: ALL },
     { group: 'Yönetim', label: 'Raporlar', detail: 'Randevu, muayene, aşı, ödeme, borç ve işletme performansı', plans: ALL },
     { group: 'Yönetim', label: 'Gelişmiş raporlar', detail: 'Hekim, hizmet ve tür kırılımları; önceki dönemle', key: 'advancedReports', plans: PRO_AND_UP },
-    { group: 'Yönetim', label: 'Şubeler özeti', detail: 'Tüm şubelerin ciro, tahsilat ve iş yükü tek tabloda', key: 'clinicsOverview', plans: PREMIUM_ONLY },
+    { group: 'Yönetim', label: 'Klinikler özeti', detail: 'Tüm kliniklerin ciro, tahsilat ve iş yükü tek tabloda', key: 'clinicsOverview', plans: PREMIUM_ONLY },
     { group: 'Yönetim', label: 'Eski sistemden veri aktarımı', detail: 'Excel veya CSV ile müşteri, hasta ve aşı kayıtları', plans: ALL },
     { group: 'Yönetim', label: 'Rol bazlı yetki', plans: ALL },
     { group: 'Yönetim', label: 'Denetim kaydı', detail: 'Kayıt geçmişi: kim, ne zaman', plans: ALL },

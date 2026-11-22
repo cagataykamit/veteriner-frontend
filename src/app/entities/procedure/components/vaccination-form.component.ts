@@ -99,7 +99,7 @@ export interface VaccinationSavedEvent {
             @if (vaccineDefinitionsError()) {
                 <p class="text-danger mt-0 mb-4" role="alert">{{ vaccineDefinitionsError() }}</p>
             }
-            <p class="text-sm text-muted-color mt-0 mb-4">Aktif Klinik: {{ activeClinicLabel() }}</p>
+            <p class="text-sm text-muted-color mt-0 mb-4">Aktif klinik: {{ activeClinicLabel() }}</p>
             @if (contextFromRoute()) {
                 <p class="text-sm text-muted-color mt-0 mb-4">Muayene bağlamı taşındı; müşteri ve hasta seçimi kilitlidir. Aşı bilgilerini doldurun.</p>
             }

@@ -62,7 +62,7 @@ const REMINDER_LOGS_LIST_STATE_KEY = 'reminderLogs:listState';
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-page-header title="Hatırlatma Geçmişi" description="Gönderilen veya kuyruğa alınan hatırlatmaları takip edin." />
+        <app-page-header title="Hatırlatma geçmişi" description="Gönderilen veya kuyruğa alınan hatırlatmaları takip edin." />
 
         <div class="card">
             @if (loading()) {
