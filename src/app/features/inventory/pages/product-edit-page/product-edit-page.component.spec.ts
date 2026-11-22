@@ -87,6 +87,13 @@ describe('ProductEditPageComponent KDV oranı ve alış fiyatı', () => {
         expect(mapProductUpsertFormValueToUpdateRequest(submit()!)).toEqual(expect.objectContaining({ vatRate: null, clearVatRate: true }));
     });
 
+    it('para birimi alanı gösterilmez; kayıtlı para birimi PUT ile korunur', () => {
+        render(dto({ currency: 'USD' }));
+
+        expect(el().textContent).not.toContain('Para birimi');
+        expect(submit()).toEqual(expect.objectContaining({ currency: 'USD' }));
+    });
+
     it('negatif alış fiyatı kaydı engeller', () => {
         render(dto());
         const price = input('productEditPurchasePrice');

@@ -104,9 +104,6 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                             }
                         }
                     </div>
-                    <app-form-field class="col-span-12 md:col-span-4" label="Para birimi" fieldId="currency" [error]="form.controls.currency.invalid && form.controls.currency.touched ? 'Para birimi zorunludur.' : null" [required]="true">
-                        <p-select inputId="currency" formControlName="currency" [options]="currencyOptions" optionLabel="label" optionValue="value" class="w-full" />
-                    </app-form-field>
                     <app-product-tax-fields [form]="form" idPrefix="product" />
                     <app-product-classification-fields [form]="form" idPrefix="product" />
                     <div class="col-span-12 flex flex-col gap-1">
@@ -149,12 +146,6 @@ export class ProductCreatePageComponent implements OnInit, HasUnsavedChanges {
 
     readonly submitting = signal(false);
     readonly submitError = signal<string | null>(null);
-
-    readonly currencyOptions = [
-        { label: 'TRY', value: 'TRY' },
-        { label: 'USD', value: 'USD' },
-        { label: 'EUR', value: 'EUR' }
-    ];
 
     readonly form = createProductUpsertFormGroup(this.fb);
 

@@ -14,6 +14,7 @@ import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { mapPaymentUpsertFormToWriteRequest } from '@/app/entities/payment/data/payment.mapper';
 import { PaymentsService } from '@/app/entities/payment/services/payments.service';
 import { PAYMENT_WRITE_METHOD_OPTIONS } from '@/app/entities/payment/utils/payment-method.utils';
+import { PAYMENT_CURRENCY } from '@/app/features/payments/utils/payment-allocation.utils';
 import { type PaymentUpsertFieldErrors, parsePaymentUpsertHttpError } from '@/app/features/payments/utils/payment-upsert-validation-parse.utils';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
@@ -69,9 +70,6 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         <app-form-field class="col-span-12 md:col-span-4" label="Tutar" fieldId="amount" [error]="apiFieldErrors().amount ? apiFieldErrors().amount : form.controls.amount.invalid && form.controls.amount.touched ? 'Geçerli tutar girin.' : null" [required]="true">
                             <input id="amount" type="number" step="0.01" min="0" class="w-full p-inputtext p-component" formControlName="amount" />
                         </app-form-field>
-                        <app-form-field class="col-span-12 md:col-span-4" label="Para birimi" fieldId="currency" [error]="apiFieldErrors().currency ? apiFieldErrors().currency : null" [required]="true">
-                            <p-select inputId="currency" [options]="currencyOptions" formControlName="currency" optionLabel="label" optionValue="value" class="w-full" />
-                        </app-form-field>
                         <app-form-field class="col-span-12 md:col-span-4" label="Yöntem" fieldId="method" [error]="apiFieldErrors().method ? apiFieldErrors().method : null" [required]="true">
                             <p-select inputId="method" [options]="methodOptions" formControlName="method" optionLabel="label" optionValue="value" class="w-full" />
                         </app-form-field>
@@ -125,19 +123,14 @@ export class PaymentEditPageComponent implements OnInit, HasUnsavedChanges {
     private appointmentId: string | null = null;
     private examinationId: string | null = null;
 
-    readonly currencyOptions = [
-        { label: 'TRY', value: 'TRY' },
-        { label: 'USD', value: 'USD' },
-        { label: 'EUR', value: 'EUR' }
-    ];
-
     readonly methodOptions = [...PAYMENT_WRITE_METHOD_OPTIONS];
 
     readonly form = this.fb.nonNullable.group({
         clientId: ['', Validators.required],
         petId: [{ value: '', disabled: true }],
         amount: ['', Validators.required],
-        currency: ['TRY', Validators.required],
+        /** Formda gösterilmez (ADR-012); kayıtlı değer korunur, değişirse backend düzeltme sayar. */
+        currency: [PAYMENT_CURRENCY, Validators.required],
         method: ['cash', Validators.required],
         paidAtLocal: ['', [Validators.required, dateTimeYearRangeValidator(), paymentDateNotTooFarPastValidator()]],
         note: ['']
@@ -198,7 +191,7 @@ export class PaymentEditPageComponent implements OnInit, HasUnsavedChanges {
                     clientId: x.clientId,
                     petId: '',
                     amount: amountToFormString(x.amountStr),
-                    currency: x.currency || 'TRY',
+                    currency: x.currency || PAYMENT_CURRENCY,
                     method: x.method ?? 'cash',
                     paidAtLocal: toIstanbulDateTimeLocalInputValue(x.paidAtUtc),
                     note: x.note

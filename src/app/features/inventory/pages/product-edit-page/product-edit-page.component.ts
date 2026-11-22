@@ -114,9 +114,6 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                                 }
                             }
                         </div>
-                        <app-form-field class="col-span-12 md:col-span-4" label="Para birimi" fieldId="currencyEdit" [error]="form.controls.currency.invalid && form.controls.currency.touched ? 'Para birimi zorunludur.' : null" [required]="true">
-                            <p-select inputId="currencyEdit" formControlName="currency" [options]="currencyOptions" optionLabel="label" optionValue="value" class="w-full" />
-                        </app-form-field>
                         <app-product-tax-fields [form]="form" idPrefix="productEdit" [currentVatRate]="originalVatRate()" />
                         <app-product-classification-fields [form]="form" idPrefix="productEdit" [originalKind]="originalKind()" />
                         <div class="col-span-12 flex flex-col gap-1">
@@ -166,12 +163,6 @@ export class ProductEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly originalKind = signal<ProductKindApi | null>(null);
     /** Kayıtlı KDV oranı; seçenek listesinde yoksa (ör. içe aktarılmış %18) listeye eklenir. */
     readonly originalVatRate = signal<number | null>(null);
-
-    readonly currencyOptions = [
-        { label: 'TRY', value: 'TRY' },
-        { label: 'USD', value: 'USD' },
-        { label: 'EUR', value: 'EUR' }
-    ];
 
     readonly form = createProductUpsertFormGroup(this.fb);
 
