@@ -5,7 +5,7 @@ import { PortalSessionService } from '@portal/app/core/auth/portal-session.servi
 import { PortalClinic, PortalClinicApi } from '@portal/app/features/clinic/portal-clinic.api';
 import { portalLoad, portalPagedLoad } from '@portal/app/shared/data/portal-load';
 import { formatPortalDay } from '@portal/app/shared/format/portal-date';
-import { paymentMethodLabel, telHref } from '@portal/app/shared/format/portal-labels';
+import { formatPortalPhone, paymentMethodLabel, telHref } from '@portal/app/shared/format/portal-labels';
 import { formatPortalMoney } from '@portal/app/shared/format/portal-money';
 import { PortalEmptyState, PortalErrorState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
 import { hasCredit, hasOutstanding, PortalBalance, PortalBalanceApi, PortalPayment } from './portal-balance.api';
@@ -40,6 +40,7 @@ export class PortalBalanceComponent {
     readonly clinic = portalLoad<PortalClinic>();
 
     readonly phoneHref = computed(() => telHref(this.clinic.data()?.phone));
+    readonly phoneText = computed(() => formatPortalPhone(this.clinic.data()?.phone));
 
     constructor() {
         effect(() => {

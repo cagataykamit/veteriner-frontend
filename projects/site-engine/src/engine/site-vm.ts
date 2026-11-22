@@ -130,6 +130,18 @@ export function whatsappNumber(raw: string): string {
     return digits;
 }
 
+/**
+ * Telefon gösterimi panel ve portalla aynı biçimde: Türkiye numarası "+90 543 958 00 91" olur; tanınmayan biçim (yurt dışı, kısa numara)
+ * kırpılıp olduğu gibi kalır. `tel:` bağlantısı ham değerden kurulur, bu yalnız gösterimdir.
+ */
+export function displayPhone(raw: string): string {
+    const digits = whatsappNumber(raw);
+
+    if (!/^90[2-58]\d{9}$/.test(digits)) return raw.trim();
+
+    return `+90 ${digits.slice(2, 5)} ${digits.slice(5, 8)} ${digits.slice(8, 10)} ${digits.slice(10)}`;
+}
+
 function resolveCopy(content: SiteCopy, voice: SiteCopy): SiteCopy {
     return Object.fromEntries(Object.keys(voice).map((key) => [key, content[key as CopyKey]?.trim() || voice[key as CopyKey]])) as unknown as SiteCopy;
 }
@@ -144,7 +156,7 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
     const name = clinic.name.trim() || 'Klinik adı';
     const place = [clinic.district.trim(), clinic.city.trim()].filter(Boolean);
     const address = clinic.address.trim();
-    const phone = clinic.phone.trim();
+    const phone = displayPhone(clinic.phone);
     const email = clinic.email.trim();
     const phoneDigits = clinic.phone.replace(/[^\d+]/g, '');
     const whatsappDigits = whatsappNumber(clinic.whatsapp);
@@ -196,7 +208,7 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
     const aboutImage = uploaded(content.aboutImage);
     const featuresImage = uploaded(content.featuresImage);
     const faqs = content.faqs.filter((faq) => faq.question.trim() && faq.answer.trim());
-    const branches = content.branches.filter((branch) => branch.name.trim());
+    const branches = content.branches.filter((branch) => branch.name.trim()).map((branch) => ({ ...branch, phone: displayPhone(branch.phone) }));
     const emergencyText = content.emergencyText.trim();
     const aboutParagraphs = split(copy.aboutText);
     const doctors = members.filter((member) => member.isDoctor);

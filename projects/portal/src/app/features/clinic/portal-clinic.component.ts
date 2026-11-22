@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { portalLoad } from '@portal/app/shared/data/portal-load';
 import { formatPortalClock } from '@portal/app/shared/format/portal-date';
-import { telHref, WEEK_DAYS } from '@portal/app/shared/format/portal-labels';
+import { formatPortalPhone, telHref, WEEK_DAYS } from '@portal/app/shared/format/portal-labels';
 import { PortalErrorState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
 import { PortalClinic, PortalClinicApi, PortalWorkingHours } from './portal-clinic.api';
 
@@ -56,6 +56,7 @@ export class PortalClinicComponent {
 
     readonly initial = computed(() => (this.clinic.data()?.name ?? '').trim().charAt(0).toLocaleUpperCase('tr-TR'));
     readonly phoneHref = computed(() => telHref(this.clinic.data()?.phone));
+    readonly phoneText = computed(() => formatPortalPhone(this.clinic.data()?.phone));
 
     /** Tanımlı günler, Pazartesi → Pazar; sunucu sırasına güvenilmez. Tanımsız gün satırı gösterilmez. */
     readonly hours = computed<HoursRow[]>(() => {

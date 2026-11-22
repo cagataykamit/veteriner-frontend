@@ -20,7 +20,7 @@
                     @if (hasContact()) {
                         @if (phoneHref(); as href) {
                             <a class="portal-action-link portal-action-link--primary" [href]="href" data-testid="clinic-phone">
-                                <i class="fa-solid fa-phone" aria-hidden="true"></i> {{ c.phone }}
+                                <i class="fa-solid fa-phone" aria-hidden="true"></i> {{ phoneText() }}
                             </a>
                         }
                         @if (c.email) {

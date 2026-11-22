@@ -124,6 +124,23 @@ describe('VisitCheckoutPanelComponent (CHECKOUT-001)', () => {
         expect(el.querySelectorAll('[data-testid="checkout-other-charge"]').length).toBe(1);
     });
 
+    it('müşteri telefonu panelin ortak biçiminde; alınan tutar eksi işaretsiz yazılır', () => {
+        const f = render(summary({ clientPhone: '905321112233' }));
+        const c = f.componentInstance;
+        const el = f.nativeElement as HTMLElement;
+
+        expect(el.textContent).toContain('+90 532 111 22 33');
+
+        c.addLine('cash');
+        c.setLineAmount(c.lines()[0].id, '250');
+        f.detectChanges();
+
+        const totals = el.querySelector('[data-testid="checkout-totals"]')?.textContent ?? '';
+
+        expect(totals).toContain('Alınan');
+        expect(totals).not.toContain('−');
+    });
+
     it('gelişe bağlı olmayan açık ücret "Önceki gelişten kalan" diye etiketlenmez', () => {
         const base = summary();
         const noVisit = { ...base.charges!.otherOpenCharges[0], chargeId: 'old2', visitId: null, visitArrivedAtUtc: null, description: 'Mama', createdAtUtc: '2026-11-01T09:00:00Z' };
