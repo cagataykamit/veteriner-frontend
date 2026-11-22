@@ -7,6 +7,7 @@ import { of, Subject, throwError } from 'rxjs';
 import type { PetTimelinePageVm, PetTimelineQuery } from '@/app/entities/pet/models/pet-timeline-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
+import { AuthService } from '@/app/core/auth/auth.service';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { PetTimelinePageComponent } from './pet-timeline-page.component';
 
@@ -56,6 +57,7 @@ describe('PetTimelinePageComponent', () => {
             providers: [
                 provideRouter([]),
                 { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'p1' })) } },
+                { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez' } },
                 {
                     provide: PetsService,
                     useValue: {
@@ -91,7 +93,7 @@ describe('PetTimelinePageComponent', () => {
         const summaries = Array.from(el().querySelectorAll('[data-testid="summary"]'));
 
         expect(summaries[0].className).toContain('text-muted-color');
-        expect(summaries[2].className).toContain('text-red-600');
+        expect(summaries[2].className).toContain('text-danger');
         expect(el().querySelectorAll('[data-testid="event-link"]').length).toBe(0);
         expect(el().querySelectorAll('[data-testid="examination-link"]').length).toBe(1);
     });
@@ -206,6 +208,23 @@ describe('PetTimelinePageComponent', () => {
         fixture.detectChanges();
 
         expect(el().querySelector('[data-testid="omitted-note"]')).toBeNull();
+    });
+
+    it('kayıtlar gün başlığı altında gruplanır; klinik adı yalnız başka klinikteki kayıtta görünür', () => {
+        responder = () =>
+            of(
+                page([
+                    item('Visit', 'v1', { eventAtUtc: '2026-11-20T10:05:00Z', clinicId: 'c1' }),
+                    item('Examination', 'e1', { eventAtUtc: '2026-11-20T10:20:00Z', clinicId: 'c2', clinicName: 'Şube' }),
+                    item('Vaccination', 'va1', { eventAtUtc: '2026-11-01T09:00:00Z', clinicId: 'c1' })
+                ])
+            );
+        create();
+
+        const days = Array.from(el().querySelectorAll('[data-testid="day-title"]')).map((d) => d.textContent?.trim());
+
+        expect(days).toEqual(['20 Kasım 2026', '1 Kasım 2026']);
+        expect(Array.from(el().querySelectorAll('[data-testid="clinic-name"]')).map((c) => c.textContent?.trim())).toEqual(['· Şube']);
     });
 
     it('ilk sayfa hatasında hata durumu ve yeniden deneme gösterilir', () => {

@@ -5,11 +5,11 @@ import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { Subscription } from 'rxjs';
-import { PetTimelineItemComponent } from '@/app/features/pets/components/pet-timeline-item.component';
+import { PetTimelineListComponent } from '@/app/features/pets/components/pet-timeline-list.component';
 import type { PetTimelineItemVm, PetTimelineType } from '@/app/entities/pet/models/pet-timeline-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { PET_TIMELINE_TYPES } from '@/app/entities/pet/utils/pet-timeline-types';
-import { petTimelineOmittedTypesLabel } from '@/app/features/pets/utils/pet-timeline.utils';
+import { petTimelineOmittedTypesLabel, petTimelineTypeTone } from '@/app/features/pets/utils/pet-timeline.utils';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
@@ -27,7 +27,7 @@ const PAGE_SIZE = 20;
 @Component({
     selector: 'app-pet-timeline-page',
     standalone: true,
-    imports: [FormsModule, ButtonModule, CheckboxModule, DateInputComponent, FilterFieldComponent, PetTimelineItemComponent, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent],
+    imports: [FormsModule, ButtonModule, CheckboxModule, DateInputComponent, FilterFieldComponent, PetTimelineListComponent, AppPageHeaderComponent, AppLoadingStateComponent, AppEmptyStateComponent, AppErrorStateComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-page-header [categoryLink]="['/panel/pets', petId()]" categoryLinkLabel="Hasta kartına dön" title="Zaman çizelgesi" [description]="petName() ?? ''" />
@@ -37,7 +37,7 @@ const PAGE_SIZE = 20;
                 @for (t of typeOptions; track t.value) {
                     <div class="flex items-center gap-2">
                         <p-checkbox [ngModel]="isTypeSelected(t.value)" (ngModelChange)="toggleType(t.value, $event)" [binary]="true" [inputId]="'tl-type-' + t.value" />
-                        <label [attr.for]="'tl-type-' + t.value" class="cursor-pointer"><i class="pi {{ t.icon }} mr-1" aria-hidden="true"></i>{{ t.label }}</label>
+                        <label [attr.for]="'tl-type-' + t.value" class="cursor-pointer"><i class="pi {{ t.icon }} mr-1 {{ tone(t.value).text }}" aria-hidden="true"></i>{{ t.label }}</label>
                     </div>
                 }
                 <div class="flex items-center gap-2">
@@ -79,11 +79,7 @@ const PAGE_SIZE = 20;
                 <app-empty-state [message]="emptyMessage()" />
             </div>
         } @else {
-            <ol class="list-none m-0 p-0 card" data-testid="timeline-list">
-                @for (item of items(); track item.key) {
-                    <li appPetTimelineItem [item]="item"></li>
-                }
-            </ol>
+            <app-pet-timeline-list class="card mb-0" [items]="items()" data-testid="timeline-list" />
 
             @if (nextCursor()) {
                 <div class="flex flex-col items-center gap-2 mt-4">
@@ -104,6 +100,7 @@ export class PetTimelinePageComponent implements OnInit {
     private readonly destroyRef = inject(DestroyRef);
 
     readonly typeOptions = PET_TIMELINE_TYPES;
+    readonly tone = petTimelineTypeTone;
 
     readonly petId = signal('');
     readonly petName = signal<string | null>(null);

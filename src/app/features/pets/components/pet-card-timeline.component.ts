@@ -5,7 +5,7 @@ import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import type { Subscription } from 'rxjs';
 import { paymentMethodLabel } from '@/app/entities/payment/utils/payment-method.utils';
-import { PetTimelineItemComponent } from '@/app/features/pets/components/pet-timeline-item.component';
+import { PetTimelineListComponent } from '@/app/features/pets/components/pet-timeline-list.component';
 import type { PetTimelineItemVm } from '@/app/entities/pet/models/pet-timeline-vm.model';
 import type { PetHistoryPaymentItemVm } from '@/app/entities/pet/models/pet-vm.model';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
@@ -24,7 +24,7 @@ export const PET_CARD_TIMELINE_LIMIT = 10;
 @Component({
     selector: 'app-pet-card-timeline',
     standalone: true,
-    imports: [FormsModule, RouterLink, ButtonModule, SelectButtonModule, PetTimelineItemComponent],
+    imports: [FormsModule, RouterLink, ButtonModule, SelectButtonModule, PetTimelineListComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <section class="card mb-0 h-full" aria-labelledby="pet-card-timeline-title">
@@ -58,11 +58,7 @@ export const PET_CARD_TIMELINE_LIMIT = 10;
                 @if (items().length === 0) {
                     <p class="m-0 text-muted-color" data-testid="timeline-empty">Bu filtreye uyan kayıt yok.</p>
                 } @else {
-                    <ol class="list-none m-0 p-0" data-testid="timeline-list" [class.opacity-60]="loading()" [attr.aria-busy]="loading()">
-                        @for (item of items(); track item.key) {
-                            <li appPetTimelineItem [item]="item"></li>
-                        }
-                    </ol>
+                    <app-pet-timeline-list [items]="items()" data-testid="timeline-list" [class.opacity-60]="loading()" [attr.aria-busy]="loading()" />
                 }
             }
         </section>
