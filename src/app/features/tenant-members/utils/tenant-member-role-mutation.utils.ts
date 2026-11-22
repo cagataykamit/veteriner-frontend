@@ -48,13 +48,13 @@ const MEMBER_ROLE_MESSAGES: Record<string, string> = {
     'Auth.PermissionDenied': 'Bu işlem için yetkiniz yok.',
     AuthPermissionDenied: 'Bu işlem için yetkiniz yok.',
     'Subscriptions.TenantReadOnly':
-        'Bu işletme salt okunur moddadır; yazma işlemleri kapalıdır. Yöneticiyseniz Hesap → Abonelik üzerinden devam edebilirsiniz.',
+        'Bu işletme salt okunur moddadır; yazma işlemleri kapalıdır. Yöneticiyseniz Ayarlar → Abonelik üzerinden devam edebilirsiniz.',
     SubscriptionsTenantReadOnly:
-        'Bu işletme salt okunur moddadır; yazma işlemleri kapalıdır. Yöneticiyseniz Hesap → Abonelik üzerinden devam edebilirsiniz.',
+        'Bu işletme salt okunur moddadır; yazma işlemleri kapalıdır. Yöneticiyseniz Ayarlar → Abonelik üzerinden devam edebilirsiniz.',
     'Subscriptions.TenantCancelled':
-        'Bu işletmenin aboneliği iptal edildiği için yazma işlemleri kapalıdır. Yöneticiyseniz Hesap → Abonelik ekranından durumu yönetin.',
+        'Bu işletmenin aboneliği iptal edildiği için yazma işlemleri kapalıdır. Yöneticiyseniz Ayarlar → Abonelik ekranından durumu yönetin.',
     SubscriptionsTenantCancelled:
-        'Bu işletmenin aboneliği iptal edildiği için yazma işlemleri kapalıdır. Yöneticiyseniz Hesap → Abonelik ekranından durumu yönetin.',
+        'Bu işletmenin aboneliği iptal edildiği için yazma işlemleri kapalıdır. Yöneticiyseniz Ayarlar → Abonelik ekranından durumu yönetin.',
     'Members.ClaimAlreadyAssigned': 'Bu rol bu üyeye zaten atanmış.',
     'TenantMembers.ClaimAlreadyAssigned': 'Bu rol bu üyeye zaten atanmış.',
     'Members.AlreadyAssigned': 'Bu rol bu üyeye zaten atanmış.',
