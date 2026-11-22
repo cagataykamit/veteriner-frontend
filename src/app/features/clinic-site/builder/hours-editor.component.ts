@@ -1,8 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import type { WorkingDay } from '@site-engine';
-import { clinicWorkingHourDayLabel } from '@/app/entities/clinic/data/clinic-working-hours.mapper';
-
-const DAY_ORDER: readonly number[] = [1, 2, 3, 4, 5, 6, 0];
+import { CLINIC_WEEK_DAY_ORDER, clinicWorkingHourDayLabel } from '@/app/entities/clinic/data/clinic-working-hours.mapper';
 
 /** Haftalık saat düzenleyici. Değişikliği bütün liste olarak verir; yazmak klinik saat ucuyladır (K8). */
 @Component({
@@ -180,7 +178,7 @@ export class SiteHoursEditorComponent {
     readonly days = input.required<readonly WorkingDay[]>();
     readonly daysChange = output<readonly WorkingDay[]>();
 
-    protected readonly orderedDays = computed(() => DAY_ORDER.map((dayOfWeek) => this.days().find((day) => day.dayOfWeek === dayOfWeek) ?? { dayOfWeek, isClosed: true, opensAt: null, closesAt: null, breakStartsAt: null, breakEndsAt: null }));
+    protected readonly orderedDays = computed(() => CLINIC_WEEK_DAY_ORDER.map((dayOfWeek) => this.days().find((day) => day.dayOfWeek === dayOfWeek) ?? { dayOfWeek, isClosed: true, opensAt: null, closesAt: null, breakStartsAt: null, breakEndsAt: null }));
 
     protected dayName(dayOfWeek: number): string {
         return clinicWorkingHourDayLabel(dayOfWeek);
