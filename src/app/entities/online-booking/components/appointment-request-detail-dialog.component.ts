@@ -22,8 +22,8 @@ import {
     type StaffAvailabilityDayVm
 } from '@/app/entities/online-booking/models/online-booking.model';
 import { AppointmentRequestsService, OnlineBookingService } from '@/app/entities/online-booking/services/online-booking.service';
+import { AppointmentRequestTimelineComponent } from '@/app/entities/online-booking/components/appointment-request-timeline.component';
 import {
-    appointmentRequestActorLabel,
     appointmentRequestChannelLabel,
     appointmentRequestChannelSeverity,
     appointmentRequestStatusLabel,
@@ -40,7 +40,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 type Mode = 'view' | 'approve' | 'reject';
 
 /**
- * Talep detayı (APPT-011; ADR-042 K4/K5): bilgiler, geçmiş ve karar. Onayda müşteri/hayvan eşleştirilir (portal talebinde bağın
+ * Talep detayı (APPT-011; ADR-042 K4/K5): bilgiler, geçmiş zaman çizelgesi ve oluşan randevu (APPT-024) ve karar. Onayda müşteri/hayvan eşleştirilir (portal talebinde bağın
  * müşterisi sabittir; bağlantı talebinde mevcut müşteri seçilir ya da hızlı kayıtla oluşturulur), istenen saat korunur ya da
  * müsait saatlerden farklı saat seçilir (yeniden planlama), hekim seçilir ya da boş uygun hekim otomatik atanır. Sahibe gidecek
  * e-posta önizlenip düzenlenebilir. Red gerekçesi zorunludur.
@@ -63,7 +63,8 @@ type Mode = 'view' | 'approve' | 'reject';
         ClientSearchComponent,
         PetSearchComponent,
         VisitQuickRegistrationComponent,
-        AppStatusTagComponent
+        AppStatusTagComponent,
+        AppointmentRequestTimelineComponent
     ],
     template: `
         <p-dialog header="Randevu talebi" [modal]="true" [visible]="visible()" (visibleChange)="onVisibleChange($event)" [style]="{ width: 'min(46rem, 96vw)' }" [draggable]="false">
@@ -241,14 +242,7 @@ type Mode = 'view' | 'approve' | 'reject';
                         </div>
                     }
 
-                    <details class="text-sm">
-                        <summary class="cursor-pointer text-muted-color">Geçmiş ({{ d.history.length }})</summary>
-                        <ul class="list-none p-0 m-0 mt-2 flex flex-col gap-1">
-                            @for (h of d.history; track $index) {
-                                <li>{{ fmt(h.atUtc) }} · {{ statusLabel(h.toStatus) }} · {{ actor(h.actorKind, h.actorName) }} @if (h.note) {— {{ h.note }}}</li>
-                            }
-                        </ul>
-                    </details>
+                    <app-appointment-request-timeline class="block border-t border-surface-200 dark:border-surface-700 pt-4" [detail]="d" />
                 </div>
             }
         </p-dialog>
@@ -328,7 +322,6 @@ export class AppointmentRequestDetailDialogComponent {
     statusSeverity = appointmentRequestStatusSeverity;
     channelLabel = appointmentRequestChannelLabel;
     channelSeverity = appointmentRequestChannelSeverity;
-    actor = appointmentRequestActorLabel;
     fmt = (utc: string | null) => formatDateTimeDisplay(utc);
     time = (utc: string) => formatTimeDisplay(utc);
 
