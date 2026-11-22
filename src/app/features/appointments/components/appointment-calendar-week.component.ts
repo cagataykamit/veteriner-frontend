@@ -43,7 +43,9 @@ type WeekRow = { kind: 'item'; item: AppointmentCalendarItemVm; minute: number }
                     >
                         <span class="text-xl font-bold tabular-nums" [class.text-primary]="d.day.today">{{ d.day.dayNumber }}</span>
                         <span class="text-[13px] font-semibold text-muted-color truncate">{{ d.day.weekday }}</span>
-                        <span class="ml-auto text-xs text-muted-color">{{ d.count }} rnd</span>
+                        @if (d.count) {
+                            <span class="ml-auto shrink-0 rounded-full bg-surface-100 dark:bg-surface-800 px-1.5 text-xs font-semibold tabular-nums" [attr.aria-label]="d.count + ' randevu'" [title]="d.count + ' randevu'">{{ d.count }}</span>
+                        }
                     </button>
                     <div class="flex flex-col gap-1.5 px-1.5 pb-2">
                         @if (d.day.vaccines; as v) {
@@ -56,7 +58,7 @@ type WeekRow = { kind: 'item'; item: AppointmentCalendarItemVm; minute: number }
                             >
                                 <i class="pi pi-shield !text-xs" aria-hidden="true"></i><b>{{ v.total }} aşı</b>
                                 @if (v.overdue) {
-                                    <span class="text-red-600 dark:text-red-400 font-bold">· {{ v.overdue }} gecikmiş</span>
+                                    <span class="shrink-0 rounded-full bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 font-bold px-1.5 tabular-nums" [title]="v.overdue + ' gecikmiş'" aria-hidden="true">{{ v.overdue }}</span>
                                 }
                                 <span class="ml-auto text-muted-color" aria-hidden="true">›</span>
                             </button>
@@ -85,7 +87,7 @@ type WeekRow = { kind: 'item'; item: AppointmentCalendarItemVm; minute: number }
                                         <span class="ml-auto shrink-0 pl-1 text-[10.5px] font-bold">{{ vet(r.item) }}</span>
                                     </span>
                                     <span class="block truncate text-[13.5px] font-bold" [class.line-through]="tone(r.item) === 'off'"
-                                        >{{ r.item.petName }} <span class="font-normal text-[12.5px]" [class]="tone(r.item) === 'room' ? 'opacity-85' : 'text-muted-color'">· {{ owner(r.item) }}</span></span
+                                        >{{ r.item.petName }}</span
                                     >
                                 </button>
                             }
@@ -169,12 +171,6 @@ export class AppointmentCalendarWeekComponent {
         return item.veterinarianUserId ? initials(item.veterinarianName) : '–';
     }
 
-    /** Dar sütunda sahip kısa: "Ayşe Yılmaz" → "A. Yılmaz". */
-    protected owner(item: AppointmentCalendarItemVm): string {
-        const words = item.clientName.split(/\s+/).filter((w) => !!w);
-
-        return words.length > 1 ? `${words[0][0]}. ${words.at(-1)}` : item.clientName;
-    }
 
     protected bubble(item: AppointmentCalendarItemVm): CalendarBubbleData {
         return appointmentBubble(item, this.clinicName());

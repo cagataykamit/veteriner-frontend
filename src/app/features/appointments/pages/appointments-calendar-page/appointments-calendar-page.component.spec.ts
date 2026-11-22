@@ -227,7 +227,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
         expect(days.map((d) => d.dateKey)).toEqual(['2026-11-16', '2026-11-17', '2026-11-18', '2026-11-19', '2026-11-20', '2026-11-21', '2026-11-22']);
         expect(days[6].closed).toBe(true);
         expect(days[0].vaccines).toEqual({ total: 2, overdue: 1 });
-        expect(el.querySelector('[data-testid="calendar-week-vaccines-2026-11-16"]')?.textContent).toContain('1 gecikmiş');
+        expect(el.querySelector('[data-testid="calendar-week-vaccines-2026-11-16"]')?.getAttribute('aria-label')).toContain('1 gecikmiş');
         // Saat sırası: 09:00 önce; şimdi (10:40) ayracı arada.
         const week = el.querySelector('[data-testid="calendar-week"]')!.textContent!;
 
@@ -237,7 +237,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
         expect(navigate).toHaveBeenCalledWith(['/panel/appointments/calendar'], { queryParams: { view: undefined, date: '2026-11-18' } });
     });
 
-    it('çalışma saati kısıtı kapalıyken kapalı gün ve mola yok; gün ızgarası 00-24, ilk çizimde 08:00 görünür; telefonda boşluklar 08-20 penceresinde', async () => {
+    it('çalışma saati kısıtı kapalıyken kapalı gün ve mola yok; gün ızgarası 00-24, bugün ilk çizimde şimdiden bir saat öncesi (09:00) görünür; telefonda boşluklar 08-20 penceresinde', async () => {
         const scrollIntoView = vi.fn();
 
         // jsdom kaydırma yapmaz; çağrı ve hedef saat sayılır.
@@ -251,7 +251,21 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
         expect(cmp.weekDays().some((d) => d.closed)).toBe(false);
         expect(cmp.agendaGaps()).toEqual([{ start: 480, end: 1200 }]);
         expect(scrollIntoView).toHaveBeenCalledTimes(1);
-        expect((scrollIntoView.mock.contexts[0] as HTMLElement).dataset['minute']).toBe('480');
+        expect((scrollIntoView.mock.contexts[0] as HTMLElement).dataset['minute']).toBe('540');
+        delete (Element.prototype as Partial<Element>).scrollIntoView;
+    });
+
+    /** R-01: mesai öncesine düşen bir randevu ızgarayı geceye uzatsa da görünüm mesai başlangıcından açılır. */
+    it('başka günde mesai öncesi randevu varken ızgara ilk çizimde mesai başlangıcına (09:00) kayar', async () => {
+        const scrollIntoView = vi.fn();
+
+        Element.prototype.scrollIntoView = scrollIntoView;
+        const { fixture, cmp } = create([appt('a', '06:00', 'v1', { scheduledAtUtc: '2026-11-17T03:00:00Z' })], { date: '2026-11-17' });
+
+        await fixture.whenStable();
+
+        expect(cmp.bounds().start).toBe(360);
+        expect((scrollIntoView.mock.contexts[0] as HTMLElement).dataset['minute']).toBe('540');
         delete (Element.prototype as Partial<Element>).scrollIntoView;
     });
 
