@@ -642,7 +642,22 @@ export const ApiEndpoints = {
         stocks: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/stocks`,
         stockMovements: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/stock-movements`,
         /** GET `?clinicId=` — parti bakiyesi (FEFO sıralı) + partisiz bakiye (`StockMovements.Read`). */
-        stockBatches: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/stock-batches`
+        stockBatches: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/stock-batches`,
+        /** PUT `{ licensedProductId }` — ilaç rehberi bağı; `null` kaldırır (LICENSED_DRUG_GUIDE_API_CONTRACT.md §4). */
+        licensedProduct: (id: string) => `/api/v1/products/${encodeURIComponent(id)}/licensed-product`
+    },
+    /** İlaç rehberi (REF-001; LICENSED_DRUG_GUIDE_API_CONTRACT.md). */
+    drugGuide: {
+        summary: () => `/api/v1/drug-guide/summary`,
+        /** Query: `Page`, `PageSize`, `Search`, `field` (All|Product|Ingredient|Holder), `activeIngredientId`. */
+        products: () => `/api/v1/drug-guide/products`,
+        productById: (id: string) => `/api/v1/drug-guide/products/${encodeURIComponent(id)}`,
+        /** Query: `search`, `limit`. */
+        ingredients: () => `/api/v1/drug-guide/active-ingredients`,
+        /** Query: `clinicId`; `Products.Read`. */
+        ingredientStockProducts: (id: string) => `/api/v1/drug-guide/active-ingredients/${encodeURIComponent(id)}/stock-products`,
+        /** Query: `productIds` (tekrarlı), `petId`. */
+        productInfo: () => `/api/v1/drug-guide/product-info`
     },
     productStocks: {
         list: () => `/api/v1/product-stocks`,
