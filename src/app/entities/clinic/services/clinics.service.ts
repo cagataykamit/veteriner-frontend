@@ -13,13 +13,13 @@ import {
 import {
     mapClinicAppointmentSettingsResponse
 } from '@/app/entities/clinic/data/clinic-appointment-settings.mapper';
-import { mapClinicWorkingHoursResponse } from '@/app/entities/clinic/data/clinic-working-hours.mapper';
+import { mapClinicWorkingHoursResponse, mapClinicWorkingHoursStateResponse } from '@/app/entities/clinic/data/clinic-working-hours.mapper';
 import type {
     UpdateClinicAppointmentSettingsRequestDto
 } from '@/app/entities/clinic/models/clinic-appointment-settings-api.model';
 import type { ClinicAppointmentSettingsVm } from '@/app/entities/clinic/models/clinic-appointment-settings-vm.model';
 import type { UpdateClinicWorkingHoursRequestDto } from '@/app/entities/clinic/models/clinic-working-hours-api.model';
-import type { ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
+import type { ClinicWorkingHoursStateVm, ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
 import type { ClinicCreateRequestDto, ClinicDetailDto, ClinicUpdateRequestDto } from '@/app/entities/clinic/models/clinic-api.model';
 import type { ClinicUpsertFormValue } from '@/app/entities/clinic/models/clinic-upsert.model';
 import type { ClinicDetailVm, ClinicListItemVm } from '@/app/entities/clinic/models/clinic-vm.model';
@@ -145,8 +145,13 @@ export class ClinicsService {
         );
     }
 
-    /** `GET /api/v1/clinics/{id}/working-hours` */
+    /** `GET /api/v1/clinics/{id}/working-hours` — yalnız günler (kayıt yoksa varsayılan hafta). */
     getWorkingHours(clinicId: string): Observable<ClinicWorkingHourVm[]> {
+        return this.getWorkingHoursState(clinicId).pipe(map((s) => s.items));
+    }
+
+    /** `GET /api/v1/clinics/{id}/working-hours` — günler ve kaydın olup olmadığı (`isConfigured`). */
+    getWorkingHoursState(clinicId: string): Observable<ClinicWorkingHoursStateVm> {
         const id = clinicId.trim();
 
         if (!id) {
@@ -158,7 +163,7 @@ export class ClinicsService {
         }
 
         return this.api.get<unknown>(ApiEndpoints.clinics.workingHours(id)).pipe(
-            map((raw) => mapClinicWorkingHoursResponse(raw)),
+            map((raw) => mapClinicWorkingHoursStateResponse(raw)),
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Çalışma saatleri yüklenemedi.')))
             )

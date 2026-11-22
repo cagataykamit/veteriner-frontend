@@ -45,6 +45,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 @if (whFormError()) {
                     <p class="text-danger text-sm mb-3 m-0" role="alert">{{ whFormError() }}</p>
                 }
+                @if (!whConfigured()) {
+                    <p class="text-sm text-muted-color mt-0 mb-3" data-testid="wh-not-configured">Aşağıdaki saatler önerilen varsayılandır ve henüz kaydedilmedi. Kontrol edip kaydedin; randevu, online randevu ve klinik sitesi kaydedilen saatleri kullanır.</p>
+                }
                 <div formArrayName="days" class="flex flex-col gap-4" [class.opacity-60]="!restrictionEnabled()" data-testid="wh-days">
                     @for (row of whDays.controls; track trackWhRow($index, row); let idx = $index) {
                         <div [formGroupName]="idx" class="rounded-lg border border-surface-200 dark:border-surface-700 p-3 md:p-4 grid grid-cols-12 gap-3 gap-y-2">
@@ -109,6 +112,8 @@ export class ClinicWorkingHoursSectionComponent {
     readonly whFormError = signal<string | null>(null);
     /** Formdaki "Çalışma saati kısıtı"; kapalıyken saat satırları soluk görünür. */
     readonly restrictionEnabled = signal(true);
+    /** Kayıtlı çalışma saati var mı; yoksa (`isConfigured=false`) form varsayılan haftayı gösterir ve değişiklik olmadan da kaydedilebilir. */
+    readonly whConfigured = signal(true);
 
     readonly whForm = this.fb.group({
         days: this.fb.array<FormGroup>([]),
@@ -145,7 +150,7 @@ export class ClinicWorkingHoursSectionComponent {
     }
 
     canSaveWorkingHours(): boolean {
-        return this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) && !this.ro.mutationBlocked() && !this.whSaving() && this.whForm.valid && this.whForm.dirty && this.whDays.length > 0 && !this.whLoading() && this.whError() === null;
+        return this.auth.hasOperationClaim(CLINICS_UPDATE_CLAIM) && !this.ro.mutationBlocked() && !this.whSaving() && this.whForm.valid && (this.whForm.dirty || !this.whConfigured()) && this.whDays.length > 0 && !this.whLoading() && this.whError() === null;
     }
 
     retryWorkingHoursLoad(): void {
@@ -185,7 +190,7 @@ export class ClinicWorkingHoursSectionComponent {
 
         const days = this.whDays.getRawValue() as ClinicWorkingHourFormValue[];
         const body = clinicWorkingHoursFormToPutBody(days);
-        const saveHours: Observable<ClinicWorkingHourVm[] | null> = this.whDays.dirty ? this.clinicsApi.updateWorkingHours(id, body) : of(null);
+        const saveHours: Observable<ClinicWorkingHourVm[] | null> = this.whDays.dirty || !this.whConfigured() ? this.clinicsApi.updateWorkingHours(id, body) : of(null);
         const enforceControl = this.whForm.controls.enforceWorkingHours;
         // Kısıt randevu ayarındadır: diğer varsayılanlar ezilmesin diye güncel ayar okunup yalnız bu alan değiştirilir.
         const saveRestriction: Observable<boolean | null> = enforceControl.dirty
@@ -202,6 +207,7 @@ export class ClinicWorkingHoursSectionComponent {
 
                 if (items) {
                     this.patchWorkingHoursForm(items);
+                    this.whConfigured.set(true);
                 }
 
                 if (enforce !== null) {
@@ -282,10 +288,11 @@ export class ClinicWorkingHoursSectionComponent {
         this.whLoading.set(true);
         this.whError.set(null);
         this.whFormError.set(null);
-        forkJoin({ items: this.clinicsApi.getWorkingHours(clinicId), settings: this.clinicsApi.getAppointmentSettings(clinicId) }).subscribe({
-            next: ({ items, settings }) => {
+        forkJoin({ hours: this.clinicsApi.getWorkingHoursState(clinicId), settings: this.clinicsApi.getAppointmentSettings(clinicId) }).subscribe({
+            next: ({ hours, settings }) => {
                 this.whForm.controls.enforceWorkingHours.setValue(settings.enforceWorkingHours);
-                this.patchWorkingHoursForm(items);
+                this.whConfigured.set(hours.isConfigured);
+                this.patchWorkingHoursForm(hours.items);
                 this.whLoading.set(false);
             },
             error: (e: Error) => {

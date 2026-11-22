@@ -1,5 +1,5 @@
 import type { ClinicWorkingHourWriteItemDto, UpdateClinicWorkingHoursRequestDto } from '@/app/entities/clinic/models/clinic-working-hours-api.model';
-import type { ClinicWorkingHourFormValue, ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
+import type { ClinicWorkingHourFormValue, ClinicWorkingHoursStateVm, ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
 
 function isRecord(x: unknown): x is Record<string, unknown> {
     return x !== null && typeof x === 'object';
@@ -174,6 +174,16 @@ export function mapClinicWorkingHoursResponse(raw: unknown): ClinicWorkingHourVm
     }
 
     return mapClinicWorkingHoursListRaw(raw);
+}
+
+/**
+ * `GET .../working-hours` yanıtı `{ isConfigured, items }`: `isConfigured=false` ise klinik için kayıt yoktur ve `items` varsayılan
+ * haftadır (ilk kayıt varsayılanla yapılabilir; "İlk hafta" adımı ve klinik sitesi kayıt ister). Alan yoksa (dizi yanıtı) kayıtlı sayılır.
+ */
+export function mapClinicWorkingHoursStateResponse(raw: unknown): ClinicWorkingHoursStateVm {
+    const configured = isRecord(raw) ? readTriBool(raw, ['isConfigured', 'IsConfigured']) : null;
+
+    return { isConfigured: configured !== false, items: mapClinicWorkingHoursResponse(raw) };
 }
 
 function timeToApiOrNull(s: string | null | undefined): string | null {
