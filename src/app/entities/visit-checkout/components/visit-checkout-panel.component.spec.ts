@@ -124,6 +124,17 @@ describe('VisitCheckoutPanelComponent (CHECKOUT-001)', () => {
         expect(el.querySelectorAll('[data-testid="checkout-other-charge"]').length).toBe(1);
     });
 
+    it('gelişe bağlı olmayan açık ücret "Önceki gelişten kalan" diye etiketlenmez', () => {
+        const base = summary();
+        const noVisit = { ...base.charges!.otherOpenCharges[0], chargeId: 'old2', visitId: null, visitArrivedAtUtc: null, description: 'Mama', createdAtUtc: '2026-11-01T09:00:00Z' };
+        const f = render({ ...base, charges: { ...base.charges!, otherOpenCharges: [...base.charges!.otherOpenCharges, noVisit] } });
+        const rows = Array.from((f.nativeElement as HTMLElement).querySelectorAll('[data-testid="checkout-other-charge"]')).map((r) => r.textContent ?? '');
+
+        expect(rows[0]).toContain('Önceki gelişten kalan');
+        expect(rows[1]).toContain('Gelişe bağlı olmayan borç');
+        expect(rows[1]).not.toContain('Önceki gelişten kalan');
+    });
+
     it('parçalı ödeme: kalem çevrilir, iki ödeme sırayla dağıtılır, geliş tamamlanır', async () => {
         const f = render();
         const c = f.componentInstance;

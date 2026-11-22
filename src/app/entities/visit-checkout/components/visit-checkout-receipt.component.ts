@@ -13,7 +13,7 @@ export interface VisitCheckoutReceiptData {
     /** Alınanın hesaptan fazla kısmı; müşteri kredisine yazıldı. */
     creditAdded: number;
     remaining: number;
-    /** Müşterinin bu hesaba dahil edilmeyen önceki borcu (bilgi satırı). */
+    /** Müşterinin bu hesaba dahil edilmeyen diğer açık borcu: önceki gelişler ve gelişe bağlı olmayan ücretler (bilgi satırı). */
     otherDebt: number;
 }
 
@@ -80,7 +80,7 @@ export interface VisitCheckoutReceiptData {
             </dl>
 
             @if (d.otherDebt > 0) {
-                <p class="mt-3 mb-0 text-xs text-muted-color">Önceki gelişlerden kalan borç: {{ money(d.otherDebt) }} (bu özete dahil değildir).</p>
+                <p class="mt-3 mb-0 text-xs text-muted-color">Diğer açık borç: {{ money(d.otherDebt) }} (bu özete dahil değildir).</p>
             }
             <p class="mt-4 mb-0 text-xs text-center text-muted-color">Bu özet bilgi amaçlıdır; fatura veya e-belge değildir.</p>
         </article>

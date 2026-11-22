@@ -262,7 +262,7 @@ const CARE_SEVERITY = { Waiting: 'warn', InProgress: 'info', Completed: 'success
                                         }
                                         <label [for]="'ch-' + c.chargeId" class="min-w-0 flex-1 cursor-pointer">
                                             <div class="font-medium truncate">{{ c.description }}</div>
-                                            <div class="text-xs text-muted-color"><i class="pi pi-history mr-1"></i>Önceki gelişten kalan · {{ date(c.visitArrivedAtUtc ?? c.createdAtUtc) }}@if (c.petName && c.petName !== s.petName) { · {{ c.petName }} }</div>
+                                            <div class="text-xs text-muted-color"><i class="pi pi-history mr-1"></i>@if (c.visitId) {Önceki gelişten kalan · {{ date(c.visitArrivedAtUtc ?? c.createdAtUtc) }}} @else {Gelişe bağlı olmayan borç · {{ date(c.createdAtUtc) }}}@if (c.petName && c.petName !== s.petName) { · {{ c.petName }} }</div>
                                         </label>
                                         <div class="font-medium tabular-nums whitespace-nowrap text-muted-color">{{ money(c.outstandingAmount) }}</div>
                                     </li>
