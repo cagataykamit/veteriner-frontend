@@ -23,6 +23,7 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { ConfirmationService } from 'primeng/api';
+import { joinPresent } from '@/app/shared/utils/labels.utils';
 
 @Component({
     selector: 'app-product-detail-page',
@@ -58,7 +59,7 @@ import { ConfirmationService } from 'primeng/api';
             <app-page-header categoryLink="/panel/products" categoryLinkLabel="Ürün listesine dön" />
 
             <!-- Kimlik kartı: ürün adı + durum rozeti, SKU, kategori/üretici satırı; sağda Düzenle; gösterge şeridi (fiyat, birim, tür, kontrollü sınıf). -->
-            <app-detail-identity-card icon="pi pi-box" [title]="p.name" [subtitle]="'SKU: ' + p.sku" [meta]="'Kategori: ' + p.categoryName + ' · Üretici: ' + p.manufacturer + ' · Barkod: ' + p.barcode" ariaLabel="Ürün kimliği" testId="product-identity-card">
+            <app-detail-identity-card icon="pi pi-box" [title]="p.name" [subtitle]="labelled([['SKU', p.sku]])" [meta]="labelled([['Kategori', p.categoryName], ['Üretici', p.manufacturer], ['Barkod', p.barcode]])" ariaLabel="Ürün kimliği" testId="product-identity-card">
                 <app-status-tag badges [label]="p.statusLabel" [severity]="p.statusSeverity" />
                 <ng-container actions>
                     @if (canUpdateProduct && !ro.mutationBlocked()) {
@@ -180,6 +181,14 @@ import { ConfirmationService } from 'primeng/api';
     `
 })
 export class ProductDetailPageComponent implements OnInit {
+    /** Kimlik kartı satırı: yalnız dolu alanlar "Ad: değer" olarak yazılır ("SKU: —" gürültüsü yok, G-05). */
+    protected labelled(fields: readonly (readonly [string, string | null | undefined])[]): string {
+        return joinPresent(
+            fields.map(([label, value]) => (value && value.trim() !== '—' ? `${label}: ${value}` : '')),
+            ' · '
+        );
+    }
+
     private readonly productService = inject(ProductService);
     private readonly confirmationService = inject(ConfirmationService);
     private readonly auth = inject(AuthService);

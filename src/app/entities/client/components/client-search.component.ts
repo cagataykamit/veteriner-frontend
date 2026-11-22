@@ -8,6 +8,7 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
 import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CLIENT_SEARCH_MIN_LENGTH, ClientSearchService } from '@/app/entities/client/services/client-search.service';
+import { joinPresent } from '@/app/shared/utils/labels.utils';
 import type { ClientSearchResultVm } from '@/app/entities/client/services/client-search.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { canShowQuickClientCreateButton } from '@/app/shared/forms/quick-create/quick-client-pet-create-visibility.utils';
@@ -47,12 +48,9 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             <ng-template #item let-c>
                 <div class="min-w-0">
                     <div class="font-medium">{{ c.fullName }}</div>
-                    <div class="text-sm text-muted-color">
-                        {{ c.phone }}
-                        @if (c.petNames.length) {
-                            · Hastalar: {{ c.petNames.join(', ') }}
-                        }
-                    </div>
+                    @if (subtitle(c); as sub) {
+                        <div class="text-sm text-muted-color">{{ sub }}</div>
+                    }
                 </div>
             </ng-template>
             <ng-template #empty>
@@ -80,6 +78,11 @@ export class ClientSearchComponent implements ControlValueAccessor {
     readonly placeholder = input('Ad, telefon, hasta adı veya mikroçip ile arayın');
 
     protected readonly minLength = CLIENT_SEARCH_MIN_LENGTH;
+
+    /** Öneri satırının ikinci satırı: telefon ve hastalar; boş parça yazılmaz. */
+    protected subtitle(c: ClientSearchResultVm): string {
+        return joinPresent([c.phone, c.petNames.length ? `Hastalar: ${c.petNames.join(', ')}` : ''], ' · ');
+    }
 
     private readonly search = inject(ClientSearchService);
     private readonly auth = inject(AuthService);

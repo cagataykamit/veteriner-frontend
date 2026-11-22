@@ -138,7 +138,7 @@ const RECORD_TEXT_SECTIONS: readonly {
             <app-page-header categoryLink="/panel/examinations" categoryLinkLabel="Muayene listesine dön" />
 
             <!-- Kimlik kartı (müşteri/hasta kartıyla aynı dil): durum rozeti, muayene tarihi (alt başlık), kayıt satırı, hasta/sahip satırı; sağda Düzenle, şablon, geçmiş. Tarih ve durum tek yerde; gösterge şeridi tekrar etmez. -->
-            <app-detail-identity-card icon="pi pi-clipboard" title="Muayene" [subtitle]="e.examinedAtUtc | trDateTime" [meta]="'Oluşturulma: ' + (e.createdAtUtc | trDateTime) + ' · Güncellenme: ' + (e.updatedAtUtc | trDateTime)" ariaLabel="Muayene kimliği" testId="exam-identity-card">
+            <app-detail-identity-card icon="pi pi-clipboard" title="Muayene" [subtitle]="e.examinedAtUtc | trDateTime" [meta]="'Oluşturulma: ' + (e.createdAtUtc | trDateTime) + (e.updatedAtUtc ? ' · Güncellenme: ' + (e.updatedAtUtc | trDateTime) : '')" ariaLabel="Muayene kimliği" testId="exam-identity-card">
                 <span badges data-testid="exam-status">
                     <app-status-tag [label]="statusLabel(e.status)" [severity]="statusSeverity(e.status)" />
                 </span>

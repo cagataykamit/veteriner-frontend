@@ -1,3 +1,14 @@
+/**
+ * Dolu parçaları ayırıcıyla birleştirir; boş ve "—" parçası ayırıcısıyla birlikte atlanır (G-05): "Burcu Çelik — —" yerine
+ * "Burcu Çelik", "— · Hastalar: Limon" yerine "Hastalar: Limon".
+ */
+export function joinPresent(parts: readonly (string | null | undefined)[], separator: string): string {
+    return parts
+        .map((p) => (p ?? '').trim())
+        .filter((p) => p !== '' && p !== '—')
+        .join(separator);
+}
+
 /** Küçük enum / kod → etiket haritaları için yardımcı. */
 export function labelFromMap<T extends string>(value: T | null | undefined, map: Record<T, string>, fallback = '—'): string {
     if (value == null) {

@@ -5,6 +5,7 @@ import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { PetsService } from '@/app/entities/pet/services/pets.service';
 import { filterPetsByClientId } from '@/app/shared/forms/client-pet-selection.utils';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
+import { joinPresent } from '@/app/shared/utils/labels.utils';
 
 export const CLIENT_SEARCH_MIN_LENGTH = 2;
 const MAX_RESULTS = 10;
@@ -87,6 +88,6 @@ function toResult(c: ClientListItemVm, petNames: string[]): ClientSearchResultVm
         fullName: c.fullName,
         phone: formatClientPhoneForDisplay(c.phone),
         petNames,
-        label: `${c.fullName} — ${formatClientPhoneForDisplay(c.phone)}`
+        label: joinPresent([c.fullName, formatClientPhoneForDisplay(c.phone)], ' — ')
     };
 }

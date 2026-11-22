@@ -219,12 +219,12 @@ export class ClientCardHeaderComponent {
 
         return (parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}` : (parts[0]?.[0] ?? '')).toLocaleUpperCase('tr-TR');
     });
-    /** Her iki tarih de yazılır; hiç güncellenmemiş kayıtta "—". */
+    /** Kayıt tarihi; güncellenme yalnız kayıt sonradan değiştiyse yazılır ("Güncellenme: —" gürültüsü yok, G-05). */
     readonly registrationLine = computed(() => {
         const c = this.client();
-        const updated = c.updatedAtUtc ? formatUtcIsoAsLocalDateTimeDisplay(c.updatedAtUtc) : '—';
+        const created = `Kayıt: ${formatUtcIsoAsLocalDateTimeDisplay(c.createdAtUtc)}`;
 
-        return `Kayıt: ${formatUtcIsoAsLocalDateTimeDisplay(c.createdAtUtc)} · Güncellenme: ${updated}`;
+        return c.updatedAtUtc ? `${created} · Güncellenme: ${formatUtcIsoAsLocalDateTimeDisplay(c.updatedAtUtc)}` : created;
     });
     readonly phone = computed(() => formatClientPhoneForDisplay(this.client().phone));
     readonly phoneHref = computed(() => clientPhoneTelHref(this.client().phone));
