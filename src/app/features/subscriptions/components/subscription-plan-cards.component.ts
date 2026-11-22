@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, input, model, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, model, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import type { SubscriptionBillingPeriod, SubscriptionCheckoutSessionVm, SubscriptionPlanVm, SubscriptionSummaryVm } from '@/app/entities/subscription/models/subscription-vm.model';
-import { formatPlanPrice, formatUserLimit } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { defByPlanKey, formatPlanPrice, formatUserLimit, planCardFeatures, type PlanCardFeatures } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import { SUBSCRIPTION_BILLING_PERIOD_LABELS, subscriptionPlanLabel } from '@/app/entities/subscription/utils/subscription-plan.utils';
 import { isActiveTrialingSubscription, isExpiredReadOnlySubscription } from '@/app/features/subscriptions/utils/subscription-access.utils';
 import { canChooseBillingPeriod, isSwitchToYearly } from '@/app/features/subscriptions/utils/subscription-billing-period.utils';
@@ -50,7 +50,10 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
                                     <span class="text-xs px-2 py-1 rounded-md bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">Mevcut</span>
                                 }
                             </div>
-                            @if (plan.description) {
+                            @let text = planTexts().get(plan.code);
+                            @if (text) {
+                                <p class="mt-2 mb-0 text-sm text-color break-words" data-testid="plan-audience"><span class="font-medium">Kimin için:</span> {{ text.audience }}</p>
+                            } @else if (plan.description) {
                                 <p class="mt-2 mb-0 text-sm text-color break-words">{{ plan.description }}</p>
                             }
                             @if (planPriceText(plan, s); as price) {
@@ -62,6 +65,16 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
                                         <div class="text-[10px] font-medium uppercase tracking-wide text-muted-color">Kullanıcı</div>
                                         <div class="text-xs font-semibold text-color">{{ userLimit }}</div>
                                     </div>
+                                </div>
+                            }
+                            @if (text && text.features.items.length > 0) {
+                                <div class="mt-3" data-testid="plan-features">
+                                    <p class="m-0 text-sm font-medium text-color">{{ text.features.lead }}</p>
+                                    <ul class="m-0 mt-1.5 p-0 list-none flex flex-col gap-1">
+                                        @for (item of text.features.items; track item.label) {
+                                            <li class="flex items-start gap-2 text-sm text-muted-color"><i class="pi pi-check text-primary text-xs mt-1 shrink-0" aria-hidden="true"></i><span>{{ item.label }}</span></li>
+                                        }
+                                    </ul>
                                 </div>
                             }
                             @if (canManage() && shouldShowPlanAction(plan, s)) {
@@ -108,6 +121,23 @@ export class SubscriptionPlanCardsComponent {
     readonly isCurrentPlan = isCurrentPlan;
     /** Kullanıcı sınırı backend kataloğundan (`maxUsers`); klinik sınırı backend'de yok, gösterilmez (WEB-007). */
     readonly userLimitLabel = formatUserLimit;
+    /**
+     * Paket metni tanıtım sitesiyle aynı kaynaktan (`pricing-plan.utils`): "Kimin için" ve bir önceki paketten farkı. Kataloğu
+     * bilinmeyen paket backend açıklamasıyla kalır.
+     */
+    readonly planTexts = computed(() => {
+        const texts = new Map<string, { readonly audience: string; readonly features: PlanCardFeatures }>();
+
+        for (const plan of this.summary().availablePlans) {
+            const def = defByPlanKey(plan.code);
+
+            if (def) {
+                texts.set(plan.code, { audience: def.description, features: planCardFeatures(def.slug) });
+            }
+        }
+
+        return texts;
+    });
 
     planLabel(plan: { code: string; name: string }): string {
         return subscriptionPlanLabel(plan.code, plan.name);
@@ -128,7 +158,8 @@ export class SubscriptionPlanCardsComponent {
             }
 
             if (isUpgradePlan(plan, summary)) {
-                return 'Hemen yükselt';
+                // Denemede üst pakete geçiş ödemesiz ve hemen uygulanır (backend `ApplyTrialPlanChange`); "yükselt" ödeme çağrıştırır.
+                return isActiveTrialingSubscription(summary) ? 'Bu pakete geç' : 'Hemen yükselt';
             }
 
             return 'Bu paketi aktifleştir';
