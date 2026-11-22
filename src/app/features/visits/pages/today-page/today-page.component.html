@@ -5,14 +5,27 @@
         @if (canCreateVisit) {
             <button pButton type="button" [disabled]="ro.mutationBlocked()" appReadOnlyReason (click)="openWalkInArrival()"><i class="p-button-icon pi pi-plus"></i>Randevusuz geliş</button>
         }
+        <!-- Salt okunurda yeni kayıt bağlantıları pasif düğme olur (sayfa açılıp orada engellenmez); neden üstteki bantta ve Randevusuz geliş yanında. -->
         @if (canCreateAppointment) {
-            <a routerLink="/panel/appointments/new" pButton type="button" class="p-button-secondary" data-testid="today-new-appointment"><i class="pi pi-calendar-plus"></i>Yeni randevu</a>
+            @if (ro.mutationBlocked()) {
+                <button pButton type="button" class="p-button-secondary" disabled data-testid="today-new-appointment"><i class="pi pi-calendar-plus"></i>Yeni randevu</button>
+            } @else {
+                <a routerLink="/panel/appointments/new" pButton type="button" class="p-button-secondary" data-testid="today-new-appointment"><i class="pi pi-calendar-plus"></i>Yeni randevu</a>
+            }
         }
         @if (canCreateExamination) {
-            <a routerLink="/panel/examinations/new" pButton type="button" class="p-button-secondary" data-testid="today-new-examination"><i class="pi pi-file-edit"></i>Yeni muayene</a>
+            @if (ro.mutationBlocked()) {
+                <button pButton type="button" class="p-button-secondary" disabled data-testid="today-new-examination"><i class="pi pi-file-edit"></i>Yeni muayene</button>
+            } @else {
+                <a routerLink="/panel/examinations/new" pButton type="button" class="p-button-secondary" data-testid="today-new-examination"><i class="pi pi-file-edit"></i>Yeni muayene</a>
+            }
         }
         @if (canQuickSell) {
-            <a routerLink="/panel/sales/new" pButton type="button" class="p-button-secondary"><i class="pi pi-shopping-cart"></i>Hızlı satış</a>
+            @if (ro.mutationBlocked()) {
+                <button pButton type="button" class="p-button-secondary" disabled data-testid="today-quick-sale"><i class="pi pi-shopping-cart"></i>Hızlı satış</button>
+            } @else {
+                <a routerLink="/panel/sales/new" pButton type="button" class="p-button-secondary" data-testid="today-quick-sale"><i class="pi pi-shopping-cart"></i>Hızlı satış</a>
+            }
         }
     </div>
 </app-page-header>

@@ -100,14 +100,14 @@ describe('petIdentityParts', () => {
         breed: 'Tekir',
         gender: 'female',
         birthDate: '2023-10-01',
-        weight: '4.2',
+        weight: '4,2',
         microchipNumber: '900000000000001'
     } as PetDetailVm;
 
     it('muayene kilosu varsa onu, yoksa profil kilosunu kullanır; boş alanları atlar', () => {
-        expect(petIdentityParts(pet, 4.4, NOW)).toEqual(['Kedi', 'Tekir', 'Dişi', '3 yaş', '4.4 kg', 'Çip 900000000000001']);
+        expect(petIdentityParts(pet, 4.4, NOW)).toEqual(['Kedi', 'Tekir', 'Dişi', '3 yaş', '4,4 kg', 'Çip 900000000000001']);
         expect(petIdentityParts({ ...pet, breed: '—', microchipNumber: '—', weight: '—', gender: '—' }, null, NOW)).toEqual(['Kedi', '3 yaş']);
-        expect(petIdentityParts(pet, null, NOW)).toContain('4.2 kg');
+        expect(petIdentityParts(pet, null, NOW)).toContain('4,2 kg');
     });
 });
 
@@ -132,7 +132,7 @@ describe('nextScheduledAppointment', () => {
 
 describe('examinationVitalsLine / examinationAssessmentText', () => {
     it('ölçülen vitalleri birimleriyle birleştirir; hiç yoksa null', () => {
-        expect(examinationVitalsLine({ temperatureC: 38.5, heartRateBpm: 120, respiratoryRatePerMin: null })).toBe('38.5 °C · 120 atım/dk');
+        expect(examinationVitalsLine({ temperatureC: 38.5, heartRateBpm: 120, respiratoryRatePerMin: null })).toBe('38,5 °C · 120 atım/dk');
         expect(examinationVitalsLine({ temperatureC: null, heartRateBpm: null, respiratoryRatePerMin: null })).toBeNull();
     });
 

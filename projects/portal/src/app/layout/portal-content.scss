@@ -134,3 +134,34 @@
     border-color: #0b6f69;
     color: #ffffff;
 }
+
+/* Koyu tema: açık tondaki sabit renklerin karşılığı (değişkenler styles.scss :root.portal-dark). */
+.portal-dark {
+    .portal-header-action {
+        color: var(--portal-link);
+    }
+
+    .portal-see-all-pill,
+    .portal-tile-icon,
+    .portal-action-link {
+        color: var(--portal-teal-text);
+    }
+
+    .portal-tile:hover {
+        border-color: var(--p-surface-500);
+    }
+
+    .portal-tile--attention {
+        border-color: var(--portal-warn-border);
+        background: var(--portal-warn-bg);
+    }
+
+    .portal-tile--attention .portal-tile-icon {
+        background: var(--portal-warn-strong-bg);
+        color: var(--portal-warn-text);
+    }
+
+    .portal-action-link--primary {
+        color: #ffffff;
+    }
+}

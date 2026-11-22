@@ -16,6 +16,12 @@ describe('pet.mapper hayvan durumu (ADR-020 S5)', () => {
         expect(mapPetListItemDtoToVm({ id: 'p2', name: 'Boncuk' }).status).toBe('Active');
     });
 
+    it('kilo Türkçe ondalıkla gösterilir; kilosuz hasta boş işaret alır', () => {
+        expect(mapPetListItemDtoToVm({ id: 'p1', name: 'Pamuk', weight: 4.2 }).weight).toBe('4,2');
+        expect(mapPetDetailDtoToVm({ id: 'p1', weight: 12.45 }).weight).toBe('12,45');
+        expect(mapPetDetailDtoToVm({ id: 'p1' }).weight).toBe('—');
+    });
+
     it('detay vefat tarihini yalnız vefat edende ve rowVersion ile okur', () => {
         const deceased = mapPetDetailDtoToVm({ id: 'p1', status: 'Deceased', deceasedOn: '2026-10-14', rowVersion: 'AAAAAAAAB9E=' });
 

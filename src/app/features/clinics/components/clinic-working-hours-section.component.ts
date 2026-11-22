@@ -11,7 +11,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CLINICS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { clinicAppointmentSettingsFormToPutBody } from '@/app/entities/clinic/data/clinic-appointment-settings.mapper';
-import { clinicWorkingHoursFormToPutBody, normalizeTimeForInput } from '@/app/entities/clinic/data/clinic-working-hours.mapper';
+import { clinicWorkingHoursFormToPutBody, compareClinicWeekDay, normalizeTimeForInput } from '@/app/entities/clinic/data/clinic-working-hours.mapper';
 import type { ClinicWorkingHourFormValue, ClinicWorkingHourVm } from '@/app/entities/clinic/models/clinic-working-hours-vm.model';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
 import { clinicWorkingDayErrorMessage, clinicWorkingDayGroupValidator } from '@/app/features/clinics/utils/clinic-working-hours-day.validator';
@@ -307,7 +307,7 @@ export class ClinicWorkingHoursSectionComponent {
 
         arr.clear();
 
-        for (const vm of [...items].sort((a, b) => a.dayOfWeek - b.dayOfWeek)) {
+        for (const vm of [...items].sort(compareClinicWeekDay)) {
             const g = this.fb.group(
                 {
                     dayOfWeek: [vm.dayOfWeek],

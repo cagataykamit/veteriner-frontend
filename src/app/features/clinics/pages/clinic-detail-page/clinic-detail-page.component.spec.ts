@@ -295,7 +295,9 @@ describe('ClinicDetailPageComponent — yükleme, form ve durum eylemleri', () =
 
         expect(button('Çalışma saatlerini kaydet').disabled).toBe(true);
 
-        (el().querySelector('#whClosed6') as HTMLInputElement).click();
+        // Liste Pazartesi başlar: whClosed5 Cumartesidir.
+        expect(el().querySelector('[data-testid="wh-days"]')?.textContent?.trim().startsWith('Pazartesi')).toBe(true);
+        (el().querySelector('#whClosed5') as HTMLInputElement).click();
         await settle();
         expect(button('Çalışma saatlerini kaydet').disabled).toBe(false);
         await click('Çalışma saatlerini kaydet');

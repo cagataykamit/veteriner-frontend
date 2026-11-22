@@ -8,6 +8,11 @@ export interface VitalSignDefinition {
     readonly max: number;
     /** Sunucu bu basamağa yuvarlar; `0` tam sayı alanıdır. */
     readonly decimals: number;
+    /**
+     * Olağan aralık: dışındaki değer kaydedilir ama girişte "kontrol edin" uyarısı çıkar (ör. 45 °C). Türden bağımsız
+     * geniş tutulur (kuşlarda ateş 42 °C'ye çıkar); nabız ve solunum türe göre çok değiştiği için tanımsızdır.
+     */
+    readonly usual?: { readonly min: number; readonly max: number };
 }
 
 /**
@@ -15,7 +20,7 @@ export interface VitalSignDefinition {
  * sıra giriş kutularının, grafiklerin ve tablonun sırasıdır.
  */
 export const VITAL_SIGNS: ReadonlyArray<VitalSignDefinition> = [
-    { key: 'temperatureC', label: 'Ateş', unit: '°C', min: 25, max: 45, decimals: 1 },
+    { key: 'temperatureC', label: 'Ateş', unit: '°C', min: 25, max: 45, decimals: 1, usual: { min: 35, max: 42 } },
     { key: 'heartRateBpm', label: 'Nabız', unit: 'atım/dk', min: 1, max: 400, decimals: 0 },
     { key: 'respiratoryRatePerMin', label: 'Solunum', unit: 'soluk/dk', min: 1, max: 200, decimals: 0 },
     { key: 'weightKg', label: 'Kilo', unit: 'kg', min: 0.01, max: 9999.99, decimals: 2 }

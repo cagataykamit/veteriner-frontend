@@ -63,6 +63,8 @@ import { RecentlyViewedService, recentlyViewedSubtitle } from '@/app/entities/pa
 import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
 import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-detail-row-link.component';
 import type { HasUnsavedChanges } from '@/app/shared/ui/unsaved-changes/unsaved-changes';
+import type { VitalSignKey } from '@/app/entities/vital-measurement/models/vital-measurement-vm.model';
+import { formatVitalReading } from '@/app/entities/vital-measurement/utils/vital-measurement-rules';
 
 /** Kayıt metin bölümleri sırası; vital satırı `findings` ile `assessment` arasına girer. */
 const RECORD_TEXT_SECTIONS: readonly {
@@ -493,14 +495,14 @@ export class ExaminationDetailPageComponent implements OnInit, HasUnsavedChanges
             return [];
         }
 
-        return [
-            { label: 'Kilo', value: e.weightKg, unit: 'kg' },
-            { label: 'Sıcaklık', value: e.temperatureC, unit: '°C' },
-            { label: 'Kalp', value: e.heartRateBpm, unit: 'atım/dk' },
-            { label: 'Solunum', value: e.respiratoryRatePerMin, unit: 'soluk/dk' }
-        ]
-            .filter((v) => v.value !== null)
-            .map((v) => ({ label: v.label, value: `${v.value} ${v.unit}` }));
+        const rows: { label: string; key: VitalSignKey; value: number | null }[] = [
+            { label: 'Kilo', key: 'weightKg', value: e.weightKg },
+            { label: 'Sıcaklık', key: 'temperatureC', value: e.temperatureC },
+            { label: 'Kalp', key: 'heartRateBpm', value: e.heartRateBpm },
+            { label: 'Solunum', key: 'respiratoryRatePerMin', value: e.respiratoryRatePerMin }
+        ];
+
+        return rows.flatMap((v) => (v.value === null ? [] : [{ label: v.label, value: formatVitalReading(v.key, v.value) }]));
     });
 
     readonly apptLoading = signal(false);

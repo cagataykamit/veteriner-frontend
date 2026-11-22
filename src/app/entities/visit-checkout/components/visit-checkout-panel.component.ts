@@ -37,6 +37,7 @@ import { printSaleReceipt } from '@/app/shared/utils/sale-receipt-print.utils';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
+import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 
 type Phase = 'edit' | 'saving' | 'failed' | 'done';
 type StepStatus = 'pending' | 'running' | 'done' | 'failed' | 'skipped';
@@ -105,7 +106,7 @@ const CARE_SEVERITY = { Waiting: 'warn', InProgress: 'info', Completed: 'success
                         }
                     </div>
                     <div class="text-sm text-muted-color">
-                        {{ s.clientName }}@if (s.clientPhone) { · {{ s.clientPhone }} } · Geliş {{ time(s.arrivedAtUtc) }}@if (s.responsibleVeterinarianName) { · {{ s.responsibleVeterinarianName }} }
+                        {{ s.clientName }}@if (s.clientPhone) { · {{ phone(s.clientPhone) }} } · Geliş {{ time(s.arrivedAtUtc) }}@if (s.responsibleVeterinarianName) { · {{ s.responsibleVeterinarianName }} }
                     </div>
                 </div>
                 <button pButton type="button" iconOnly size="small" [text]="true" severity="secondary" aria-label="Klavye kısayolları" pTooltip="Kısayollar (?)" tooltipPosition="bottom" (click)="showShortcuts.set(!showShortcuts())">
@@ -436,11 +437,11 @@ const CARE_SEVERITY = { Waiting: 'warn', InProgress: 'info', Completed: 'success
                             <dd class="m-0 text-right tabular-nums">{{ money(t.due) }}</dd>
                             @if (t.credit > 0) {
                                 <dt class="text-muted-color">Krediden</dt>
-                                <dd class="m-0 text-right tabular-nums">−{{ money(t.credit) }}</dd>
+                                <dd class="m-0 text-right tabular-nums">{{ money(t.credit) }}</dd>
                             }
                             @if (t.paid > 0) {
                                 <dt class="text-muted-color">Alınan</dt>
-                                <dd class="m-0 text-right tabular-nums">−{{ money(t.paid) }}</dd>
+                                <dd class="m-0 text-right tabular-nums">{{ money(t.paid) }}</dd>
                             }
                             <dt class="font-semibold" [class]="t.remaining > 0 ? 'text-amber-700 dark:text-amber-300' : ''">{{ t.overpaid > 0 ? 'Krediye yazılacak' : 'Kalan' }}</dt>
                             <dd class="m-0 text-right font-semibold tabular-nums text-base" [class]="t.remaining > 0 ? 'text-amber-700 dark:text-amber-300' : ''">{{ money(t.overpaid > 0 ? t.overpaid : t.remaining) }}</dd>
@@ -747,6 +748,10 @@ export class VisitCheckoutPanelComponent {
 
     protected money(n: number): string {
         return formatMoney(n, 'TRY');
+    }
+
+    protected phone(value: string): string {
+        return formatClientPhoneForDisplay(value);
     }
 
     protected date(iso: string): string {

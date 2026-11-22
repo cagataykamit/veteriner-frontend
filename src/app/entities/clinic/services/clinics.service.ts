@@ -4,6 +4,7 @@ import { catchError, map, Observable, throwError } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import { AuthService } from '@/app/core/auth/auth.service';
+import { CLINICS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import {
     clinicProfileToWriteDto,
     extractCreatedClinicIdFromPostResponse,
@@ -30,10 +31,17 @@ export class ClinicsService {
     private readonly api = inject(ApiClient);
     private readonly auth = inject(AuthService);
 
-    /** `GET /api/v1/clinics` */
+    /**
+     * `GET /api/v1/clinics` (`Clinics.Read`). İzin yoksa istek atılmaz (hekim ve sekreterde 403
+     * konsola düşmesin); çağıran aynı hata yolundan aktif klinikle devam eder.
+     */
     listClinics(): Observable<ClinicListItemVm[]> {
         if (!this.auth.getAccessToken()?.trim()) {
             return throwError(() => new Error('Oturum bulunamadı. Lütfen tekrar giriş yapın.'));
+        }
+
+        if (!this.auth.hasOperationClaim(CLINICS_READ_CLAIM)) {
+            return throwError(() => new Error('Klinik listesini görme yetkiniz yok.'));
         }
 
         return this.api.get<unknown>(ApiEndpoints.clinics.list()).pipe(

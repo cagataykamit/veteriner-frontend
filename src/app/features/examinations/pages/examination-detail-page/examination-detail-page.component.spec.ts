@@ -471,8 +471,8 @@ describe('ExaminationDetailPageComponent — kesinleştirme ve ek not', () => {
         const vitals = Array.from(el.querySelectorAll('[data-testid="vital"]')).map((v) => Array.from(v.children).map((c) => c.textContent?.trim()));
 
         expect(vitals).toEqual([
-            ['Kilo', '4.25 kg'],
-            ['Sıcaklık', '38.6 °C']
+            ['Kilo', '4,25 kg'],
+            ['Sıcaklık', '38,6 °C']
         ]);
         expect(el.querySelector('[data-testid="record-empty-sections"]')?.textContent).not.toContain('Klinik bulgular');
     });

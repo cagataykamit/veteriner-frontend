@@ -195,8 +195,8 @@ import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/impor
                         } @else if (paymentSummary()) {
                             <div class="grid grid-cols-3 gap-3 text-sm">
                                 <div class="min-w-0">
-                                    <p class="text-muted-color text-xs m-0 mb-0.5">Toplam ödeme</p>
-                                    <p class="m-0 font-semibold text-surface-900 dark:text-surface-0">{{ paymentSummary()!.totalPaymentsCount }}</p>
+                                    <p class="text-muted-color text-xs m-0 mb-0.5">Ödeme sayısı</p>
+                                    <p class="m-0 font-semibold text-surface-900 dark:text-surface-0 tabular-nums" data-testid="payment-count">{{ paymentSummary()!.totalPaymentsCount }}</p>
                                 </div>
                                 <div class="min-w-0">
                                     <p class="text-muted-color text-xs m-0 mb-0.5">Son ödeme</p>
@@ -205,7 +205,7 @@ import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/impor
                                     </p>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-muted-color text-xs m-0 mb-0.5">Para birimi toplamları</p>
+                                    <p class="text-muted-color text-xs m-0 mb-0.5">Toplam ödeme</p>
                                     @if (paymentSummary()!.currencyTotals.length > 0) {
                                         <ul class="list-none m-0 p-0 space-y-0.5">
                                             @for (ct of paymentSummary()!.currencyTotals; track ct.currency) {
@@ -217,6 +217,8 @@ import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/impor
                                         <p class="text-muted-color text-[10px] m-0 mt-0.5 leading-tight">Genel toplam (rapor)</p>
                                     } @else if (paymentSummary()!.totalPaidAmount === 0 && paymentSummary()!.totalPaymentsCount > 0) {
                                         <p class="text-muted-color text-xs m-0 leading-snug">Farklı para birimlerindeki tutarlar toplanmaz; her para birimi ayrı gösterilir.</p>
+                                    } @else if (paymentSummary()!.totalPaymentsCount === 0) {
+                                        <p class="m-0 font-semibold text-sm text-surface-900 dark:text-surface-0 tabular-nums" data-testid="payment-total">{{ money(0, 'TRY') }}</p>
                                     } @else {
                                         <p class="m-0 font-semibold text-surface-900 dark:text-surface-0">—</p>
                                     }

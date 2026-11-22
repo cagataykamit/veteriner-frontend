@@ -97,6 +97,13 @@ const TR_DAY: Record<number, string> = {
     6: 'Cumartesi'
 };
 
+/** Türkiye'de hafta Pazartesi başlar: listeler Pazartesi → Pazar sıralanır (`dayOfWeek`: 0 Pazar). */
+export const CLINIC_WEEK_DAY_ORDER: readonly number[] = [1, 2, 3, 4, 5, 6, 0];
+
+export function compareClinicWeekDay(a: { dayOfWeek: number }, b: { dayOfWeek: number }): number {
+    return CLINIC_WEEK_DAY_ORDER.indexOf(a.dayOfWeek) - CLINIC_WEEK_DAY_ORDER.indexOf(b.dayOfWeek);
+}
+
 export function clinicWorkingHourDayLabel(dayOfWeek: number): string {
     return TR_DAY[dayOfWeek] ?? `Gün ${dayOfWeek}`;
 }

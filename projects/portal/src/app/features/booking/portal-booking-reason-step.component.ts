@@ -21,10 +21,10 @@ import { PortalBookingStep } from './portal-booking-ui.component';
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            border: 1px solid #f5b8a8;
+            border: 1px solid var(--portal-danger-soft-border, #f5b8a8);
             border-radius: 0.75rem;
-            background: #fff5f2;
-            color: #7a2410;
+            background: var(--portal-danger-soft-bg, #fff5f2);
+            color: var(--portal-danger-soft-text, #7a2410);
             font-size: 0.9375rem;
         }
         .urgent-text {
@@ -43,7 +43,7 @@ import { PortalBookingStep } from './portal-booking-ui.component';
             justify-content: space-between;
             gap: 0.75rem;
             padding: 0.625rem 0.875rem;
-            border-top: 1px solid #f5b8a8;
+            border-top: 1px solid var(--portal-danger-soft-border, #f5b8a8);
             background: var(--portal-surface);
             line-height: 1.25;
         }
@@ -83,8 +83,8 @@ import { PortalBookingStep } from './portal-booking-ui.component';
             flex: 0 0 auto;
             padding: 0.125rem 0.5rem;
             border-radius: 999px;
-            background: #eef2f6;
-            color: #334155;
+            background: var(--portal-muted-bg, #eef2f6);
+            color: var(--portal-muted-text, #334155);
             font-size: 0.8125rem;
             font-weight: 600;
             white-space: nowrap;

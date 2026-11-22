@@ -105,7 +105,7 @@ describe('ExaminationPatientContextComponent', () => {
     it('kilo, gecikmiş aşı, aktif tedavi/yatış ve son muayeneleri tek panelde gösterir', async () => {
         const { el, text, vaccinations, treatments: treatmentsService, related } = await setup();
 
-        expect(text('ctx-weight')).toContain('4.4 kg');
+        expect(text('ctx-weight')).toContain('4,4 kg');
         expect(vaccinations.getVaccinations).toHaveBeenCalledWith(expect.objectContaining({ petId: 'pet-1', onlyOverdue: true }));
         expect(el.querySelectorAll('[data-testid="ctx-overdue-item"]').length).toBe(1);
         expect(text('ctx-overdue')).toContain('+3 daha');

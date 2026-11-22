@@ -232,6 +232,21 @@ describe('ExaminationWorkspacePageComponent (düzenleme)', () => {
         expect(service.updateExamination).not.toHaveBeenCalled();
     });
 
+    it('olağan dışı ateş (45 °C) uyarı gösterir ama kaydı engellemez', () => {
+        service.getExaminationForEditById.mockReturnValue(of(editVm({ temperatureC: 38.6 })));
+        cmp.reload();
+        service.updateExamination.mockReturnValue(of({ id: 'e1', rowVersion: 'V2' }));
+        cmp.form.controls.temperatureC.setValue(45);
+        fixture.detectChanges();
+
+        const warning = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="vital-warning-temperatureC"]');
+
+        expect(warning?.textContent).toContain('Olağan dışı değer');
+        expect(cmp.vitalWarning('weightKg')).toBeNull();
+        cmp.onSubmit();
+        expect(vi.mocked(service.updateExamination).mock.lastCall![1].temperatureC).toBe(45);
+    });
+
     it('vital değer varken PUT ta clearVitals gönderilmez', () => {
         service.getExaminationForEditById.mockReturnValue(of(editVm({ weightKg: 4.25 })));
         cmp.reload();

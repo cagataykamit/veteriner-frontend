@@ -45,7 +45,7 @@ export class PortalLoadingState {
             height: 0.875rem;
             width: 70%;
             border-radius: 0.375rem;
-            background: linear-gradient(90deg, #eef2f6 25%, #e2e8f0 50%, #eef2f6 75%);
+            background: linear-gradient(90deg, var(--portal-muted-bg, #eef2f6) 25%, var(--portal-border) 50%, var(--portal-muted-bg, #eef2f6) 75%);
             background-size: 200% 100%;
             animation: portal-skeleton-pulse 1.4s ease-in-out infinite;
         }

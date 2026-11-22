@@ -69,7 +69,7 @@ describe('PetImportedRecordsSectionComponent', () => {
         (el.querySelector('[data-testid="imported-record-toggle"]') as HTMLButtonElement).click();
         fixture.detectChanges();
         expect(el.querySelector('[data-testid="imported-record-detail"]')?.textContent).toContain('Antibiyotik 5 gün');
-        expect(el.textContent).toContain('Ateş 39.8 °C');
+        expect(el.textContent).toContain('Kilo 4,2 kg · Ateş 39,8 °C');
         expect(el.querySelector('[data-testid="imported-records-more"]')).toBeNull();
     });
 });

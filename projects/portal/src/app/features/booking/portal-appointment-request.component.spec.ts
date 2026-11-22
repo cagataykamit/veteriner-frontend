@@ -160,8 +160,8 @@ describe('PortalAppointmentRequestComponent (oturumlu talep)', () => {
         const call = el.querySelector('[data-testid=booking-urgent] a')!;
 
         expect(call.getAttribute('href')).toBe('tel:02320000000');
-        expect(call.getAttribute('aria-label')).toBe('Kliniği ara: 0232 000 00 00');
-        expect(el.querySelector('[data-testid=booking-urgent] .urgent-number')?.textContent?.trim()).toBe('0232 000 00 00');
+        expect(call.getAttribute('aria-label')).toBe('Kliniği ara: +90 232 000 00 00');
+        expect(el.querySelector('[data-testid=booking-urgent] .urgent-number')?.textContent?.trim()).toBe('+90 232 000 00 00');
     });
 
     it('klinik telefonu yoksa acil uyarısında telefon satırı olmaz', async () => {
