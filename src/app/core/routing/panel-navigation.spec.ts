@@ -111,7 +111,8 @@ describe('panel-navigation', () => {
             ['Ücret bekleyenler', '/panel/charges/pending'],
             ['Ödemeler', '/panel/payments'],
             ['Satışlar', '/panel/sales'],
-            ['e-Belgeler', '/panel/e-documents']
+            ['e-Belgeler', '/panel/e-documents'],
+            ['Kasa', '/panel/cash-registers']
         ]);
         expect(tabs('Stok').map(([l]) => l)).toEqual(['Ürünler', 'Stok durumu', 'Stok hareketleri', 'Mal kabul', 'İlaç rehberi']);
         expect(tabs('Kayıtlar').map(([l]) => l)).toEqual(['Muayeneler', 'Tedaviler', 'Reçeteler', 'Aşılar', 'Lab sonuçları', 'Görüntüleme', 'Yatışlar', 'Uygulamalar']);
@@ -378,7 +379,7 @@ describe('panel-navigation', () => {
             'Muayene raporu',
             'Aşı raporu',
             'Gün sonu',
-            'Kasa',
+            'Kasa hareketleri',
             'Ödeme hareketleri',
             'Borç raporu',
             'Muayene Kayıt Defteri',
@@ -398,5 +399,15 @@ describe('panel-navigation', () => {
         expect(labels(visibleGroups(REPORT_SECTIONS, (c) => c === 'Prescriptions.Read'))).toEqual(['Reçete Kayıt Defteri', 'HBS takibi — reçeteler']);
         expect(labels(visibleGroups(REPORT_SECTIONS, (c) => c === 'Vaccinations.Read'))).toEqual(['Aşı raporu', 'HBS takibi — aşılar']);
         expect(visibleGroups(REPORT_SECTIONS, () => false)).toEqual([]);
+    });
+
+    it('Kasa (S-05): Para sekmesi, Tanımlar kartı ve Raporlar › Kasa hareketleri; izinler eski Kasa sayfasıyla aynı', () => {
+        const kasa = entry('Para').tabs!.find((t) => t.label === 'Kasa')!;
+
+        expect(kasa).toEqual(expect.objectContaining({ route: '/panel/cash-registers', claims: ['CashRegisters.Read'], planFeature: 'CashManagement' }));
+        expect(tabsForUrl(MENU_GROUPS, '/panel/cash-registers', only('CashRegisters.Read', 'Payments.Read'))?.active.label).toBe('Kasa');
+        expect(visibleEntries(DEFINITION_ENTRIES, only('CashRegisters.Read'))).toEqual([]);
+        expect(visibleEntries(DEFINITION_ENTRIES, only('CashRegisters.Manage')).map((e) => e.route)).toEqual(['/panel/settings/definitions/cash-registers']);
+        expect(listLabelForUrl('/panel/reports/cash-registers')).toBe('Kasa hareketleri');
     });
 });

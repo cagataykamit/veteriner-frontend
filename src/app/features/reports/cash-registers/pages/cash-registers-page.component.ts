@@ -1,18 +1,18 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import type { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { CASH_MOVEMENTS_CREATE_CLAIM, CASH_MOVEMENTS_VOID_CLAIM, CASH_REGISTERS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
-import { REPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
+import { CASH_MOVEMENTS_VOID_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { CASH_REGISTER_ROUTE, REPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { CASH_REGISTER_REPORT_KIND_LABELS, type CashMovementCategoryDto, type CashRegisterDto, type CashRegisterReportDto, type CashRegisterReportRowDto } from '@/app/entities/cash-register/models/cash-register.model';
+import { CashReportRowsComponent } from '@/app/entities/cash-register/components/cash-report-rows.component';
+import type { CashRegisterDto, CashRegisterReportDto } from '@/app/entities/cash-register/models/cash-register.model';
 import { CashRegistersService } from '@/app/entities/cash-register/services/cash-registers.service';
 import { AppPlanUpgradeNoticeComponent } from '@/app/entities/subscription/components/app-plan-upgrade-notice.component';
-import { CashMovementFormsComponent } from '@/app/features/reports/cash-registers/components/cash-movement-forms.component';
-import { CashRegisterSettingsComponent } from '@/app/features/reports/cash-registers/components/cash-register-settings.component';
 import { ymdDaysBefore } from '@/app/features/reports/end-of-day/utils/cash-count.utils';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -20,18 +20,16 @@ import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { AppListFilterToggleComponent } from '@/app/shared/ui/list-filters/app-list-filter-toggle.component';
 import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
-import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { formatUtcIsoAsLocalDateTimeDisplay, localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
+import { localDateYyyyMmDd } from '@/app/shared/utils/date.utils';
 import { fileNameFromContentDisposition, triggerBlobDownload } from '@/app/shared/utils/file-download.utils';
 
-const MOVEMENT_KINDS: ReadonlySet<string> = new Set(['In', 'Out', 'TransferIn', 'TransferOut']);
-
 /**
- * Kasa (TIER-008, `CASH_REGISTERS_API_CONTRACT.md`): kasa hareketleri raporu (devreden, hareketler, dönem sonu; CSV/Excel), kasaya giriş/çıkış
- * ve kasalar arası aktarım, kasa ve tür tanımı. Tek klinik: aktif klinik. Temel pakette "üst pakete geç" kutusu; paket düşmüşse kayıtlar
- * raporda okunur, yeni işlem girilmez.
+ * Raporlar › Kasa hareketleri (TIER-008, `CASH_REGISTERS_API_CONTRACT.md` §3.6): devreden, dönemin hareketleri ve dönem sonu; CSV/Excel.
+ * Günlük işlem (para girişi, çıkışı, aktarım) Para › Kasa sekmesinde, kasa ve tür tanımları Ayarlar › Tanımlar'da (S-05). Adres eskisiyle
+ * aynı kaldı (rapor anahtarı ve kayıtlı tercihler bozulmasın). Tek klinik: aktif klinik. Temel pakette "üst pakete geç" kutusu; paket
+ * düşmüşse kayıtlar okunur.
  */
 @Component({
     selector: 'app-cash-registers-page',
@@ -39,6 +37,7 @@ const MOVEMENT_KINDS: ReadonlySet<string> = new Set(['In', 'Out', 'TransferIn', 
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         FormsModule,
+        RouterLink,
         ButtonModule,
         MenuModule,
         SelectModule,
@@ -46,9 +45,7 @@ const MOVEMENT_KINDS: ReadonlySet<string> = new Set(['In', 'Out', 'TransferIn', 
         MoneyPipe,
         AppPageHeaderComponent,
         AppPlanUpgradeNoticeComponent,
-        ReasonConfirmDialogComponent,
-        CashMovementFormsComponent,
-        CashRegisterSettingsComponent,
+        CashReportRowsComponent,
         FilterFieldComponent,
         AppListFiltersComponent,
         AppListFilterToggleComponent
@@ -71,28 +68,12 @@ const MOVEMENT_KINDS: ReadonlySet<string> = new Set(['In', 'Out', 'TransferIn', 
                 font-weight: 500;
             }
         }
-
-        .cash-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.875rem;
-
-            th,
-            td {
-                padding: 0.5rem 0.625rem;
-                border-bottom: 1px solid var(--surface-border);
-                text-align: left;
-                vertical-align: top;
-            }
-
-            th {
-                font-weight: 600;
-                color: var(--text-color-secondary);
-            }
-        }
     `,
     template: `
-        <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" title="Kasa" description="Kasaların nakit hareketleri, kasaya giriş/çıkış ve kasalar arası aktarım." />
+        <app-page-header [categoryLink]="reportsRoute" categoryLinkLabel="Raporlar" title="Kasa hareketleri" description="Kasaların nakit hareketleri; tarih aralığı, kasa ve dışa aktarma." />
+        <p class="m-0 mb-4 text-sm text-muted-color" data-testid="cash-report-where">
+            Para girişi, çıkışı ve kasalar arası aktarım <a [routerLink]="cashRoute" class="text-primary font-medium hover:underline">Para › Kasa</a> sekmesinde yapılır.
+        </p>
 
         @if (!clinicId) {
             <section class="card"><p class="text-sm text-muted-color m-0">Kasa tek klinik için tutulur. Bir klinik seçerek girin.</p></section>
@@ -106,13 +87,9 @@ const MOVEMENT_KINDS: ReadonlySet<string> = new Set(['In', 'Out', 'TransferIn', 
                 </section>
             }
 
-            @if (!planLocked() && canCreate() && registers().length > 0) {
-                <app-cash-movement-forms [clinicId]="clinicId" [registers]="registers()" [categories]="categories()" (changed)="loadReport()" />
-            }
-
             @if (showReport()) {
                 <section class="card mb-4" aria-labelledby="cashReportTitle" data-testid="cash-report">
-                    <h5 id="cashReportTitle" class="mt-0 mb-3">Kasa hareketleri</h5>
+                    <h5 id="cashReportTitle" class="mt-0 mb-3">Dönem</h5>
                     <!-- Rapor filtre çubuğuyla aynı desen (G-10): alanlar, altında Filtrele · Temizle, sağda tek Dışa aktar; telefonda "Filtre (n)". -->
                     <form class="mb-4" (ngSubmit)="loadReport()">
                         <div class="sm:hidden flex justify-end"><app-list-filter-toggle [filters]="filters" /></div>
@@ -165,72 +142,13 @@ const MOVEMENT_KINDS: ReadonlySet<string> = new Set(['In', 'Out', 'TransferIn', 
                         @if (r.rows.length === 0) {
                             <p class="text-sm text-muted-color m-0">Bu aralıkta kasa hareketi yok.</p>
                         } @else {
-                            <!-- relative: başlıktaki sr-only metin kaydırma kutusunda kalır; telefonda sayfa yana taşmaz. -->
-                            <div class="overflow-x-auto relative">
-                                <table class="cash-table" aria-label="Kasa hareketleri" data-testid="cash-report-rows">
-                                    <thead>
-                                        <tr>
-                                            <th>Tarih</th>
-                                            @if (!r.cashRegisterId) {
-                                                <th>Kasa</th>
-                                            }
-                                            <th>Hareket</th>
-                                            <th>Açıklama</th>
-                                            <th class="text-right">Giriş</th>
-                                            <th class="text-right">Çıkış</th>
-                                            <th class="text-right">Bakiye</th>
-                                            <th>İşlemi yapan</th>
-                                            @if (canVoid()) {
-                                                <th><span class="sr-only">İşlem</span></th>
-                                            }
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @for (row of r.rows; track row.referenceId + row.kind) {
-                                            <tr>
-                                                <td>{{ timeLabel(row.atUtc) }}</td>
-                                                @if (!r.cashRegisterId) {
-                                                    <td>{{ row.cashRegisterName }}</td>
-                                                }
-                                                <td>{{ kindLabel(row) }}</td>
-                                                <td>{{ row.description }}</td>
-                                                <td class="text-right">{{ row.inAmount ? (row.inAmount | money) : '' }}</td>
-                                                <td class="text-right">{{ row.outAmount ? (row.outAmount | money) : '' }}</td>
-                                                <td class="text-right font-medium">{{ row.balance | money }}</td>
-                                                <td>{{ row.performedByName || '—' }}</td>
-                                                @if (canVoid()) {
-                                                    <td>
-                                                        @if (isMovement(row)) {
-                                                            <button pButton type="button" class="p-button-text p-button-sm p-button-danger" (click)="openVoid(row)" data-testid="cash-movement-void"><i class="pi pi-times"></i>İptal et</button>
-                                                        }
-                                                    </td>
-                                                }
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
+                            <app-cash-report-rows [rows]="r.rows" [showRegister]="!r.cashRegisterId" [canVoid]="canVoid()" (voided)="loadReport()" />
                         }
                     } @else {
                         <p class="text-sm text-muted-color m-0">Yükleniyor…</p>
                     }
                 </section>
             }
-
-            @if (!planLocked() && canManage()) {
-                <app-cash-register-settings [clinicId]="clinicId" [registers]="allRegisters()" [categories]="allCategories()" (changed)="loadDefinitions()" />
-            }
-
-            <app-reason-confirm-dialog
-                [(visible)]="voidVisible"
-                header="Kasa hareketini iptal et"
-                [summary]="voidTarget() ? kindLabel(voidTarget()!) + ' · ' + voidTarget()!.description : null"
-                description="Kayıt silinmez; gerekçeyle iptal edilir ve kasa bakiyesine girmez. Aktarımda iki kasadaki bacak birlikte iptal edilir."
-                confirmLabel="İptal et"
-                failureFallback="Kasa hareketi iptal edilemedi."
-                [execute]="voidMovement"
-                (confirmed)="loadReport()"
-            />
         }
     `
 })
@@ -240,12 +158,10 @@ export class CashRegistersPageComponent implements OnInit {
     private readonly ro = inject(TenantReadOnlyContextService);
 
     protected readonly reportsRoute = REPORTS_ROUTE;
+    protected readonly cashRoute = CASH_REGISTER_ROUTE;
     readonly clinicId = this.auth.getClinicId()?.trim() || null;
 
     readonly allRegisters = signal<CashRegisterDto[]>([]);
-    readonly allCategories = signal<CashMovementCategoryDto[]>([]);
-    readonly registers = computed(() => this.allRegisters().filter((r) => r.isActive));
-    readonly categories = computed(() => this.allCategories().filter((c) => c.isActive));
     readonly registerOptions = computed(() => [{ id: '', name: 'Tüm kasalar' }, ...this.allRegisters()]);
 
     readonly copy = PANEL_COPY;
@@ -263,32 +179,20 @@ export class CashRegistersPageComponent implements OnInit {
     readonly reportError = signal<string | null>(null);
     readonly loading = signal(false);
     readonly exporting = signal(false);
-    readonly voidTarget = signal<CashRegisterReportRowDto | null>(null);
-    voidVisible = false;
     private seq = 0;
 
     readonly planLocked = computed(() => this.ro.lockedPlanFeature('CashManagement') !== null);
-    private readonly writable = computed(() => !this.planLocked() && !this.ro.mutationBlocked());
-    readonly canCreate = computed(() => this.writable() && this.auth.hasOperationClaim(CASH_MOVEMENTS_CREATE_CLAIM));
-    readonly canVoid = computed(() => this.writable() && this.auth.hasOperationClaim(CASH_MOVEMENTS_VOID_CLAIM));
-    readonly canManage = computed(() => this.writable() && this.auth.hasOperationClaim(CASH_REGISTERS_MANAGE_CLAIM));
+    readonly canVoid = computed(() => !this.planLocked() && !this.ro.mutationBlocked() && this.auth.hasOperationClaim(CASH_MOVEMENTS_VOID_CLAIM));
     /** Temel'de rapor yalnız paket düşmüş ve Ana kasa dışında kasası olan kiracıda okunur. */
     readonly showReport = computed(() => !this.planLocked() || this.allRegisters().length > 1);
 
-    readonly voidMovement = (reason: string) => this.service.voidMovement(this.voidTarget()!.referenceId, reason);
-
     ngOnInit(): void {
-        this.loadDefinitions();
-        this.loadReport();
-    }
-
-    loadDefinitions(): void {
         if (!this.clinicId) {
             return;
         }
 
         this.service.list(this.clinicId, true).subscribe({ next: (rows) => this.allRegisters.set(rows), error: () => this.allRegisters.set([]) });
-        this.service.listCategories(true).subscribe({ next: (rows) => this.allCategories.set(rows), error: () => this.allCategories.set([]) });
+        this.loadReport();
     }
 
     loadReport(): void {
@@ -345,22 +249,5 @@ export class CashRegistersPageComponent implements OnInit {
                 this.reportError.set(panelHttpFailureMessage(err, 'Dosya indirilemedi.'));
             }
         });
-    }
-
-    openVoid(row: CashRegisterReportRowDto): void {
-        this.voidTarget.set(row);
-        this.voidVisible = true;
-    }
-
-    isMovement(row: CashRegisterReportRowDto): boolean {
-        return MOVEMENT_KINDS.has(row.kind);
-    }
-
-    kindLabel(row: CashRegisterReportRowDto): string {
-        return CASH_REGISTER_REPORT_KIND_LABELS[row.kind] ?? row.kind;
-    }
-
-    timeLabel(utcIso: string): string {
-        return formatUtcIsoAsLocalDateTimeDisplay(utcIso);
     }
 }
