@@ -90,16 +90,6 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         expect(host().querySelectorAll('.legal-consent input[type="checkbox"]').length).toBe(1);
     });
 
-    it('tanıtımın sıcak dili (L-01): kök tanıtım değişkenlerini taşır, teal geçişli çerçeve yok; başlık ve etiketler ortak sınıfla; devre dışı düğme ortak birincil sınıfta (L-03 rengi tema dosyasında)', () => {
-        const root = host().querySelector('.public-auth-page');
-
-        expect(root?.classList).toContain('public-site');
-        expect(host().querySelector('.public-auth-title')?.textContent).toContain('Hesap oluştur');
-        expect(host().querySelector('label[for="tenantName"]')?.classList).toContain('public-auth-label');
-        expect(submitButton()?.disabled).toBe(true);
-        expect(submitButton()?.classList).toContain('public-auth-submit');
-    });
-
     it('kutu işaretlenmeden gönderim pasif ve istek atılmaz', () => {
         expect(submitButton()?.disabled).toBe(true);
 

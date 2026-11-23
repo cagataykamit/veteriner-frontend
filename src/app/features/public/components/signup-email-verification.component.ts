@@ -23,7 +23,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="flex flex-col gap-2" data-testid="signup-email">
-            <label for="email" class="public-auth-label !mb-0">Yetkili e-posta *</label>
+            <label for="email" class="block text-surface-900 dark:text-surface-0 font-medium">Yetkili e-posta *</label>
 
             @if (step() === 'verified') {
                 <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-surface-200 dark:border-surface-700 px-3 py-2" data-testid="signup-email-verified">
@@ -69,7 +69,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 <app-turnstile-widget [siteKey]="turnstileSiteKey()" [action]="turnstileAction" (tokenChange)="turnstileToken.set($event)" />
 
                 @if (step() === 'code') {
-                    <label for="signupEmailCode" class="public-auth-label !mb-0 mt-2">E-postanıza gelen kod</label>
+                    <label for="signupEmailCode" class="block text-surface-900 dark:text-surface-0 font-medium mt-2">E-postanıza gelen kod</label>
                     <div class="flex flex-col sm:flex-row gap-2">
                         <input
                             pInputText

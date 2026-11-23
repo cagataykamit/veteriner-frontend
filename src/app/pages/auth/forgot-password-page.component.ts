@@ -32,7 +32,7 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
     imports: [FormsModule, ButtonModule, InputTextModule, RippleModule, RouterLink, PublicLegalLinksComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="public-page public-site public-auth-page">
+        <div class="public-page public-auth-page">
             <div class="public-auth-shell">
                 <div class="public-auth-card-frame">
                     <div class="public-auth-card-inner">
@@ -54,7 +54,7 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
                                     <img [src]="brand.logoFull" alt="Vetinity" class="public-auth-logo block dark:hidden" width="120" height="30" />
                                     <img [src]="brand.logoFullDark" alt="Vetinity" class="public-auth-logo hidden dark:block" width="120" height="30" />
                                 </a>
-                                <div class="public-auth-title">Şifremi unuttum</div>
+                                <div class="public-auth-title">Şifremi Unuttum</div>
                                 <span class="public-auth-subtitle">E-posta adresini gir, şifre sıfırlama bağlantısı gönderelim.</span>
                             </div>
 
@@ -73,7 +73,7 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
                                     }
                                 </div>
 
-                                <button pButton type="submit" class="w-full public-auth-submit" [disabled]="loading()">@if (loading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Sıfırlama bağlantısı gönder</button>
+                                <button pButton type="submit" class="w-full public-auth-submit" [disabled]="loading()">@if (loading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Sıfırlama Bağlantısı Gönder</button>
 
                                 @if (formError()) {
                                     <div class="public-auth-alert" role="alert" aria-live="assertive">
