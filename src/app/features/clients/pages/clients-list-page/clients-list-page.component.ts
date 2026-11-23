@@ -59,7 +59,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
             <div class="flex flex-col gap-4">
                 <app-list-header class="pb-3 border-b border-surface-200 dark:border-surface-700" title="Müşteriler" [count]="totalItems()">
                     <app-filter-field label="Arama" labelFor="clientSearch" [active]="isSearchActive()" width="grow">
-                        <app-search-input inputId="clientSearch" placeholder="Ad, e-posta, telefon…" [(value)]="searchInput" (searchRequested)="applySearch()" />
+                        <app-search-input inputId="clientSearch" hint="Ad, e-posta, telefon" [(value)]="searchInput" (searchRequested)="applySearch()" />
                     </app-filter-field>
                     <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                     @if (canCreateClient && !ro.mutationBlocked()) {

@@ -52,7 +52,8 @@ describe('PetsListPageComponent — süzgeçler', () => {
 
         expect(el.querySelector('app-client-search')).toBeNull();
         expect(el.querySelectorAll('app-search-input').length).toBe(1);
-        const placeholder = el.querySelector('input#petSearch')!.getAttribute('placeholder');
+        // R-06: kısa yer tutucu, kapsam ipucunda (title).
+        const placeholder = el.querySelector('input#petSearch')!.getAttribute('title');
 
         expect(placeholder).toContain('mikroçip');
         expect(placeholder).toContain('telefon');
