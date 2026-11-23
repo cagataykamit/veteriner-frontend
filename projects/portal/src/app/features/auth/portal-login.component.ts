@@ -10,7 +10,7 @@ import { PortalAuthApi } from '@portal/app/core/auth/portal-auth.api';
 import { safeReturnUrl } from '@portal/app/core/auth/portal-auth.guards';
 import type { PortalAuthTokens } from '@portal/app/core/auth/portal-auth.models';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
-import { PORTAL_ERROR_CODES, PORTAL_ERROR_MESSAGES, portalErrorMessage } from '@portal/app/core/errors/portal-errors';
+import { PORTAL_CODE_INVALID_MESSAGE, PORTAL_ERROR_CODES, PORTAL_ERROR_MESSAGES, portalErrorMessage } from '@portal/app/core/errors/portal-errors';
 import { PortalBrandHeader, PortalFooter } from '@portal/app/layout/portal-brand.component';
 import { normalizeOneTimeCode, portalEmailValidators, portalFieldError, portalOneTimeCodeValidator } from '@portal/app/shared/validation/portal-form-rules';
 import { HUMAN_CHECK_PENDING_MESSAGE, PORTAL_TURNSTILE_ACTIONS, PortalHumanVerificationService } from '@portal/app/core/security/portal-human-verification.service';
@@ -19,9 +19,7 @@ import { PortalResendTimer } from './portal-resend-timer';
 
 type LoginMethod = 'code' | 'password';
 
-/** Sunucu kod/parola/kilit ayrımı yapmaz (numaralandırma koruması, sözleşme §3); mesaj da ayırt etmez. */
-export const LOGIN_CODE_INVALID_MESSAGE =
-    'Kod doğrulanamadı. Kod yanlış, süresi dolmuş ya da hesap geçici olarak kilitli olabilir; yeni kod isteyip tekrar deneyin.';
+/** Sunucu kod/parola/kilit ayrımı yapmaz (numaralandırma koruması, sözleşme §3); mesaj da ayırt etmez (kod için PORTAL_CODE_INVALID_MESSAGE). */
 export const LOGIN_PASSWORD_INVALID_MESSAGE =
     'E-posta veya parola hatalı. Çok sayıda hatalı denemeden sonra giriş geçici olarak kilitlenir; kodla giriş yapabilir ya da parolanızı sıfırlayabilirsiniz.';
 export const PORTAL_ACCOUNT_DELETED_MESSAGE = 'Hesabınız silindi. Silme onayı e-posta adresinize gönderildi.';
@@ -154,7 +152,7 @@ export class PortalLoginComponent {
 
         const code = normalizeOneTimeCode(this.form.controls.code.value);
 
-        this.signIn(this.authApi.verifyCode(this.email(), code), LOGIN_CODE_INVALID_MESSAGE);
+        this.signIn(this.authApi.verifyCode(this.email(), code), PORTAL_CODE_INVALID_MESSAGE);
     }
 
     private signInWithPassword(): void {
