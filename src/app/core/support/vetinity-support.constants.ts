@@ -1,3 +1,9 @@
+/** Vetinity iletişim e-postası: tanıtım sitesinin iletişim kartı ve alt bilgisi, hukuki metinlerdeki iletişim ve KVKK başvuru adresi. */
+export const VETINITY_CONTACT_EMAIL = 'vetinity.app@gmail.com';
+
+/** Vetinity'nin işletme/tüzel kişi unvanı (alt bilgi, hakkımızda, hukuki metinler); `null` ise yalnız "Vetinity" yazar. */
+export const VETINITY_LEGAL_ENTITY_NAME: string | null = null;
+
 /** Vetinity destek hattı: panel menüsündeki WhatsApp destek bağlantısı ve tanıtım sitesinin iletişim sayfası numarayı buradan alır. */
 export const VETINITY_SUPPORT_PHONE_DISPLAY = '0543 958 00 91';
 

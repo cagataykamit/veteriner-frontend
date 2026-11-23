@@ -25,6 +25,9 @@ export interface PricingPlanDef {
 /** Fiyatların vergi notu (ADR-035: KDV hariç; backend `vatIncluded: false`). */
 export const PRICING_VAT_NOTE = 'KDV hariç';
 
+/** Ücretsiz deneme süresi (gün); backend `SubscriptionTrialDefaults.TrialDays` ile aynı. Paket kartları ve kullanım şartları buradan okur. */
+export const PRICING_TRIAL_DAYS = 14;
+
 /** VERİ — paket metni (ADR-035 tablosu). Fiyat ve sınır backend'den. */
 export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
     {
@@ -33,7 +36,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         title: 'Temel',
         description: 'Tek şubeli, küçük ekipli klinik',
         recommended: false,
-        trialDays: 14
+        trialDays: PRICING_TRIAL_DAYS
     },
     {
         slug: 'pro',
@@ -41,7 +44,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         title: 'Profesyonel',
         description: 'Tek şubeli, ekibi büyüyen klinik',
         recommended: true,
-        trialDays: 14
+        trialDays: PRICING_TRIAL_DAYS
     },
     {
         slug: 'premium',
@@ -49,7 +52,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         title: 'Kurumsal',
         description: 'Birden çok şubesi ya da büyük ekibi olan klinik',
         recommended: false,
-        trialDays: 14
+        trialDays: PRICING_TRIAL_DAYS
     }
 ];
 
