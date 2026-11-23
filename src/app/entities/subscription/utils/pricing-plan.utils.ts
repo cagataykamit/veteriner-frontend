@@ -278,14 +278,6 @@ export function plansFromText(apiCode: string): string {
     return titles.length === 1 ? `${titles[0]} paketinde` : `${titles.slice(0, -1).join(', ')} ve ${titles[titles.length - 1]} paketlerinde`;
 }
 
-/** Şu an olmayanlar (ADR-035): dürüst kısa liste, paketten bağımsız; tarih ya da vaat yazılmaz. */
-export const PRICING_NOT_AVAILABLE: readonly string[] = [
-    'SMS hatırlatma (hatırlatmalar e-posta ile gider)',
-    'Online ödeme',
-    'Ayrı telefon uygulaması (panel tarayıcıda, telefonda da çalışır)',
-    "HBS'e otomatik gönderim (takip listesi var, giriş klinikçe yapılır)"
-];
-
 /** Katalog alınamadığında ya da paketin fiyatı yokken tutar yerine yazılan metin (ADR-034); bağlantı iletişime gider. */
 export const PRICING_ON_REQUEST_TEXT = 'Fiyat için bize yazın';
 

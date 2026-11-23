@@ -7,6 +7,7 @@
 
 import { VETINITY_SUPPORT_PHONE_DISPLAY } from '@/app/core/support/vetinity-support.constants';
 import { planAvailabilityText, planTitlesText, planTitlesWithFeature, PRICING_VAT_NOTE, pricingTermsText } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { PUBLIC_SITE_SHOWCASE } from './public-site-showcase-content.utils';
 
 /** Çok klinik yönetimi olan paketlerin adları ("Kurumsal"), özellik tablosundan. */
 const MULTI_CLINIC_PLANS = planTitlesWithFeature('multiClinic');
@@ -36,7 +37,7 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
             },
             {
                 question: 'Kurulum gerekiyor mu?',
-                answer: 'Hayır. Tarayıcıdan çalışır; bilgisayar, tablet ya da telefonda ek kurulum yoktur. Ayrı bir mobil uygulama bugün yoktur.'
+                answer: 'Gerekmez. Vetinity tarayıcıdan çalışır: bilgisayarda, tablette ve telefonda adresi açıp giriş yaparsınız. Telefonda tam çalışır; isterseniz ana ekrana ekleyip uygulama gibi açarsınız.'
             },
             {
                 question: 'Birden fazla klinik destekleniyor mu?',
@@ -45,12 +46,12 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
             },
             {
                 question: 'Hatırlatmalar nasıl gider?',
-                answer: 'Aşı ve randevu hatırlatmaları e-posta ile gönderilir; randevu hatırlatmasında onay, iptal ve takvime ekle bağlantısı bulunur. SMS gönderimi şu an yoktur.',
+                answer: "Aşı ve randevu hatırlatmaları e-posta ile gönderilir; randevu hatırlatmasında onay, iptal ve takvime ekle bağlantısı bulunur. Personeliniz hasta sahibine WhatsApp'tan hazır mesajla da ulaşabilir.",
                 homepage: true
             },
             {
                 question: 'Klinik web sitesi her pakette mi?',
-                answer: `${planAvailabilityText('clinicSite')} var. Sihirbazla kliniğinizin çok sayfalı sitesini kurar, yayından önce önizlersiniz; siteniz Vetinity adresi altında yayınlanır. Kendi alan adınızı bağlamak şu an yoktur.`
+                answer: `${planAvailabilityText('clinicSite')} var. Sihirbazla kliniğinizin çok sayfalı sitesini kurar, yayından önce önizlersiniz; ${PUBLIC_SITE_SHOWCASE.addressNote}`
             },
             {
                 question: 'Veteriner bul nedir, ücretli mi?',
@@ -94,7 +95,7 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
             },
             {
                 question: 'Fatura kesiliyor mu?',
-                answer: "Abonelik için fatura düzenlenir. Klinikte aldığınız ödemeler için e-Fatura, e-Arşiv ve e-SMM'yi panelden kesersiniz: kendi e-belge sağlayıcı hesabınızı bağlarsınız, belge ücretleri sağlayıcınızla aranızdadır. Belge kesmediğiniz tahsilat fişleri mali belge değildir."
+                answer: "Abonelik için fatura düzenlenir. Klinikte aldığınız ödemeler için e-Fatura, e-Arşiv ve e-SMM'yi panelden kesersiniz: kendi e-belge sağlayıcı hesabınızı bağlarsınız, belge ücretleri sağlayıcınızla aranızdadır. Mali belge için e-Belge kesersiniz; tahsilat fişi müşteriye bilgi verir."
             }
         ]
     },

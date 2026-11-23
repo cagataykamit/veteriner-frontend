@@ -30,7 +30,7 @@ import { PUBLIC_REGISTERS } from '@/app/features/public/utils/public-registers-c
 import { PUBLIC_SCREENSHOTS, type PublicScreenshotKey } from '@/app/features/public/utils/public-screenshots.utils';
 import { PUBLIC_SITE_DESIGNS, PUBLIC_SITE_SHOWCASE, publicSiteDesignSrc } from '@/app/features/public/utils/public-site-showcase-content.utils';
 import { SITE_CONCEPTS } from '@site-engine';
-import { PRICING_AI_CREDITS_ROW, PRICING_FEATURE_ROWS, PRICING_NOT_AVAILABLE, PRICING_ON_REQUEST_TEXT, PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { PRICING_AI_CREDITS_ROW, PRICING_FEATURE_ROWS, PRICING_ON_REQUEST_TEXT, PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import type { PublicSubscriptionPlanCatalogDto } from '@/app/features/public/models/public-plan-catalog-api.model';
 import { PUBLIC_ABOUT_PAGE_META, PUBLIC_CONTACT_PAGE_META, PUBLIC_FAQ_PAGE_META, PUBLIC_FEATURES_PAGE_META, PUBLIC_HOME_PAGE_META, PUBLIC_LOGO_PATH, PUBLIC_MIGRATION_PAGE_META, PUBLIC_OG_IMAGE_PATH, PUBLIC_PACKAGES_PAGE_META, PUBLIC_REGISTERS_PAGE_META, PUBLIC_SITE_ORIGIN, publicOrganizationJsonLd } from '@/app/features/public/utils/public-seo.utils';
 
@@ -104,7 +104,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
             expect(root().querySelector('footer a[href="/gizlilik"]')).not.toBeNull();
         });
 
-        it(`${page.path}: ön sürüm ve yer tutucu dili yok (pilot, yakında, "ekran görüntüsü gelecek", AK-6)`, async () => {
+        it(`${page.path}: ön sürüm ve yer tutucu dili yok (pilot, yakında, "ekran görüntüsü gelecek", AK-6) ve "şu an yok" listesi yok`, async () => {
             await harness.navigateByUrl(page.path);
             harness.detectChanges();
 
@@ -115,6 +115,8 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
             expect(body).not.toMatch(/ekran görüntüsü gelecek/i);
             expect(body).not.toMatch(/fiyat için (bize )?yazın/i);
             expect(body).not.toContain('AK-6');
+            // Tanıtım olmayanı saymaz, bulunanı söyler (kullanıcı kararı 2026-11-23).
+            expect(body).not.toMatch(/şu an yok|bugün yok|yapmadığımız|mali belge değildir/i);
         });
     }
 
@@ -226,7 +228,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(section.querySelector('figure.public-shot figcaption')?.textContent).toBeTruthy();
         expect(section.querySelector('img.public-shot-img--light')?.getAttribute('alt')).toBe(PUBLIC_SCREENSHOTS.klinikSitesi.alt);
         expect(section.querySelector('[data-site-links] a')?.getAttribute('href')).toBe('/veteriner');
-        expect(section.querySelector('[data-site-address-note]')?.textContent).toContain('Kendi alan adınızı bağlamak şu an yoktur');
+        expect(section.querySelector('[data-site-address-note]')?.textContent).toContain(PUBLIC_SITE_SHOWCASE.address);
         expect(section.textContent).not.toMatch(/en iyi|bir numara|yalnızca bizde|dakikada|saniyede/i);
     });
 
@@ -371,7 +373,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(Array.from(aiRow.querySelectorAll('td')).map((td) => td.textContent?.trim())).toEqual(['Yok', '500', '2.000']);
         expect(aiRow.textContent).toContain('Talep üzerine açılır');
         PRICING_FEATURE_ROWS.forEach((r) => expect(rowHeaders.some((t) => t.startsWith(r.label)), r.label).toBe(true));
-        expect(texts('#packages-not-title + ul li')).toEqual([...PRICING_NOT_AVAILABLE]);
+        expect(root().querySelector('#packages-not-title')).toBeNull();
     });
 
     it('paketler: SoftwareApplication JSON-LD fiyatları backend kataloğundan (KDV hariç)', async () => {

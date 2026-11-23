@@ -2,7 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Component, DestroyRef, effect, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { PUBLIC_PACKAGES_FAQ_CATEGORY_ID, publicFaqsOf } from '@/app/features/public/utils/public-faq-content.utils';
-import { PRICING_NOT_AVAILABLE, PRICING_PLAN_DEFS, pricingTermsText } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { PRICING_PLAN_DEFS, pricingTermsText } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import { PublicPlanCatalogService } from '@/app/features/public/services/public-plan-catalog.service';
 import {
     PUBLIC_PACKAGES_PAGE_META,
@@ -22,7 +22,7 @@ const PRICING_JSON_LD_ID = 'packages-offers';
 const PRICING_FAQ_JSON_LD_ID = 'packages-faq';
 
 /**
- * Paketler (tasarım belgesi 5.5, ADR-035, WEB-007): üç paket kartı (Aylık/Yıllık), karşılaştırma tablosu, "Şu an yok", SSS.
+ * Paketler (tasarım belgesi 5.5, ADR-035, WEB-007): üç paket kartı (Aylık/Yıllık), karşılaştırma tablosu, SSS. Tanıtım olmayanı saymaz, bulunanı söyler (kullanıcı kararı 2026-11-23).
  * Paket metni `pricing-plan.utils.ts`'ten; fiyat, yıllık kural ve kullanıcı sınırı backend kataloğundan, sayfa sayı kopyalamaz.
  * Teklif (JSON-LD) yalnız katalog gelince yazılır.
  */
@@ -55,19 +55,6 @@ const PRICING_FAQ_JSON_LD_ID = 'packages-faq';
             </div>
         </section>
 
-        <section class="ps-section ps-section--tight" aria-labelledby="packages-not-title">
-            <div class="ps-wrap">
-                <div class="ps-card ps-card--quiet">
-                    <h2 id="packages-not-title" class="ps-h3"><span class="ps-round ps-round--small" aria-hidden="true"><i class="pi pi-clock"></i></span>Şu an yok</h2>
-                    <ul class="ps-list ps-ticklist ps-ticklist--two">
-                        @for (item of notAvailable; track item) {
-                            <li><i class="pi pi-minus" aria-hidden="true"></i><span>{{ item }}</span></li>
-                        }
-                    </ul>
-                </div>
-            </div>
-        </section>
-
         <section class="ps-section ps-section--band" aria-labelledby="packages-faq-title">
             <div class="ps-wrap ps-narrow">
                 <header class="ps-head ps-head--center">
@@ -90,7 +77,6 @@ export class PublicPackagesPageComponent implements OnInit {
     readonly plans = PRICING_PLAN_DEFS;
     readonly pricing = this.planCatalog.state;
     readonly pricingTerms = pricingTermsText();
-    readonly notAvailable = PRICING_NOT_AVAILABLE;
     readonly faqs = publicFaqsOf(PUBLIC_PACKAGES_FAQ_CATEGORY_ID);
 
     constructor() {

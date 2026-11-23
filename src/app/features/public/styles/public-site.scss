@@ -375,11 +375,6 @@ $ps: '.public-page.public-site';
     background: var(--tone, var(--ps-band));
 }
 
-#{$ps} .ps-card--quiet {
-    border: 2px dashed var(--ps-rule);
-    background: transparent;
-}
-
 #{$ps} .ps-panel {
     padding: clamp(1.5rem, 3.6vw, 3.5rem);
     border-radius: 36px;
@@ -1267,11 +1262,6 @@ $ps: '.public-page.public-site';
     margin-top: 0.35em;
     font-size: 0.75rem;
     color: var(--ps-accent);
-}
-
-.public-site .ps-card--quiet .ps-ticklist,
-.public-site .ps-card--quiet .ps-ticklist i {
-    color: var(--ps-ink-2);
 }
 
 /* —— Madde kutuları —— */
