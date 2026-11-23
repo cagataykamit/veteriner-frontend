@@ -18,15 +18,15 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
     imports: [CommonModule, FormsModule, ButtonModule, SelectModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden">
-            <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">
+        <div class="public-page public-site public-auth-page">
+            <div class="public-auth-shell">
                 <div class="public-auth-card-frame">
-                    <div class="public-auth-card-inner w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 sm:px-20">
-                        <div class="text-center mb-8">
-                            <img [src]="brand.logoFull" alt="Vetinity" class="mx-auto mb-6 h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden" width="120" height="30" />
-                            <img [src]="brand.logoFullDark" alt="Vetinity" class="mx-auto mb-6 hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block" width="120" height="30" />
-                            <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Klinik Seçimi</div>
-                            <span class="text-muted-color font-medium">Devam etmek için çalışacağınız kliniği seçin.</span>
+                    <div class="public-auth-card-inner">
+                        <div class="public-auth-header">
+                            <img [src]="brand.logoFull" alt="Vetinity" class="public-auth-logo block dark:hidden" width="120" height="30" />
+                            <img [src]="brand.logoFullDark" alt="Vetinity" class="public-auth-logo hidden dark:block" width="120" height="30" />
+                            <div class="public-auth-title">Klinik seçimi</div>
+                            <span class="public-auth-subtitle">Devam etmek için çalışacağınız kliniği seçin.</span>
                         </div>
 
                         @if (loading()) {
@@ -35,8 +35,8 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
                             <p class="m-0 text-center text-danger">{{ noClinicsMessage }}</p>
                         } @else {
                             <div class="mx-auto w-full max-w-[25rem]">
-                                <div class="mb-8">
-                                    <label for="clinicSelect" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2"> Aktif klinik </label>
+                                <div class="public-auth-field-before-action">
+                                    <label for="clinicSelect" class="public-auth-label">Aktif klinik</label>
                                     <p-select
                                         inputId="clinicSelect"
                                         [options]="clinics()"

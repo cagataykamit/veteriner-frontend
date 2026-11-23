@@ -40,7 +40,7 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
     imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, FormsModule, RippleModule, RouterLink, PublicLegalLinksComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="public-page public-auth-page">
+        <div class="public-page public-site public-auth-page">
             <div class="public-auth-shell">
                 <div class="public-auth-card-frame">
                     <div class="public-auth-card-inner">
