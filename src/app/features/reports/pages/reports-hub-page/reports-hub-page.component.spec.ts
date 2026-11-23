@@ -114,6 +114,41 @@ describe('ReportsHubPageComponent — tasarım B (ADR-052) ve favoriler (REPORT-
         expect(grid()?.getAttribute('aria-busy')).toBe('false');
     });
 
+    it('ilk özet gelene kadar bant ve kart sayıları için yer tutucu çizilir; sıra aynı kalır, özet gelince yer tutucular kalkar', () => {
+        const first$ = new Subject<ReportHubSummaryDto>();
+
+        summaryService.get.mockReturnValue(first$);
+        const fixture = render();
+        const root = el(fixture);
+        const placeholders = () => root.querySelectorAll('[data-testid="figure-placeholder"]').length;
+        const before = questionIds(root);
+
+        expect(root.querySelector('[data-testid="attention-placeholder"]')).not.toBeNull();
+        expect(placeholders()).toBe(3);
+        expect(root.querySelector('[data-testid="figure-value"]')).toBeNull();
+
+        first$.next(hubSummary({ endOfDayUnchargedVisitCount: 2 }));
+        fixture.detectChanges();
+
+        expect(questionIds(root)).toEqual(before);
+        expect(placeholders()).toBe(0);
+        expect(root.querySelector('[data-testid="attention-placeholder"]')).toBeNull();
+        expect(root.querySelector('[data-testid="attention-endOfDay"]')).not.toBeNull();
+        expect(root.querySelectorAll('[data-testid="figure-value"]').length).toBe(3);
+    });
+
+    it('dönem değişirken eldeki özet kalır; yer tutucu yalnız ilk açılışta', () => {
+        const fixture = render();
+        const month$ = new Subject<ReportHubSummaryDto>();
+
+        summaryService.get.mockReturnValue(month$);
+        el(fixture).querySelector<HTMLButtonElement>('[data-testid="period-month"]')!.click();
+        fixture.detectChanges();
+
+        expect(el(fixture).querySelector('[data-testid="figure-placeholder"]')).toBeNull();
+        expect(el(fixture).querySelector('[data-testid="attention-placeholder"]')).toBeNull();
+    });
+
     it('bant yalnız sıfırdan büyük ve izinli uyarıyla görünür', () => {
         summaryService.get.mockReturnValue(of(hubSummary({ endOfDayUnchargedVisitCount: 0 })));
         expect(el(render()).querySelector('[data-testid="attention-band"]')).toBeNull();
@@ -144,6 +179,8 @@ describe('ReportsHubPageComponent — tasarım B (ADR-052) ve favoriler (REPORT-
         expect(root.querySelector('[data-testid="hub-load-error"]')).not.toBeNull();
         expect(root.textContent).toContain('Ödeme hareketleri');
         expect(root.querySelector('[data-testid="figure-value"]')).toBeNull();
+        expect(root.querySelector('[data-testid="figure-placeholder"]')).toBeNull();
+        expect(root.querySelector('[data-testid="attention-placeholder"]')).toBeNull();
     });
 
     it('favoriler en üstte, eklenme sırasıyla; izni olmayan rapor favoride olsa da görünmez', () => {
