@@ -97,13 +97,8 @@
             }
         }
 
-        <!-- Hasta bağlamı | form: kırılım içerik alanına göre (detay sayfasıyla aynı: ≥56rem iki sütun). -->
+        <!-- Form | hasta bağlamı: kırılım içerik alanına göre (detay sayfasıyla aynı: ≥56rem iki sütun, bağlam sağda, K-02). -->
         <div class="@container grid grid-cols-12 gap-4 items-start">
-            @if (contextPetId(); as pid) {
-                <aside class="col-span-12 @4xl:col-span-4 @4xl:sticky @4xl:top-20 min-w-0" data-testid="patient-context-aside">
-                    <app-examination-patient-context [petId]="pid" [excludeExaminationId]="isEdit ? examinationId : null" />
-                </aside>
-            }
             <form appFormSubmit class="col-span-12 min-w-0" [ngClass]="{ '@4xl:col-span-8': !!contextPetId() }" [formGroup]="form" (ngSubmit)="onSubmit()">
                 <app-form-error-summary />
                 <div class="card mb-4">
@@ -264,6 +259,11 @@
                     <button pButton type="button" severity="secondary" (click)="onCancel()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>
+            @if (contextPetId(); as pid) {
+                <aside class="col-span-12 @4xl:col-span-4 @4xl:sticky @4xl:top-20 min-w-0" data-testid="patient-context-aside">
+                    <app-examination-patient-context [petId]="pid" [excludeExaminationId]="isEdit ? examinationId : null" />
+                </aside>
+            }
         </div>
     }
 
