@@ -75,17 +75,6 @@ describe('JoinInvitePageComponent hukuki onay (ADR-029)', () => {
         expect(hrefs).toEqual(['/kullanim-sartlari', '/gizlilik']);
     });
 
-    it('giriş sayfalarıyla aynı sıcak kabuk (L-01): tanıtım değişkenleri, ortak kart, başlık ve etiket; birincil düğme ortak sınıfta', () => {
-        create(invite());
-
-        expect(host().querySelector('.public-auth-page')?.classList).toContain('public-site');
-        expect(host().querySelector('.public-auth-card-inner')).not.toBeNull();
-        expect(host().querySelector('.card')).toBeNull();
-        expect(host().querySelector('h2')?.classList).toContain('public-auth-title');
-        expect(host().querySelector('label[for="invPw"]')?.classList).toContain('public-auth-label');
-        expect(submitButton()?.classList).toContain('public-auth-submit');
-    });
-
     it('kutu işaretlenmeden gönderim pasif; işaretlenince belgeler gövdeye eklenir', () => {
         create(invite());
         invites.signupAndAccept.mockReturnValue(of(undefined));

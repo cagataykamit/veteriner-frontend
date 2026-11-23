@@ -40,17 +40,17 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <app-floating-configurator />
-        <div class="public-page public-site public-auth-page">
-            <div class="public-auth-shell">
-                <div class="public-auth-card-inner">
+        <div class="public-page bg-surface-50 dark:bg-surface-950 min-h-screen min-w-screen py-10 px-4">
+            <div class="max-w-lg mx-auto">
+                <div class="card mb-0">
                     @if (loading()) {
                         <p class="m-0 text-muted-color">Davet yükleniyor…</p>
                     } @else if (loadError(); as le) {
-                        <h2 class="public-auth-title mt-0">Davet açılamadı</h2>
+                        <h2 class="mt-0 mb-2 text-xl text-surface-900 dark:text-surface-0">Davet açılamadı</h2>
                         <p class="text-danger m-0 mb-4" role="alert">{{ le }}</p>
                         <a routerLink="/auth/login" class="public-brand-link no-underline">Giriş sayfasına git</a>
                     } @else if (successMode(); as sm) {
-                        <h2 class="public-auth-title mt-0">
+                        <h2 class="mt-0 mb-2 text-xl text-surface-900 dark:text-surface-0">
                             {{ sm === 'accept' ? 'Davet kabul edildi' : 'Hesap oluşturuldu' }}
                         </h2>
                         <p class="text-muted-color m-0 mb-4">
@@ -67,12 +67,12 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
                             </ul>
                         }
                         @if (sm === 'accept') {
-                            <button pButton type="button" class="w-full public-auth-submit" (click)="goToPanel()">Panele git</button>
+                            <button pButton type="button" class="w-full" (click)="goToPanel()">Panele git</button>
                         } @else {
-                            <button pButton type="button" class="w-full public-auth-submit" (click)="goToLoginAfterSignup()">Giriş yap</button>
+                            <button pButton type="button" class="w-full" (click)="goToLoginAfterSignup()">Giriş yap</button>
                         }
                     } @else if (vm(); as inv) {
-                        <h2 class="public-auth-title mt-0">Davet</h2>
+                        <h2 class="mt-0 mb-2 text-xl text-surface-900 dark:text-surface-0">Davet</h2>
                         <p class="text-muted-color text-sm m-0 mb-4">Sizi bir işletmeye davet ettiler. Bilgileri kontrol edin.</p>
 
                         <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 mb-4 text-sm">
@@ -118,16 +118,16 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
 
                         @if (!auth.isAuthenticated() && inv.requiresLogin) {
                             <p class="m-0 mb-3 text-sm">Bu daveti kabul etmek için önce giriş yapmalısınız.</p>
-                            <button pButton type="button" class="w-full mb-3 public-auth-submit" (click)="goToLogin(inv)">Giriş yap</button>
+                            <button pButton type="button" class="w-full mb-3" (click)="goToLogin(inv)">Giriş yap</button>
                         }
 
                         @if (!auth.isAuthenticated() && !inv.requiresLogin && !inv.requiresSignup && inv.canJoin && !inv.isExpired) {
                             <p class="m-0 mb-3 text-sm">Devam etmek için giriş yapın.</p>
-                            <button pButton type="button" class="w-full mb-3 public-auth-submit" (click)="goToLogin(inv)">Giriş yap</button>
+                            <button pButton type="button" class="w-full mb-3" (click)="goToLogin(inv)">Giriş yap</button>
                         }
 
                         @if (!auth.isAuthenticated() && inv.requiresSignup && !inv.isExpired && inv.canJoin) {
-                            <label for="invFullName" class="public-auth-label">Adınız soyadınız</label>
+                            <label for="invFullName" class="block text-sm font-medium mb-2">Adınız soyadınız</label>
                             <input
                                 pInputText
                                 id="invFullName"
@@ -143,7 +143,7 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
                             @if (fullNameFieldError()) {
                                 <p class="text-danger text-sm m-0 mb-3" role="alert">{{ fullNameFieldError() }}</p>
                             }
-                            <label for="invPw" class="public-auth-label">Şifre belirleyin</label>
+                            <label for="invPw" class="block text-sm font-medium mb-2">Şifre belirleyin</label>
                             <p class="text-xs text-muted-color m-0 mb-2">{{ passwordPolicyHint }}</p>
                             <p-password
                                 id="invPw"
@@ -170,7 +170,7 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
                             <button
                                 pButton
                                 type="button"
-                                class="w-full public-auth-submit"
+                                class="w-full"
                                 [disabled]="actionLoading() || (inv.requiredLegalDocuments.length > 0 && !legalConsent())"
                                 (click)="onSignupAndAccept(inv)"
                             >@if (actionLoading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Hesap oluştur ve katıl</button>
@@ -180,7 +180,7 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
                             <button
                                 pButton
                                 type="button"
-                                class="w-full public-auth-submit"
+                                class="w-full"
                                 [disabled]="actionLoading()"
                                 (click)="onAccept(inv)"
                             >@if (actionLoading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Daveti kabul et</button>
@@ -191,7 +191,7 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
                         }
 
                         <p class="text-center m-0 mt-6 mb-0">
-                            <a routerLink="/auth/login" class="public-brand-link no-underline text-sm min-h-11">Giriş sayfası</a>
+                            <a routerLink="/auth/login" class="public-brand-link no-underline text-sm">Giriş sayfası</a>
                         </p>
                     }
                 </div>
