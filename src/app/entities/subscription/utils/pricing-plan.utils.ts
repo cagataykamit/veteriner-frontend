@@ -116,7 +116,7 @@ export interface PricingFeatureRowDef {
 }
 
 const ALL: Readonly<Record<PricingPlanSlug, PricingFeatureCell>> = { basic: true, pro: true, premium: true };
-/** Profesyonel ve Kurumsal (TIER-003…008, 018; ADR-035). Portal 2026-11-16'dan beri tüm paketlerde. */
+/** Profesyonel ve Kurumsal (TIER-003…005, 008, 018; ADR-035). Portal 2026-11-16'dan, kamerayla barkod 2026-11-23'ten beri tüm paketlerde. */
 const PRO_AND_UP: Readonly<Record<PricingPlanSlug, PricingFeatureCell>> = { basic: false, pro: true, premium: true };
 const PREMIUM_ONLY: Readonly<Record<PricingPlanSlug, PricingFeatureCell>> = { basic: false, pro: false, premium: true };
 
@@ -166,7 +166,7 @@ export const PRICING_FEATURE_ROWS: readonly PricingFeatureRowDef[] = [
     },
     { group: 'Para ve stok', label: 'Ürün ve stok takibi', detail: 'Düşük ve süresi geçmiş stok görünür', plans: ALL },
     { group: 'Para ve stok', label: 'Mal kabul, parti ve son kullanma tarihi', plans: ALL },
-    { group: 'Para ve stok', label: 'Kamerayla barkod okutma', detail: 'Telefon kamerasıyla mal kabulde, satışta ve ürün aramasında', key: 'mobileBarcode', plans: PRO_AND_UP },
+    { group: 'Para ve stok', label: 'Kamerayla barkod okutma', detail: 'Telefon kamerasıyla mal kabulde, satışta ve ürün aramasında', key: 'mobileBarcode', plans: ALL },
     { group: 'Para ve stok', label: 'Muayenesiz doğrudan satış', plans: ALL },
     { group: 'Web sitesi ve randevu', label: 'Klinik web sitesi', detail: 'Panelden kendiniz yaparsınız: dört hazır tasarım, sihirbazla çok sayfalı site, yayından önce önizleme', key: 'clinicSite', plans: ALL },
     { group: 'Web sitesi ve randevu', label: "Veteriner bul'da listelenme", detail: 'İl ve ilçeye göre; isteğe bağlı ve ücretsiz', key: 'vetFinder', plans: ALL },

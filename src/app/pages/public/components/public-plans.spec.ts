@@ -70,6 +70,7 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         // Portal 2026-11-16'dan beri tüm paketlerde (ADR-035): Temel'in sayımında, üst paket farkında değil.
         expect(labels('pro')).not.toContain('Hasta sahibi portalı');
         expect(labels('pro')).not.toContain('Portaldan randevu talebi');
+        expect(labels('pro')).not.toContain('Kamerayla barkod okutma');
         expect(labels('pro')).not.toContain('Bugün ekranı ve geliş takibi');
         expect(labels('pro')).not.toContain('Çok klinik yönetimi ve klinikler arası yetki');
 
@@ -106,7 +107,6 @@ describe('Paket verisi (pricing-plan.utils)', () => {
             'Bekleme listesi',
             'Otomatik aşı sihirbazı',
             'Çoklu kasa ve kasa yönetimi',
-            'Kamerayla barkod okutma',
             'Otomatik hatırlatıcılar',
             'Gelişmiş raporlar',
             'Klinikler özeti',
@@ -124,7 +124,8 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         ]);
         expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.premium === false)).toEqual([]);
 
-        for (const key of ['clinicSite', 'vetFinder', 'onlineBooking', 'reminderReplies', 'dataExport']) {
+        // Kamerayla barkod 2026-11-23 kullanıcı kararıyla tüm paketlerde (ADR-035).
+        for (const key of ['clinicSite', 'vetFinder', 'onlineBooking', 'reminderReplies', 'dataExport', 'mobileBarcode']) {
             expect(plansOf(key), key).toEqual({ basic: true, pro: true, premium: true });
         }
     });

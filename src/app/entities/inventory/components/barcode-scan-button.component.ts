@@ -7,7 +7,7 @@ import { BarcodeCameraDialogComponent } from '@/app/shared/barcode/barcode-camer
 
 /**
  * Kamerayla barkod okutma düğmesi (TIER-006, `MOBILE_BARCODE_API_CONTRACT.md`). Paket kararı backend'dedir (`MobileBarcode`,
- * `access-state`); pakette yoksa kilitli düğme "üst pakete geç" kutusunu açar. Elle ya da okuyucuyla barkod girişi her pakette açıktır
+ * `access-state`; 2026-11-23'ten beri tüm paketlerde); pakette yoksa kilitli düğme "üst pakete geç" kutusunu açar. Elle ya da okuyucuyla barkod girişi her pakette açıktır
  * ve bu düğmenin dışındadır. Okunan barkod `scanned` ile döner; ürünü bulmak çağıranın işidir.
  */
 @Component({
