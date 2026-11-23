@@ -1,5 +1,33 @@
 <p-toast position="top-right" />
 <app-page-header title="Bugün" [titleNote]="headerNote()">
+    <!-- Telefonda (B-01): tek birincil "Randevusuz geliş", diğer hızlı işlemler "⋯" menüsünde, Yenile yazısız ikon. -->
+    @if (compact()) {
+        <div actions class="flex items-center gap-2" data-testid="today-quick-actions-compact">
+            @if (canCreateVisit) {
+                <button pButton type="button" [disabled]="ro.mutationBlocked()" appReadOnlyReason (click)="openWalkInArrival()"><i class="p-button-icon pi pi-plus"></i>Randevusuz geliş</button>
+            }
+            @if (quickMenuItems().length > 0) {
+                <button
+                    pButton
+                    type="button"
+                    iconOnly
+                    severity="secondary"
+                    [outlined]="true"
+                    aria-label="Diğer hızlı işlemler"
+                    [attr.title]="'Diğer hızlı işlemler'"
+                    aria-haspopup="menu"
+                    (click)="quickMenu.toggle($event)"
+                    data-testid="today-quick-more"
+                >
+                    <i class="p-button-icon pi pi-ellipsis-h"></i>
+                </button>
+                <p-menu #quickMenu [popup]="true" [model]="quickMenuItems()" appendTo="body" />
+            }
+            <button pButton type="button" iconOnly severity="secondary" [text]="true" [attr.aria-label]="copy.buttonRefresh" [attr.title]="copy.buttonRefresh" (click)="refresh('silent')" data-testid="today-refresh-icon">
+                <i class="p-button-icon pi pi-refresh"></i>
+            </button>
+        </div>
+    } @else {
     <div actions class="flex flex-wrap gap-2">
         <button pButton type="button" severity="secondary" (click)="refresh('silent')"><i class="p-button-icon pi pi-refresh"></i>{{ copy.buttonRefresh }}</button>
         @if (canCreateVisit) {
@@ -28,6 +56,7 @@
             }
         }
     </div>
+    }
 </app-page-header>
 
 <!-- İlk hafta rehberi (TIER-022): rolüne göre kısa adımlar; ilk 14 gün ya da kullanıcı menüsünden açılınca görünür. -->
@@ -48,11 +77,14 @@
 <app-waitlist-today-summary />
 
 <!-- İki ayrı seçim (liste türü, hasta kapsamı) etiket ve ayraçla ayrılır; seçili olan ana renkle doludur. Açık işler aynı satırda sağa yaslı (dar ekranda alta sarar). -->
+<!-- Telefonda liste seçici ayrı satır tutmaz, liste kartının başlığındadır (B-01); liste boşken kart yok, seçici burada kalır. -->
 <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
-    <span class="inline-flex items-center gap-2">
-        <span class="text-sm text-muted-color">Liste</span>
-        <p-selectbutton [options]="viewOptions" [ngModel]="view()" (ngModelChange)="setView($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Liste" />
-    </span>
+    @if (!compact() || (!loading() && groups().length === 0)) {
+        <span class="inline-flex items-center gap-2">
+            <span class="text-sm text-muted-color">Liste</span>
+            <p-selectbutton [options]="viewOptions" [ngModel]="view()" (ngModelChange)="setView($event)" optionLabel="label" optionValue="value" [allowEmpty]="false" ariaLabel="Liste" />
+        </span>
+    }
     @if (myUserId()) {
         <span class="hidden sm:block w-px h-7 bg-surface-300 dark:bg-surface-600" aria-hidden="true"></span>
         <span class="inline-flex items-center gap-2">
@@ -63,7 +95,7 @@
     <!-- Talep çipi listenin yüklenmesinden ve açık iş özetinden bağımsız: bekleyen talep varsa satır yine çizilir. -->
     @if (showPendingChip() || today()?.openItems) {
         <app-today-open-items
-            class="ml-auto"
+            class="ml-auto max-sm:ml-0 max-sm:w-full"
             [summary]="today()?.openItems ?? null"
             [hasLeadingItem]="showPendingChip()"
             [canAddCharge]="canCreateCharge && !ro.mutationBlocked()"
@@ -106,7 +138,20 @@
         <!-- Tek kart, tek liste: açık iş üstte (Klinikte, Sıradaki randevular), bitmiş iş altta ve katlı. -->
         <section class="card mb-4 p-0! overflow-hidden" [attr.aria-label]="listTitle" data-testid="today-list">
             <div class="flex flex-wrap items-center gap-x-[10px] gap-y-1 px-[16px] pt-[12px] pb-[10px]">
-                <h2 class="m-0 text-[16px] font-bold">{{ listTitle }}</h2>
+                @if (compact()) {
+                    <p-select
+                        [options]="viewOptions"
+                        [ngModel]="view()"
+                        (ngModelChange)="setView($event)"
+                        optionLabel="label"
+                        optionValue="value"
+                        ariaLabel="Liste"
+                        styleClass="font-bold border-0 shadow-none"
+                        data-testid="today-view-select"
+                    />
+                } @else {
+                    <h2 class="m-0 text-[16px] font-bold">{{ listTitle }}</h2>
+                }
                 <span
                     class="text-[12px] font-semibold rounded-full px-[8px] py-px border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 text-muted-color"
                     [attr.aria-label]="(today()?.items?.length ?? 0) + ' kayıt'"
@@ -140,7 +185,7 @@
                                         <div class="tabular-nums leading-tight">
                                             <div class="font-bold" [class.text-muted-color]="row.done">{{ mainTime(item) }}</div>
                                             @if (note) {
-                                                <div class="text-xs text-muted-color">{{ note }}</div>
+                                                <div class="text-xs text-muted-color whitespace-nowrap" data-testid="today-time-note">{{ note }}</div>
                                             }
                                         </div>
                                         <div class="min-w-0 flex flex-wrap justify-end items-center gap-1">
@@ -187,14 +232,8 @@
                 <div
                     class="@container overflow-x-auto [&_th]:px-[10px]! [&_th]:py-[7px]! [&_th]:text-[12px]! [&_th]:font-semibold! [&_th]:text-muted-color! [&_th]:bg-surface-50! dark:[&_th]:bg-surface-800!"
                 >
-                    <p-table [value]="rows()" dataKey="id" size="small" [tableStyle]="{ 'table-layout': 'fixed' }">
-                        <ng-template #colgroup>
-                            <colgroup>
-                                @for (col of columns(); track col.label) {
-                                    <col [class]="col.className" />
-                                }
-                            </colgroup>
-                        </ng-template>
+                    <!-- Genişlik başlık hücrelerinden gelir (sabit düzen ilk satıra bakar); <col> kullanılmaz: gizli sütunun <col>'u yer tutmaya devam ediyor, başlık şeridi karttan kısa kalıyordu (B-06). -->
+                    <p-table [value]="rows()" dataKey="id" size="small" [tableStyle]="{ 'table-layout': 'fixed', width: '100%' }">
                         <ng-template #header>
                             <tr>
                                 @for (col of columns(); track col.label; let last = $last) {
@@ -219,7 +258,7 @@
                                         <td class="tabular-nums leading-tight" [attr.title]="item.arrivedAtUtc ? 'Geliş ' + arrival(item.arrivedAtUtc) : null">
                                             <div class="text-[14.5px]" [class]="row.done ? 'font-medium text-muted-color' : 'font-bold'">{{ mainTime(item) }}</div>
                                             @if (note) {
-                                                <div class="text-[11.5px] text-muted-color">{{ note }}</div>
+                                                <div class="text-xs text-muted-color whitespace-nowrap" data-testid="today-time-note">{{ note }}</div>
                                             }
                                         </td>
                                         <td>
@@ -426,10 +465,10 @@
     @if (item.isVoided) {
         <app-status-tag label="Yanlış geliş" severity="danger" />
     }
-    <!-- Yatıştaki hastanın gelişi taburcuya kadar bilerek açık kalır: "Önceki günden açık" uyarısı yok (2026-11-19). -->
-    @if (item.isCarriedOver && !item.hasActiveHospitalization) {
-        <span [attr.title]="carriedOverTitle">
-            <app-status-tag label="Önceki günden açık" severity="secondary" />
+    <!-- Önceki günden açık geliş tek rozet (B-03); yatıştaki hastanın gelişi taburcuya kadar bilerek açık kalır, rozet yok (2026-11-19). -->
+    @if (carriedOverLabel(item); as carried) {
+        <span [attr.title]="carriedOverTitle" data-testid="today-carried-over">
+            <app-status-tag [label]="carried" severity="secondary" />
         </span>
     }
 </ng-template>
@@ -446,7 +485,7 @@
 <!-- Grup ara başlığındaki kayıt sayısı: başlıktan ayrışsın diye liste başlığındaki sayaçla aynı küçük rozet. -->
 <ng-template #groupCount let-count>
     <span
-        class="ml-[7px] inline-block align-[1px] text-[11px] leading-[16px] font-semibold rounded-full px-[7px] border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-800 text-muted-color"
+        class="ml-[7px] inline-block align-[1px] text-xs leading-[16px] font-semibold rounded-full px-[7px] border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-800 text-muted-color"
         [attr.aria-label]="count + ' kayıt'"
         data-testid="today-group-count"
         >{{ count }}</span
@@ -481,7 +520,7 @@
         @if (canCollectPayment && !ro.mutationBlocked() && !item.isVoided) {
             <button
                 type="button"
-                class="shrink-0 inline-flex items-center text-[11.5px] font-semibold px-[7px] py-px rounded-full border-0 cursor-pointer whitespace-nowrap bg-amber-100 text-amber-800 dark:bg-amber-400/15 dark:text-amber-300 touch:touch-hit"
+                class="shrink-0 inline-flex items-center text-xs font-semibold px-[7px] py-px rounded-full border-0 cursor-pointer whitespace-nowrap bg-amber-100 text-amber-800 dark:bg-amber-400/15 dark:text-amber-300 touch:touch-hit"
                 data-testid="today-client-debt-pay"
                 title="Müşterinin toplam açık borcu — ödeme al"
                 [attr.aria-label]="'Müşteri borcu ' + (item.clientOutstandingAmount | money) + ', ödeme al'"
@@ -490,7 +529,7 @@
                 Borç {{ item.clientOutstandingAmount | money }}
             </button>
         } @else {
-            <span class="shrink-0 inline-flex items-center text-[11.5px] font-semibold px-[7px] py-px rounded-full whitespace-nowrap bg-amber-100 text-amber-800 dark:bg-amber-400/15 dark:text-amber-300" title="Müşterinin toplam açık borcu" data-testid="today-client-debt"
+            <span class="shrink-0 inline-flex items-center text-xs font-semibold px-[7px] py-px rounded-full whitespace-nowrap bg-amber-100 text-amber-800 dark:bg-amber-400/15 dark:text-amber-300" title="Müşterinin toplam açık borcu" data-testid="today-client-debt"
                 >Borç {{ item.clientOutstandingAmount | money }}</span
             >
         }

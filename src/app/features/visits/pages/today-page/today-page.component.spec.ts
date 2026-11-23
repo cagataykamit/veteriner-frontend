@@ -484,21 +484,71 @@ describe('TodayPageComponent', () => {
                 items: [],
                 openItems: { unchargedVisitCount: 0, outstandingVisitCount: 0, outstandingAmount: 0, awaitingLabCount: 0, incompleteVisitCount: 0, pendingChargeItemCount: 3 }
             });
-            const link = Array.from((f.nativeElement as HTMLElement).querySelectorAll('a')).find((a) => a.textContent?.includes('Ücret bekliyor: 3 kalem'));
+            const link = Array.from((f.nativeElement as HTMLElement).querySelectorAll('a')).find((a) => a.textContent?.includes('Ücret bekliyor 3 kalem'));
 
             expect(link?.getAttribute('href')).toBe('/panel/charges/pending');
         });
 
-        it('Açık işler: gecikmiş randevu sayısı takvimi "Gecikmiş" süzgeciyle açar (ADR-052)', async () => {
+        it("B-02: birikmiş işler (gecikmiş randevu, HBS'e girilmeyen reçete/aşı) Bugün'de gösterilmez; yanıtta olsalar da şerit 'Açık iş yok' der", async () => {
             const f = await create(['Visits.Read'], {
                 date: 'd',
                 activeHospitalizations: [],
                 items: [],
-                openItems: { unchargedVisitCount: 0, outstandingVisitCount: 0, outstandingAmount: 0, awaitingLabCount: 0, incompleteVisitCount: 0, overdueAppointmentCount: 2 }
+                openItems: {
+                    unchargedVisitCount: 0,
+                    outstandingVisitCount: 0,
+                    outstandingAmount: 0,
+                    awaitingLabCount: 0,
+                    incompleteVisitCount: 0,
+                    overdueAppointmentCount: 2,
+                    hbsNotEnteredPrescriptionCount: 3,
+                    hbsNotEnteredVaccinationCount: 4
+                }
             });
-            const link = Array.from((f.nativeElement as HTMLElement).querySelectorAll('a')).find((a) => a.textContent?.includes('Gecikmiş randevu: 2'));
+            const strip = (f.nativeElement as HTMLElement).querySelector('[data-testid="open-items-strip"]')!;
 
-            expect(link?.getAttribute('href')).toBe('/panel/appointments/calendar?view=month&states=Overdue');
+            expect(strip.textContent).not.toMatch(/Gecikmiş randevu|HBS/);
+            expect(strip.textContent).toContain('Açık iş yok');
+            expect(strip.querySelector('[data-testid="open-items-toggle"]')).toBeNull();
+        });
+
+        it('B-02 ton kuralı: kırmızı yalnız Ücret yok ve Lab bekliyor, onlar öne; diğerleri sakin çerçeve', async () => {
+            const f = await create(['Visits.Read'], {
+                date: 'd',
+                activeHospitalizations: [],
+                items: [item()],
+                openItems: { unchargedVisitCount: 1, outstandingVisitCount: 2, outstandingAmount: 750, awaitingLabCount: 3, incompleteVisitCount: 1, pendingChargeItemCount: 4 }
+            });
+            const list = (f.nativeElement as HTMLElement).querySelector('#todayOpenItemsList')!;
+            const chips = Array.from(list.querySelectorAll<HTMLElement>('a, button'));
+
+            expect(chips.map((c) => c.textContent?.trim().split(/\s+/).slice(0, 2).join(' '))).toEqual(['Ücret yok', 'Lab bekliyor', 'Ücret bekliyor', 'Ödeme bekliyor', 'Önceki günden']);
+            expect(chips.filter((c) => c.className.includes('bg-red-50')).length).toBe(2);
+            expect(chips.slice(2).every((c) => !c.className.includes('red') && !c.className.includes('amber'))).toBe(true);
+        });
+
+        it('B-01 telefon: şerit tek satır özet ("Açık işler 3" + en acil iş); dokununca çipler açılır', async () => {
+            const f = await create(['Visits.Read'], {
+                date: 'd',
+                activeHospitalizations: [],
+                items: [item()],
+                openItems: { unchargedVisitCount: 0, outstandingVisitCount: 2, outstandingAmount: 750, awaitingLabCount: 3, incompleteVisitCount: 1 }
+            });
+            const root = f.nativeElement as HTMLElement;
+            const toggle = root.querySelector<HTMLButtonElement>('[data-testid="open-items-toggle"]')!;
+            const list = root.querySelector('#todayOpenItemsList')!;
+
+            expect(toggle.className).toContain('sm:hidden');
+            expect(toggle.getAttribute('aria-expanded')).toBe('false');
+            expect(words(toggle)).toBe('Açık işler 3 Lab bekliyor: 3 +2');
+            expect(list.className).toContain('max-sm:hidden');
+
+            toggle.click();
+            f.detectChanges();
+
+            expect(toggle.getAttribute('aria-expanded')).toBe('true');
+            expect(list.className).not.toContain('max-sm:hidden');
+            expect(root.querySelector('[data-testid="open-items-top"]')?.textContent?.trim()).toBe('');
         });
 
         it('iptal edilen randevu listede yok; sayaç günün takvimine götürür', async () => {
@@ -561,9 +611,9 @@ describe('TodayPageComponent', () => {
             });
             const strip = (f.nativeElement as HTMLElement).querySelector('[data-testid="open-items-strip"]')!.textContent ?? '';
 
-            expect(strip).toContain('Ücret yok: 3 geliş');
-            expect(strip).toContain('Ödeme bekliyor: 2 geliş');
-            expect(strip).toContain('Önceki günden açık geliş: 1');
+            expect(strip).toContain('Ücret yok 3 geliş');
+            expect(strip).toContain('Ödeme bekliyor 2 geliş');
+            expect(strip).toContain('Önceki günden açık geliş 1');
             expect(strip).not.toContain('Lab bekliyor');
 
             const links = Array.from((f.nativeElement as HTMLElement).querySelectorAll('[data-testid="open-items-strip"] a')).map((a) => a.getAttribute('href'));
@@ -572,8 +622,8 @@ describe('TodayPageComponent', () => {
             // Liste sayfası olmayan iki sayı da tıklanır: ziyaret listesini açan çip (OPEN_ITEMS_API_CONTRACT §10).
             const strip$ = (f.nativeElement as HTMLElement).querySelector('[data-testid="open-items-strip"]')!;
 
-            expect(strip$.querySelector('button[data-testid="open-items-chip-Uncharged"]')?.textContent).toContain('Ücret yok: 3 geliş');
-            expect(strip$.querySelector('button[data-testid="open-items-chip-Incomplete"]')?.textContent).toContain('Önceki günden açık geliş: 1');
+            expect(strip$.querySelector('button[data-testid="open-items-chip-Uncharged"]')?.textContent).toContain('Ücret yok 3 geliş');
+            expect(strip$.querySelector('button[data-testid="open-items-chip-Incomplete"]')?.textContent).toContain('Önceki günden açık geliş 1');
         });
 
         it('açık geliş listesinden Tamamla, satırın Tamamla akışıyla gelişi kapatır ve listeyi yeniler', async () => {
@@ -669,31 +719,10 @@ describe('TodayPageComponent', () => {
             });
             const a = (f.nativeElement as HTMLElement).querySelector('[data-testid="open-items-strip"] a');
 
-            expect(a?.textContent).toContain('Lab bekliyor: 4');
+            expect(a?.textContent).toContain('Lab bekliyor 4');
             expect(a?.getAttribute('href')).toBe('/panel/lab-results');
         });
 
-        it("HBS'e girilmedi satırları süzgeçli Reçeteler/Aşılar listesine bağlanır; sıfır veya null görünmez", async () => {
-            const f = await create(['Visits.Read'], {
-                date: 'd',
-                activeHospitalizations: [],
-                items: [item()],
-                openItems: {
-                    unchargedVisitCount: null,
-                    outstandingVisitCount: null,
-                    outstandingAmount: null,
-                    awaitingLabCount: null,
-                    incompleteVisitCount: 0,
-                    hbsNotEnteredPrescriptionCount: 2,
-                    hbsNotEnteredVaccinationCount: 0
-                }
-            });
-            const links = Array.from((f.nativeElement as HTMLElement).querySelectorAll('[data-testid="open-items-strip"] a'));
-
-            expect(links.map((a) => a.textContent?.trim())).toEqual(["HBS'e girilmedi: 2 reçete"]);
-            expect(links[0].getAttribute('href')).toBe('/panel/prescriptions?hbsStatus=NotEntered');
-            expect(((f.nativeElement as HTMLElement).querySelector('[data-testid="open-items-strip"]')?.textContent ?? '').toLowerCase()).not.toContain('zorunlu');
-        });
     });
 
     it('telefon okunabilir biçimde; listede hiç hekim yoksa Hekim sütunu çizilmez ve "Atanmadı" yazılmaz', async () => {
@@ -758,7 +787,8 @@ describe('TodayPageComponent', () => {
         const detail = (f.nativeElement as HTMLElement).querySelector('[data-testid="today-status"] [title]') as HTMLElement;
 
         expect(detail.getAttribute('title')).toBe('30 dakikayı aşan bekleme');
-        expect(detail.className).toContain('text-orange-600');
+        // G-14: vurgu metni AA kontrastlı ortak sınıf (açıkta orange-700).
+        expect(detail.className).toContain('text-warn');
         expect(detail.querySelector('i.pi-clock')).not.toBeNull();
         expect(detail.textContent).toContain('45 dk');
     });
@@ -1113,7 +1143,7 @@ describe('TodayPageComponent', () => {
             expect(groupHeaders(f)).toEqual(['Klinikte 2', 'Sıradaki randevular 1', 'Tamamlandı 1', 'Gelmedi 1']);
             expect(getComputedStyle(tables[0]).tableLayout).toBe('fixed');
             expect(tables[0].querySelectorAll('thead th').length).toBe(7);
-            expect(tables[0].querySelectorAll('colgroup col').length).toBe(7);
+            expect(tables[0].querySelector('colgroup')).toBeNull();
             expect(root.querySelector('[data-testid="today-group-header"] td')?.getAttribute('colspan')).toBe('7');
         });
 
@@ -1132,7 +1162,7 @@ describe('TodayPageComponent', () => {
             expect(summary).toEqual(['1 bekleniyor', '1 sırada', '1 muayenede', '1 tamamlandı']);
         });
 
-        it('saat tek değer: "Randevu" kelimesi yok; gelen randevulu hastada "geldi …", randevusuz gelişte "randevusuz", bitmiş işte not yok', async () => {
+        it('saat tek değer: "Randevu" kelimesi yok; gelen randevulu hastada "… geldi", randevusuz gelişte "randevusuz", bitmiş işte not yok', async () => {
             const f = await create(['Visits.Read'], {
                 date: 'd',
                 activeHospitalizations: [],
@@ -1145,7 +1175,7 @@ describe('TodayPageComponent', () => {
             });
             const times = Array.from((f.nativeElement as HTMLElement).querySelectorAll('tbody tr[data-today-row] td:first-child')).map((td) => words(td));
 
-            expect(times).toEqual(['12:45 geldi 12:48', '12:48 randevusuz', '14:00', '10:00']);
+            expect(times).toEqual(['12:45 12:48 geldi', '12:48 randevusuz', '14:00', '10:00']);
             expect(text(f)).not.toContain('Randevu ');
         });
 
@@ -1212,7 +1242,8 @@ describe('TodayPageComponent', () => {
         it('taslak ölçüleri: px sütun genişlikleri, küçük soluk başlıklar, düz yazılı ara başlık; müşteri adı düz metin renginde', async () => {
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'w', clientPhone: '905439580091' })] });
             const root = f.nativeElement as HTMLElement;
-            const cols = Array.from(root.querySelectorAll('colgroup col')).map((c) => Array.from(c.classList).find((k) => k.startsWith('w-')));
+            // Genişlik başlık hücrelerinde (B-06: <col> yok, gizli sütun yer tutmaz).
+            const cols = Array.from(root.querySelectorAll('thead th')).map((c) => Array.from(c.classList).find((k) => k.startsWith('w-')));
             const wrapper = root.querySelector('table')!.closest('.overflow-x-auto') as HTMLElement;
             const groupCell = root.querySelector('[data-testid="today-group-header"] td') as HTMLElement;
             const client = root.querySelector('[data-testid="today-client-link"]') as HTMLElement;
@@ -1248,7 +1279,7 @@ describe('TodayPageComponent', () => {
             });
             const host = f.nativeElement as HTMLElement;
             const ths = Array.from(host.querySelectorAll('thead th'));
-            const cols = Array.from(host.querySelectorAll('colgroup col')).map((c) => c.className);
+            const cols = ths.map((c) => c.className);
             const cells = Array.from(host.querySelectorAll<HTMLTableCellElement>('tbody tr[data-today-row] td'));
 
             expect(ths.every((th) => th.classList.contains('whitespace-nowrap'))).toBe(true);
@@ -1263,8 +1294,9 @@ describe('TodayPageComponent', () => {
             expect(fallback('@min-[72rem]:hidden').some((e) => e.textContent?.includes('Dr. Ayşe'))).toBe(true);
             expect(fallback('@min-[64rem]:hidden').some((e) => e.textContent?.includes('Ödeme bekliyor'))).toBe(true);
             expect(cells[4].textContent).toContain('Yatışta');
-            // Yatıştaki hastanın gelişi taburcuya kadar bilerek açık kalır: "Önceki günden açık" rozeti çıkmaz.
-            expect(cells[4].textContent).not.toContain('Önceki günden açık');
+            // Yatıştaki hastanın gelişi taburcuya kadar bilerek açık kalır: "n gündür açık" rozeti çıkmaz.
+            expect(host.querySelector('[data-testid="today-carried-over"]')).toBeNull();
+            expect(host.querySelector('colgroup')).toBeNull();
         });
 
         it('uzun ad 2 satıra sarar ve tam adı ipucuyla (title) gösterilir: Müşteri, Hasta, Hekim', async () => {
@@ -1448,16 +1480,23 @@ describe('TodayPageComponent', () => {
             expect(root.querySelector('tbody p-tag')).toBeNull();
         });
 
-        it('Önceki günden açık rozeti sönük (secondary) ve ipucu metni var', async () => {
-            const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ isCarriedOver: true })] });
-            const tagHost = Array.from((f.nativeElement as HTMLElement).querySelectorAll('span[title]')).find((e) => e.textContent?.includes('Önceki günden')) as HTMLElement;
+        it('B-03: önceki günden açık gelişte tek sönük rozet "3 gündür açık" (açıklama ipucunda); süre ve "Unutulmuş olabilir" tekrar yazılmaz, saat notu tek satır', async () => {
+            const f = await create(['Visits.Read'], {
+                date: 'd',
+                activeHospitalizations: [],
+                items: [item({ isCarriedOver: true, appointmentId: 'a1', scheduledAtUtc: '2026-10-07T11:30:00Z', arrivedAtUtc: '2026-10-07T02:37:00Z' })]
+            });
+            const root = f.nativeElement as HTMLElement;
+            const tagHost = root.querySelector<HTMLElement>('[data-testid="today-carried-over"]')!;
 
-            expect(tagHost).toBeDefined();
+            expect(tagHost.textContent?.trim()).toBe('3 gündür açık');
             expect(tagHost.getAttribute('title')).toBe('Önceki günden kalan açık geliş; tamamlayın veya hatalı işaretleyin');
-            const tag = tagHost.querySelector('.p-tag')!;
-
-            expect(tag.classList.contains('p-tag-secondary')).toBe(true);
-            expect(tag.classList.contains('p-tag-contrast')).toBe(false);
+            expect(tagHost.querySelector('.p-tag')!.classList.contains('p-tag-secondary')).toBe(true);
+            expect(words(root.querySelector('[data-testid="today-status"]')!)).toBe('Sırada');
+            expect(root.textContent).not.toContain('Unutulmuş olabilir');
+            expect(root.textContent).not.toContain('Önceki günden açık');
+            expect(root.querySelector('[data-testid="today-time-note"]')?.textContent?.trim()).toBe('07.10 05:37 geldi');
+            expect(root.querySelector('[data-testid="today-time-note"]')?.classList).toContain('whitespace-nowrap');
         });
 
         it('12 saati aşan açık gelişte sönük "Unutulmuş olabilir" ipucu; kısa sürede ve tamamlananda yok', async () => {
@@ -1506,6 +1545,19 @@ describe('TodayPageComponent', () => {
             (root.querySelector('[data-testid="today-completed-toggle"]') as HTMLButtonElement).click();
             f.detectChanges();
             expect(root.querySelectorAll('[data-testid="today-card"]').length).toBe(2);
+        });
+
+        it('B-01 telefon üstü: tek birincil "Randevusuz geliş", diğerleri "⋯" menüsünde (yetkiye göre), Yenile ikon; liste seçici kart başlığında', async () => {
+            narrow(true);
+            const f = await create(['Visits.Read', 'Visits.Create', 'Appointments.Create', 'Sales.Create'], today);
+            const root = f.nativeElement as HTMLElement;
+            const bar = root.querySelector('[data-testid="today-quick-actions-compact"]')!;
+
+            expect(Array.from(bar.querySelectorAll('button')).map((b) => b.getAttribute('aria-label') ?? b.textContent?.trim())).toEqual(['Randevusuz geliş', 'Diğer hızlı işlemler', 'Yenile']);
+            expect(root.querySelector('[data-testid="today-new-appointment"]')).toBeNull();
+            expect(f.componentInstance.quickMenuItems().map((i) => i.label)).toEqual(['Yeni randevu', 'Hızlı satış']);
+            expect(root.querySelector('[data-testid="today-view-select"]')).not.toBeNull();
+            expect(root.querySelector('p-selectbutton[ariaLabel="Liste"]')).toBeNull();
         });
 
         it('geniş ekranda tablo düzeni değişmez', async () => {
