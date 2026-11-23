@@ -5,6 +5,7 @@ import { filter, map } from 'rxjs';
 import { isClinicPortalClosed, isPortalServiceUnavailable } from '@portal/app/core/auth/portal-auth.models';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
 import { PORTAL_CLINIC_CLOSED_MESSAGE, PORTAL_SERVICE_UNAVAILABLE_MESSAGE } from '@portal/app/core/errors/portal-errors';
+import { portalBackLink } from '@portal/app/core/navigation/portal-back-link';
 import { PortalEmptyState } from '@portal/app/shared/ui/portal-states.component';
 import { PortalBrandHeader, PortalFooter } from './portal-brand.component';
 
@@ -44,7 +45,7 @@ const OWNER_RIGHTS_PATHS: readonly string[] = [...ACCOUNT_LEVEL_PATHS, '/account
     template: `
         <a class="portal-skip-link" href="#portal-main">İçeriğe geç</a>
         <div class="portal-shell-header">
-            <portal-brand-header [clinicName]="session.activeLink()?.clinicName ?? null">
+            <portal-brand-header [clinicName]="session.activeLink()?.clinicName ?? null" [backLink]="backLink()">
                 @if (session.links().length > 1) {
                     <a class="portal-header-action" routerLink="/clinics" aria-label="Klinik değiştir">
                         <i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>
@@ -99,13 +100,14 @@ export class PortalShell {
     protected readonly closedMessage = PORTAL_CLINIC_CLOSED_MESSAGE;
     protected readonly serviceUnavailableMessage = PORTAL_SERVICE_UNAVAILABLE_MESSAGE;
 
-    private readonly path = toSignal(
-        this.router.events.pipe(
-            filter((event): event is NavigationEnd => event instanceof NavigationEnd),
-            map((event) => event.urlAfterRedirects)
-        ),
-        { initialValue: this.router.url }
-    );
+    private readonly navigationEnd = this.router.events.pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd));
+
+    private readonly path = toSignal(this.navigationEnd.pipe(map((event) => event.urlAfterRedirects)), { initialValue: this.router.url });
+
+    /** Alt sayfanın üst sayfası (PO-04); ana sekmelerde yok. */
+    protected readonly backLink = toSignal(this.navigationEnd.pipe(map(() => portalBackLink(this.router.routerState.snapshot.root))), {
+        initialValue: portalBackLink(this.router.routerState.snapshot.root)
+    });
 
     protected readonly showClosedNotice = computed(() => isClinicPortalClosed(this.session.activeLink()) && !ACCOUNT_LEVEL_PATHS.includes(this.path().split(/[?#]/)[0]));
 

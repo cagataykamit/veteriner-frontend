@@ -3,6 +3,7 @@ import { environment } from '@portal/environments/environment';
 import { portalAuthGuard, portalClinicGuard, portalGuestGuard } from './core/auth/portal-auth.guards';
 import { PORTAL_EMBEDDABLE } from './core/embed/portal-embed';
 import { portalAcceptanceGuard } from './features/legal/portal-acceptance.guard';
+import { PORTAL_BACK_LINK } from './core/navigation/portal-back-link';
 
 /** Davet bağlantısı yolu (sözleşme §4.2: `{PortalBaseUrl}/invite?token=…`). */
 const INVITE_ROUTE = environment.invitePath.replace(/^\/+/, '');
@@ -97,6 +98,7 @@ export const portalRoutes: Routes = [
             },
             {
                 path: 'pets/:petId',
+                data: { [PORTAL_BACK_LINK]: '/pets' },
                 title: title('Hayvan bilgileri'),
                 loadComponent: () => import('./features/pets/portal-pet-detail.component').then((m) => m.PortalPetDetailComponent)
             },
@@ -107,11 +109,13 @@ export const portalRoutes: Routes = [
             },
             {
                 path: 'appointments/requests',
+                data: { [PORTAL_BACK_LINK]: '/appointments' },
                 title: title('Randevu taleplerim'),
                 loadComponent: () => import('./features/booking/portal-appointment-requests.component').then((m) => m.PortalAppointmentRequestsComponent)
             },
             {
                 path: 'appointments/requests/new',
+                data: { [PORTAL_BACK_LINK]: '/appointments/requests' },
                 title: title('Randevu talebi'),
                 loadComponent: () => import('./features/booking/portal-appointment-request.component').then((m) => m.PortalAppointmentRequestComponent)
             },
@@ -122,6 +126,7 @@ export const portalRoutes: Routes = [
             },
             {
                 path: 'clinic',
+                data: { [PORTAL_BACK_LINK]: '/' },
                 title: title('Klinik bilgileri'),
                 loadComponent: () => import('./features/clinic/portal-clinic.component').then((m) => m.PortalClinicComponent)
             },
@@ -132,11 +137,13 @@ export const portalRoutes: Routes = [
             },
             {
                 path: 'account/data-requests',
+                data: { [PORTAL_BACK_LINK]: '/account' },
                 title: title('Verilerimle ilgili talep'),
                 loadComponent: () => import('./features/data-requests/portal-data-requests.component').then((m) => m.PortalDataRequestsComponent)
             },
             {
                 path: 'account/delete',
+                data: { [PORTAL_BACK_LINK]: '/account' },
                 title: title('Hesabı sil'),
                 loadComponent: () => import('./features/account/portal-account-deletion.component').then((m) => m.PortalAccountDeletionComponent)
             }

@@ -5,7 +5,7 @@ import { PORTAL_PRIVACY_PATH, PORTAL_TERMS_PATH } from '@portal/app/features/leg
 /**
  * Marka başlığı (ADR-031 AK-10): klinik biliniyorsa klinik adı ve harf rozeti, bilinmiyorsa Vetinity. Kliniğe özel bağlantı
  * sayfası kliniğin sitesindeki logoyu verir (APPT-022); logo yüklenemezse harf rozetine döner. Ad ana sayfaya götürür;
- * sayfalarda ayrıca "Geri" yoktur (oturum yoksa ana sayfa girişe yönlendirir).
+ * alt sayfada (`backLink`) solda "Geri" üst sayfaya döner (PO-04).
  */
 @Component({
     selector: 'portal-brand-header',
@@ -14,6 +14,12 @@ import { PORTAL_PRIVACY_PATH, PORTAL_TERMS_PATH } from '@portal/app/features/leg
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <header class="portal-brand">
+            @if (backLink(); as back) {
+                <a class="portal-header-back" [routerLink]="back" data-testid="header-back">
+                    <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                    <span>Geri</span>
+                </a>
+            }
             <a class="portal-brand-home" routerLink="/" aria-label="Ana sayfa" data-testid="brand-home">
                 @if (clinicName(); as name) {
                     @if (logoUrl() && !logoFailed()) {
@@ -35,6 +41,8 @@ export class PortalBrandHeader {
     readonly clinicName = input<string | null>(null);
     /** Kliniğin logosu; yalnız klinik adıyla birlikte çizilir, ad metin olarak yine yazılır (logo süstür, `alt` boş). */
     readonly logoUrl = input<string | null>(null);
+    /** Alt sayfanın üst sayfası; verilirse başlığın solunda "Geri". */
+    readonly backLink = input<string | null>(null);
 
     readonly logoFailed = signal(false);
     readonly initial = computed(() => (this.clinicName() ?? '').trim().charAt(0).toLocaleUpperCase('tr-TR'));
