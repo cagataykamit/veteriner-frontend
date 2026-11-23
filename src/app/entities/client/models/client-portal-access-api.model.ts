@@ -4,8 +4,8 @@
  */
 export type ClientPortalLinkStatus = 'Active' | 'Closed';
 
-/** Kapalı bağın gerekçesi (ADR-041): personel kapattı ya da hasta sahibi hesabını sildi; aktif bağda `null`. */
-export type ClientPortalLinkCloseReason = 'ClinicClosed' | 'OwnerAccountDeleted';
+/** Kapalı bağın gerekçesi (ADR-041, ADR-054 K9): personel kapattı, hasta sahibi hesabını sildi ya da klinik müşteriyi sildi; aktif bağda `null`. */
+export type ClientPortalLinkCloseReason = 'ClinicClosed' | 'OwnerAccountDeleted' | 'ClientDeleted';
 
 /** `Expired`: bekleyen ama süresi geçmiş davet (sunucu hesaplar). */
 export type ClientPortalInviteStatus = 'Pending' | 'Accepted' | 'Revoked' | 'Expired';

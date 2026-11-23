@@ -32,6 +32,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 import { AiEntryButtonComponent } from '@/app/entities/ai/components/ai-entry-button.component';
 import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
 import { joinPresent } from '@/app/shared/utils/labels.utils';
+import { DeletionUndoNoticeComponent } from '@/app/entities/record-deletion/components/deletion-undo-notice.component';
 
 type PetsListState = {
     search: string;
@@ -66,13 +67,16 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         FilterFieldComponent,
         SearchInputComponent,
         AppRowActionButtonComponent,
-        AiEntryButtonComponent
+        AiEntryButtonComponent,
+        DeletionUndoNoticeComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (activeClientId()) {
             <app-context-filter-chip label="Seçili müşterinin hastaları gösteriliyor" (clear)="clearClientContext()" />
         }
+        <!-- Hasta kartından silip dönünce "Silindi · Geri al" (ADR-054). -->
+        <app-deletion-undo-notice kind="pet" (restored)="reload()" />
 
         <div class="card">
             <div class="flex flex-col gap-4">

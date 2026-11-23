@@ -25,6 +25,7 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
 import { RowLinkDirective } from '@/app/shared/ui/row-link/row-link.directive';
+import { DeletionUndoNoticeComponent } from '@/app/entities/record-deletion/components/deletion-undo-notice.component';
 
 type ClientsListState = {
     search: string;
@@ -39,6 +40,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
     standalone: true,
     imports: [
         RowLinkDirective,
+        DeletionUndoNoticeComponent,
         CommonModule,
         FormsModule,
         RouterLink,
@@ -58,6 +60,9 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
+        <!-- Müşteri kartından silip dönünce "Silindi · Geri al" (ADR-054). -->
+        <app-deletion-undo-notice kind="client" (restored)="reload()" />
+
         <div class="card">
             <div class="flex flex-col gap-4">
                 <app-list-header class="pb-3 border-b border-surface-200 dark:border-surface-700" title="Müşteriler" [count]="totalItems()">

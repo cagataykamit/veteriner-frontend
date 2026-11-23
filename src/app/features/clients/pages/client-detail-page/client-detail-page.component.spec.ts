@@ -18,6 +18,7 @@ import type { PetCardSection } from '@/app/entities/patient/utils/pet-card.utils
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
 import { RecentlyViewedService } from '@/app/entities/patient/services/recently-viewed.service';
+import { RecordDeletionService } from '@/app/entities/record-deletion/services/record-deletion.service';
 import { ClientDetailPageComponent } from './client-detail-page.component';
 
 const client: ClientDetailVm = {
@@ -33,6 +34,7 @@ const client: ClientDetailVm = {
     kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null, templateVersion: null, templateHash: null },
     invoicing: null,
     notes: null,
+    deletedAtUtc: null,
     rowVersion: 'rv1'
 };
 
@@ -66,6 +68,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
     let pets: PetCardSection<PetListItemVm[]>;
     let pendingChargesSpy: Mock;
     let recordRecent: Mock;
+    let cardClient: ClientDetailVm;
 
     const el = () => fixture.nativeElement as HTMLElement;
 
@@ -81,7 +84,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
                 {
                     provide: ClientsService,
                     useValue: {
-                        getClientById: () => of(client),
+                        getClientById: () => of(cardClient),
                         getClientPaymentSummary: () => of(paymentSummary),
                         getPortalAccess: () => of({ clientId: 'c1', canInvite: true, inviteBlockedCode: null, links: [], invites: [] }),
                         getClientRecentSummary: () =>
@@ -103,7 +106,8 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
                 { provide: ClientCreditsService, useValue: { getCredits: () => of([]) } },
                 { provide: ImportedHistoryService, useValue: { getClientAccountEntries: () => of({ items: [], page: 1, pageSize: 20, totalItems: 0, totalPages: 0, totals: { debit: 0, credit: 0 } }) } },
                 { provide: VisitsService, useValue: { getVeterinarians: () => ({ subscribe: () => undefined }) } },
-                { provide: PetsService, useValue: {} }
+                { provide: PetsService, useValue: {} },
+                { provide: RecordDeletionService, useValue: {} }
             ]
         });
         fixture = TestBed.createComponent(ClientDetailPageComponent);
@@ -114,6 +118,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         claims = new Set(['Clients.Update', 'Examinations.Create', 'Charges.Read', 'Charges.Create', 'Visits.Create', 'Appointments.Create']);
         pets = { state: 'ok', data: [pet('p1', 'Pamuk'), pet('p2', 'Karabaş')] };
         recordRecent = vi.fn().mockName('RecentlyViewedService.record');
+        cardClient = client;
         pendingChargesSpy = vi
             .fn()
             .mockName('clientPendingCharges')
@@ -246,5 +251,41 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
         create();
         expect(el().querySelector('[data-testid="client-portal"]')).not.toBeNull();
         expect(el().querySelector('[data-testid="client-portal-invite"]')).not.toBeNull();
+    });
+
+    describe('silme (ADR-054)', () => {
+        it('"…" menüsünde "Sil" yalnız Clients.Delete ile; onay penceresine hasta sayısı gider', () => {
+            create();
+            expect(el().querySelector('[data-testid="client-more-actions"]')).toBeNull();
+            expect(fixture.componentInstance.moreMenuItems()).toEqual([]);
+
+            TestBed.resetTestingModule();
+            claims.add('Clients.Delete');
+            create();
+            expect(el().querySelector('[data-testid="client-more-actions"]')).not.toBeNull();
+            expect(fixture.componentInstance.moreMenuItems().map((i) => i.label)).toEqual(['Sil']);
+            expect(fixture.componentInstance.petCount()).toBe(2);
+        });
+
+        it('silinen kart: bant ve "Geri yükle" (izinle); Düzenle, "…", eylem çubuğu ve rıza işaretleme çizilmez', () => {
+            claims.add('Clients.Delete');
+            cardClient = { ...client, deletedAtUtc: '2026-11-23T10:00:00Z' };
+            create();
+
+            expect(el().querySelector('[data-testid="deleted-record-banner"]')?.textContent).toContain('tarihinde silindi');
+            expect(el().querySelector('[data-testid="deleted-record-restore"]')).not.toBeNull();
+            expect(el().querySelector('a[href="/panel/clients/c1/edit"]')).toBeNull();
+            expect(el().querySelector('[data-testid="client-more-actions"]')).toBeNull();
+            expect(el().querySelector('[data-testid="patient-action-bar"]')).toBeNull();
+            expect(el().querySelector('[data-testid="kvkk-mark-action"]')).toBeNull();
+        });
+
+        it('silme izni yoksa silinen kartta bant var, "Geri yükle" yok', () => {
+            cardClient = { ...client, deletedAtUtc: '2026-11-23T10:00:00Z' };
+            create();
+
+            expect(el().querySelector('[data-testid="deleted-record-banner"]')).not.toBeNull();
+            expect(el().querySelector('[data-testid="deleted-record-restore"]')).toBeNull();
+        });
     });
 });

@@ -21,6 +21,7 @@ import { VitalMeasurementsService } from '@/app/entities/vital-measurement/servi
 import { AiService } from '@/app/entities/ai/services/ai.service';
 import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
 import { VisitsService } from '@/app/entities/visit/services/visits.service';
+import { RecordDeletionService } from '@/app/entities/record-deletion/services/record-deletion.service';
 
 const pet: PetDetailVm = {
     petAlerts: NO_PET_ALERTS,
@@ -47,6 +48,8 @@ const pet: PetDetailVm = {
     status: 'Active',
     deceasedOn: null,
     rowVersion: 'AAAAAAAAB9E=',
+    deletedAtUtc: null,
+    deletedWithClient: false,
     vaccinationsSummary: { totalCount: 0, items: [] },
     examinationsSummary: { totalCount: 0, lastExaminedAtUtc: null },
     appointmentsSummary: { totalCount: 0, upcomingCount: null }
@@ -117,6 +120,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
                 { provide: VisitsService, useValue: { startVisit: () => of({}), getVeterinarians: () => of([]) } },
                 { provide: AppointmentsService, useValue: { getAppointments: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
+                { provide: RecordDeletionService, useValue: {} },
                 {
                     provide: PetsService,
                     useValue: {
@@ -199,6 +203,31 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
     it('Pets.Update yoksa durum eylemi sunulmaz', () => {
         claims = new Set(['Examinations.Create']);
         create();
+        expect(el().querySelector('[data-testid="pet-more-actions"]')).toBeNull();
+    });
+
+    it('"Sil" Pets.Delete ile "…" menüsünde, durum eyleminin yanında; yalnız silme izniyle de menü açılır (ADR-054)', () => {
+        claims.add('Pets.Delete');
+        create();
+        expect(fixture.componentInstance.moreMenuItems().map((i) => i.label)).toEqual(['Vefat olarak işaretle', 'Sil']);
+
+        TestBed.resetTestingModule();
+        claims = new Set(['Pets.Delete']);
+        create();
+        expect(el().querySelector('[data-testid="pet-more-actions"]')).not.toBeNull();
+        expect(fixture.componentInstance.moreMenuItems().map((i) => i.label)).toEqual(['Sil']);
+    });
+
+    it('silinen kart: bant, eylem çubuğu ve Düzenle yok; müşterisiyle silinen hastada geri yükleme müşteri kartına yönlendirir', () => {
+        claims.add('Pets.Delete');
+        petValue = { ...pet, deletedAtUtc: '2026-11-23T10:00:00Z', deletedWithClient: true };
+        create();
+
+        expect(el().querySelector('[data-testid="deleted-record-banner"]')?.textContent).toContain('Müşterisiyle birlikte silindi');
+        expect(el().querySelector('[data-testid="deleted-record-restore"]')).toBeNull();
+        expect(el().querySelector('[data-testid="deleted-record-client-link"]')?.getAttribute('href')).toBe('/panel/clients/c1');
+        expect(el().querySelector('[data-testid="patient-action-bar"]')).toBeNull();
+        expect(el().querySelector('a[href="/panel/pets/p1/edit"]')).toBeNull();
         expect(el().querySelector('[data-testid="pet-more-actions"]')).toBeNull();
     });
 

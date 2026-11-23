@@ -6,7 +6,10 @@ import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
 import { type Observable, Subscription } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { EXAMINATIONS_READ_CLAIM, IMAGING_READ_CLAIM, PETS_UPDATE_CLAIM, VACCINATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { EXAMINATIONS_READ_CLAIM, IMAGING_READ_CLAIM, PETS_DELETE_CLAIM, PETS_UPDATE_CLAIM, VACCINATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { DeletedRecordBannerComponent } from '@/app/entities/record-deletion/components/deleted-record-banner.component';
+import { RecordDeleteDialogComponent } from '@/app/entities/record-deletion/components/record-delete-dialog.component';
+import { RecentDeletionService } from '@/app/entities/record-deletion/services/recent-deletion.service';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { PetImagingSectionComponent } from '@/app/entities/imaging/components/pet-imaging-section.component';
 import { VitalMeasurementsSectionComponent } from '@/app/entities/vital-measurement/components/vital-measurements-section.component';
@@ -57,6 +60,8 @@ import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
         PetSummaryCardComponent,
         PetCardTimelineComponent,
         PetStatusDialogComponent,
+        RecordDeleteDialogComponent,
+        DeletedRecordBannerComponent,
         PetImagingSectionComponent,
         VitalMeasurementsSectionComponent,
         PetImportedRecordsSectionComponent,
@@ -79,34 +84,54 @@ import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
         } @else if (pet(); as p) {
             <app-page-header categoryLink="/panel/pets" categoryLinkLabel="Hasta listesine dön" />
 
+            <!-- Silinen kart (ADR-054): bant ve geri yükleme; düzenleme ve yeni işlem eylemleri çizilmez. -->
+            @if (p.deletedAtUtc; as deletedAt) {
+                <app-deleted-record-banner
+                    kind="pet"
+                    [recordId]="p.id"
+                    [deletedAtUtc]="deletedAt"
+                    [deletedWithClient]="p.deletedWithClient"
+                    [clientId]="p.ownerId"
+                    [canRestore]="canDeletePet && !ro.mutationBlocked()"
+                    (restored)="reload()"
+                />
+            }
+
             <app-pet-card-header [pet]="p" [summary]="summary()" [balance]="ownerOutstanding()" [nextAppointment]="nextAppointment()">
                 <!-- Eylemler tek kökte: denetim akışı bloğunda birden çok kök [editAction] yuvasına yansıtılmaz. -->
                 <ng-container editAction>
                     <!-- Geçmiş özeti (AI-002) kayıt yazmaz: salt okunur kiracıda da görünür; görünürlüğü AI durumu belirler. -->
                     <app-ai-entry-button label="Geçmişi özetle" [active]="aiHistoryOpenFor(p.id)" (pressed)="aiPanel.openHistory(p.id, p.name)" />
-                    @if (canUpdatePet && !ro.mutationBlocked()) {
-                        <a [routerLink]="['/panel/pets', p.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
-                        <!-- Seyrek durum eylemi "Düzenle"nin yanında aynı görünürlükte değil, "…" menüsünde (M-03). -->
-                        <button
-                            pButton
-                            type="button"
-                            class="p-button-outlined p-button-secondary"
-                            aria-label="Diğer eylemler"
-                            aria-haspopup="true"
-                            (click)="moreMenu.toggle($event)"
-                            data-testid="pet-more-actions"
-                        ><i class="pi pi-ellipsis-h" aria-hidden="true"></i></button>
-                        <p-menu #moreMenu [model]="moreMenuItems()" [popup]="true" appendTo="body" />
-                    } @else if (canUpdatePet && ro.mutationBlocked()) {
-                        <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                    @if (!deleted()) {
+                        @if (canUpdatePet && !ro.mutationBlocked()) {
+                            <a [routerLink]="['/panel/pets', p.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                        } @else if (canUpdatePet && ro.mutationBlocked()) {
+                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                        }
+                        <!-- Seyrek eylemler (durum, silme) "Düzenle"nin yanında aynı görünürlükte değil, "…" menüsünde (M-03). -->
+                        @if (moreMenuItems().length > 0) {
+                            <button
+                                pButton
+                                type="button"
+                                class="p-button-outlined p-button-secondary"
+                                aria-label="Diğer eylemler"
+                                aria-haspopup="true"
+                                (click)="moreMenu.toggle($event)"
+                                data-testid="pet-more-actions"
+                            ><i class="pi pi-ellipsis-h" aria-hidden="true"></i></button>
+                            <p-menu #moreMenu [model]="moreMenuItems()" [popup]="true" appendTo="body" />
+                        }
                     }
                 </ng-container>
             </app-pet-card-header>
-            @if (canUpdatePet && !ro.mutationBlocked()) {
+            @if (canUpdatePet && !ro.mutationBlocked() && !deleted()) {
                 <app-pet-status-dialog [(visible)]="statusDialogOpen" [pet]="p" (changed)="onStatusChanged($event)" (stale)="refreshPet()" (appointmentsCancelled)="reloadOpenItems()" />
             }
+            @if (canDeletePet && !ro.mutationBlocked() && !deleted()) {
+                <app-record-delete-dialog kind="pet" [(visible)]="deleteDialogOpen" [recordId]="p.id" [recordName]="p.name" [clientId]="p.ownerId" (deleted)="onDeleted(p)" />
+            }
 
-            @if (p.ownerId) {
+            @if (p.ownerId && !deleted()) {
                 <app-patient-action-bar [sticky]="true" [clientId]="p.ownerId" [petId]="p.id" [petLabel]="p.name + ' — ' + p.speciesName" [clientName]="p.clientName" [petDeceased]="p.status === 'Deceased'"
                     [openVisit]="openVisit()"
                 />
@@ -127,7 +152,7 @@ import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
                 </div>
 
                 <!-- Vital ve kilo eğilimi (HOSP-004); buradan eklenen ölçüm yatışa ya da muayeneye bağlı değildir. -->
-                <app-vital-measurements-section [petId]="p.id" [entryClosed]="p.status === 'Deceased'" />
+                <app-vital-measurements-section [petId]="p.id" [entryClosed]="p.status === 'Deceased' || deleted()" />
 
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 @4xl:col-span-8 min-w-0 flex flex-col gap-4">
@@ -194,6 +219,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     private readonly cardData = inject(PetCardDataService);
     private readonly auth = inject(AuthService);
     private readonly recentlyViewed = inject(RecentlyViewedService);
+    private readonly recentDeletion = inject(RecentDeletionService);
     readonly ro = inject(TenantReadOnlyContextService);
     protected readonly aiPanel = inject(AiPanelService);
     readonly canReadImaging = this.auth.hasOperationClaim(IMAGING_READ_CLAIM);
@@ -232,11 +258,16 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     readonly followUps = signal<PetCardSection<TreatmentListItemVm[]>>(null);
 
     readonly canUpdatePet = this.auth.hasOperationClaim(PETS_UPDATE_CLAIM);
+    /** Silme, "Silinenler" ve geri yükleme (ADR-054 K8). */
+    readonly canDeletePet = this.auth.hasOperationClaim(PETS_DELETE_CLAIM);
+    /** Silinen kart salt okunur açılır: düzenleme ve yeni işlem eylemleri çizilmez (K3). */
+    readonly deleted = computed(() => !!this.pet()?.deletedAtUtc);
+    readonly deleteDialogOpen = signal(false);
     /** Aşı planı önerisi (TIER-005): planlayabilen kullanıcıya, bakımı süren hayvanda; paket kilidi hedef sayfadadır (üst paket kutusu). */
     readonly vaccinationPlanLink = computed(() => {
         const p = this.pet();
 
-        return p && p.status !== 'Deceased' && this.auth.hasOperationClaim(VACCINATIONS_CREATE_CLAIM) && !this.ro.mutationBlocked()
+        return p && p.status !== 'Deceased' && !p.deletedAtUtc && this.auth.hasOperationClaim(VACCINATIONS_CREATE_CLAIM) && !this.ro.mutationBlocked()
             ? ['/panel/pets', p.id, 'vaccination-plan']
             : null;
     });
@@ -247,11 +278,24 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     readonly ownerOutstanding = computed(() => ownerOutstandingSection(this.openItems()));
     readonly nextAppointment = computed(() => openItemsSection(this.openItems(), (o) => o.nextAppointment));
     readonly statusDialogOpen = signal(false);
-    /** "…" menüsü: durum eylemi (vefat olarak işaretle / aktife al). */
+    /** "…" menüsü: durum eylemi (vefat olarak işaretle / aktife al) ve silme; her biri kendi izniyle, salt okunur kiracıda yok. */
     readonly moreMenuItems = computed<MenuItem[]>(() => {
-        const deceased = this.pet()?.status === 'Deceased';
+        if (this.ro.mutationBlocked()) {
+            return [];
+        }
 
-        return [{ label: deceased ? 'Aktife al' : 'Vefat olarak işaretle', icon: deceased ? 'pi pi-undo' : 'pi pi-minus-circle', id: 'pet-status-action', command: () => this.statusDialogOpen.set(true) }];
+        const deceased = this.pet()?.status === 'Deceased';
+        const items: MenuItem[] = [];
+
+        if (this.canUpdatePet) {
+            items.push({ label: deceased ? 'Aktife al' : 'Vefat olarak işaretle', icon: deceased ? 'pi pi-undo' : 'pi pi-minus-circle', id: 'pet-status-action', command: () => this.statusDialogOpen.set(true) });
+        }
+
+        if (this.canDeletePet) {
+            items.push({ label: 'Sil', icon: 'pi pi-trash', id: 'pet-delete-action', command: () => this.deleteDialogOpen.set(true) });
+        }
+
+        return items;
     });
     /** Hasta klinikte mi: hasta özetindeki son geliş bekliyor ya da muayenede (eylem çubuğu Bugün'de aç / Muayeneye al gösterir). */
     readonly openVisit = computed<PatientOpenVisit | null>(() => {
@@ -267,7 +311,7 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
             petId: this.pet()?.id ?? '',
             clientId: this.pet()?.ownerId ?? null,
             hasClaim: (claim) => this.auth.hasOperationClaim(claim),
-            mutationBlocked: this.ro.mutationBlocked(),
+            mutationBlocked: this.ro.mutationBlocked() || this.deleted(),
             emphasis: this.emphasis
         })
     );
@@ -308,6 +352,12 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
             this.pet.set({ ...p, ...result });
             this.loadOpenItems(p.id);
         }
+    }
+
+    /** Silindi: listeye dönülür, liste "Silindi · Geri al" bildirimini gösterir. */
+    onDeleted(p: PetDetailVm): void {
+        this.recentDeletion.remember({ kind: 'pet', id: p.id, name: p.name });
+        void this.router.navigate(['/panel/pets']);
     }
 
     /** Yalnız hayvan kaydı (durum, rowVersion) yenilenir; kart bölümleri yerinde kalır (eşzamanlılık çakışması sonrası). */
