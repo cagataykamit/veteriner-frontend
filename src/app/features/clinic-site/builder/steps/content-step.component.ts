@@ -23,9 +23,11 @@ const COPY_GROUPS: readonly { readonly title: string; readonly fields: readonly 
     {
         title: 'Giriş bölümü ve düğmeler',
         fields: [
+            { key: 'heroEyebrow', label: 'Üst satır' },
             { key: 'heroTitle', label: 'Başlık', rows: 2 },
             { key: 'heroText', label: 'Açıklama', rows: 2 },
-            { key: 'ctaPrimary', label: 'Randevu düğmesi metni' }
+            { key: 'ctaPrimary', label: 'Ana düğme metni' },
+            { key: 'ctaSecondary', label: 'İkinci düğme metni' }
         ]
     },
     {
@@ -399,9 +401,9 @@ export class ContentStepComponent {
         this.patch({ featuresImage: this.toImage(reference, this.store.record().name) });
     }
 
-    /** Seçili konseptin hazır karesi; sitede çizilenle aynı. */
+    /** Seçili bölüm alternatifinin hazır karesi; sitede çizilenle aynı. */
     protected sectionStock(type: 'hero' | 'about' | 'features'): SiteImage | null {
-        return stockSectionPhoto(this.store.stored().design.conceptKey, type);
+        return stockSectionPhoto(this.store.stored().design.sections[type], type);
     }
 
     protected patchService(index: number, change: Partial<SiteService>): void {

@@ -131,7 +131,7 @@ export class SitePreviewComponent {
     }
 }
 
-/** Küçük canlı render: sihirbazın konsept kartları ve yayın önizlemesi. Etkileşime kapalıdır, gerçek bileşenleri çizer. */
+/** Küçük canlı render: sihirbazın kartlarındaki konsept ve bölüm önizlemeleri. Etkileşime kapalıdır, gerçek bileşenleri çizer. */
 @Component({
     selector: 'app-site-thumb',
     standalone: true,
@@ -140,7 +140,7 @@ export class SitePreviewComponent {
     template: `
         <div class="clip" [style.aspect-ratio]="logicalWidth() + ' / ' + logicalHeight()">
             <div class="stage" inert aria-hidden="true" [style.width.px]="logicalWidth()" [style.height.px]="logicalHeight()" [style.transform]="'scale(' + scale() + ')'">
-                <site-renderer [config]="config()" [maxSections]="maxSections()" [viewportHeight]="logicalHeight() + 'px'" />
+                <site-renderer [config]="config()" [only]="only()" [maxSections]="maxSections()" [viewportHeight]="logicalHeight() + 'px'" />
             </div>
         </div>
     `,
@@ -168,6 +168,7 @@ export class SitePreviewComponent {
 })
 export class SiteThumbComponent {
     readonly config = input.required<SiteConfig>();
+    readonly only = input<SectionType | null>(null);
     readonly maxSections = input<number | null>(1);
     readonly logicalWidth = input(1280);
     readonly logicalHeight = input(800);
