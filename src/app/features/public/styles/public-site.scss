@@ -1078,6 +1078,11 @@ $ps: '.public-page.public-site';
     .public-site .ps-minis {
         grid-template-columns: 1fr 1fr;
     }
+
+    /* Tek sayıda kutuda sonuncusu tam satır (yapay zekâ işlevleri) */
+    .public-site .ps-minis[data-ai-features] > li:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+    }
 }
 
 @media (min-width: 1000px) {
@@ -1527,7 +1532,12 @@ $ps: '.public-page.public-site';
 /* Telefonda alt bilgi bağlantıları da 44 px dokunma hedefi */
 @media (max-width: 767.98px) {
     .public-site .ps-footer a {
+        min-width: 44px;
         min-height: 44px;
+    }
+
+    .public-site .ps-footer-base {
+        align-items: center;
     }
 }
 

@@ -231,8 +231,8 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
                 <div class="ps-wrap">
                     <div class="ps-panel ps-tone-sky ps-split">
                         <div>
-                            <p class="ps-chip"><i class="pi pi-sparkles" aria-hidden="true"></i>{{ ai.eyebrow }}</p>
-                            <h2 id="public-home-ai-title" class="public-h2 mt-4">{{ ai.title }}</h2>
+                            <p class="ps-tagline"><span class="ps-chip"><i class="pi pi-sparkles" aria-hidden="true"></i>{{ ai.eyebrow }}</span></p>
+                            <h2 id="public-home-ai-title" class="public-h2">{{ ai.title }}</h2>
                             <p class="public-lead">{{ ai.homeLead }}</p>
                             <ul class="ps-list ps-ticklist" data-ai-rules>
                                 @for (rule of aiRules; track rule) {

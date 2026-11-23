@@ -147,7 +147,7 @@ import { PublicSiteShowcaseComponent } from './components/public-site-showcase.c
                             <li><i class="pi pi-check" aria-hidden="true"></i><span>{{ rule }}</span></li>
                         }
                     </ul>
-                    <p class="ps-small m-0">
+                    <p class="ps-note m-0">
                         {{ ai.creditsNote }} <a [routerLink]="paths.packages" class="ps-inline-link">Paketler</a>
                     </p>
                 </section>

@@ -16,7 +16,7 @@ export interface PublicScreenshotCrop {
  * yazı okunur kalır. Alanlar açık tema görüntüsüne göre seçildi; koyu eşler aynı piksel düzenindedir.
  */
 export const PUBLIC_SCREENSHOT_CROPS = {
-    bugunIcerik: { shot: 'bugun', x: 250, y: 62, w: 1176, h: 736 },
+    bugunIcerik: { shot: 'bugun', x: 250, y: 62, w: 1176, h: 620 },
     bugunBekleyenler: { shot: 'bugun', x: 266, y: 172, w: 1146, h: 374 },
     bugunAcil: { shot: 'bugun', x: 268, y: 224, w: 700, h: 196 },
     muayeneIcerik: { shot: 'muayene', x: 250, y: 62, w: 1176, h: 770 },
