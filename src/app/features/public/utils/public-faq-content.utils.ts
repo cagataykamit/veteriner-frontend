@@ -150,7 +150,7 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
         label: 'Destek',
         items: [
             {
-                question: 'Destek nasıl alırım?',
+                question: 'Nasıl destek alırım?',
                 answer: `İletişim sayfasından ya da WhatsApp destek hattından (${VETINITY_SUPPORT_PHONE_DISPLAY}) bize ulaşın; demo, geçiş ve kullanım sorularınızı yanıtlarız.`,
                 homepage: true
             }
