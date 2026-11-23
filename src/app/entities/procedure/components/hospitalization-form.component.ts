@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/entities/client/components/client-s
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, forwardRef, computed, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, forwardRef, computed, DestroyRef, effect, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { convertToParamMap, type ParamMap } from '@angular/router';
@@ -126,7 +126,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                             [options]="examinationOptions()"
                             optionLabel="label"
                             optionValue="value"
-                            placeholder="Muayene seçin"
+                            [placeholder]="petChosen() ? 'Muayene seçin' : 'Önce hasta seçin'"
                             [filter]="true"
                             filterPlaceholder="Ara…"
                             filterBy="label"
@@ -150,7 +150,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                                 [options]="visitOptions()"
                                 optionLabel="label"
                                 optionValue="value"
-                                [placeholder]="visitOptions().length ? 'Bağlanacak geliş (isteğe bağlı)' : 'Bu hasta için bugün geliş yok'"
+                                [placeholder]="!petChosen() ? 'Önce hasta seçin' : visitOptions().length ? 'Bağlanacak geliş (isteğe bağlı)' : 'Bu hasta için bugün geliş yok'"
                                 [showClear]="true"
                                 class="w-full"
                             />
@@ -259,6 +259,21 @@ export class HospitalizationFormComponent implements OnInit, HasUnsavedChanges {
     private readonly selectedPetId = signal('');
     private readonly contextVisitId = signal('');
     readonly visitOptions = computed(() => hospitalizationVisitOptions(this.todayItems(), this.selectedPetId(), this.contextVisitId()));
+    /** Geliş ve muayene listesi hastaya bağlı: hasta seçilene kadar "yok" denmez, alan kapalı ve "Önce hasta seçin" (G-12). */
+    readonly petChosen = computed(() => !!this.selectedPetId() || this.contextLocked());
+    private readonly visitSelectState = effect(() => {
+        const visit = this.form.controls.visitId;
+
+        if (this.contextFromVisit()) {
+            return;
+        }
+
+        if (this.petChosen()) {
+            visit.enable({ emitEvent: false });
+        } else {
+            visit.disable({ emitEvent: false });
+        }
+    });
     private relationLoadSeq = 0;
     readonly apiFieldErrors = signal<HospitalizationUpsertFieldErrors>({});
 
