@@ -87,16 +87,15 @@ describe('DateInputComponent — tarih-saat alanı (aşı formu)', () => {
         expect(input().value).toBe('10.11.2026 08:01');
     });
 
-    it('gün seçilip saat okla ayarlanınca Enter seçimi korur ve paneli kapatır', async () => {
+    it('gün seçilince panel açık kalır; saat okla ayarlanır, Enter seçimi korur ve paneli kapatır', async () => {
         await open('');
         // Ayın 1'i her gün geçmiş ya da bugündür ("geçmiş" sınırında seçilebilir); ızgaranın ilk "1"i bu ayındır.
         await userEvent.click([...panel()!.querySelectorAll('td span')].find((s) => s.textContent?.trim() === '1') as HTMLElement);
         await expect.poll(() => control().value.startsWith(`${todayPrefix().slice(0, 8)}01T`)).toBe(true);
-        // PrimeNG gün seçiminden 150 ms sonra paneli kendisi kapatır (hideOnDateTimeSelect). Ok bu zamanlayıcıyla yarışmasın:
-        // kapanma beklenir, panel yeniden açılır.
-        await closed();
-        await userEvent.click(input());
-        await shown();
+        // PrimeNG varsayılanı gün seçiminden 150 ms sonra paneli kapatırdı (hideOnDateTimeSelect); artık açık kalır.
+        await wait(300);
+        expect(input().getAttribute('aria-expanded')).toBe('true');
+        expect(panel()).not.toBeNull();
         const before = control().value;
 
         await userEvent.click(button('Önceki saat'));
@@ -120,6 +119,35 @@ describe('DateInputComponent — tarih-saat alanı (aşı formu)', () => {
         await userEvent.keyboard('{Enter}');
         await wait(50);
         expect(control().value).toBe('2026-11-10T09:00');
+    });
+
+    const pickFirstDay = async () => {
+        await userEvent.click([...panel()!.querySelectorAll('td span')].find((s) => s.textContent?.trim() === '1') as HTMLElement);
+        await expect.poll(() => control().value.startsWith(`${todayPrefix().slice(0, 8)}01T`)).toBe(true);
+    };
+
+    it('gün seçildikten sonra Esc paneli kapatır, seçim kalır', async () => {
+        await open('');
+        await pickFirstDay();
+        await userEvent.keyboard('{Escape}');
+        await closed();
+        expect(control().value.startsWith(`${todayPrefix().slice(0, 8)}01T`)).toBe(true);
+    });
+
+    it('gün seçildikten sonra dışarı tıklama paneli kapatır', async () => {
+        const outside = document.body.appendChild(document.createElement('button'));
+
+        outside.textContent = 'Dışarı';
+        outside.style.cssText = 'position: fixed; right: 0; bottom: 0;';
+
+        try {
+            await open('');
+            await pickFirstDay();
+            await userEvent.click(outside);
+            await closed();
+        } finally {
+            outside.remove();
+        }
     });
 
     it('"Bugün" bugünün tarihini o anki saatle yazar (00:00 değil)', async () => {

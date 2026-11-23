@@ -31,6 +31,7 @@ let openInstance: DateInputComponent | null = null;
 /**
  * Ortak tarih / tarih-saat / saat alanı (PrimeNG DatePicker). Alana tıklayınca takvim açılır; klavyeyle yazarken maske
  * uygulanır (`24111991` → `24.11.1991`, saatli: `24.11.1991 14:30`; yalnız rakam, uzunluk biçimle sınırlı); × temizler.
+ * Tarih-saat alanında gün seçilince panel açık kalır (saat okla ayarlanabilsin); Enter, Esc ya da dışarı tıklama kapatır.
  * Form değeri yerel `<input type="date|datetime-local|time">` ile aynı metindir (`yyyy-MM-dd`, `yyyy-MM-ddTHH:mm`,
  * `HH:mm`; boş = `''`), böylece mevcut doğrulayıcı ve İstanbul/UTC dönüşümleri değişmeden çalışır.
  *
@@ -56,6 +57,7 @@ let openInstance: DateInputComponent | null = null;
             [disabled]="disabled()"
             dateFormat="dd.mm.yy"
             [showTime]="type() === 'datetime-local'"
+            [hideOnDateTimeSelect]="type() !== 'datetime-local'"
             [timeOnly]="type() === 'time'"
             hourFormat="24"
             [minDate]="minDate()"
@@ -73,6 +75,7 @@ let openInstance: DateInputComponent | null = null;
             (onBlur)="onBlur()"
             (onShow)="onPanelShow()"
             (onClose)="onPanelClose()"
+            (onSelect)="onDateSelected()"
         />
         @if (errorMessage(); as message) {
             <small class="text-danger block" role="alert">{{ message }}</small>
@@ -125,8 +128,10 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
     private onValidatorChange: () => void = () => undefined;
     private lastMasked = '';
 
+    private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+
     constructor() {
-        const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+        const host = this.host;
         // Capture: PrimeNG'in kendi `input` dinleyicisinden önce çalışır; maskelenmiş metni PrimeNG çözümler.
         const onInput = (event: Event): void => this.onRawInput(event);
 
@@ -205,6 +210,16 @@ export class DateInputComponent implements ControlValueAccessor, Validator {
         }
 
         picker.updateTime();
+    }
+
+    /**
+     * Tarih-saat alanında gün seçilince panel açık kalır (`hideOnDateTimeSelect` kapalı): saat okla ayarlanır. Odak tıklanan günde
+     * kalırsa Enter günü yeniden seçer, Esc ve yazma alana ulaşmaz; odak alana döner, Enter / Esc paneli kapatır.
+     */
+    onDateSelected(): void {
+        if (this.type() === 'datetime-local') {
+            this.host.querySelector('input')?.focus();
+        }
     }
 
     onPanelShow(): void {
