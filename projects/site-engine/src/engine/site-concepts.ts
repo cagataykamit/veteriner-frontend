@@ -1,9 +1,15 @@
 import type { CharacterKey, GroundKey, LogoPlacement, RadiusKey, SectionType, SiteColors, SiteCopy, SiteDesign } from '../model/site.model';
 
 /**
- * Konsept: bölüm sisteminin hazır kombinasyonu. Seçilince varsayılan bölüm alternatifleri, renk, yazı ve köşe gelir; klinik sonra
- * tek tek değiştirir. `voice`, klinik boş bıraktığı metinlerde kullanılan elle yazılmış cümlelerdir: her kliniğe uyacak kadar genel
- * kalır, kliniğe dair doğrulanamayan iddia içermez (ADR-045 K14; spec korur).
+ * Düğmenin biçimi ve tonu: `hap` tam yuvarlak, cümle düzeninde; `etiket` köşe token'ını izler, aralıklı büyük harfle yazılır.
+ * Kliniğin köşe seçimi kart ve görsellere uygulanır; düğme biçimi konseptin kimliğidir.
+ */
+export type ButtonStyle = 'hap' | 'etiket';
+
+/**
+ * Konsept: sitenin tek düzeninin token kombinasyonu (K-01). Konseptler yalnız renk, zemin, yazı, köşe ve düğme biçimiyle ayrılır; bölüm
+ * düzeni hepsinde aynıdır. Seçilince bunlar gelir, klinik sonra tek tek değiştirir. `voice`, klinik boş bıraktığı metinlerde kullanılan
+ * elle yazılmış cümlelerdir: her kliniğe uyacak kadar genel kalır, kliniğe dair doğrulanamayan iddia içermez (ADR-045 K14; spec korur).
  */
 export interface SiteConcept {
     readonly key: string;
@@ -16,7 +22,7 @@ export interface SiteConcept {
     readonly radius: RadiusKey;
     readonly logoPlacement: LogoPlacement;
     readonly character: CharacterKey;
-    readonly sectionKey: string;
+    readonly button: ButtonStyle;
     readonly voice: SiteCopy;
 }
 
@@ -26,15 +32,15 @@ export const SITE_CONCEPTS: readonly SiteConcept[] = [
     {
         key: 'modern',
         name: 'Modern',
-        idea: 'Beyaz zemin, dev tipografi, ince çizgiler. Bir mimarlık bürosunun kataloğu gibi: süs yok, ölçü var.',
+        idea: 'Beyaz zemin, lacivert vurgu, sade yazı, yumuşak köşeler. Ferah ve düzenli; kişiliği fotoğraflar taşır.',
         colors: { primary: '#0f4c81', secondary: '#5b7083', accent: '#d4451b' },
         ground: 'beyaz',
         headFont: 'instrument',
         bodyFont: 'instrument',
-        radius: 'keskin',
+        radius: 'yumusak',
         logoPlacement: 'sol',
         character: 'sade',
-        sectionKey: 'modern',
+        button: 'hap',
         voice: {
             heroEyebrow: 'Veteriner kliniği',
             heroTitle: 'Evcil hayvanınızın sağlığı için bize ulaşın.',
@@ -57,15 +63,15 @@ export const SITE_CONCEPTS: readonly SiteConcept[] = [
     {
         key: 'premium',
         name: 'Zarif',
-        idea: 'Gece zemini, pirinç rengi ince çizgiler, iri tırnaklı yazı. Bir galeri afişi ve menü kartı gibi: sakin ve özenli.',
+        idea: 'Gece zemini, pirinç rengi, tırnaklı başlık, keskin köşe ve büyük harfli düğme. Sakin ve özenli.',
         colors: { primary: '#c7a66b', secondary: '#7d6f5c', accent: '#c7a66b' },
         ground: 'gece',
         headFont: 'cormorant',
         bodyFont: 'jost',
         radius: 'keskin',
-        logoPlacement: 'orta',
+        logoPlacement: 'sol',
         character: 'zarif',
-        sectionKey: 'premium',
+        button: 'etiket',
         voice: {
             heroEyebrow: 'Veteriner kliniği',
             heroTitle: 'Evcil dostunuzun sağlığı için.',
@@ -88,7 +94,7 @@ export const SITE_CONCEPTS: readonly SiteConcept[] = [
     {
         key: 'friendly',
         name: 'Samimi',
-        idea: 'Sıcak krem zemin, dolgun renk blokları, buzdolabına iliştirilmiş fotoğraflar. Mahalle veterineriyle sohbet eder gibi.',
+        idea: 'Sıcak krem zemin, kiremit ve turkuaz, yuvarlak köşeler. Mahalle veterineriyle sohbet eder gibi.',
         colors: { primary: '#c8401f', secondary: '#f2b233', accent: '#0f6b62' },
         ground: 'krem',
         headFont: 'bricolage',
@@ -96,7 +102,7 @@ export const SITE_CONCEPTS: readonly SiteConcept[] = [
         radius: 'yuvarlak',
         logoPlacement: 'sol',
         character: 'samimi',
-        sectionKey: 'friendly',
+        button: 'hap',
         voice: {
             heroEyebrow: 'Veteriner kliniğiniz',
             heroTitle: 'Hoş geldiniz. Minik dostunuz bugün nasıl?',
@@ -119,7 +125,7 @@ export const SITE_CONCEPTS: readonly SiteConcept[] = [
     {
         key: 'nature',
         name: 'Doğal',
-        idea: 'Adaçayı zemin, kemerli pencereler, italik tırnaklı yazı, bol boşluk. Bir sera gibi ferah; acelesi olmayan bir ritim.',
+        idea: 'Adaçayı zemin, orman yeşili, tırnaklı başlık, yumuşak köşeler. Bir sera gibi ferah, acelesiz.',
         colors: { primary: '#2f4a36', secondary: '#8a9a6b', accent: '#a8582f' },
         ground: 'adacayi',
         headFont: 'newsreader',
@@ -127,7 +133,7 @@ export const SITE_CONCEPTS: readonly SiteConcept[] = [
         radius: 'yumusak',
         logoPlacement: 'sol',
         character: 'dogal',
-        sectionKey: 'nature',
+        button: 'hap',
         voice: {
             heroEyebrow: 'Hayvan dostlarımız için',
             heroTitle: 'Hayvanınızın sağlığı için buradayız.',
@@ -166,7 +172,7 @@ export function conceptByKey(key: string): SiteConcept {
     return SITE_CONCEPTS.find((concept) => concept.key === key) ?? SITE_CONCEPTS[0];
 }
 
-/** Konseptin bütün tasarımı; bölümlerin hepsi kendi paketinden gelir. */
+/** Konseptin bütün tasarımı. `sections` eski kayıtlarla uyum için konsept anahtarıyla dolar; motor tek düzen çizer, okumaz. */
 export function designFromConcept(concept: SiteConcept): SiteDesign {
     return {
         conceptKey: concept.key,
@@ -177,6 +183,6 @@ export function designFromConcept(concept: SiteConcept): SiteDesign {
         radius: concept.radius,
         logoPlacement: concept.logoPlacement,
         character: concept.character,
-        sections: Object.fromEntries(ALL_SECTIONS.map((type) => [type, concept.sectionKey])) as Record<SectionType, string>
+        sections: Object.fromEntries(ALL_SECTIONS.map((type) => [type, concept.key])) as Record<SectionType, string>
     };
 }

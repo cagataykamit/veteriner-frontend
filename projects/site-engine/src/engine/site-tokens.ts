@@ -1,21 +1,21 @@
 import type { GroundKey, RadiusKey, SiteDesign } from '../model/site.model';
 import { contrast, ensureContrast, isHex, luminance, mix, readableOn } from './site-color.utils';
-import { conceptByKey } from './site-concepts';
+import { type ButtonStyle, conceptByKey } from './site-concepts';
 import { fontByKey } from './site-fonts';
 
 /**
- * Ortak token sözleşmesi. Bölüm alternatifleri renk, yazı, köşe ve boşluğu yalnız bu `--s-*` değişkenlerinden alır; sabit renk
- * yazmaz (tek istisna: fotoğraf üstünde karartılmış zeminde beyaz metin). Bu sayede farklı konseptlerin bölümleri aynı sayfada
- * bir arada durur. Üstünde metin okunan her çift burada 4.5:1 geçecek biçimde üretilir; seçilen renk zayıfsa metin rengi
- * kaydırılır, klinik uyarıyı sihirbazda görür.
+ * Ortak token sözleşmesi. Bölümler renk, yazı, köşe, düğme ve boşluğu yalnız bu `--s-*` değişkenlerinden alır; sabit renk yazmaz.
+ * Dört konsept tek düzeni paylaşır ve yalnız burada ayrılır (K-01). Üstünde metin okunan her çift burada 4.5:1 geçecek biçimde
+ * üretilir; seçilen renk zayıfsa metin rengi kaydırılır, klinik uyarıyı sihirbazda görür.
  *
  * - Zemin: --s-bg, --s-surface, --s-ink, --s-muted, --s-line
  * - Renk: --s-primary/--s-on-primary, --s-secondary/--s-on-secondary, --s-accent/--s-on-accent
  * - Zeminde okunan renk: --s-primary-text, --s-secondary-text, --s-accent-text
- * - Yumuşak yüzey: --s-tint/--s-on-tint
- * - Koyu bant: --s-band/--s-on-band, --s-band-muted, --s-band-line, --s-band-accent, --s-band-btn/--s-on-band-btn
+ * - Yumuşak yüzey (üst çubuk ve giriş bölümü): --s-tint/--s-on-tint, --s-tint-muted, --s-tint-primary
+ * - Durum metni: --s-ok (açık), --s-warn (mola); çerçeve: --s-line-strong; koyu zeminde logo plakası: --s-logo-plate, --s-logo-pad
  * - Yazı: --s-head, --s-body, --s-head-weight, --s-head-track, --s-head-leading, --s-head-style, --s-head-scale
- * - Biçim: --s-radius, --s-radius-img, --s-radius-btn; boşluk: --s-gutter, --s-space, --s-max
+ * - Biçim: --s-radius (kart ve denetim), --s-radius-img; boşluk: --s-gutter, --s-space, --s-max
+ * - Düğme: --s-radius-btn, --s-btn-case, --s-btn-track, --s-btn-size, --s-btn-weight
  */
 export const GROUNDS: readonly { readonly key: GroundKey; readonly label: string; readonly bg: string; readonly ink: string }[] = [
     { key: 'beyaz', label: 'Beyaz', bg: '#ffffff', ink: '#14171a' },
@@ -25,10 +25,16 @@ export const GROUNDS: readonly { readonly key: GroundKey; readonly label: string
     { key: 'gece', label: 'Gece', bg: '#100f0d', ink: '#f3efe6' }
 ];
 
-const RADII: Readonly<Record<RadiusKey, { readonly control: string; readonly image: string; readonly button: string }>> = {
-    keskin: { control: '2px', image: '0px', button: '2px' },
-    yumusak: { control: '10px', image: '14px', button: '10px' },
-    yuvarlak: { control: '20px', image: '32px', button: '999px' }
+const RADII: Readonly<Record<RadiusKey, { readonly control: string; readonly image: string }>> = {
+    keskin: { control: '2px', image: '2px' },
+    yumusak: { control: '12px', image: '16px' },
+    yuvarlak: { control: '22px', image: '28px' }
+};
+
+/** `etiket` düğmenin köşesi kliniğin köşe seçimini izler; `hap` her zaman tam yuvarlaktır. */
+const BUTTONS: Readonly<Record<ButtonStyle, { readonly pill: boolean; readonly textCase: string; readonly track: string; readonly size: string; readonly weight: string }>> = {
+    hap: { pill: true, textCase: 'none', track: '0', size: '16px', weight: '600' },
+    etiket: { pill: false, textCase: 'uppercase', track: '0.1em', size: '14px', weight: '500' }
 };
 
 export const RADIUS_OPTIONS: readonly { readonly key: RadiusKey; readonly label: string }[] = [
@@ -54,10 +60,10 @@ export function buildSiteTokens(design: SiteDesign): Record<string, string> {
     const { primary, secondary, accent } = safeColors(design);
     const dark = luminance(bg) < 0.18;
     const surface = mix(bg, ink, dark ? 0.07 : 0.04);
-    const band = dark ? mix(bg, primary, 0.13) : mix(primary, '#0b0c0d', contrast(primary, '#ffffff') >= 9 ? 0 : 0.55);
-    const onBand = readableOn(band);
-    const bandAccent = ensureContrast(accent, band);
     const tint = mix(bg, primary, dark ? 0.16 : 0.1);
+    const muted = ensureContrast(mix(ink, bg, 0.36), surface);
+    const concept = conceptByKey(design.conceptKey);
+    const button = BUTTONS[concept.button] ?? BUTTONS.hap;
     const head = fontByKey(design.headFont);
     const body = fontByKey(design.bodyFont);
     const radius = RADII[design.radius] ?? RADII.yumusak;
@@ -66,8 +72,9 @@ export function buildSiteTokens(design: SiteDesign): Record<string, string> {
         '--s-bg': bg,
         '--s-surface': surface,
         '--s-ink': ink,
-        '--s-muted': ensureContrast(mix(ink, bg, 0.36), surface),
+        '--s-muted': muted,
         '--s-line': mix(bg, ink, dark ? 0.2 : 0.16),
+        '--s-line-strong': mix(bg, ink, dark ? 0.4 : 0.34),
         '--s-primary': primary,
         '--s-on-primary': readableOn(primary),
         '--s-primary-text': ensureContrast(primary, surface),
@@ -79,14 +86,13 @@ export function buildSiteTokens(design: SiteDesign): Record<string, string> {
         '--s-accent-text': ensureContrast(accent, surface),
         '--s-tint': tint,
         '--s-on-tint': ensureContrast(ink, tint, 7),
-        '--s-band': band,
-        '--s-on-band': onBand,
-        '--s-band-muted': ensureContrast(mix(onBand, band, 0.28), band),
-        '--s-band-line': mix(band, onBand, 0.24),
-        '--s-band-accent': bandAccent,
-        '--s-band-btn': bandAccent,
-        '--s-on-band-btn': readableOn(bandAccent),
+        '--s-tint-muted': ensureContrast(muted, tint),
+        '--s-tint-primary': ensureContrast(primary, tint),
+        '--s-ok': ensureContrast(dark ? '#6fd39a' : '#17713f', bg),
+        '--s-warn': ensureContrast(dark ? '#f0c36b' : '#8a5a00', bg),
         '--s-focus': ensureContrast(primary, bg),
+        '--s-logo-plate': dark ? '#ffffff' : 'transparent',
+        '--s-logo-pad': dark ? '4px' : '0px',
         '--s-head': head.stack,
         '--s-body': body.stack,
         '--s-head-weight': String(head.weight),
@@ -96,10 +102,14 @@ export function buildSiteTokens(design: SiteDesign): Record<string, string> {
         '--s-head-scale': String(head.scale),
         '--s-radius': radius.control,
         '--s-radius-img': radius.image,
-        '--s-radius-btn': radius.button,
-        '--s-gutter': 'clamp(20px, 4.4cqi, 64px)',
-        '--s-space': 'clamp(64px, 10cqi, 136px)',
-        '--s-max': '1440px',
+        '--s-radius-btn': button.pill ? '999px' : radius.control,
+        '--s-btn-case': button.textCase,
+        '--s-btn-track': button.track,
+        '--s-btn-size': button.size,
+        '--s-btn-weight': button.weight,
+        '--s-gutter': 'clamp(20px, 3.2cqi, 40px)',
+        '--s-space': 'clamp(56px, 7cqi, 88px)',
+        '--s-max': '1260px',
         'color-scheme': dark ? 'dark' : 'light'
     };
 }

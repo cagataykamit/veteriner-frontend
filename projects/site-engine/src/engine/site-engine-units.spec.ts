@@ -3,10 +3,10 @@ import { emptyContent, forbiddenCopy, patchClinic, sampleConfig } from '../testi
 import { contrast } from './site-color.utils';
 import { designFromConcept, SITE_CONCEPTS, SITE_PALETTES } from './site-concepts';
 import { SITE_FONTS } from './site-fonts';
-import { clinicStatus, hoursGroups, nextSlotDays } from './site-hours';
+import { clinicStatus, hasWorkingHours, hoursGroups, nextSlotDays } from './site-hours';
 import { safeHref, safeImageSrc, socialLinks } from './site-links';
 import { buildSiteTokens, colorWarnings } from './site-tokens';
-import { buildSiteVm, displayPhone, memberInitials, whatsappNumber } from './site-vm';
+import { buildSiteVm, displayPhone, memberInitials, whatsappNumber, wordmark } from './site-vm';
 import record from '../../stock/KAYNAKLAR.json';
 import { isStockPhoto, STOCK_GALLERY, STOCK_LIBRARY, STOCK_PHOTOS, stockArticlePhoto, stockSectionPhoto, stockServicePhoto, stockSharePhoto } from './stock-photos';
 
@@ -80,8 +80,25 @@ describe('çalışma saatleri', () => {
         const groups = hoursGroups(week, NOW);
 
         expect(groups.map((group) => group.label)).toEqual(['Pazartesi – Cuma', 'Cumartesi – Pazar']);
-        expect(groups[0]).toEqual({ label: 'Pazartesi – Cuma', value: '09:00–19:00', note: 'Mola 13:00–14:00', isToday: true });
-        expect(groups[1].value).toBe('Kapalı');
+        expect(groups[0]).toEqual({ label: 'Pazartesi – Cuma', value: '09:00–19:00', note: 'Mola 13:00–14:00', isToday: true, isClosed: false });
+        expect(groups[1]).toMatchObject({ value: 'Kapalı', isClosed: true });
+    });
+
+    it('gece yarısından gece yarısına açık gün "24 saat açık" yazılır; diğer saatler olduğu gibi kalır', () => {
+        const days: WorkingDay[] = [
+            { dayOfWeek: 0, isClosed: false, opensAt: '00:00', closesAt: '23:59', breakStartsAt: null, breakEndsAt: null },
+            { dayOfWeek: 1, isClosed: false, opensAt: '01:00', closesAt: '23:59', breakStartsAt: null, breakEndsAt: null }
+        ];
+        const groups = hoursGroups(days, NOW);
+
+        expect(groups.find((group) => group.label === 'Pazar')?.value).toBe('24 saat açık');
+        expect(groups.find((group) => group.label === 'Pazartesi')?.value).toBe('01:00–23:59');
+    });
+
+    it('saat girilmediyse çalışma saati yok sayılır', () => {
+        expect(hasWorkingHours([])).toBe(false);
+        expect(hasWorkingHours([{ dayOfWeek: 1, isClosed: true, opensAt: null, closesAt: null, breakStartsAt: null, breakEndsAt: null }])).toBe(false);
+        expect(hasWorkingHours(week)).toBe(true);
     });
 });
 
@@ -181,10 +198,19 @@ describe('buildSiteVm', () => {
         const vm = buildSiteVm(emptyContent(sampleConfig()), voice, NOW);
 
         expect(vm.name).toBe('Klinik adı');
-        expect(vm.initial).toBe('K');
+        expect(vm.wordmark).toEqual({ main: 'Klinik adı', sub: '' });
+        expect(vm.hasHours).toBe(false);
         expect(vm.telHref).toBeNull();
         expect(vm.mapHref).toBeNull();
         expect(vm.homeSections).toEqual(['about', 'gallery']);
+    });
+
+    it('yazı işareti: tür eki ayrı satıra iner, büyük harfle yazılsa da tanınır; ek yoksa ad tek satırdır (K-01)', () => {
+        expect(wordmark('Merkez Pati Veteriner Kliniği')).toEqual({ main: 'Merkez Pati', sub: 'Veteriner Kliniği' });
+        expect(wordmark('MODA HAYVAN HASTANESİ')).toEqual({ main: 'MODA', sub: 'HAYVAN HASTANESİ' });
+        expect(wordmark('Kuzey Veteriner Polikliniği')).toEqual({ main: 'Kuzey', sub: 'Veteriner Polikliniği' });
+        expect(wordmark('Pati Dostları')).toEqual({ main: 'Pati Dostları', sub: '' });
+        expect(wordmark('Veteriner Kliniği')).toEqual({ main: 'Veteriner Kliniği', sub: '' });
     });
 
     it('üye baş harfleri unvanı atlar, Türkçe büyük harf kullanır', () => {
@@ -204,10 +230,10 @@ describe('token sözleşmesi', () => {
         [tokens['--s-primary-text'], tokens['--s-surface']],
         [tokens['--s-accent-text'], tokens['--s-surface']],
         [tokens['--s-on-tint'], tokens['--s-tint']],
-        [tokens['--s-on-band'], tokens['--s-band']],
-        [tokens['--s-band-muted'], tokens['--s-band']],
-        [tokens['--s-band-accent'], tokens['--s-band']],
-        [tokens['--s-on-band-btn'], tokens['--s-band-btn']]
+        [tokens['--s-tint-muted'], tokens['--s-tint']],
+        [tokens['--s-tint-primary'], tokens['--s-tint']],
+        [tokens['--s-ok'], tokens['--s-bg']],
+        [tokens['--s-warn'], tokens['--s-bg']]
     ];
 
     for (const concept of SITE_CONCEPTS) {
@@ -232,6 +258,28 @@ describe('token sözleşmesi', () => {
         for (const [text, background] of textPairs(buildSiteTokens({ ...designFromConcept(SITE_CONCEPTS[0]), colors }))) {
             expect(contrast(text, background), `${text} / ${background}`).toBeGreaterThanOrEqual(4.5);
         }
+    });
+
+    it('düğme biçimi konseptten gelir: Zarif köşeyi izleyen büyük harfli etiket, diğerleri hap (K-01)', () => {
+        const tokens = (key: string) => buildSiteTokens(designFromConcept(SITE_CONCEPTS.find((concept) => concept.key === key)!));
+
+        for (const key of ['modern', 'friendly', 'nature']) {
+            expect(tokens(key)['--s-radius-btn'], key).toBe('999px');
+            expect(tokens(key)['--s-btn-case'], key).toBe('none');
+        }
+
+        expect(tokens('premium')['--s-radius-btn']).toBe(tokens('premium')['--s-radius']);
+        expect(tokens('premium')['--s-btn-case']).toBe('uppercase');
+    });
+
+    it('köşe kliniğin seçimidir: kart ve görsel köşesi değişir, hap düğme aynı kalır', () => {
+        const base = designFromConcept(SITE_CONCEPTS[0]);
+        const sharp = buildSiteTokens({ ...base, radius: 'keskin' });
+        const round = buildSiteTokens({ ...base, radius: 'yuvarlak' });
+
+        expect(sharp['--s-radius']).not.toBe(round['--s-radius']);
+        expect(sharp['--s-radius-img']).not.toBe(round['--s-radius-img']);
+        expect(sharp['--s-radius-btn']).toBe(round['--s-radius-btn']);
     });
 
     it('geçersiz renk konseptin rengine, bilinmeyen köşe ve zemin varsayılana düşer', () => {
@@ -284,7 +332,7 @@ describe('fontlar ve hazır fotoğraf', () => {
         expect(isStockPhoto({ src: '/api/v1/public/sites/a/images/b', alt: '' })).toBe(false);
     });
 
-    it('her konseptin yuvaları doludur; yuvası olmayan alternatif boş döner', () => {
+    it('her konseptin yuvaları doludur; bilinmeyen konsept boş döner', () => {
         for (const concept of SITE_CONCEPTS) {
             for (const type of ['hero', 'about', 'features'] as const) expect(stockSectionPhoto(concept.key, type), `${concept.key}-${type}`).not.toBeNull();
         }

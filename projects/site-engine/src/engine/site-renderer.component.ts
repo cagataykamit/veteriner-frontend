@@ -1,7 +1,8 @@
 import { NgComponentOutlet } from '@angular/common';
 import { afterNextRender, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, input, model, untracked } from '@angular/core';
-import type { HomeSectionType, SectionType, SiteConfig } from '../model/site.model';
-import { findAlternative } from './section-registry';
+import type { HomeSectionType, SiteConfig } from '../model/site.model';
+import { SECTION_COMPONENTS } from './section-registry';
+import { SiteDockComponent } from './sections/site-dock.component';
 import { SiteContext } from './site-context';
 import { conceptByKey } from './site-concepts';
 import { SitePageComponent } from './site-page.component';
@@ -12,36 +13,36 @@ import { buildSiteVm } from './site-vm';
 /**
  * Render motoru: yalnız site yapılandırmasını alıp çizer, sihirbazdan hiçbir şey bilmez. Önizleme, küçük resim ve tam sayfa aynı
  * bileşendir. Yerleşim ekran genişliğine değil kendi genişliğine bakar (`site` container'ı); bu yüzden önizleme çerçevesi gerçek
- * cihaz gibi davranır. `viewportHeight` çerçevenin yüksekliğidir; tam sayfada `100dvh`.
+ * cihaz gibi davranır. `viewportHeight` çerçevenin yüksekliğidir; tam sayfada `100dvh`. Ana sayfa bölümleri sırayla yumuşak yüzey ve zemin
+ * üstünde çizilir: klinik sırayı değiştirse de iki bölüm aynı zeminde yan yana gelmez. Telefonda alt eylem şeridi küçük resimde çizilmez.
  */
 @Component({
     selector: 'site-renderer',
     standalone: true,
-    imports: [NgComponentOutlet, SitePageComponent],
+    imports: [NgComponentOutlet, SiteDockComponent, SitePageComponent],
     providers: [SiteContext],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="site" [style]="tokens()" [style.--s-vh]="viewportHeight()">
-            @if (only(); as type) {
-                <ng-container *ngComponentOutlet="component(type)" />
-            } @else {
-                <ng-container *ngComponentOutlet="component('nav')" />
-                <main>
-                    @if (page().kind === 'home') {
-                        <ng-container *ngComponentOutlet="component('hero')" />
-                        @for (section of homeSections(); track section.key) {
-                            <div class="slot" [attr.data-anchor]="section.type">
-                                <ng-container *ngComponentOutlet="section.component" />
-                            </div>
-                        }
-                    } @else {
-                        <site-page [page]="page()" [sections]="config().design.sections" />
+            <ng-container *ngComponentOutlet="sections.nav" />
+            <main>
+                @if (page().kind === 'home') {
+                    <ng-container *ngComponentOutlet="sections.hero" />
+                    @for (type of homeSections(); track type) {
+                        <div class="slot" [attr.data-anchor]="type">
+                            <ng-container *ngComponentOutlet="sections[type]" />
+                        </div>
                     }
-                </main>
-                @if (vm().usesStock) {
-                    <p class="stock-note">Bu sitedeki bazı görseller temsilidir.</p>
+                } @else {
+                    <site-page [page]="page()" />
                 }
-                <ng-container *ngComponentOutlet="component('footer')" />
+            </main>
+            @if (vm().usesStock) {
+                <p class="stock-note">Bu sitedeki bazı görseller temsilidir.</p>
+            }
+            <ng-container *ngComponentOutlet="sections.footer" />
+            @if (maxSections() === null) {
+                <site-dock />
             }
         </div>
     `,
@@ -64,7 +65,11 @@ import { buildSiteVm } from './site-vm';
         }
 
         .slot {
-            scroll-margin-top: 72px;
+            scroll-margin-top: 76px;
+        }
+
+        .slot:nth-of-type(odd) {
+            background: var(--s-surface);
         }
 
         .stock-note {
@@ -83,8 +88,6 @@ export class SiteRendererComponent {
     /** Sayfa bağlantılarının tam adresi için kök; yeni sekmede açmak bu sayede çalışır. */
     readonly baseHref = input('');
     readonly viewportHeight = input('100dvh');
-    /** Yalnız bu bölümü çiz (sihirbazdaki alternatif küçük resmi). */
-    readonly only = input<SectionType | null>(null);
     /** Ana sayfada en çok bu kadar bölüm (konsept küçük resmi). */
     readonly maxSections = input<number | null>(null);
 
@@ -98,15 +101,12 @@ export class SiteRendererComponent {
 
     protected readonly page = computed(() => resolveSitePage(this.path(), this.vm()));
 
-    protected readonly homeSections = computed(() => {
+    protected readonly sections = SECTION_COMPONENTS;
+
+    protected readonly homeSections = computed((): readonly HomeSectionType[] => {
         const limit = this.maxSections();
-        const list = limit === null ? this.vm().homeSections : this.vm().homeSections.slice(0, limit);
 
-        return list.map((type: HomeSectionType) => {
-            const alternative = findAlternative(type, this.config().design.sections[type]);
-
-            return { type, key: `${type}:${alternative.key}`, component: alternative.component };
-        });
+        return limit === null ? this.vm().homeSections : this.vm().homeSections.slice(0, limit);
     });
 
     constructor() {
@@ -119,10 +119,6 @@ export class SiteRendererComponent {
         });
     }
 
-    protected component(type: SectionType) {
-        return findAlternative(type, this.config().design.sections[type]).component;
-    }
-
     /** Çapa varsa bölüme, yoksa sayfa başına; kaydıran öğe önizleme çerçevesi ya da pencere. */
     private scrollTo(path: string): void {
         const anchor = path.split('#')[1];
@@ -132,7 +128,7 @@ export class SiteRendererComponent {
             this.host.querySelector(`[data-anchor="${CSS.escape(anchor)}"]`)?.scrollIntoView({ block: 'start' });
         } else if (scroller) {
             scroller.scrollTo({ top: 0 });
-        } else if (!this.only() && this.maxSections() === null) {
+        } else if (this.maxSections() === null) {
             window.scrollTo({ top: 0 });
         }
     }

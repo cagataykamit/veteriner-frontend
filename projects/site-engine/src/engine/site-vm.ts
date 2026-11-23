@@ -1,7 +1,7 @@
 import { PAGE_DEFS, type CopyKey, type HomeSectionType, type PageKey, type SiteBranch, type SiteConfig, type SiteCopy, type SiteFaq, type SiteFeature, type SiteImage } from '../model/site.model';
-import { clinicStatus, hoursGroups, nextSlotDays, type ClinicStatus, type HoursGroup, type SlotDayVm } from './site-hours';
+import { clinicStatus, hasWorkingHours, hoursGroups, nextSlotDays, type ClinicStatus, type HoursGroup, type SlotDayVm } from './site-hours';
 import { safeHref, safeImage, safeImageSrc, socialLinks, type SocialVm } from './site-links';
-import { isStockPhoto, STOCK_GALLERY, STOCK_PHOTOS, stockArticlePhoto, stockSectionPhoto, stockServicePhoto, type StockSlot } from './stock-photos';
+import { isStockPhoto, STOCK_GALLERY, stockArticlePhoto, stockSectionPhoto, stockServicePhoto, type SectionPhotoSlot } from './stock-photos';
 
 export interface ServiceVm {
     readonly slug: string;
@@ -46,14 +46,20 @@ export interface CtaVm {
     readonly href: string | null;
 }
 
+/** Yazı işareti: ad büyük, tür eki ("Veteriner Kliniği") altında küçük. Logo olsa da olmasa da çizilir. */
+export interface WordmarkVm {
+    readonly main: string;
+    readonly sub: string;
+}
+
 /**
- * Sitenin çizime hazır hâli. Bölüm alternatifleri yalnız bunu okur; boş veri burada elenir, bölüm boşsa görünmez. `pages` de içeriğe
+ * Sitenin çizime hazır hâli. Bölümler yalnız bunu okur; boş veri burada elenir, bölüm boşsa görünmez. `pages` de içeriğe
  * göre düzeltilir: açık ama boş sayfa menüye girmez, adresi "bulunamadı" olur. Bağlantı ve görsel adresleri `site-links`'ten geçmiştir.
  * Klinik görsel yüklemediyse hazır fotoğraf gelir (K7); yüklenemeyen adres `unavailable` ile düşer, bölüm görselsiz düzenini çizer.
  */
 export interface SiteVm {
     readonly name: string;
-    readonly initial: string;
+    readonly wordmark: WordmarkVm;
     readonly logo: string | null;
     readonly logoCenter: boolean;
     readonly slogan: string;
@@ -71,13 +77,15 @@ export interface SiteVm {
     readonly mapHref: string | null;
     readonly social: readonly SocialVm[];
     readonly status: ClinicStatus;
+    /** Klinik saat girmediyse durum ve saat tablosu çizilmez. */
+    readonly hasHours: boolean;
     readonly groups: readonly HoursGroup[];
     readonly copy: SiteCopy;
     readonly heroImage: SiteImage | null;
     readonly aboutImage: SiteImage | null;
     readonly featuresImage: SiteImage | null;
-    /** Hazır fotoğraf yuvaları; bölümler kliniğin görseli yoksa buradan okur. */
-    readonly stock: Readonly<Record<StockSlot, SiteImage | null>>;
+    /** Bölüm fotoğrafları: kliniğin yüklediği, yoksa konseptin hazır karesi (K7); yüklenemeyen düşer. */
+    readonly photos: Readonly<Record<SectionPhotoSlot, SiteImage | null>>;
     /** Sitede hazır fotoğraf çiziliyor: "temsili görsel" ibaresi görünür. */
     readonly usesStock: boolean;
     readonly aboutParagraphs: readonly string[];
@@ -119,7 +127,18 @@ export function memberInitials(name: string): string {
         .join('');
 }
 
-/** Metinler: klinik boş bıraktıysa konseptin önerdiği cümle. */
+/** Klinik adının sonundaki tür eki; aranırken Türkçe küçük harfe çevrilir. */
+const NAME_KIND = /\s+((veteriner|hayvan)\s+(kliniği|polikliniği|hastanesi|sağlık merkezi)|pet kliniği)$/u;
+
+/** "Merkez Pati Veteriner Kliniği" → "Merkez Pati" + "Veteriner Kliniği". Ek yoksa ya da adın tamamıysa ad tek satırdır. */
+export function wordmark(name: string): WordmarkVm {
+    const match = NAME_KIND.exec(name.toLocaleLowerCase('tr'));
+
+    if (!match || match.index === 0) return { main: name, sub: '' };
+
+    return { main: name.slice(0, match.index).trim(), sub: name.slice(match.index).trim() };
+}
+
 /** `wa.me` ülke kodlu, başında sıfır olmayan numara ister; Türkiye'de 0 ile ya da ülke kodsuz yazılan numara tamamlanır. */
 export function whatsappNumber(raw: string): string {
     const digits = raw.replace(/\D/g, '');
@@ -142,6 +161,7 @@ export function displayPhone(raw: string): string {
     return `+90 ${digits.slice(2, 5)} ${digits.slice(5, 8)} ${digits.slice(8, 10)} ${digits.slice(10)}`;
 }
 
+/** Metinler: klinik boş bıraktıysa konseptin önerdiği cümle. */
 function resolveCopy(content: SiteCopy, voice: SiteCopy): SiteCopy {
     return Object.fromEntries(Object.keys(voice).map((key) => [key, content[key as CopyKey]?.trim() || voice[key as CopyKey]])) as unknown as SiteCopy;
 }
@@ -203,10 +223,15 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
     const features = content.features.filter((feature) => feature.title.trim());
     const uploadedGallery = content.gallery.map(uploaded).filter((image): image is SiteImage => image !== null);
     const gallery = uploadedGallery.length ? uploadedGallery : STOCK_GALLERY.filter((image) => usable(image));
-    const stock = Object.fromEntries(Object.entries(STOCK_PHOTOS).map(([slot, image]) => [slot, usable(image)])) as Record<StockSlot, SiteImage | null>;
     const heroImage = uploaded(content.heroImage);
     const aboutImage = uploaded(content.aboutImage);
     const featuresImage = uploaded(content.featuresImage);
+    const { conceptKey } = config.design;
+    const photos: Record<SectionPhotoSlot, SiteImage | null> = {
+        hero: heroImage ?? usable(stockSectionPhoto(conceptKey, 'hero')),
+        about: aboutImage ?? usable(stockSectionPhoto(conceptKey, 'about')),
+        features: featuresImage ?? usable(stockSectionPhoto(conceptKey, 'features'))
+    };
     const faqs = content.faqs.filter((faq) => faq.question.trim() && faq.answer.trim());
     const branches = content.branches.filter((branch) => branch.name.trim()).map((branch) => ({ ...branch, phone: displayPhone(branch.phone) }));
     const emergencyText = content.emergencyText.trim();
@@ -244,21 +269,19 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
     const cta: CtaVm | null = bookingHref ? { label: copy.ctaPrimary, path: null, href: bookingHref } : telHref ? { label: 'Hemen ara', path: null, href: telHref } : null;
     const homeSections = structure.homeSections.filter((section) => section.on && hasContent[section.type]).map((section) => section.type);
     const isShown = (type: HomeSectionType, page: PageKey): boolean => homeSections.includes(type) || pages[page];
-    const { sections } = config.design;
-    const sectionPhoto = (slot: string): SiteImage | null => usable(STOCK_PHOTOS[slot as StockSlot] ?? null);
+    // Hizmet kartları ikonludur; hizmet fotoğrafı yalnız hizmetin kendi sayfasında çizilir.
     const drawn: readonly (SiteImage | null)[] = [
-        heroImage ?? usable(stockSectionPhoto(sections.hero, 'hero')),
-        sectionPhoto(`${sections.hero}-hero-2`),
-        ...(isShown('about', 'hakkimizda') ? [aboutImage ?? usable(stockSectionPhoto(sections.about, 'about')), sectionPhoto(`${sections.about}-about-2`)] : []),
-        ...(isShown('features', 'hakkimizda') && features.length ? [featuresImage ?? usable(stockSectionPhoto(sections.features, 'features'))] : []),
-        ...(isShown('services', 'hizmetler') ? services.map((service) => service.image) : []),
+        photos.hero,
+        ...(isShown('about', 'hakkimizda') ? [photos.about] : []),
+        ...(isShown('features', 'hakkimizda') && features.length ? [photos.features] : []),
+        ...(pages.hizmetDetay ? services.map((service) => service.image) : []),
         ...(isShown('guide', 'rehber') ? articles.map((article) => article.image) : []),
         ...(isShown('gallery', 'galeri') ? gallery : [])
     ];
 
     return {
         name,
-        initial: name.charAt(0).toLocaleUpperCase('tr'),
+        wordmark: wordmark(name),
         logo: safeImageSrc(clinic.logo),
         logoCenter: config.design.logoPlacement === 'orta',
         slogan: clinic.slogan.trim(),
@@ -275,12 +298,13 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
         mapHref: safeHref(clinic.mapUrl) ?? (address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}` : null),
         social: socialLinks(clinic),
         status: clinicStatus(clinic.workingDays, now),
+        hasHours: hasWorkingHours(clinic.workingDays),
         groups: hoursGroups(clinic.workingDays, now),
         copy,
         heroImage,
         aboutImage,
         featuresImage,
-        stock,
+        photos,
         usesStock: drawn.some(isStockPhoto),
         aboutParagraphs,
         services,

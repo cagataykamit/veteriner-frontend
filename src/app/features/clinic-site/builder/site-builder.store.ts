@@ -5,7 +5,6 @@ import {
     conceptByKey,
     defaultStoredConfig,
     designFromConcept,
-    findAlternative,
     readStoredConfig,
     resolveSiteImages,
     type SectionType,
@@ -288,14 +287,9 @@ export class SiteBuilderStore {
         this.patch((config) => ({ ...config, structure: { ...config.structure, ...change } }));
     }
 
-    /** Konsept seçimi: bölümler, renk, yazı ve köşe gelir; içerik aynı kalır. */
+    /** Konsept seçimi: renk, zemin, yazı ve köşe gelir; düzen ve içerik aynı kalır. */
     applyConcept(key: string): void {
         this.patch((config) => ({ ...config, design: designFromConcept(conceptByKey(key)) }));
-    }
-
-    setSection(type: SectionType, key: string): void {
-        this.patch((config) => ({ ...config, design: { ...config.design, sections: { ...config.design.sections, [type]: findAlternative(type, key).key } } }));
-        this.focus(type);
     }
 
     focus(type: SectionType): void {

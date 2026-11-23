@@ -50,7 +50,7 @@ export function contrastChecks(config: SiteConfig): readonly SiteCheck[] {
         return { label, ok: ratio >= 4.5, detail: `${ratio.toFixed(1)}:1` };
     };
 
-    return [pair('Metin / zemin', '--s-ink', '--s-bg'), pair('Soluk metin / yüzey', '--s-muted', '--s-surface'), pair('Ana renk metni / yüzey', '--s-primary-text', '--s-surface'), pair('Düğme metni / ana renk', '--s-on-primary', '--s-primary'), pair('Bant metni / bant', '--s-on-band', '--s-band')];
+    return [pair('Metin / zemin', '--s-ink', '--s-bg'), pair('Soluk metin / yüzey', '--s-muted', '--s-surface'), pair('Ana renk metni / yüzey', '--s-primary-text', '--s-surface'), pair('Düğme metni / ana renk', '--s-on-primary', '--s-primary'), pair('Üst bölüm metni / zemin', '--s-tint-muted', '--s-tint')];
 }
 
 export function imageChecks(config: SiteConfig): readonly SiteCheck[] {

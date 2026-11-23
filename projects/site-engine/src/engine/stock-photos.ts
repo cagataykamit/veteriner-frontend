@@ -41,27 +41,25 @@ const PHOTO = {
 
 export const STOCK_LIBRARY: readonly SiteImage[] = Object.values(PHOTO);
 
-/** Yuva, bölüm alternatifinin fotoğraf kullandığı yerdir; paketler havasına uyan kareyi burada seçer. */
+/** Bölüm fotoğrafının yuvası: konsept + bölüm. Her konsept havasına uyan kareyi burada seçer; düzen tektir, kare konseptle değişir. */
 export const STOCK_PHOTOS = {
     'modern-hero': PHOTO.bandana,
     'modern-about': PHOTO.exSmallDog,
-    'modern-about-2': PHOTO.catLap,
     'modern-features': PHOTO.labField,
     'premium-hero': PHOTO.tuxedoDark,
     'premium-about': PHOTO.catLap,
     'premium-features': PHOTO.siameseDark,
     'friendly-hero': PHOTO.goldenSmile,
-    'friendly-hero-2': PHOTO.orangeSill,
     'friendly-about': PHOTO.catLap,
     'friendly-features': PHOTO.basset,
     'nature-hero': PHOTO.tollerFence,
-    'nature-hero-2': PHOTO.longFur,
     'nature-about': PHOTO.shoreDogs,
-    'nature-about-2': PHOTO.orangeSill,
     'nature-features': PHOTO.collie
 } as const satisfies Record<string, SiteImage>;
 
 export type StockSlot = keyof typeof STOCK_PHOTOS;
+
+export type SectionPhotoSlot = 'hero' | 'about' | 'features';
 
 export const STOCK_GALLERY: readonly SiteImage[] = [PHOTO.exSmallDog, PHOTO.orangeSill, PHOTO.orangeWhite, PHOTO.goldenField, PHOTO.exWhiteCat, PHOTO.catLap, PHOTO.basset, PHOTO.rabbitWindow];
 
@@ -100,9 +98,9 @@ export function stockArticlePhoto(slug: string, index: number): SiteImage {
     return pick(slug, index, ARTICLE_RULES, ARTICLE_POOL);
 }
 
-/** Bölüm alternatifinin yuvası: `sections.hero` "premium" ise premium hero karesi. */
-export function stockSectionPhoto(pack: string, type: 'hero' | 'about' | 'features'): SiteImage | null {
-    return STOCK_PHOTOS[`${pack}-${type}` as StockSlot] ?? null;
+/** Konseptin bölüm karesi: konsept "premium" ise premium hero karesi. Bilinmeyen konsept boş döner. */
+export function stockSectionPhoto(conceptKey: string, type: SectionPhotoSlot): SiteImage | null {
+    return STOCK_PHOTOS[`${conceptKey}-${type}` as StockSlot] ?? null;
 }
 
 /** Klinik paylaşım görseli ya da hero yüklemediyse paylaşımda konseptin hero karesi görünür. */
