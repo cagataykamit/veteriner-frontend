@@ -213,6 +213,20 @@ describe('buildSiteVm', () => {
         expect(wordmark('Veteriner Kliniği')).toEqual({ main: 'Veteriner Kliniği', sub: '' });
     });
 
+    it('üst çubuğun ana bağlantıları önem sırasıyla en çok beştir; hekimler kapalıysa ekip yerini alır (K-01)', () => {
+        const base = sampleConfig();
+
+        const labels = (pages: Partial<typeof base.structure.pages>) => {
+            const vm = buildSiteVm({ ...base, structure: { ...base.structure, pages: { ...base.structure.pages, ...pages } } }, voice, NOW);
+
+            return { primary: vm.navPrimary.map((link) => link.label), more: vm.navMore.map((link) => link.label) };
+        };
+
+        expect(labels({})).toEqual({ primary: ['Hizmetler', 'Hakkımızda', 'Hekimler', 'Galeri', 'İletişim'], more: ['Sağlık Rehberi', 'SSS', 'Acil', 'Ekibimiz', 'Şubeler'] });
+        expect(labels({ hekimler: false }).primary).toEqual(['Hizmetler', 'Hakkımızda', 'Ekibimiz', 'Galeri', 'İletişim']);
+        expect(labels({ rehber: false, sss: false, acil: false, ekibimiz: false, subeler: false })).toEqual({ primary: ['Hizmetler', 'Hakkımızda', 'Hekimler', 'Galeri', 'İletişim'], more: [] });
+    });
+
     it('üye baş harfleri unvanı atlar, Türkçe büyük harf kullanır', () => {
         expect(memberInitials('Dr. Örnek Hekim')).toBe('ÖH');
         expect(memberInitials('Vet. Hek. inci deniz')).toBe('İD');

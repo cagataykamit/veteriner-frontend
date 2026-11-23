@@ -167,6 +167,31 @@ describe('SiteRendererComponent', () => {
             expect(logo.querySelector('.name')?.textContent?.trim()).toBe('Örnek');
         });
 
+        it('masaüstünde üst çubukta en çok beş ana bağlantı açık durur, kalanı "Diğer"dedir; telefonda hepsi "Menü"dedir', async () => {
+            const visible = (host: HTMLElement, selector: string): string[] =>
+                [...host.querySelectorAll<HTMLElement>(selector)].filter((element) => getComputedStyle(element).display !== 'none' && element.getClientRects().length > 0).map((element) => element.textContent?.trim() ?? '');
+            const wide = await render(sampleConfig(), { width: 1280 });
+            const burger = wide.querySelector<HTMLButtonElement>('site-nav .burger')!;
+
+            expect(visible(wide, 'site-nav .links a')).toEqual(['Hizmetler', 'Hakkımızda', 'Hekimler', 'Galeri', 'İletişim']);
+            expect(visible(wide, 'site-nav .burger span')).toEqual(['Diğer']);
+
+            burger.click();
+            await fixture!.whenStable();
+
+            expect(visible(wide, 'site-nav .panel a')).toEqual(['Sağlık Rehberi', 'SSS', 'Acil', 'Ekibimiz', 'Şubeler']);
+
+            const narrow = await render(sampleConfig(), { width: 375 });
+
+            expect(visible(narrow, 'site-nav .links a')).toEqual([]);
+            expect(visible(narrow, 'site-nav .burger span')).toEqual(['Menü']);
+
+            narrow.querySelector<HTMLButtonElement>('site-nav .burger')!.click();
+            await fixture!.whenStable();
+
+            expect(visible(narrow, 'site-nav .panel a')).toHaveLength(10);
+        });
+
         it('giriş bölümü: durum çipi, randevu ve "Ara · numara" düğmeleri, konum ve yol tarifi', async () => {
             const host = await render(patchClinic(sampleConfig(), { bookingUrl: BOOKING }));
             const hero = host.querySelector('site-hero')!;
@@ -517,7 +542,7 @@ describe('SiteRendererComponent', () => {
             fixture.componentRef.setInput('baseHref', '/k/ornek');
             await fixture.whenStable();
 
-            expect((fixture.nativeElement as HTMLElement).querySelector('site-nav nav a')?.getAttribute('href')).toBe('/k/ornek/hakkimizda');
+            expect((fixture.nativeElement as HTMLElement).querySelector('site-nav nav a')?.getAttribute('href')).toBe('/k/ornek/hizmetler');
         });
 
         it('küçük resim sınırlı sayıda bölüm çizer, alt şerit çizmez', async () => {

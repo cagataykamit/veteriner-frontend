@@ -5,8 +5,9 @@ import { SiteIconComponent, SiteLogoComponent, SiteStatusComponent } from '../si
 
 /**
  * Üst çubuk (K-01, B'nin üst kısmı): giriş bölümüyle aynı yumuşak zeminde yazı işareti, menü, durum ve ana eylem. Online randevu açıksa
- * eylem "Randevu al", kapalıysa numaralı telefon düğmesidir. Bağlantılar sığmazsa (`siteNavFit`) ya da ekran darsa "Menü" açılır.
- * Logo ortada seçildiyse geniş ekranda bağlantılar sola, eylem sağa geçer.
+ * eylem "Randevu al", kapalıysa numaralı telefon düğmesidir. Geniş ekranda yalnız ana bağlantılar (`navPrimary`) açık durur, kalanı
+ * "Diğer" altındadır. Ana bağlantılar da sığmazsa (`siteNavFit`) ya da ekran darsa hepsi "Menü"dedir. Logo ortada seçildiyse geniş
+ * ekranda bağlantılar sola, eylem sağa geçer; sığmazsa logo yine sola döner, öğeler üst üste binmez.
  */
 @Component({
     selector: 'site-nav',
@@ -15,11 +16,11 @@ import { SiteIconComponent, SiteLogoComponent, SiteStatusComponent } from '../si
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @let v = vm();
-        <header class="nav tinted" siteNavFit [class.is-center]="v.logoCenter">
+        <header class="nav tinted" siteNavFit [class.is-center]="v.logoCenter" [class.has-more]="v.navMore.length > 0">
             <div class="inner bar" data-fit-bar>
                 <a class="home" data-fit="home" siteLink="/" [attr.aria-label]="v.name + ', ana sayfa'"><site-logo /></a>
                 <nav class="links" data-fit="a" aria-label="Site menüsü">
-                    @for (link of v.menu; track link.path) {
+                    @for (link of v.navPrimary; track link.path) {
                         <a [siteLink]="link.path" [attr.aria-current]="site.page() === link.path ? 'page' : null">{{ link.label }}</a>
                     }
                 </nav>
@@ -33,8 +34,13 @@ import { SiteIconComponent, SiteLogoComponent, SiteStatusComponent } from '../si
                         <a class="btn main act" data-fit="b" [href]="v.telHref"><site-icon name="phone" />{{ v.phone }}</a>
                     }
                     @if (v.menu.length) {
-                        <button type="button" class="burger" [attr.aria-expanded]="open()" (click)="open.set(!open())">
-                            <site-icon [name]="open() ? 'close' : 'menu'" />{{ open() ? 'Kapat' : 'Menü' }}
+                        <button type="button" class="burger" data-fit="b" [attr.aria-expanded]="open()" (click)="open.set(!open())">
+                            <site-icon [name]="open() ? 'close' : 'menu'" />
+                            @if (open()) {
+                                Kapat
+                            } @else {
+                                <span class="say-all">Menü</span><span class="say-more">Diğer</span>
+                            }
                         </button>
                     }
                 </div>
@@ -42,7 +48,10 @@ import { SiteIconComponent, SiteLogoComponent, SiteStatusComponent } from '../si
             @if (open()) {
                 <nav class="panel" aria-label="Site menüsü" (click)="open.set(false)">
                     <div class="inner">
-                        @for (link of v.menu; track link.path) {
+                        @for (link of v.navPrimary; track link.path) {
+                            <a class="prim" [siteLink]="link.path">{{ link.label }}</a>
+                        }
+                        @for (link of v.navMore; track link.path) {
                             <a [siteLink]="link.path">{{ link.label }}</a>
                         }
                     </div>
@@ -91,7 +100,9 @@ import { SiteIconComponent, SiteLogoComponent, SiteStatusComponent } from '../si
 
             .burger {
                 display: inline-flex;
+                flex: none;
                 align-items: center;
+                white-space: nowrap;
                 gap: 8px;
                 min-height: 44px;
                 padding: 0 16px;
@@ -112,6 +123,10 @@ import { SiteIconComponent, SiteLogoComponent, SiteStatusComponent } from '../si
                 border-top: 1px solid var(--s-line);
                 background: var(--s-tint);
                 box-shadow: 0 12px 24px rgb(0 0 0 / 8%);
+            }
+
+            .burger .say-more {
+                display: none;
             }
 
             .panel a {
@@ -174,20 +189,20 @@ import { SiteIconComponent, SiteLogoComponent, SiteStatusComponent } from '../si
                     display: none;
                 }
 
-                .is-center .bar {
+                .is-center:not(.is-tight) .bar {
                     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
                 }
 
-                .is-center .home {
+                .is-center:not(.is-tight) .home {
                     grid-area: 1 / 2;
                 }
 
-                .is-center .links {
+                .is-center:not(.is-tight) .links {
                     grid-area: 1 / 1;
                     justify-content: flex-start;
                 }
 
-                .is-center .end {
+                .is-center:not(.is-tight) .end {
                     grid-area: 1 / 3;
                     justify-self: end;
                 }
@@ -201,12 +216,24 @@ import { SiteIconComponent, SiteLogoComponent, SiteStatusComponent } from '../si
                     grid-column: 3;
                 }
 
+                .has-more .burger,
                 .is-tight .burger {
                     display: inline-flex;
                 }
 
+                .has-more .panel,
                 .is-tight .panel {
                     display: block;
+                }
+
+                /* Ana bağlantılar çubukta açıkken düğme "Diğer"dir ve yalnız kalanları listeler. */
+                .has-more:not(.is-tight) .burger .say-all,
+                .has-more:not(.is-tight) .panel .prim {
+                    display: none;
+                }
+
+                .has-more:not(.is-tight) .burger .say-more {
+                    display: inline;
                 }
 
                 .panel .inner {

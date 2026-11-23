@@ -100,6 +100,9 @@ export interface SiteVm {
     readonly branches: readonly SiteBranch[];
     readonly pages: Readonly<Record<PageKey, boolean>>;
     readonly menu: readonly LinkVm[];
+    /** Üst çubukta masaüstünde açık duran ana bağlantılar (`NAV_PRIMARY` sırasıyla); kalanı `navMore`, "Diğer" altında. */
+    readonly navPrimary: readonly LinkVm[];
+    readonly navMore: readonly LinkVm[];
     readonly cta: CtaVm | null;
     readonly homeSections: readonly HomeSectionType[];
     readonly siteName: string;
@@ -112,6 +115,12 @@ const split = (text: string): string[] =>
         .filter(Boolean);
 
 const MENU_KEYS: readonly PageKey[] = ['hakkimizda', 'hizmetler', 'hekimler', 'rehber', 'galeri', 'sss', 'acil', 'ekibimiz', 'subeler', 'iletisim'];
+/**
+ * Üst çubuğun ana bağlantıları, önem sırasıyla (K-01): en çok beş. Hekimler sayfası kapalıysa ekip sayfası onun yerini alır. Diğer açık
+ * sayfalar "Diğer" menüsündedir; telefonda hepsi "Menü"dedir.
+ */
+const NAV_PRIMARY: readonly (readonly PageKey[])[] = [['hizmetler'], ['hakkimizda'], ['hekimler', 'ekibimiz'], ['galeri'], ['iletisim']];
+
 const MENU_LABELS: Partial<Record<PageKey, string>> = { hekimler: 'Hekimler', hizmetler: 'Hizmetler', rehber: 'Sağlık Rehberi', sss: 'SSS', acil: 'Acil', subeler: 'Şubeler', ekibimiz: 'Ekibimiz' };
 
 /** "Dr. Örnek Hekim" → "ÖH": unvan kısaltmaları (nokta ile biten) atlanır. */
@@ -265,6 +274,9 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
 
         return { label: MENU_LABELS[key] ?? def.label, path: def.path! };
     });
+    const linkOf = (key: PageKey): LinkVm | undefined => menu.find((link) => link.path === PAGE_DEFS.find((page) => page.key === key)!.path);
+    const navPrimary = NAV_PRIMARY.map((choices) => choices.map(linkOf).find((link) => link !== undefined)).filter((link): link is LinkVm => link !== undefined);
+    const navMore = menu.filter((link) => !navPrimary.includes(link));
     const bookingHref = safeHref(clinic.bookingUrl);
     const cta: CtaVm | null = bookingHref ? { label: copy.ctaPrimary, path: null, href: bookingHref } : telHref ? { label: 'Hemen ara', path: null, href: telHref } : null;
     const homeSections = structure.homeSections.filter((section) => section.on && hasContent[section.type]).map((section) => section.type);
@@ -318,6 +330,8 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
         branches,
         pages,
         menu,
+        navPrimary,
+        navMore,
         cta,
         homeSections,
         siteName: config.publish.siteName.trim() || name
