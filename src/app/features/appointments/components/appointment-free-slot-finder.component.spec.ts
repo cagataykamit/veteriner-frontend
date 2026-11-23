@@ -79,6 +79,25 @@ describe('AppointmentFreeSlotFinderComponent', () => {
         expect(el().textContent).toContain('Önümüzdeki 7 günde boş saat yok.');
     });
 
+    it('kapatılabilir panelde başlık kapat düğmesi; içerik katlanmaz; hekim seçimi açılır liste (R-02)', () => {
+        render([day('2026-11-16', '2026-11-16T11:00:00Z')], '2026-11-16');
+        fixture.componentRef.setInput('vets', [
+            { userId: 'v1', name: 'Dr. Ayşe' },
+            { userId: 'v2', name: 'Dr. Mert' }
+        ]);
+        fixture.componentRef.setInput('closable', true);
+        const closed = vi.fn();
+
+        fixture.componentInstance.closed.subscribe(closed);
+        fixture.detectChanges();
+
+        expect(el().querySelector('[data-testid="free-slot-toggle"]')).toBeNull();
+        expect(el().querySelector('[data-testid="free-slot-vet"]')).not.toBeNull();
+        expect(dayLabels()).toEqual(['Bugün']);
+        el().querySelector<HTMLButtonElement>('[data-testid="free-slot-close"]')!.click();
+        expect(closed).toHaveBeenCalled();
+    });
+
     it('açık gün değişince liste o günden yeniden yüklenir; boşsa açık güne göre metin', () => {
         render([], null);
         expect(availability).toHaveBeenLastCalledWith('c1', null, '2026-11-16', 7);
