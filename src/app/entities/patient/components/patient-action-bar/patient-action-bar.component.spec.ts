@@ -60,9 +60,12 @@ describe('PatientActionBarComponent', () => {
 
     it('Visits.Create varsa Geldi düğmesi gösterilir; yoksa gösterilmez', () => {
         claims.add('Visits.Create');
-        let el: HTMLElement = create({ clientId: 'cl1', petId: 'p1', petLabel: 'Pamuk — Kedi', clientName: 'Ali Veli' }).nativeElement;
+        const first = create({ clientId: 'cl1', petId: 'p1', petLabel: 'Pamuk — Kedi', clientName: 'Ali Veli' });
+        let el: HTMLElement = first.nativeElement;
 
-        expect(Array.from(el.querySelectorAll('button')).some((b) => b.textContent?.includes('Geldi'))).toBe(true);
+        // Hekimde Geldi "Geliş ve randevu" menüsünde.
+        expect(first.componentInstance.actions().map((a) => a.key)).toContain('arrive');
+        expect(el.querySelector('app-visit-arrival-dialog')).not.toBeNull();
         TestBed.resetTestingModule();
         claims.delete('Visits.Create');
         el = create({ clientId: 'cl1', petId: 'p1' }).nativeElement;
@@ -101,6 +104,45 @@ describe('PatientActionBarComponent', () => {
 
         expect(locked.textContent).toContain('Muayene başlat');
         expect(locked.disabled).toBe(true);
+    });
+
+    it('hasta kartında hekim: Klinik grubu açık düğmeler, Geliş ve randevu ile Para grup adlı menü; telefonda birincil + Diğer (M-02)', () => {
+        claims.add('Visits.Create');
+        const fixture = create({ clientId: 'cl1', petId: 'p1' });
+        const el: HTMLElement = fixture.nativeElement;
+        const clinic = el.querySelector('[data-testid="patient-action-group-clinic"]')!;
+
+        expect(clinic.querySelector('a[href^="/panel/examinations/new"]')?.classList).toContain('p-button-primary');
+        expect(el.querySelector('[data-testid="patient-action-group-visit"] a')).toBeNull();
+        expect(el.querySelector('[data-testid="patient-action-menu-visit"]')?.textContent).toContain('Geliş ve randevu');
+        expect(el.querySelector('[data-testid="patient-action-menu-money"]')?.textContent).toContain('Para');
+        expect(el.querySelector('[data-testid="patient-action-phone"]')?.textContent).toContain('Muayene başlat');
+        expect(fixture.componentInstance.phoneMenuItems().map((g) => [g.label, g.items!.map((i) => i.label)])).toEqual([
+            ['Geliş ve randevu', ['Geldi', 'Randevu al']],
+            ['Para', ['Ödeme al']]
+        ]);
+    });
+
+    it('hasta kartında ön büro (muayene yetkisi yok): Geliş ve randevu ile Para açık, birincil Geldi; klinikteyse Bugün\'de aç', () => {
+        claims = new Set(['Visits.Create', 'Visits.Read', 'Appointments.Create', 'Payments.Create', 'Vaccinations.Create']);
+        let fixture = create({ clientId: 'cl1', petId: 'p1' });
+        let el: HTMLElement = fixture.nativeElement;
+        const primary = el.querySelector('[data-testid="patient-action-group-visit"] .p-button-primary');
+
+        expect(primary?.textContent).toContain('Geldi');
+        expect(el.querySelector('[data-testid="patient-action-group-money"] a[href^="/panel/payments/new"]')).not.toBeNull();
+        expect(el.querySelector('[data-testid="patient-action-menu-clinic"]')?.textContent).toContain('Klinik');
+
+        TestBed.resetTestingModule();
+        fixture = create({ clientId: 'cl1', petId: 'p1' });
+        fixture.componentRef.setInput('openVisit', { visitId: 'vis1', waiting: true });
+        fixture.detectChanges();
+        el = fixture.nativeElement;
+        const today = el.querySelector('[data-testid="patient-action-group-visit"] a.p-button-primary') as HTMLAnchorElement;
+
+        expect(today.textContent).toContain("Bugün'de aç");
+        expect(today.getAttribute('href')).toBe('/panel/today');
+        expect(el.textContent).not.toContain('Geldi');
     });
 
     it('sticky açıkken çubuk (telefon dışında) üst çubuğun altında sabitlenir; varsayılan sabit değildir; şerit kart değildir', () => {

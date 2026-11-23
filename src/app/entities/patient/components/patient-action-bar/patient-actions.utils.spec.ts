@@ -1,4 +1,4 @@
-import { buildPatientActions } from './patient-actions.utils';
+import { buildPatientActions, groupPatientActions, primaryPatientActionKey } from './patient-actions.utils';
 
 const ALL = new Set(['Visits.Create', 'Examinations.Create', 'Appointments.Create', 'Vaccinations.Create', 'LabResults.Create', 'Hospitalizations.Create', 'Charges.Create', 'Payments.Create', 'Pets.Create']);
 
@@ -42,5 +42,43 @@ describe('buildPatientActions', () => {
 
         expect(secretary.map((a) => a.key)).toEqual(['arrive', 'appointment', 'payment']);
         expect(buildPatientActions({ clientId: 'cl1', petId: 'p1' }, () => false)).toEqual([]);
+    });
+
+    it('hasta klinikteyken Geldi yerine Bugün\'de aç, Muayene başlat yerine gelişle Muayeneye al (M-02)', () => {
+        const actions = buildPatientActions({ clientId: 'cl1', petId: 'p1', openVisit: { visitId: 'vis1', waiting: true } }, (c) => ALL.has(c) || c === 'Visits.Read');
+        const byKey = (k: string) => actions.find((a) => a.key === k);
+
+        expect(actions.map((a) => a.label).slice(0, 2)).toEqual(["Bugün'de aç", 'Muayeneye al']);
+        expect(byKey('arrive')).toBeUndefined();
+        expect(byKey('openToday')).toEqual(expect.objectContaining({ route: '/panel/today', queryParams: {} }));
+        expect(byKey('takeIn')).toEqual(expect.objectContaining({ route: null, queryParams: { clientId: 'cl1', petId: 'p1', visitId: 'vis1' } }));
+        // Müşteri kartında açık geliş yok sayılır.
+        expect(buildPatientActions({ clientId: 'cl1', petId: null, openVisit: { visitId: 'vis1', waiting: true } }, (c) => ALL.has(c))[0].key).toBe('arrive');
+    });
+
+    it('gruplar: hekimde Klinik açık ve önde, birincil Muayene başlat; ön büroda Geliş ve randevu ile Para açık, birincil Geldi', () => {
+        const actions = buildPatientActions({ clientId: 'cl1', petId: 'p1' }, (c) => ALL.has(c));
+        const vet = groupPatientActions(actions, 'clinical');
+
+        expect(vet.map((g) => [g.key, g.open, g.actions.length])).toEqual([
+            ['clinic', true, 4],
+            ['visit', false, 2],
+            ['money', false, 2]
+        ]);
+        expect(primaryPatientActionKey(actions, 'clinical')).toBe('examination');
+
+        const desk = groupPatientActions(actions, 'frontDesk');
+
+        expect(desk.map((g) => [g.key, g.open])).toEqual([
+            ['visit', true],
+            ['money', true],
+            ['clinic', false]
+        ]);
+        expect(primaryPatientActionKey(actions, 'frontDesk')).toBe('arrive');
+        // Vefat eden hastada rolün ilk işi yoksa birincil düğme olmaz; boş grup çizilmez.
+        const deceased = buildPatientActions({ clientId: 'cl1', petId: 'p1', petDeceased: true }, (c) => ALL.has(c));
+
+        expect(primaryPatientActionKey(deceased, 'frontDesk')).toBeNull();
+        expect(groupPatientActions(deceased, 'frontDesk').map((g) => g.key)).toEqual(['money', 'clinic']);
     });
 });

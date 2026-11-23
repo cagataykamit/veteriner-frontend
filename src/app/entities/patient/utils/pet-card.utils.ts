@@ -24,7 +24,11 @@ import { formatMoney } from '@/app/shared/utils/money.utils';
  */
 export type PetCardSection<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error' } | null;
 
-/** Rol bazlı vurgu (ADR-020 karar 3): yeni ekran yok, yalnız sıralama. Muayene açabilen klinik bilgiyi, ücret/ödeme alan parayı öne alır. */
+/**
+ * Rol bazlı vurgu (ADR-020 karar 3): yeni ekran yok, yalnız sıralama. Muayene açabilen klinik bilgiyi, ücret/ödeme alan parayı öne alır.
+ * Hasta kartı eylem şeridinin rol grubu da buradan (M-02): `Examinations.Create` olan hekim sayılır (Klinik grubu açık);
+ * yoksa `Payments.Create` ya da `Charges.Create` olan ön büro sayılır (Geliş ve randevu ile Para açık); ikisi de yoksa hekim gibi.
+ */
 export type PetCardEmphasis = 'clinical' | 'frontDesk';
 
 export function petCardEmphasis(hasClaim: (claim: string) => boolean): PetCardEmphasis {
