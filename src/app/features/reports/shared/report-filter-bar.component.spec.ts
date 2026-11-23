@@ -107,6 +107,19 @@ describe('ReportFilterBarComponent — müşteri/hasta seçicisi yok, yalnız ar
         expect(printed).toEqual([1]);
     });
 
+    it('varsayılan tarih aralığı etkin filtre sayılmaz; kullanıcının değiştirdiği tarih sayılır (G-02)', () => {
+        const state = TestBed.runInInjectionContext(() => new ReportListState<ReportListQueryBase, ReportListResultBase>({ source, stateKey: KEY, readClaim: 'Test.Read', exportFilePrefix: 'test' }));
+
+        state.init();
+        expect([state.isFromDateActive(), state.isToDateActive()]).toEqual([false, false]);
+
+        state.fromDateInput = '2020-01-01';
+        state.applyFilters();
+        expect([state.isFromDateActive(), state.isToDateActive()]).toEqual([true, false]);
+
+        state.resetFilters();
+        expect(state.isFromDateActive()).toBe(false);
+    });
     it('anlık görüntü raporunda da yalnız Arama var; yalnız tarih aralığı raporunda arama da yok', () => {
         expect(create({ snapshot: true }).querySelector('app-search-input')).not.toBeNull();
         expect(create({ dateRangeOnly: true }).querySelector('app-search-input, app-client-search, app-pet-search')).toBeNull();
