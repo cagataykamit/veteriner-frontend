@@ -145,12 +145,12 @@ interface ComparisonGroupVm {
                     @if (heads()[phonePlan()]; as head) {
                         <p class="m-0 mt-2 text-center text-sm" data-phone-price>
                             @if (head.monthly; as monthly) {
-                                <b class="text-base">{{ monthly }}</b> <span class="text-muted-color">/ ay, {{ vatNote() }}</span>
+                                <b class="text-base">{{ monthly }}</b><span class="text-muted-color">&nbsp;/ ay, {{ vatNote() }}</span>
                             } @else if (head.priceOnRequest) {
                                 <a [routerLink]="paths.contact" class="public-brand-link font-medium">{{ onRequestText }}</a>
                             }
                             @if (head.users; as users) {
-                                <span class="text-muted-color"> · {{ users }}</span>
+                                <span class="text-muted-color">&nbsp;· {{ users }}</span>
                             }
                         </p>
                     }
