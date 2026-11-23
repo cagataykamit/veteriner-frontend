@@ -98,7 +98,8 @@ export function buildSiteTokens(design: SiteDesign): Record<string, string> {
         '--s-radius-img': radius.image,
         '--s-radius-btn': radius.button,
         '--s-gutter': 'clamp(20px, 4.4cqi, 64px)',
-        '--s-space': 'clamp(64px, 10cqi, 136px)',
+        // Bölümler arası boşluk iki bölümün payı toplanınca masaüstünde ~250 px boş bant oluyordu (W-04); ~150 px'e iner.
+        '--s-space': 'clamp(48px, 6cqi, 96px)',
         '--s-max': '1440px',
         'color-scheme': dark ? 'dark' : 'light'
     };

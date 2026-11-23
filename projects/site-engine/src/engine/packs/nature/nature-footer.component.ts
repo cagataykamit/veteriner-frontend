@@ -26,21 +26,25 @@ import { SECTION_BASE } from '../../section-base';
                         }
                     </nav>
                     <div class="stack">
-                        @if (v.telHref) {
-                            <a [href]="v.telHref">{{ v.phone }}</a>
-                        }
-                        @if (v.mailHref) {
-                            <a [href]="v.mailHref">{{ v.email }}</a>
+                        @if (!site.onContactPage()) {
+                            @if (v.telHref) {
+                                <a [href]="v.telHref">{{ v.phone }}</a>
+                            }
+                            @if (v.mailHref) {
+                                <a [href]="v.mailHref">{{ v.email }}</a>
+                            }
                         }
                         @for (link of v.social; track link.key) {
                             <a [href]="link.href" target="_blank" rel="noopener">{{ link.label }}</a>
                         }
                     </div>
-                    <div class="stack hours">
-                        @for (group of v.groups; track group.label) {
-                            <p><span>{{ group.label }}</span> <span class="muted">{{ group.value }}</span></p>
-                        }
-                    </div>
+                    @if (!site.onContactPage()) {
+                        <div class="stack hours">
+                            @for (group of v.groups; track group.label) {
+                                <p><span>{{ group.label }}</span> <span class="muted">{{ group.value }}</span></p>
+                            }
+                        </div>
+                    }
                 </div>
                 <p class="made muted">© {{ v.siteName }} · Vetinity ile hazırlandı</p>
             </div>
