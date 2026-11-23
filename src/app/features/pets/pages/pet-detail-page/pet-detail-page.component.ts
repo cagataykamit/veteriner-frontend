@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import type { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { MenuModule } from 'primeng/menu';
 import { type Observable, Subscription } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { EXAMINATIONS_READ_CLAIM, IMAGING_READ_CLAIM, PETS_UPDATE_CLAIM, VACCINATIONS_CREATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -25,6 +27,7 @@ import { DETAIL_FIELD_LIST_CLASS } from '@/app/shared/ui/detail.classes';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import type { TreatmentListItemVm } from '@/app/entities/treatment/models/treatment-vm.model';
 import { PatientActionBarComponent } from '@/app/entities/patient/components/patient-action-bar/patient-action-bar.component';
+import type { PatientOpenVisit } from '@/app/entities/patient/components/patient-action-bar/patient-actions.utils';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -46,6 +49,7 @@ import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
         CommonModule,
         RouterLink,
         ButtonModule,
+        MenuModule,
         AppPageHeaderComponent,
         PatientActionBarComponent,
         PetCardHeaderComponent,
@@ -81,14 +85,18 @@ import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
                     <!-- Geçmiş özeti (AI-002) kayıt yazmaz: salt okunur kiracıda da görünür; görünürlüğü AI durumu belirler. -->
                     <app-ai-entry-button label="Geçmişi özetle" [active]="aiHistoryOpenFor(p.id)" (pressed)="aiPanel.openHistory(p.id, p.name)" />
                     @if (canUpdatePet && !ro.mutationBlocked()) {
+                        <a [routerLink]="['/panel/pets', p.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                        <!-- Seyrek durum eylemi "Düzenle"nin yanında aynı görünürlükte değil, "…" menüsünde (M-03). -->
                         <button
                             pButton
                             type="button"
-                            class="p-button-text p-button-secondary"
-                            data-testid="pet-status-action"
-                            (click)="statusDialogOpen.set(true)"
-                        ><i [class]="p.status === 'Deceased' ? 'pi pi-undo' : 'pi pi-minus-circle'"></i>{{ p.status === 'Deceased' ? 'Aktife al' : 'Vefat olarak işaretle' }}</button>
-                        <a [routerLink]="['/panel/pets', p.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                            class="p-button-outlined p-button-secondary"
+                            aria-label="Diğer eylemler"
+                            aria-haspopup="true"
+                            (click)="moreMenu.toggle($event)"
+                            data-testid="pet-more-actions"
+                        ><i class="pi pi-ellipsis-h" aria-hidden="true"></i></button>
+                        <p-menu #moreMenu [model]="moreMenuItems()" [popup]="true" appendTo="body" />
                     } @else if (canUpdatePet && ro.mutationBlocked()) {
                         <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
                     }
@@ -99,7 +107,9 @@ import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
             }
 
             @if (p.ownerId) {
-                <app-patient-action-bar [sticky]="true" [clientId]="p.ownerId" [petId]="p.id" [petLabel]="p.name + ' — ' + p.speciesName" [clientName]="p.clientName" [petDeceased]="p.status === 'Deceased'" />
+                <app-patient-action-bar [sticky]="true" [clientId]="p.ownerId" [petId]="p.id" [petLabel]="p.name + ' — ' + p.speciesName" [clientName]="p.clientName" [petDeceased]="p.status === 'Deceased'"
+                    [openVisit]="openVisit()"
+                />
             }
 
             <!--
@@ -237,6 +247,18 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     readonly ownerOutstanding = computed(() => ownerOutstandingSection(this.openItems()));
     readonly nextAppointment = computed(() => openItemsSection(this.openItems(), (o) => o.nextAppointment));
     readonly statusDialogOpen = signal(false);
+    /** "…" menüsü: durum eylemi (vefat olarak işaretle / aktife al). */
+    readonly moreMenuItems = computed<MenuItem[]>(() => {
+        const deceased = this.pet()?.status === 'Deceased';
+
+        return [{ label: deceased ? 'Aktife al' : 'Vefat olarak işaretle', icon: deceased ? 'pi pi-undo' : 'pi pi-minus-circle', id: 'pet-status-action', command: () => this.statusDialogOpen.set(true) }];
+    });
+    /** Hasta klinikte mi: hasta özetindeki son geliş bekliyor ya da muayenede (eylem çubuğu Bugün'de aç / Muayeneye al gösterir). */
+    readonly openVisit = computed<PatientOpenVisit | null>(() => {
+        const visit = this.summary()?.lastVisit.data;
+
+        return visit && (visit.careStatus === 'Waiting' || visit.careStatus === 'InProgress') ? { visitId: visit.id, waiting: visit.careStatus === 'Waiting' } : null;
+    });
     /** Yan panelde bu hastanın geçmiş özeti açık mı (giriş düğmesi mor zeminle işaretlenir). */
     protected readonly aiHistoryOpenFor = (petId: string): boolean => this.aiPanel.content()?.kind === 'history' && this.aiPanel.history()?.petId === petId;
 
