@@ -3,19 +3,19 @@
  * göre ayrı öğelerdir.
  */
 export const PAGE_HEAD_STYLES = `
-    /* Sayfa başlığı: duruşu seçili hero'dan gelir. */
+    /* Sayfa başlığı: üst çubukla aynı yumuşak zemin. */
     .page-head {
-        padding-block: clamp(40px, 7cqi, 96px) clamp(24px, 3cqi, 48px);
-        color: var(--s-ink);
+        padding-block: clamp(28px, 4cqi, 56px) clamp(32px, 4.4cqi, 64px);
     }
 
     .ttl {
-        font-size: calc(var(--s-head-scale) * clamp(42px, 7cqi, 112px));
+        font-size: calc(var(--s-head-scale) * clamp(34px, 4.4cqi, 54px));
     }
 
     .ld {
-        max-width: 48ch;
-        margin-top: 16px;
+        max-width: 52ch;
+        margin-top: 14px;
+        color: var(--s-muted);
         font-size: 18px;
         line-height: 1.5;
     }
@@ -31,39 +31,8 @@ export const PAGE_HEAD_STYLES = `
         text-decoration: none;
     }
 
-    .back .pi {
-        font-size: 12px;
-    }
-
-    .page-head[data-style='modern'] {
-        border-bottom: 1px solid var(--s-line);
-    }
-
-    .page-head[data-style='premium'] {
-        border-bottom: 1px solid var(--s-line);
-        text-align: center;
-    }
-
-    .page-head[data-style='premium'] .ld {
-        margin-inline: auto;
-        color: var(--s-muted);
-    }
-
-    .page-head[data-style='friendly'] .inner {
-        padding-block: clamp(24px, 4cqi, 56px);
-        border-radius: var(--s-radius-img);
-        background: var(--s-tint);
-        color: var(--s-on-tint);
-    }
-
-    .page-head[data-style='friendly'] {
-        padding-inline: var(--s-gutter);
-        padding-top: 16px;
-    }
-
-    .page-head[data-style='nature'] .ttl {
-        font-style: italic;
-        color: var(--s-primary-text);
+    .back site-icon {
+        --icon: 16px;
     }
 
     .lost {
@@ -74,7 +43,7 @@ export const PAGE_HEAD_STYLES = `
     }
 
     .lost h1 {
-        font-size: calc(var(--s-head-scale) * clamp(36px, 6cqi, 80px));
+        font-size: calc(var(--s-head-scale) * clamp(32px, 4.4cqi, 54px));
     }
 `;
 
@@ -83,14 +52,14 @@ export const PAGE_READING_STYLES = `
     .detail {
         display: grid;
         gap: 28px;
-        padding-block: clamp(24px, 4cqi, 56px) clamp(32px, 5cqi, 72px);
+        padding-block: clamp(32px, 4.4cqi, 64px) clamp(32px, 5cqi, 72px);
     }
 
     .prose p,
     .reading p {
         margin-bottom: 18px;
-        font-size: 18px;
-        line-height: 1.6;
+        font-size: 17px;
+        line-height: 1.65;
     }
 
     .prose .btn {
@@ -127,13 +96,14 @@ export const PAGE_READING_STYLES = `
         text-decoration: none;
     }
 
-    .others .pi {
-        font-size: 12px;
+    .others site-icon {
+        --icon: 18px;
+        color: var(--s-primary-text);
     }
 
     .reading {
         max-width: 760px;
-        padding-block: 8px var(--s-space);
+        padding-block: clamp(32px, 4.4cqi, 64px) var(--s-space);
     }
 
     .reading figure {
@@ -145,6 +115,10 @@ export const PAGE_READING_STYLES = `
         display: grid;
         gap: 24px;
         padding-bottom: var(--s-space);
+    }
+
+    .bios .muted {
+        margin-top: 4px;
     }
 
     .bios article {
@@ -160,7 +134,7 @@ export const PAGE_READING_STYLES = `
     .bios p:last-child {
         margin-top: 10px;
         font-size: 17px;
-        line-height: 1.55;
+        line-height: 1.6;
     }
 
     @container site (min-width: 860px) {
@@ -176,7 +150,7 @@ export const PAGE_INFO_STYLES = `
     /* SSS, acil ve randevu çağrısı, şubeler. */
     .faq {
         max-width: 880px;
-        padding-block: 8px var(--s-space);
+        padding-block: clamp(24px, 3cqi, 40px) var(--s-space);
     }
 
     details {
@@ -190,7 +164,7 @@ export const PAGE_INFO_STYLES = `
         gap: 16px;
         min-height: 60px;
         padding-block: 12px;
-        font-size: calc(var(--s-head-scale) * clamp(20px, 2cqi, 26px));
+        font-size: calc(var(--s-head-scale) * clamp(19px, 1.8cqi, 23px));
         list-style: none;
         cursor: pointer;
     }
@@ -199,13 +173,12 @@ export const PAGE_INFO_STYLES = `
         display: none;
     }
 
-    summary .pi {
-        flex: none;
-        font-size: 13px;
+    summary site-icon {
+        color: var(--s-primary-text);
         transition: transform 0.2s ease;
     }
 
-    details[open] summary .pi {
+    details[open] summary site-icon {
         transform: rotate(45deg);
     }
 
@@ -217,29 +190,30 @@ export const PAGE_INFO_STYLES = `
 
     .callout {
         display: grid;
+        justify-items: start;
         gap: 20px;
         max-width: 880px;
-        padding-block: 8px var(--s-space);
+        padding-block: clamp(32px, 4.4cqi, 64px) var(--s-space);
+    }
+
+    .callout site-hours {
+        width: 100%;
+        max-width: 520px;
     }
 
     .note {
-        font-size: 19px;
+        font-size: 18px;
         line-height: 1.55;
     }
 
-    .call {
-        display: inline-flex;
-        align-items: center;
-        gap: 14px;
-        min-height: 72px;
-        color: var(--s-primary-text);
-        font-size: calc(var(--s-head-scale) * clamp(36px, 7cqi, 80px));
-        font-variant-numeric: tabular-nums;
-        text-decoration: none;
+    .acts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
     }
 
-    .call .pi {
-        font-size: 0.5em;
+    .call {
+        font-variant-numeric: tabular-nums;
     }
 
     /* En yakın müsait saatler (TIER-017): her saat talep formuna gider. */
@@ -295,7 +269,7 @@ export const PAGE_INFO_STYLES = `
     .branches {
         display: grid;
         gap: 20px;
-        padding-block: 8px var(--s-space);
+        padding-block: clamp(32px, 4.4cqi, 64px) var(--s-space);
     }
 
     .branches article {
@@ -319,7 +293,7 @@ export const PAGE_INFO_STYLES = `
 
         site-map {
             grid-column: 1 / -1;
-            min-height: 360px;
+            max-width: 520px;
         }
     }
 `;

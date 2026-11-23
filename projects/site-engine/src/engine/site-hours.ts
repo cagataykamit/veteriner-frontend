@@ -15,6 +15,7 @@ export interface HoursGroup {
     readonly value: string;
     readonly note: string | null;
     readonly isToday: boolean;
+    readonly isClosed: boolean;
 }
 
 /** Sayfada günler pazartesiden başlar. */
@@ -51,6 +52,16 @@ function toMinutes(time: string | null): number | null {
 
 function isOpenDay(day: WorkingDay | undefined): day is WorkingDay {
     return !!day && !day.isClosed && !!day.opensAt && !!day.closesAt;
+}
+
+/** Klinik en az bir gün için saat girmiş mi; girmediyse sayfada durum ve saat tablosu çizilmez. */
+export function hasWorkingHours(days: readonly WorkingDay[]): boolean {
+    return days.some(isOpenDay);
+}
+
+/** Gece yarısından gece yarısına açık gün "24 saat açık" yazılır; "00:00–23:59" okuyana saat gibi görünmez. */
+function dayValue(day: WorkingDay): string {
+    return day.opensAt === '00:00' && (day.closesAt === '23:59' || day.closesAt === '24:00') ? '24 saat açık' : `${day.opensAt}–${day.closesAt}`;
 }
 
 /** Saate ek gelmesin diye ("19:00'a", "17:00'ye") durum metni "Kapanış 19:00" biçimindedir. */
@@ -110,9 +121,10 @@ export function hoursGroups(days: readonly WorkingDay[], now: Date): HoursGroup[
 
     return groups.map((g) => ({
         label: g.first === g.last ? DAY_NAMES[g.first] : `${DAY_NAMES[g.first]} – ${DAY_NAMES[g.last]}`,
-        value: isOpenDay(g.day) ? `${g.day.opensAt}–${g.day.closesAt}` : 'Kapalı',
+        value: isOpenDay(g.day) ? dayValue(g.day) : 'Kapalı',
         note: isOpenDay(g.day) && g.day.breakStartsAt ? `Mola ${g.day.breakStartsAt}–${g.day.breakEndsAt}` : null,
-        isToday: g.isToday
+        isToday: g.isToday,
+        isClosed: !isOpenDay(g.day)
     }));
 }
 

@@ -1,16 +1,16 @@
 import { NgComponentOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import type { SectionType, SiteDesign } from '../model/site.model';
-import { findAlternative } from './section-registry';
-import { SECTION_BASE } from './section-base';
+import type { SectionType } from '../model/site.model';
+import { SECTION_COMPONENTS } from './section-registry';
+import { SECTION_BASE, SECTION_KIT } from './section-base';
 import { SECTION_DIRECTIVES, SiteSection } from './site-context';
 import { PAGE_HEAD_STYLES, PAGE_INFO_STYLES, PAGE_READING_STYLES } from './site-page.styles';
-import { SiteHoursComponent, SiteMapComponent } from './site-parts.component';
+import { SiteHoursComponent, SiteIconComponent, SiteMapComponent } from './site-parts.component';
 import { pageHeading, type SitePage } from './site-page-route';
 
 /**
- * Alt sayfalar. Liste sayfaları sitede seçili bölüm alternatifini çizer (hizmetler sayfası ana sayfadaki düzenle aynıdır); yalnız
- * sayfa başlığı ve yazı sayfaları burada, token'larla ortak yazılıdır. Başlığın duruşu seçili hero'dan gelir.
+ * Alt sayfalar. Liste sayfaları ana sayfadaki bölümü çizer (hizmetler sayfası ana sayfadaki düzenle aynıdır); yalnız sayfa başlığı ve
+ * yazı sayfaları burada, token'larla ortak yazılıdır. Başlık, üst çubukla aynı yumuşak zemindedir.
  *
  * Randevu sayfası kliniğin talep formuna (ADR-042, K11) bağlantı verir, telefon ve saatleri gösterir; motor ikinci bir randevu
  * modeli kurmaz. En yakın müsait saatler (TIER-017) aynı forma o saat seçili gider.
@@ -18,16 +18,16 @@ import { pageHeading, type SitePage } from './site-page-route';
 @Component({
     selector: 'site-page',
     standalone: true,
-    imports: [NgComponentOutlet, SECTION_DIRECTIVES, SiteHoursComponent, SiteMapComponent],
+    imports: [NgComponentOutlet, SECTION_DIRECTIVES, SiteHoursComponent, SiteIconComponent, SiteMapComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @let v = vm();
         @let p = page();
         @if (head(); as h) {
-            <header class="page-head" [attr.data-style]="sections().hero">
+            <header class="page-head tinted">
                 <div class="inner">
                     @if (h.back; as back) {
-                        <a class="back" [siteLink]="back.path"><i class="pi pi-arrow-left" aria-hidden="true"></i>{{ back.label }}</a>
+                        <a class="back" [siteLink]="back.path"><site-icon name="arrowLeft" />{{ back.label }}</a>
                     }
                     <h1 class="h ttl">{{ h.title }}</h1>
                     @if (h.lead) {
@@ -78,7 +78,7 @@ import { pageHeading, type SitePage } from './site-page-route';
                             <p>{{ paragraph }}</p>
                         }
                         @if (v.cta; as cta) {
-                            <a siteCta class="btn main">{{ cta.label }}</a>
+                            <a siteCta class="btn main"><site-icon [name]="v.bookingHref ? 'calendar' : 'phone'" />{{ cta.label }}</a>
                         }
                     </div>
                     @if (service()!.image; as image) {
@@ -90,7 +90,7 @@ import { pageHeading, type SitePage } from './site-page-route';
                         <h2 class="h">Diğer hizmetler</h2>
                         <ul>
                             @for (other of otherServices(); track other.slug) {
-                                <li><a [siteLink]="other.path">{{ other.title }}<i class="pi pi-arrow-right" aria-hidden="true"></i></a></li>
+                                <li><a [siteLink]="other.path">{{ other.title }}<site-icon name="arrowRight" /></a></li>
                             }
                         </ul>
                     </section>
@@ -110,7 +110,7 @@ import { pageHeading, type SitePage } from './site-page-route';
                 <section class="inner faq">
                     @for (faq of v.faqs; track $index) {
                         <details>
-                            <summary class="h">{{ faq.question }}<i class="pi pi-plus" aria-hidden="true"></i></summary>
+                            <summary class="h">{{ faq.question }}<site-icon name="plus" /></summary>
                             <p>{{ faq.answer }}</p>
                         </details>
                     }
@@ -120,10 +120,11 @@ import { pageHeading, type SitePage } from './site-page-route';
                 <section class="inner callout">
                     <p class="note">{{ v.emergencyText }}</p>
                     @if (v.telHref) {
-                        <a class="h call" [href]="v.telHref"><i class="pi pi-phone" aria-hidden="true"></i>{{ v.phone }}</a>
+                        <a class="btn main call" [href]="v.telHref"><site-icon name="phone" />Ara · {{ v.phone }}</a>
                     }
-                    <p class="muted">Acil durumda kliniği arayın.</p>
-                    <site-hours />
+                    @if (v.hasHours) {
+                        <site-hours />
+                    }
                 </section>
             }
             @case ('subeler') {
@@ -156,13 +157,17 @@ import { pageHeading, type SitePage } from './site-page-route';
                             <p class="muted">Saati seçince talep formu bu saatle açılır. Bu bir talep; klinik onaylayınca randevunuz kesinleşir.</p>
                         </div>
                     }
-                    @if (v.bookingHref) {
-                        <a siteCta class="btn main">Randevu talebi gönder</a>
+                    <div class="acts">
+                        @if (v.bookingHref) {
+                            <a siteCta class="btn main"><site-icon name="calendar" />Randevu talebi gönder</a>
+                        }
+                        @if (v.telHref) {
+                            <a class="btn call" [class.main]="!v.bookingHref" [class.line]="!!v.bookingHref" [href]="v.telHref"><site-icon name="phone" />Ara · {{ v.phone }}</a>
+                        }
+                    </div>
+                    @if (v.hasHours) {
+                        <site-hours />
                     }
-                    @if (v.telHref) {
-                        <a class="h call" [href]="v.telHref"><i class="pi pi-phone" aria-hidden="true"></i>{{ v.phone }}</a>
-                    }
-                    <site-hours />
                 </section>
             }
             @case ('notfound') {
@@ -173,11 +178,10 @@ import { pageHeading, type SitePage } from './site-page-route';
             }
         }
     `,
-    styles: [SECTION_BASE, PAGE_HEAD_STYLES, PAGE_READING_STYLES, PAGE_INFO_STYLES]
+    styles: [SECTION_BASE, SECTION_KIT, PAGE_HEAD_STYLES, PAGE_READING_STYLES, PAGE_INFO_STYLES]
 })
 export class SitePageComponent extends SiteSection {
     readonly page = input.required<SitePage>();
-    readonly sections = input.required<SiteDesign['sections']>();
 
     protected readonly service = computed(() => {
         const page = this.page();
@@ -198,6 +202,6 @@ export class SitePageComponent extends SiteSection {
     protected readonly head = computed(() => pageHeading(this.page(), this.vm()));
 
     protected comp(type: SectionType) {
-        return findAlternative(type, this.sections()[type]).component;
+        return SECTION_COMPONENTS[type];
     }
 }

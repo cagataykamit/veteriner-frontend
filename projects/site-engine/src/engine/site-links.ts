@@ -1,7 +1,7 @@
 import type { SiteClinic, SiteImage } from '../model/site.model';
 
 /**
- * Yapılandırmadan gelen adreslerin tek kapısı: bölüm alternatifleri bağlantıyı ve görseli yalnız VM'den okur, VM de buradan geçirir.
+ * Yapılandırmadan gelen adreslerin tek kapısı: bölümler bağlantıyı ve görseli yalnız VM'den okur, VM de buradan geçirir.
  * Angular'ın `[href]` temizliği ikinci savunmadır; burada şema baştan sınırlanır, reddedilen bağlantı hiç çizilmez.
  */
 const LINK_SCHEMES: ReadonlySet<string> = new Set(['http:', 'https:', 'tel:', 'mailto:']);

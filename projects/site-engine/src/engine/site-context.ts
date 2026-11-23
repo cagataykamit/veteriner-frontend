@@ -20,6 +20,8 @@ export class SiteContext {
     /** İletişim sayfası telefon, adres ve saatleri zaten gösterir; alt bilgi bunları tekrar yazmaz (W-04). */
     readonly onContactPage = computed(() => this.page() === CONTACT_PATH);
     readonly navTick = signal(0);
+    /** Giriş bölümündeki eylem düğmeleri ekranda mı. Değilse telefonda alt şerit çıkar (W-01 A); giriş bölümü olmayan alt sayfada şerit hep görünür. */
+    readonly heroActionsVisible = signal(true);
     /** Yüklenemeyen görsel adresleri: VM bunları düşer, bölüm görselsiz düzenini çizer. */
     readonly failedImages = signal<ReadonlySet<string>>(new Set());
 
@@ -188,15 +190,8 @@ export class SiteNavFitDirective {
 
 export const SECTION_DIRECTIVES = [SiteLinkDirective, SiteImgDirective, SiteCtaDirective, SiteNavFitDirective] as const;
 
-/** Bölüm alternatiflerinin ortak tabanı. */
+/** Bölümlerin ortak tabanı. */
 export abstract class SiteSection {
     protected readonly site = inject(SiteContext);
     protected readonly vm = this.site.vm;
-
-    /** Başlığın son sözcüğünü vurgulamak için böler. */
-    protected lastWord(text: string): { readonly lead: string; readonly last: string } {
-        const at = text.trimEnd().lastIndexOf(' ');
-
-        return at < 0 ? { lead: '', last: text } : { lead: text.slice(0, at + 1), last: text.slice(at + 1) };
-    }
 }

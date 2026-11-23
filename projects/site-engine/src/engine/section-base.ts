@@ -1,7 +1,7 @@
 /**
- * Bölüm alternatiflerinin ortak sınıfları; her bileşen `styles`'ına ekler. Yalnız token kullanır. `.band` içinde token'lar yeniden
- * tanımlanır: koyu bantta çizilen bölüm aynı değişkenleri okur, ayrı renk düşünmez. `.s-head` bölümün kendi başlığıdır; alt
- * sayfada sayfa başlığı zaten olduğu için gizlenir.
+ * Bölümlerin ortak sınıfları; her bileşen `styles`'ına ekler. Yalnız token kullanır. Bileşen stil bütçesi `styles` dizisinin öğesi başına
+ * ölçülür (`anyComponentStyle`), bu yüzden temel ve kit ayrı öğelerdir. `.s-head` bölümün kendi başlığıdır; alt sayfada sayfa başlığı
+ * zaten olduğu için gizlenir. `.tinted` üst çubuk ve giriş bölümünün yumuşak zeminidir: soluk ve ana renk metni o zemine göre okunur.
  */
 export const SECTION_BASE = `
     :host {
@@ -57,72 +57,18 @@ export const SECTION_BASE = `
         letter-spacing: var(--s-head-track);
         line-height: var(--s-head-leading);
         text-wrap: balance;
+        overflow-wrap: break-word;
     }
 
     .muted {
         color: var(--s-muted);
     }
 
-    .band {
-        --s-bg: var(--s-band);
-        --s-surface: color-mix(in srgb, var(--s-band) 90%, var(--s-on-band));
-        --s-ink: var(--s-on-band);
-        --s-muted: var(--s-band-muted);
-        --s-line: var(--s-band-line);
-        --s-primary: var(--s-band-btn);
-        --s-on-primary: var(--s-on-band-btn);
-        --s-primary-text: var(--s-band-accent);
-        --s-accent-text: var(--s-band-accent);
-        --s-secondary-text: var(--s-band-accent);
-        --s-focus: var(--s-on-band);
-        background: var(--s-band);
-        color: var(--s-on-band);
-    }
-
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        min-height: 48px;
-        padding: 0 22px;
-        border: 1px solid transparent;
-        border-radius: var(--s-radius-btn);
-        font: 600 15px/1.2 var(--s-body);
-        text-decoration: none;
-        white-space: nowrap;
-        cursor: pointer;
-        transition: 0.2s ease;
-    }
-
-    .btn:hover {
-        transform: translateY(-1px);
-    }
-
-    .btn.main {
-        background: var(--s-primary);
-        color: var(--s-on-primary);
-    }
-
-    .btn.acc {
-        background: var(--s-accent);
-        color: var(--s-on-accent);
-    }
-
-    .btn.line {
-        border-color: currentColor;
-        background: transparent;
-    }
-
-    .tlink {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        min-height: 44px;
-        font-weight: 600;
-        text-decoration: underline;
-        text-decoration-thickness: 1px;
-        text-underline-offset: 5px;
+    .tinted {
+        --s-muted: var(--s-tint-muted);
+        --s-primary-text: var(--s-tint-primary);
+        background: var(--s-tint);
+        color: var(--s-on-tint);
     }
 
     a:focus-visible,
@@ -146,20 +92,89 @@ export const SECTION_BASE = `
     }
 `;
 
-/** Mobil menü düğmesi ve açılır liste gibi navigasyonların ortak parçası. */
-export const NAV_BASE = `
-    .burger {
+/**
+ * Düğme, bölüm başlığı, kart ve ikon kabarcığı. Düğmenin biçimi ve tonu konsept token'ından gelir (`--s-radius-btn`, `--s-btn-*`):
+ * dolgun `.main` ana eylem, çerçeveli `.line` ikinci eylem. Altı çizili metin bağlantı düğme yerine kullanılmaz.
+ */
+export const SECTION_KIT = `
+    .btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        min-width: 44px;
-        min-height: 44px;
-        padding: 0 10px;
-        border: 0;
-        background: transparent;
-        color: inherit;
-        font: 600 14px/1 var(--s-body);
+        max-width: 100%;
+        min-height: 48px;
+        padding: 0 22px;
+        border: 1.5px solid transparent;
+        border-radius: var(--s-radius-btn);
+        font: var(--s-btn-weight) var(--s-btn-size) / 1.2 var(--s-body);
+        letter-spacing: var(--s-btn-track);
+        text-transform: var(--s-btn-case);
+        text-align: center;
+        text-decoration: none;
+        white-space: nowrap;
         cursor: pointer;
+        transition: filter 0.15s ease, background-color 0.15s ease;
+    }
+
+    .btn site-icon {
+        --icon: 18px;
+    }
+
+    .btn.main {
+        background: var(--s-primary);
+        color: var(--s-on-primary);
+    }
+
+    .btn.main:hover {
+        filter: brightness(1.08);
+    }
+
+    .btn.line {
+        border-color: var(--s-line-strong);
+        background: transparent;
+        color: var(--s-ink);
+    }
+
+    .btn.line:hover {
+        background: var(--s-surface);
+    }
+
+    .head {
+        margin-bottom: clamp(24px, 2.8cqi, 36px);
+    }
+
+    .head .title {
+        font-size: calc(var(--s-head-scale) * clamp(27px, 3cqi, 38px));
+    }
+
+    .head .intro {
+        max-width: 56ch;
+        margin-top: 8px;
+        color: var(--s-muted);
+        font-size: 17px;
+    }
+
+    .more {
+        margin-top: 28px;
+    }
+
+    .card {
+        border: 1px solid var(--s-line);
+        border-radius: var(--s-radius);
+        background: var(--s-bg);
+        color: var(--s-ink);
+    }
+
+    .bub {
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 44px;
+        height: 44px;
+        border-radius: calc(var(--s-radius) * 0.7);
+        background: var(--s-tint);
+        color: var(--s-tint-primary);
+        --icon: 22px;
     }
 `;
