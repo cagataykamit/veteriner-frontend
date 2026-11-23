@@ -7,6 +7,8 @@ import { CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants
 import { isRightAfterDetail, rowDangerActions, rowEditActions } from '@/app/shared/ui/row-action-button/row-action-button.testing';
 import { ClientsService } from '@/app/entities/client/services/clients.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
+import { RecentDeletionService } from '@/app/entities/record-deletion/services/recent-deletion.service';
+import { RecordDeletionService } from '@/app/entities/record-deletion/services/record-deletion.service';
 import { ClientsListPageComponent } from './clients-list-page.component';
 
 /** Ortak arama davranışı (ürün kararı): yazdıkça arar, Enter anında, × listeyi geri getirir, "Ara" düğmesi yok. */
@@ -130,6 +132,29 @@ describe('ClientsListPageComponent — tek başlık', () => {
         expect(el.querySelector('app-loading-state')).not.toBeNull();
         expect(el.querySelector('h1')?.textContent?.trim()).toBe('Müşteriler');
         expect(el.querySelector('a[href="/panel/clients/new"]')).not.toBeNull();
+    });
+
+    it('karttan silip dönünce "Silindi · Geri al" bildirimi görünür; bekleyen silme yoksa çizilmez (ADR-054)', () => {
+        const recent = new RecentDeletionService();
+
+        recent.remember({ kind: 'client', id: 'c1', name: 'Ayşe Yılmaz' });
+        TestBed.configureTestingModule({
+            imports: [ClientsListPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ClientsService, useValue: { getClients: () => of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }) } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => true } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: RecentDeletionService, useValue: recent },
+                { provide: RecordDeletionService, useValue: {} }
+            ]
+        });
+        const fixture = TestBed.createComponent(ClientsListPageComponent);
+
+        fixture.detectChanges();
+        expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="deletion-undo-notice"]')?.textContent).toContain('Ayşe Yılmaz silindi.');
+        TestBed.resetTestingModule();
+        expect(create().querySelector('[data-testid="deletion-undo-notice"]')).toBeNull();
     });
 });
 

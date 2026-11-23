@@ -26,6 +26,7 @@ import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
 import { RowLinkDirective } from '@/app/shared/ui/row-link/row-link.directive';
 import { DeletionUndoNoticeComponent } from '@/app/entities/record-deletion/components/deletion-undo-notice.component';
+import { RecentDeletionService } from '@/app/entities/record-deletion/services/recent-deletion.service';
 
 type ClientsListState = {
     search: string;
@@ -61,7 +62,9 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <!-- Müşteri kartından silip dönünce "Silindi · Geri al" (ADR-054). -->
-        <app-deletion-undo-notice kind="client" (restored)="reload()" />
+        @if (recentDeletion; as deletion) {
+            <app-deletion-undo-notice [deletion]="deletion" (restored)="reload()" />
+        }
 
         <div class="card">
             <div class="flex flex-col gap-4">
@@ -155,6 +158,8 @@ export class ClientsListPageComponent implements OnInit {
     readonly formatClientPhoneForDisplay = formatClientPhoneForDisplay;
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
+    /** Karttan silip dönüldüyse "Silindi · Geri al" (ADR-054); bir kez alınır. */
+    readonly recentDeletion = inject(RecentDeletionService).take('client');
 
     private readonly clientsService = inject(ClientsService);
 
