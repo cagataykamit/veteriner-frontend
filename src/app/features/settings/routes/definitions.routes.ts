@@ -29,5 +29,6 @@ export default [
     { path: 'hospitalization-wards', loadChildren: () => import('../../hospitalization-wards/routes/hospitalization-wards.routes') },
     { path: 'appointment-reasons', loadChildren: () => import('../../appointment-reasons/routes/appointment-reasons.routes') },
     { path: 'appointment-resources', loadChildren: () => import('../../appointment-resources/routes/appointment-resources.routes') },
-    { path: 'vaccination-schedule', loadChildren: () => import('../../vaccination-schedule/routes/vaccination-schedule.routes') }
+    { path: 'vaccination-schedule', loadChildren: () => import('../../vaccination-schedule/routes/vaccination-schedule.routes') },
+    { path: 'cash-registers', loadChildren: () => import('../../cash-registers/routes/cash-registers.routes').then((m) => m.CASH_REGISTER_DEFINITION_ROUTES) }
 ] as Routes;

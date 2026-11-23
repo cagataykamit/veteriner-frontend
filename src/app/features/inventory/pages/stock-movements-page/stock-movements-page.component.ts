@@ -24,6 +24,7 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { buildCsvFromStringRows, csvTextToUtf8BlobWithBom } from '@/app/shared/utils/csv-text.utils';
@@ -60,6 +61,7 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
         ToastModule,
         StockMovementCreateDialogComponent,
         AppListHeaderComponent,
+        AppListFiltersComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
         AppErrorStateComponent,
@@ -81,11 +83,10 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
 
             <div class="flex flex-col gap-4">
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                    <app-list-header class="mb-3" title="Stok hareketleri" [count]="totalItems()">
+                    <app-list-header title="Stok hareketleri" [count]="totalItems()">
                         <app-filter-field label="Arama" labelFor="smSearch" [active]="isSearchActive()" width="grow">
-                            <app-search-input inputId="smSearch" placeholder="Ürün, SKU, kategori, klinik…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                            <app-search-input inputId="smSearch" hint="Ürün, SKU, kategori, klinik" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
-                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canExportStockMovements()) {
                             <button pButton type="button" actions severity="secondary" (click)="exportCsv()" [disabled]="loading() || exporting()"><i class="p-button-icon" [class]="exporting() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Dışa aktar</button>
                         }
@@ -94,29 +95,29 @@ const LIST_STATE_KEY = 'panel:inventory:stock-movements:listState';
                         } @else if (canCreateStockMovement && ro.mutationBlocked()) {
                             <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni stok hareketi (salt okunur)</button>
                         }
+                        <app-list-filters (clear)="resetFilters()">
+                            <app-filter-field label="Hareket tipi" labelId="lblSmType" [active]="movementTypeActive()" width="select">
+                                <p-select
+                                    ariaLabelledBy="lblSmType"
+                                    inputId="smMovementType"
+                                    [options]="movementTypeOptions"
+                                    [(ngModel)]="movementTypeFilter"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    placeholder="Tümü"
+                                    class="w-full"
+                                    [showClear]="true"
+                                    (ngModelChange)="scheduleApply()"
+                                />
+                            </app-filter-field>
+                            <app-filter-field label="Başlangıç" labelFor="smFrom" [active]="isFromActive()" width="date">
+                                <app-date-input inputId="smFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                            <app-filter-field label="Bitiş" labelFor="smTo" [active]="isToActive()" width="date">
+                                <app-date-input inputId="smTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                        </app-list-filters>
                     </app-list-header>
-                    <div class="flex flex-wrap items-end gap-3">
-                        <app-filter-field label="Hareket tipi" labelId="lblSmType" [active]="movementTypeActive()" width="select">
-                            <p-select
-                                ariaLabelledBy="lblSmType"
-                                inputId="smMovementType"
-                                [options]="movementTypeOptions"
-                                [(ngModel)]="movementTypeFilter"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Tümü"
-                                class="w-full"
-                                [showClear]="true"
-                                (ngModelChange)="scheduleApply()"
-                            />
-                        </app-filter-field>
-                        <app-filter-field label="Başlangıç" labelFor="smFrom" [active]="isFromActive()" width="date">
-                            <app-date-input inputId="smFrom" type="date" min="1900-01-01" [(ngModel)]="dateFromInput" limit="past" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                        <app-filter-field label="Bitiş" labelFor="smTo" [active]="isToActive()" width="date">
-                            <app-date-input inputId="smTo" type="date" min="1900-01-01" [(ngModel)]="dateToInput" limit="past" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                    </div>
                 </div>
                 @if (loading()) {
                     <app-loading-state message="Stok hareketleri yükleniyor…" />

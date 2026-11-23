@@ -1,6 +1,8 @@
 import { afterNextRender, afterRenderEffect, computed, DestroyRef, Directive, ElementRef, HostAttributeToken, Injectable, inject, input, type Signal, signal } from '@angular/core';
-import type { SiteImage } from '../model/site.model';
+import { PAGE_DEFS, type SiteImage } from '../model/site.model';
 import type { SiteVm } from './site-vm';
+
+const CONTACT_PATH = PAGE_DEFS.find((page) => page.key === 'iletisim')!.path;
 
 /**
  * Bir site çiziminin bağlamı: VM, açık sayfa, iç bağlantılar. `SiteRendererComponent` sağlar; önizleme ve tam sayfa aynı yoldan
@@ -15,6 +17,8 @@ export class SiteContext {
     /** Yol ile çapa ayrı: "/#iletisim" → "/" + "iletisim". */
     readonly page = computed(() => this.path().split('#')[0] || '/');
     readonly onHome = computed(() => this.page() === '/');
+    /** İletişim sayfası telefon, adres ve saatleri zaten gösterir; alt bilgi bunları tekrar yazmaz (W-04). */
+    readonly onContactPage = computed(() => this.page() === CONTACT_PATH);
     readonly navTick = signal(0);
     /** Giriş bölümündeki eylem düğmeleri ekranda mı. Değilse telefonda alt şerit çıkar (W-01 A); giriş bölümü olmayan alt sayfada şerit hep görünür. */
     readonly heroActionsVisible = signal(true);

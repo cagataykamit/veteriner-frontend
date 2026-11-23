@@ -22,7 +22,7 @@ const BAR_HEIGHT = 64;
             <div class="inner grid" [class.no-photo]="!v.photos.hero">
                 <div class="text">
                     @if (v.hasHours) {
-                        @if (hoursPath(); as path) {
+                        @if (v.contactPath; as path) {
                             <a class="chip" [siteLink]="path"><site-status [strong]="true" /></a>
                         } @else {
                             <p class="chip"><site-status [strong]="true" /></p>
@@ -193,12 +193,6 @@ export class SiteHeroComponent extends SiteSection {
     private readonly acts = viewChild<ElementRef<HTMLElement>>('acts');
 
     protected readonly place = computed(() => this.vm().location || this.vm().address);
-    /** Çip saat tablosuna gider: ana sayfada iletişim bölümü, yoksa iletişim sayfası. */
-    protected readonly hoursPath = computed(() => {
-        const v = this.vm();
-
-        return v.homeSections.includes('contact') ? '/#contact' : v.pages.iletisim ? '/iletisim' : null;
-    });
 
     constructor() {
         super();

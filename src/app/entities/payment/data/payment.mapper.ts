@@ -1,5 +1,6 @@
 import { HttpParams } from '@angular/common/http';
 import type {
+    PaymentAllocationItemDto,
     PaymentCreateRequestDto,
     PaymentCreateWithAllocationsRequestDto,
     PaymentDetailDto,
@@ -8,7 +9,7 @@ import type {
 } from '@/app/entities/payment/models/payment-api.model';
 import type { CreatePaymentRequest, UpdatePaymentRequest } from '@/app/entities/payment/models/payment-create.model';
 import type { PaymentsListQuery } from '@/app/entities/payment/models/payment-query.model';
-import type { PaymentDetailVm, PaymentEditVm, PaymentListItemVm } from '@/app/entities/payment/models/payment-vm.model';
+import type { PaymentAllocationVm, PaymentDetailVm, PaymentEditVm, PaymentListItemVm } from '@/app/entities/payment/models/payment-vm.model';
 import {
     paymentMethodCanonicalToApiEnum,
     resolvePaymentMethodFormValue
@@ -198,6 +199,11 @@ export function mapPaymentDetailDtoToVm(dto: PaymentDetailDto): PaymentDetailVm 
         appointmentId: detailAppointmentId(dto),
         examinationId: detailExaminationId(dto)
     };
+}
+
+/** Tahsis satırı: ücret açıklaması boşsa "Ücret"; tutar okunamazsa 0. */
+export function mapPaymentAllocationDtoToVm(dto: PaymentAllocationItemDto): PaymentAllocationVm {
+    return { chargeId: dto.chargeId, description: dto.chargeDescription?.trim() || 'Ücret', amount: num(dto.amount) ?? 0 };
 }
 
 export function mapPaymentDetailDtoToEditVm(dto: PaymentDetailDto): PaymentEditVm {

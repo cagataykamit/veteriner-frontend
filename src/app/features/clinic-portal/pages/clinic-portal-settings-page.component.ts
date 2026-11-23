@@ -12,13 +12,15 @@ import { CLINICS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants
 import { CLINIC_DETAIL_ROUTE, SETTINGS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { ClinicsService } from '@/app/entities/clinic/services/clinics.service';
-import type { ClinicPortalSettingsVm, OwnerNotificationChannel, OwnerNotificationRuleVm } from '@/app/entities/owner-portal/models/owner-portal.model';
+import type { ClinicPortalSettingsVm, OwnerNotificationCategory, OwnerNotificationChannel, OwnerNotificationRuleVm } from '@/app/entities/owner-portal/models/owner-portal.model';
 import { ClinicPortalSettingsService } from '@/app/entities/owner-portal/services/owner-portal.service';
 import {
+    channelModeIcon,
     channelModeLabel,
     channelModeSeverity,
+    NOTIFICATION_CATEGORIES,
     NOTIFICATION_CHANNELS,
-    notificationCategoryLabel,
+    notificationChannelHint,
     notificationTypeLabel
 } from '@/app/entities/owner-portal/utils/owner-portal-labels.utils';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
@@ -54,6 +56,45 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         AppStatusTagComponent
     ],
     providers: [ConfirmationService],
+    styles: `
+        /* A-04 başlık biçimi 2: zemin bandı ve renkli kenar yok; düzey farkı yazı boyu, boşluk ve çizgi kalınlığıyla. */
+        .portal-rules th.rule-head {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--text-color-secondary);
+            vertical-align: bottom;
+            padding-top: 0.375rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 0;
+            background: transparent;
+        }
+        .portal-rules th.rule-channel {
+            width: 11.5rem;
+        }
+        /* Satırlar kategori başlığından girintili; telefonda satır karta döner, girinti yok. */
+        @media (min-width: 576px) {
+            .portal-rules :is(th, td).rule-name {
+                padding-left: 1.125rem;
+            }
+        }
+        .portal-rules tr.rule-group > th {
+            padding: 1.875rem 0 0.5625rem;
+            border-bottom: 2px solid var(--text-color-secondary);
+            background: transparent;
+            text-align: left;
+            font-weight: 400;
+        }
+        .portal-rules tr.rule-group:first-child > th {
+            padding-top: 0.75rem;
+        }
+        .rule-group-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+    `,
     template: `
         <app-page-header
             [categoryLink]="settingsRoute"
@@ -75,9 +116,10 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
             </div>
         }
 
-        <div class="grid grid-cols-12 gap-4">
-            <section class="card col-span-12 lg:col-span-5 mb-0" aria-labelledby="portalAccessTitle">
-                <h5 id="portalAccessTitle" class="mt-0">Portal erişimi</h5>
+        <!-- A-04 A: erişim üstte yatay şerit, bildirim kanalları altta tam genişlik. -->
+        <div class="flex flex-col gap-4">
+            <section class="card mb-0" aria-labelledby="portalAccessTitle" data-testid="portal-access">
+                <h5 id="portalAccessTitle" class="mt-0 mb-3">Portal erişimi</h5>
                 @if (loading()) {
                     <app-loading-state message="Portal ayarı yükleniyor…" />
                 } @else if (error()) {
@@ -98,54 +140,88 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                                 <a [routerLink]="clinicDetailLink()" class="font-medium">Telefonu ekle</a>
                             </p-message>
                         }
-                        <div class="flex items-center gap-3">
-                            <p-toggleswitch inputId="portalEnabled" [ngModel]="toggle()" (ngModelChange)="onToggle($event)" [disabled]="!canWrite() || saving()" data-testid="portal-enabled" />
-                            <label for="portalEnabled">Hasta sahibi portalı bu klinikte açık</label>
+                        <div class="flex flex-wrap items-center gap-x-7 gap-y-3">
+                            <div class="flex items-center gap-3">
+                                <p-toggleswitch inputId="portalEnabled" [ngModel]="toggle()" (ngModelChange)="onToggle($event)" [disabled]="!canWrite() || saving()" data-testid="portal-enabled" />
+                                <label for="portalEnabled">Hasta sahibi portalı bu klinikte açık</label>
+                            </div>
+                            <app-status-tag [label]="s.isEnabled ? 'Açık: hasta sahipleri giriş yapabilir' : 'Kapalı: erişim durduruldu'" [severity]="s.isEnabled ? 'success' : 'warn'" />
+                            <p class="m-0 text-sm md:ml-auto" data-testid="portal-counts">
+                                Aktif portal erişimi: <span class="font-medium">{{ s.activeLinkCount }}</span> · Bekleyen davet: <span class="font-medium">{{ s.pendingInviteCount }}</span>
+                            </p>
                         </div>
-                        <app-status-tag [label]="s.isEnabled ? 'Açık: hasta sahipleri giriş yapabilir' : 'Kapalı: erişim durduruldu'" [severity]="s.isEnabled ? 'success' : 'warn'" />
-                        <p class="m-0 text-sm" data-testid="portal-counts">
-                            Aktif portal erişimi: <span class="font-medium">{{ s.activeLinkCount }}</span> · Bekleyen davet: <span class="font-medium">{{ s.pendingInviteCount }}</span>
-                        </p>
-                        @if (s.updatedAtUtc) {
-                            <small class="text-muted-color">Son değişiklik: {{ fmt(s.updatedAtUtc) }}</small>
-                        }
-                        <small class="text-muted-color">Kapatmak geçicidir: hesaplar ve bağlantılar silinmez, yalnız erişim durur. Tekrar açınca her şey olduğu gibi geri gelir. Hatırlatma e-postaları etkilenmez.</small>
+                        <small class="text-muted-color">
+                            Kapatmak geçicidir: hesaplar ve bağlantılar silinmez, yalnız erişim durur. Tekrar açınca her şey olduğu gibi geri gelir. Hatırlatma e-postaları etkilenmez.
+                            @if (s.updatedAtUtc) {
+                                <span class="whitespace-nowrap">Son değişiklik: {{ fmt(s.updatedAtUtc) }}</span>
+                            }
+                        </small>
                     </div>
                 }
             </section>
 
-            <section class="card col-span-12 lg:col-span-7 mb-0" aria-labelledby="portalChannelsTitle">
-                <h5 id="portalChannelsTitle" class="mt-0">Bildirim kanalları</h5>
-                <p class="mt-0 mb-3 text-sm text-muted-color">
+            <section class="card mb-0" aria-labelledby="portalChannelsTitle">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-2">
+                    <h5 id="portalChannelsTitle" class="m-0 mr-auto">Bildirim kanalları</h5>
+                    @if (rules(); as list) {
+                        <!-- Kategori filtresi; sayılar tablodaki satır sayısı. -->
+                        <div class="flex flex-wrap gap-1.5" role="group" aria-label="Kategori" data-testid="portal-rule-filter">
+                            @for (f of categoryFilters(); track f.key) {
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center gap-1.5 min-h-8 px-3 rounded-full border text-sm cursor-pointer"
+                                    [class]="categoryFilter() === f.key ? 'border-primary bg-primary-50 dark:bg-primary-950 text-primary font-semibold' : 'border-surface text-color hover:border-primary'"
+                                    [attr.aria-pressed]="categoryFilter() === f.key"
+                                    (click)="categoryFilter.set(f.key)"
+                                >
+                                    {{ f.label }}<span class="text-xs font-semibold text-muted-color tabular-nums">{{ f.count }}</span>
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+                <p class="mt-0 mb-2 text-sm text-muted-color">
                     Hasta sahibine hangi iletinin hangi kanaldan gittiği. İşlem iletileri tercihle kapanmaz; hatırlatma ve kampanya hasta sahibinin tercihine bağlıdır. WhatsApp iletisini sistem göndermez: personel müşteri kartından kendi WhatsApp'ında açar.
                 </p>
                 @if (rulesError(); as err) {
                     <app-error-state [detail]="err" (retry)="loadRules()" />
                 } @else if (rules(); as list) {
-                    <div class="overflow-x-auto table-stack-phone">
-                        <p-table [value]="list" [tableStyle]="{ 'min-width': '36rem' }" data-testid="portal-rules">
+                    <div class="overflow-x-auto table-stack-phone portal-rules">
+                        <!-- Grup sırası bizim (işlem, hatırlatma, ticari); customSort tablonun grup alanına göre alfabetik sıralamasını kapatır. -->
+                        <p-table [value]="shownRules()" rowGroupMode="subheader" groupRowsBy="category" [customSort]="true" [tableStyle]="{ 'min-width': '44rem', 'table-layout': 'fixed' }" data-testid="portal-rules">
                             <ng-template #header>
                                 <tr>
-                                    <th>Bildirim</th>
+                                    <th scope="col" class="rule-head rule-name">Bildirim</th>
                                     @for (c of channels; track c.channel) {
-                                        <th>{{ c.label }}</th>
+                                        <th scope="col" class="rule-head rule-channel">
+                                            <span class="inline-flex items-center gap-1.5"><i [class]="c.icon + ' !text-xs'" aria-hidden="true"></i>{{ c.label }}</span>
+                                            <span class="block mt-0.5 normal-case tracking-normal font-normal text-xs">{{ channelHint(c.channel, list) }}</span>
+                                        </th>
                                     }
+                                </tr>
+                            </ng-template>
+                            <ng-template #groupheader let-r>
+                                <tr class="rule-group" [attr.data-testid]="'portal-rule-group-' + r.category">
+                                    <th colspan="4" scope="colgroup">
+                                        <span class="flex flex-wrap items-baseline gap-x-3.5 gap-y-1">
+                                            <b class="rule-group-title">{{ group(r.category).title }}</b>
+                                            <small class="text-muted-color text-[13.5px]">{{ group(r.category).description }}</small>
+                                            <span class="ml-auto text-[13px] font-medium text-muted-color pr-2.5 tabular-nums">{{ categoryCount(r.category) }} bildirim</span>
+                                        </span>
+                                    </th>
                                 </tr>
                             </ng-template>
                             <ng-template #body let-r>
                                 <tr data-testid="portal-rule-row">
-                                    <td>
-                                        <div>{{ typeLabel(r.type) }}</div>
-                                        <small class="text-muted-color">{{ categoryLabel(r.category) }}</small>
-                                    </td>
+                                    <td class="rule-name">{{ typeLabel(r.type) }}</td>
                                     @for (c of channels; track c.channel) {
-                                        <td [attr.data-label]="c.label"><app-status-tag [label]="modeLabel(r, c.channel)" [severity]="modeSeverity(r, c.channel)" /></td>
+                                        <td [attr.data-label]="c.label"><app-status-tag class="whitespace-nowrap" [label]="modeLabel(r, c.channel)" [severity]="modeSeverity(r, c.channel)" [icon]="modeIcon(r, c.channel)" /></td>
                                     }
                                 </tr>
                             </ng-template>
                         </p-table>
                     </div>
-                    <small class="block mt-2 text-muted-color">Mobil bildirim, uygulama anahtarları tanımlanana dek "Yapılandırılmadı" görünür; hasta sahibinin tercihi şimdiden saklanır.</small>
+                    <small class="block mt-3 text-muted-color">Mobil bildirim, uygulama anahtarları tanımlanana dek "Yapılandırılmadı" görünür; hasta sahibinin tercihi şimdiden saklanır.</small>
                 } @else {
                     <app-loading-state message="Bildirim kanalları yükleniyor…" />
                 }
@@ -189,11 +265,36 @@ export class ClinicPortalSettingsPageComponent implements OnInit {
     readonly clinicPhone = signal<string | null | undefined>(undefined);
     readonly clinicDetailLink = computed(() => `${CLINIC_DETAIL_ROUTE}/${this.clinicId()}`);
 
+    /** Kategori filtresi (A-04): "Tümü" ya da tek kategori; satırlar kategori sırasıyla gruplanır. */
+    readonly categoryFilter = signal<OwnerNotificationCategory | 'all'>('all');
+    readonly shownRules = computed(() => {
+        const filter = this.categoryFilter();
+        const order = NOTIFICATION_CATEGORIES.map((c) => c.category);
+
+        return (this.rules() ?? []).filter((r) => filter === 'all' || r.category === filter).sort((a, b) => order.indexOf(a.category) - order.indexOf(b.category));
+    });
+    readonly categoryFilters = computed(() => {
+        const rules = this.rules() ?? [];
+
+        return [
+            { key: 'all' as OwnerNotificationCategory | 'all', label: 'Tümü', count: rules.length },
+            ...NOTIFICATION_CATEGORIES.map((c) => ({ key: c.category as OwnerNotificationCategory | 'all', label: c.title, count: rules.filter((r) => r.category === c.category).length })).filter((f) => f.count > 0)
+        ];
+    });
+
     typeLabel = notificationTypeLabel;
-    categoryLabel = notificationCategoryLabel;
+    channelHint = notificationChannelHint;
     fmt = (utc: string) => formatDateTimeDisplay(utc);
 
     private loadSeq = 0;
+
+    group(category: OwnerNotificationCategory): { title: string; description: string } {
+        return NOTIFICATION_CATEGORIES.find((c) => c.category === category) ?? { title: category, description: '' };
+    }
+
+    categoryCount(category: OwnerNotificationCategory): number {
+        return (this.rules() ?? []).filter((r) => r.category === category).length;
+    }
 
     ngOnInit(): void {
         const active = this.auth.getClinicId()?.trim() ?? '';
@@ -297,6 +398,10 @@ export class ClinicPortalSettingsPageComponent implements OnInit {
 
     modeSeverity(rule: OwnerNotificationRuleVm, channel: OwnerNotificationChannel) {
         return channelModeSeverity(rule.channels.find((c) => c.channel === channel)?.mode);
+    }
+
+    modeIcon(rule: OwnerNotificationRuleVm, channel: OwnerNotificationChannel): string | undefined {
+        return channelModeIcon(rule.channels.find((c) => c.channel === channel)?.mode);
     }
 
     private save(enabled: boolean): void {

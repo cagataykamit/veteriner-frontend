@@ -128,12 +128,16 @@ describe('PortalAppointmentLinkComponent (hatırlatmada onayla / iptal et)', () 
 
         vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
         await create('tok', 'onayla');
+        el.querySelector<HTMLButtonElement>('[data-testid=calendar-toggle]')!.click();
+        await settle();
         expect(el.querySelector('[data-testid=calendar-google]')?.getAttribute('href')).toBe(PAGE.googleCalendarUrl);
         expect(api.calendar).not.toHaveBeenCalled();
 
         await click('Geleceğim, onayla');
         expect(el.querySelector('[data-testid="link-confirmed"] [data-testid=add-to-calendar]')).not.toBeNull();
 
+        el.querySelector<HTMLButtonElement>('[data-testid="link-confirmed"] [data-testid=calendar-toggle]')!.click();
+        await settle();
         el.querySelector<HTMLButtonElement>('[data-testid=calendar-ics]')!.click();
         await settle();
 

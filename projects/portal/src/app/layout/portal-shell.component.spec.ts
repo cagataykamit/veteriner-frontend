@@ -6,6 +6,7 @@ import { PortalSessionService } from '@portal/app/core/auth/portal-session.servi
 import { PORTAL_CLINIC_CLOSED_MESSAGE, PORTAL_SERVICE_UNAVAILABLE_MESSAGE } from '@portal/app/core/errors/portal-errors';
 import { createSessionStub, LINK_MERKEZ, LINK_SAHIL } from '@portal/app/testing/portal-fixtures';
 import type { PortalLink } from '@portal/app/core/auth/portal-auth.models';
+import { PORTAL_BACK_LINK } from '@portal/app/core/navigation/portal-back-link';
 import { PortalShell } from './portal-shell.component';
 
 @Component({ selector: 'portal-test-page', standalone: true, changeDetection: ChangeDetectionStrategy.OnPush, template: '<p data-testid="page">sayfa</p>' })
@@ -23,7 +24,7 @@ describe('PortalShell (klinik portalı kapalı)', () => {
                             { path: '', component: TestPage },
                             { path: 'pets', component: TestPage },
                             { path: 'account', component: TestPage },
-                            { path: 'account/delete', component: TestPage },
+                            { path: 'account/delete', component: TestPage, data: { [PORTAL_BACK_LINK]: '/account' } },
                             { path: 'account/data-requests', component: TestPage }
                         ]
                     }
@@ -40,6 +41,17 @@ describe('PortalShell (klinik portalı kapalı)', () => {
     }
 
     const closed: PortalLink = { ...LINK_MERKEZ, isClinicPortalEnabled: false };
+
+    it('alt sayfada başlığın solunda "Geri" üst sayfaya döner; ana sekmede yok (PO-04)', async () => {
+        const sub = await open([LINK_MERKEZ], '/account/delete');
+
+        expect(sub.querySelector('[data-testid=header-back]')?.getAttribute('href')).toBe('/account');
+
+        TestBed.resetTestingModule();
+        const tab = await open([LINK_MERKEZ], '/pets');
+
+        expect(tab.querySelector('[data-testid=header-back]')).toBeNull();
+    });
 
     it('açık klinikte sayfa içeriği görünür', async () => {
         const el = await open([LINK_MERKEZ], '/pets');

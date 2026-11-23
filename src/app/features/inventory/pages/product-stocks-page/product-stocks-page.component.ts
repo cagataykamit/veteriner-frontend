@@ -22,6 +22,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import type { SelectOption } from '@/app/shared/forms/client-pet-selection.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -59,6 +60,7 @@ const PRODUCT_STOCK_CSV_HEADERS = ['Ürün', 'SKU', 'Kategori', 'Klinik', 'Kulla
         InputTextModule,
         SelectModule,
         AppListHeaderComponent,
+        AppListFiltersComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
@@ -78,50 +80,49 @@ const PRODUCT_STOCK_CSV_HEADERS = ['Ürün', 'SKU', 'Kategori', 'Klinik', 'Kulla
 
             <div class="flex flex-col gap-4">
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                    <app-list-header class="mb-3" title="Stok durumu" [count]="totalItems()">
+                    <app-list-header title="Stok durumu" [count]="totalItems()">
                         <p hint class="text-muted-color text-sm m-0 mt-1">{{ activeClinicContextHint() }}</p>
                         <app-filter-field label="Arama" labelFor="stockSearch" [active]="isSearchActive()" width="grow">
-                            <app-search-input inputId="stockSearch" placeholder="Ürün adı, SKU…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                            <app-search-input inputId="stockSearch" hint="Ürün adı, SKU" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
-                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canExportStocks()) {
                             <button pButton type="button" actions severity="secondary" (click)="exportCsv()" [disabled]="loading() || exporting()"><i class="p-button-icon" [class]="exporting() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>Dışa aktar</button>
                         }
-                    </app-list-header>
-                    <div class="flex flex-wrap items-end gap-3">
-                        @if (canReadCategories && categoryOptions().length > 0) {
-                            <app-filter-field label="Kategori" labelId="lblStockCat" [active]="isCategoryFilterApplied()" width="select">
+                        <app-list-filters (clear)="resetFilters()">
+                            @if (canReadCategories && categoryOptions().length > 0) {
+                                <app-filter-field label="Kategori" labelId="lblStockCat" [active]="isCategoryFilterApplied()" width="select">
+                                    <p-select
+                                        ariaLabelledBy="lblStockCat"
+                                        inputId="stockCategoryFilter"
+                                        [options]="categoryOptions()"
+                                        [(ngModel)]="categoryFilterInput"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        placeholder="Tüm kategoriler"
+                                        class="w-full"
+                                        [filter]="true"
+                                        filterPlaceholder="Ara…"
+                                        filterBy="label"
+                                        [showClear]="true"
+                                        (ngModelChange)="scheduleApply()"
+                                    />
+                                </app-filter-field>
+                            }
+                            <app-filter-field label="Düşük stok" labelId="lblStockLow" [active]="isLowStockFilterApplied()" width="select">
                                 <p-select
-                                    ariaLabelledBy="lblStockCat"
-                                    inputId="stockCategoryFilter"
-                                    [options]="categoryOptions()"
-                                    [(ngModel)]="categoryFilterInput"
+                                    ariaLabelledBy="lblStockLow"
+                                    inputId="stockLowFilter"
+                                    [options]="lowStockFilterOptions"
+                                    [(ngModel)]="lowStockFilterInput"
                                     optionLabel="label"
                                     optionValue="value"
-                                    placeholder="Tüm kategoriler"
+                                    placeholder="Tümü"
                                     class="w-full"
-                                    [filter]="true"
-                                    filterPlaceholder="Ara…"
-                                    filterBy="label"
-                                    [showClear]="true"
                                     (ngModelChange)="scheduleApply()"
                                 />
                             </app-filter-field>
-                        }
-                        <app-filter-field label="Düşük stok" labelId="lblStockLow" [active]="isLowStockFilterApplied()" width="select">
-                            <p-select
-                                ariaLabelledBy="lblStockLow"
-                                inputId="stockLowFilter"
-                                [options]="lowStockFilterOptions"
-                                [(ngModel)]="lowStockFilterInput"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Tümü"
-                                class="w-full"
-                                (ngModelChange)="scheduleApply()"
-                            />
-                        </app-filter-field>
-                    </div>
+                        </app-list-filters>
+                    </app-list-header>
                 </div>
                 @if (loading()) {
                     <app-loading-state message="Stok listesi yükleniyor…" />

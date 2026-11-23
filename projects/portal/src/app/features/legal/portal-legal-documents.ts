@@ -2,10 +2,21 @@ import type { PortalLegalDocumentType } from './portal-legal.api';
 
 /**
  * Hasta sahibi portalı hukuki metinleri — TEK veri dosyası. Kaynak: ürün deposu `legal/portal-kullanim-sartlari.md` ve
- * `legal/portal-gizlilik-politikasi.md` v0.1 (2026-10-16). Metin aynen aktarılır; köşeli parantezli alanlar ve hukuki
- * görüş notları doldurulmadan bırakılır. İç belge bağlantıları (ADR, şablon dosyaları) müşteriye gösterilmez; portal
+ * `legal/portal-gizlilik-politikasi.md` v0.1 (2026-10-16). Metin aynen aktarılır; yer tutucular 2026-11-23 kullanıcı kararıyla
+ * dolduruldu. İç belge bağlantıları (ADR, şablon dosyaları) müşteriye gösterilmez; portal
  * belgeleri arası bağlantılar uygulama içi rotaya çevrilir. Sürüm numarası backend'den gelir (`GET /legal-documents`).
  */
+
+/**
+ * Vetinity iletişim e-postası (iletişim ve KVKK başvurusu) ve unvanı. Portal panel kodunu içe aktarmadığı için (ADR-031 K5)
+ * panelin `VETINITY_CONTACT_EMAIL` / `VETINITY_LEGAL_ENTITY_NAME` (`src/app/core/support/vetinity-support.constants.ts`)
+ * sabitlerinin portal karşılığıdır; değer değişince ikisi birlikte değişir. Unvan `null` ise metinde yalnız "Vetinity" yazar.
+ */
+export const PORTAL_VETINITY_CONTACT_EMAIL = 'vetinity.app@gmail.com';
+export const PORTAL_VETINITY_LEGAL_ENTITY_NAME: string | null = null;
+
+/** Metinde taraf olarak Vetinity: unvan girilince `Unvan ("Vetinity")`, girilmeden yalnız "Vetinity". */
+const VETINITY_PARTY = PORTAL_VETINITY_LEGAL_ENTITY_NAME ? `${PORTAL_VETINITY_LEGAL_ENTITY_NAME} ("Vetinity")` : 'Vetinity';
 
 /** Taslak uyarısı — tek yer. `null`: bant yok (2026-11-09 kullanıcı kararı: hukukçu görüşü beklenmez, metinler yayında). */
 export const PORTAL_LEGAL_DRAFT_NOTICE: string | null = null;
@@ -45,7 +56,7 @@ export const PORTAL_TERMS_DOCUMENT: PortalLegalDocument = {
     path: PORTAL_TERMS_PATH,
     title: 'Vetinity Hasta Sahibi Portalı Kullanım Şartları',
     shortTitle: 'Kullanım Şartları',
-    statusLine: 'Son güncelleme: 2026-11-09',
+    statusLine: 'Son güncelleme: 2026-11-23',
     intro: [
         'Bu şartlar, veteriner kliniğinin müşterisi olarak hasta sahibi portalını (web ve mobil uygulama) kullanan kişilere ilişkindir. Kliniklerin Vetinity\'yi kullanma koşulları ayrı belgededir.'
     ],
@@ -53,7 +64,7 @@ export const PORTAL_TERMS_DOCUMENT: PortalLegalDocument = {
         {
             heading: '1. Taraflar ve kapsam',
             paragraphs: [
-                'Bu şartlar, [Şirket unvanı] ("Vetinity") ile portal hesabı açan hasta sahibi ("Kullanıcı") arasındadır. Portal, Kullanıcı\'nın hizmet aldığı ve kendisini davet eden veteriner kliniğinin ("Klinik") kayıtlarından türetilen bilgileri Kullanıcı\'ya gösteren bir yazılım hizmetidir ("Portal"). Hesap açarken veya şartların yeni sürümünü onaylarken bu şartları kabul etmiş olursunuz. Portal ücretsizdir; Klinik\'in veteriner hizmetlerinin ücreti Klinik ile Kullanıcı arasındadır.'
+                `Bu şartlar, ${VETINITY_PARTY} ile portal hesabı açan hasta sahibi ("Kullanıcı") arasındadır. Portal, Kullanıcı'nın hizmet aldığı ve kendisini davet eden veteriner kliniğinin ("Klinik") kayıtlarından türetilen bilgileri Kullanıcı'ya gösteren bir yazılım hizmetidir ("Portal"). Hesap açarken veya şartların yeni sürümünü onaylarken bu şartları kabul etmiş olursunuz. Portal ücretsizdir; Klinik'in veteriner hizmetlerinin ücreti Klinik ile Kullanıcı arasındadır.`
             ]
         },
         {
@@ -71,7 +82,7 @@ export const PORTAL_TERMS_DOCUMENT: PortalLegalDocument = {
         {
             heading: '3. Hesap ve giriş güvenliği',
             paragraphs: [
-                'Hesap yalnız Klinik\'in gönderdiği tek kullanımlık, süreli davetle açılır. Giriş, e-postanıza gelen tek kullanımlık kodla veya e-posta ve parolanızla yapılır. Kod ve parolanızı kimseyle paylaşmayın; Vetinity veya Klinik çalışanları kodunuzu ya da parolanızı sizden istemez. Cihazınızın ve e-posta hesabınızın güvenliğinden siz sorumlusunuz. Hesabınızın izinsiz kullanıldığından şüphelenirseniz parolanızı değiştirin, "tüm cihazlardan çıkış" yapın ve [destek e-postası] adresine bildirin. Güvenlik için çok sayıda hatalı denemeden sonra giriş geçici olarak kilitlenebilir. Hesap kişiseldir; başkası adına açılamaz ve devredilemez. Hesabın sahibi, Klinik\'in müşteri kaydındaki kişidir.'
+                `Hesap yalnız Klinik'in gönderdiği tek kullanımlık, süreli davetle açılır. Giriş, e-postanıza gelen tek kullanımlık kodla veya e-posta ve parolanızla yapılır. Kod ve parolanızı kimseyle paylaşmayın; Vetinity veya Klinik çalışanları kodunuzu ya da parolanızı sizden istemez. Cihazınızın ve e-posta hesabınızın güvenliğinden siz sorumlusunuz. Hesabınızın izinsiz kullanıldığından şüphelenirseniz parolanızı değiştirin, "tüm cihazlardan çıkış" yapın ve ${PORTAL_VETINITY_CONTACT_EMAIL} adresine bildirin. Güvenlik için çok sayıda hatalı denemeden sonra giriş geçici olarak kilitlenebilir. Hesap kişiseldir; başkası adına açılamaz ve devredilemez. Hesabın sahibi, Klinik'in müşteri kaydındaki kişidir.`
             ]
         },
         {
@@ -125,7 +136,7 @@ export const PORTAL_TERMS_DOCUMENT: PortalLegalDocument = {
         {
             heading: '11. Uygulanacak hukuk',
             paragraphs: [
-                'Türkiye Cumhuriyeti hukuku uygulanır. Tüketici sıfatıyla yasal haklarınız ve tüketici hakem heyeti ile tüketici mahkemelerine başvuru hakkınız saklıdır; diğer uyuşmazlıklarda [şehir] mahkemeleri ve icra daireleri yetkilidir. İletişim: [Şirket unvanı], [adres], [iletişim e-postası].'
+                `Türkiye Cumhuriyeti hukuku uygulanır. Türkiye Cumhuriyeti mahkemeleri ve icra daireleri yetkilidir; tüketici işlemlerinde emredici hükümler saklıdır. Tüketici sıfatıyla tüketici hakem heyeti ile tüketici mahkemelerine başvuru hakkınız saklıdır. İletişim: ${VETINITY_PARTY}, ${PORTAL_VETINITY_CONTACT_EMAIL}.`
             ]
         }
     ]
@@ -136,7 +147,7 @@ export const PORTAL_PRIVACY_DOCUMENT: PortalLegalDocument = {
     path: PORTAL_PRIVACY_PATH,
     title: 'Vetinity Hasta Sahibi Portalı Gizlilik Politikası',
     shortTitle: 'Gizlilik Politikası',
-    statusLine: 'Son güncelleme: 2026-11-09',
+    statusLine: 'Son güncelleme: 2026-11-23',
     intro: [
         [
             'Bu politika, hasta sahibi portalını (web ve mobil uygulama) kullanan kişilerin ',
@@ -148,7 +159,7 @@ export const PORTAL_PRIVACY_DOCUMENT: PortalLegalDocument = {
         {
             heading: '1. Veri sorumlusu',
             paragraphs: [
-                '[Şirket unvanı], [adres], [MERSİS/ticaret sicil no], [iletişim e-postası]. Klinik kayıtları (bölüm 2b) bakımından Vetinity, kliniğin talimatıyla veri işleyendir.'
+                `Portal hesabı verilerinin veri sorumlusu: ${VETINITY_PARTY}. İletişim: ${PORTAL_VETINITY_CONTACT_EMAIL}. Klinik kayıtları (bölüm 2b) bakımından Vetinity, kliniğin talimatıyla veri işleyendir.`
             ]
         },
         {
@@ -192,7 +203,7 @@ export const PORTAL_PRIVACY_DOCUMENT: PortalLegalDocument = {
                 ],
                 [
                     { text: 'Hizmet sağlayıcılar:', strong: true },
-                    ' barındırma ve altyapı, güvenlik doğrulaması (Cloudflare Turnstile; Cloudflare, Inc., ABD), e-posta gönderim sağlayıcısı [sağlayıcı belirlenmedi], bildirim (push) hizmeti — v1\'de, uygulama mağazası platformlarının bildirim altyapısı [yurt dışına aktarım: sağlayıcı, ülke ve Kanun m.9 mekanizması buraya yazılır].'
+                    " barındırma ve altyapı, güvenlik doğrulaması (Cloudflare Turnstile; Cloudflare, Inc., ABD), e-posta gönderimi (Google LLC, ABD) ve mobil uygulamada bildirim (push) açıldığında uygulama mağazası platformlarının bildirim altyapısı. Yurt dışına aktarım: giriş kodu, parola sıfırlama ve hatırlatma e-postaları için Google LLC (ABD); güvenlik doğrulaması için Cloudflare, Inc. (ABD). Yurt dışına aktarım Kanun m.9'a uygun olmadıkça yapılmaz."
                 ],
                 [{ text: 'Yetkili kurumlar:', strong: true }, ' mevzuatın zorunlu kıldığı hallerde.']
             ],
@@ -226,7 +237,7 @@ export const PORTAL_PRIVACY_DOCUMENT: PortalLegalDocument = {
         {
             heading: '8. Çerezler ve yerel depolama',
             paragraphs: [
-                'Portal, oturumunuzu sürdürmek için tarayıcı veya uygulama içi yerel depolamada oturum bilgisi ve dil/görünüm gibi zorunlu ayarları tutar. Analitik veya reklam çerezi kullanılmaz; kullanılması gerekirse önceden açık rızanız alınır [çerez politikası eklenecek]. Çıkış yaptığınızda oturum bilgisi cihazdan silinir.'
+                'Portal, oturumunuzu sürdürmek için tarayıcı veya uygulama içi yerel depolamada oturum bilgisi ve dil/görünüm gibi zorunlu ayarları tutar. Yalnız zorunlu çerezler ve zorunlu yerel depolama kullanılır; analitik, ölçüm veya reklam çerezi kullanılmaz.Çıkış yaptığınızda oturum bilgisi cihazdan silinir.'
             ]
         },
         {
@@ -238,7 +249,7 @@ export const PORTAL_PRIVACY_DOCUMENT: PortalLegalDocument = {
         {
             heading: '10. Başvuru yolu',
             items: [
-                'Portal hesabı verileri için: [başvuru e-postası/adresi]. Hesabınızı ve bildirim tercihlerinizi Portal\'dan kendiniz de silebilir veya değiştirebilirsiniz.',
+                `Portal hesabı verileri için: ${PORTAL_VETINITY_CONTACT_EMAIL}. Hesabınızı ve bildirim tercihlerinizi Portal'dan kendiniz de silebilir veya değiştirebilirsiniz.`,
                 'Klinik kayıtları için: doğrudan ilgili kliniğe veya Portal\'daki "Verilerimle ilgili talep" bölümünden (v1) başvurabilirsiniz; talep kliniğin KVKK talep sürecine iletilir ve klinik yanıtlar. Vetinity\'ye gelen klinik kaydı talepleri ilgili kliniğe yönlendirilir.'
             ],
             closing: [

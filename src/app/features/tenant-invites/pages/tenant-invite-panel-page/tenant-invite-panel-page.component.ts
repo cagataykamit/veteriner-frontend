@@ -44,7 +44,7 @@ import { TenantRolePipe } from '@/app/shared/pipes/tenant-role.pipe';
         } @else {
             @if (claimsLoadError(); as cle) {
                 <div class="card mb-4">
-                    <p class="text-orange-600 dark:text-orange-400 m-0 text-sm" role="status">{{ cle }}</p>
+                    <p class="text-warn m-0 text-sm" role="status">{{ cle }}</p>
                     <p class="text-muted-color text-sm mt-2 mb-0">
                         Beklenen:
                         <code class="text-xs">GET /api/v1/tenants/{{ '{' }}tenantId{{ '}' }}/assignable-operation-claims</code>
@@ -129,7 +129,7 @@ import { TenantRolePipe } from '@/app/shared/pipes/tenant-role.pipe';
                     <div class="flex flex-wrap gap-2">
                         <button pButton type="button" (click)="copyJoinLink()" [disabled]="!joinUrl()"><i class="p-button-icon pi pi-copy"></i>Bağlantıyı kopyala</button>
                         @if (copyFeedback(); as cf) {
-                            <span class="text-sm self-center" [class.text-green-600]="cf === 'ok'" [class.text-danger]="cf === 'fail'">
+                            <span class="text-sm self-center" [class.text-success]="cf === 'ok'" [class.text-danger]="cf === 'fail'">
                                 @if (cf === 'ok') {
                                     Panoya kopyalandı.
                                 } @else {

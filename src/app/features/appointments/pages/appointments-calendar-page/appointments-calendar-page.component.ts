@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { of, type Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { type Popover, PopoverModule } from 'primeng/popover';
 import { VaccinationsService } from '@/app/entities/vaccination/services/vaccinations.service';
@@ -116,6 +119,8 @@ const FALLBACK_WEEK: ClinicWorkingHourVm[] = [1, 2, 3, 4, 5, 6].map((dayOfWeek) 
 }));
 /** Çalışma saati kısıtı kapalı klinikte telefondaki boş satırlar bu pencerede aranır (gece saatleri boş diye listelenmez). */
 const UNRESTRICTED_GAP_DAY: WorkingDay = { open: DEFAULT_GRID_START, close: DEFAULT_GRID_END, breakStart: null, breakEnd: null };
+/** Sağ panelin (Klinikte, Boş saat bul) ızgaranın yanında durduğu en dar ekran; altında 1280'de beş hekim sütunu sığar (R-02). */
+const WIDE_RAIL_MEDIA_QUERY = '(min-width: 1440px)';
 const WEEKDAY_SHORT = new Intl.DateTimeFormat('tr-TR', { weekday: 'short', timeZone: 'UTC' });
 const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
@@ -132,7 +137,10 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
     standalone: true,
     providers: [CalendarBubbleService],
     imports: [
+        NgTemplateOutlet,
+        FormsModule,
         ButtonModule,
+        CheckboxModule,
         DialogModule,
         PopoverModule,
         CalendarBubbleComponent,
@@ -302,7 +310,7 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                 } @else {
                     <!-- Günün özeti tek satır; hekim seçici ("Yalnız benim", çipler; boş hekim gizli) aynı satırın sağında. Seçim kullanıcı başına hatırlanır. -->
                     <div class="hidden lg:flex flex-wrap items-center gap-x-4 gap-y-1 mb-2 min-h-8 text-[13px]" data-testid="calendar-kpis">
-                        <p class="m-0 flex flex-wrap items-center gap-x-1.5 text-muted-color">
+                        <p class="m-0 mr-auto flex flex-wrap items-center gap-x-1.5 text-muted-color">
                             @for (k of summary(); track k.key; let last = $last) {
                                 <span [attr.title]="k.title"
                                     ><b class="tabular-nums" [class]="k.cls || 'text-color'">{{ k.value }}</b> {{ k.label }}</span
@@ -312,50 +320,77 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                                 }
                             }
                         </p>
-                        @if (resourceColumnsAvailable()) {
-                            <!-- Sütun seçimi (ADR-053 K8): hekim ya da oda ve cihaz; klinikte aktif kaynak yoksa görünmez. Seçim adreste (columns=resources). -->
-                            <div class="ml-auto inline-flex rounded-lg border border-surface bg-surface-50 dark:bg-surface-800 p-0.5 text-[12.5px]" role="group" aria-label="Sütunlar" data-testid="calendar-column-mode">
-                                <button type="button" class="px-2.5 py-1 rounded-md cursor-pointer" [class]="columnSegClass('vets')" [attr.aria-pressed]="!resourceMode()" (click)="changeColumnMode('vets')">Hekim</button>
-                                <button type="button" class="px-2.5 py-1 rounded-md cursor-pointer" [class]="columnSegClass('resources')" [attr.aria-pressed]="resourceMode()" (click)="changeColumnMode('resources')" data-testid="calendar-column-resources">Oda ve cihaz</button>
-                            </div>
-                        }
-                        @if (vetBarShown() && !resourceMode()) {
-                            <div class="ml-auto flex items-center gap-1.5 overflow-x-auto text-[12.5px]" data-testid="calendar-vet-bar">
+                        <!-- Sağdaki düğmeler (R-02 A): 1440 px altında "Klinikte n" ve "Boş saat bul" paneli ızgaranın üstüne açar;
+                             hekim adı sütun başlığında bir kez yazar, sütun gizleme "Hekimler n/n" menüsünde. -->
+                        <div class="ml-auto flex flex-wrap items-center justify-end gap-1.5 text-[13px]">
+                            @if (resourceColumnsAvailable()) {
+                                <!-- Sütun seçimi (ADR-053 K8): hekim ya da oda ve cihaz; klinikte aktif kaynak yoksa görünmez. Seçim adreste (columns=resources). -->
+                                <div class="inline-flex rounded-lg border border-surface bg-surface-50 dark:bg-surface-800 p-0.5 text-[12.5px]" role="group" aria-label="Sütunlar" data-testid="calendar-column-mode">
+                                    <button type="button" class="px-2.5 py-1 rounded-md cursor-pointer" [class]="columnSegClass('vets')" [attr.aria-pressed]="!resourceMode()" (click)="changeColumnMode('vets')">Hekim</button>
+                                    <button type="button" class="px-2.5 py-1 rounded-md cursor-pointer" [class]="columnSegClass('resources')" [attr.aria-pressed]="resourceMode()" (click)="changeColumnMode('resources')" data-testid="calendar-column-resources">Oda ve cihaz</button>
+                                </div>
+                            }
+                            @if (!wideScreen()) {
+                                @if (inClinic(); as list) {
+                                    <button type="button" [class]="panelButtonClass('clinic')" [attr.aria-pressed]="overlayPanel() === 'clinic'" (click)="toggleOverlayPanel('clinic')" data-testid="calendar-panel-clinic">
+                                        Klinikte <span class="min-w-[1.25rem] rounded-full bg-amber-400 text-amber-950 text-[11px] font-bold leading-4 px-1.5 text-center">{{ list.length }}</span>
+                                    </button>
+                                }
+                                @if (showFinder()) {
+                                    <button type="button" [class]="panelButtonClass('free')" [attr.aria-pressed]="overlayPanel() === 'free'" (click)="toggleOverlayPanel('free')" data-testid="calendar-panel-free">
+                                        <i class="pi pi-search !text-xs" aria-hidden="true"></i>Boş saat bul
+                                    </button>
+                                }
+                                @if (showRail() && vetBarShown() && !resourceMode()) {
+                                    <span class="w-px h-5 bg-surface-200 dark:bg-surface-700 mx-0.5" aria-hidden="true"></span>
+                                }
+                            }
+                            @if (vetBarShown() && !resourceMode()) {
                                 @if (canOnlyMine()) {
                                     <button
                                         type="button"
-                                        class="h-7 px-2.5 rounded-full border whitespace-nowrap font-semibold cursor-pointer"
+                                        class="h-8 px-3 rounded-full border whitespace-nowrap font-semibold cursor-pointer"
                                         [class]="vetPrefs().onlyMine ? 'border-primary bg-primary text-primary-contrast' : 'border-primary text-primary'"
                                         [attr.aria-pressed]="vetPrefs().onlyMine"
                                         (click)="toggleOnlyMine()"
+                                        data-testid="calendar-only-mine"
                                     >
                                         Yalnız benim
                                     </button>
                                 }
-                                @for (v of vetChips(); track v.id) {
-                                    <button
-                                        type="button"
-                                        class="inline-flex items-center gap-1.5 h-7 pl-0.5 pr-2.5 rounded-full border border-surface bg-surface-0 dark:bg-surface-900 whitespace-nowrap cursor-pointer"
-                                        [class]="v.on ? 'font-semibold' : 'opacity-50'"
-                                        [attr.aria-pressed]="v.on"
-                                        (click)="toggleVet(v.id)"
-                                        [attr.data-testid]="'calendar-vet-chip-' + v.id"
-                                    >
-                                        <span class="w-[22px] h-[22px] rounded-full grid place-items-center text-[10px] font-bold bg-primary text-primary-contrast" aria-hidden="true">{{ v.initials }}</span>{{ v.name }}
-                                    </button>
-                                }
-                                @if (hiddenIdleCount()) {
-                                    <button type="button" class="text-primary font-semibold whitespace-nowrap cursor-pointer hover:underline" (click)="showIdleVets.set(true)" data-testid="calendar-vet-idle">
-                                        +{{ hiddenIdleCount() }} hekimin bu gün randevusu yok
-                                    </button>
-                                }
-                            </div>
-                        }
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-surface bg-surface-0 dark:bg-surface-900 whitespace-nowrap cursor-pointer hover:border-primary"
+                                    aria-haspopup="true"
+                                    (click)="vetMenu.toggle($event)"
+                                    data-testid="calendar-vet-menu"
+                                >
+                                    <i class="pi pi-users !text-xs text-muted-color" aria-hidden="true"></i>Hekimler <b class="tabular-nums">{{ vetCountLabel() }}</b>
+                                    <i class="pi pi-chevron-down !text-[10px] text-muted-color" aria-hidden="true"></i>
+                                </button>
+                            }
+                        </div>
                     </div>
+                    <p-popover #vetMenu styleClass="w-[17rem] max-w-[calc(100vw-2rem)]">
+                        <div class="flex flex-col gap-0.5" role="group" aria-label="Gösterilen hekimler" data-testid="calendar-vet-list">
+                            @for (v of vetChips(); track v.id) {
+                                <label class="flex items-center gap-2.5 min-h-9 px-2 rounded-md cursor-pointer hover:bg-surface-100 dark:hover:bg-surface-800" [attr.data-testid]="'calendar-vet-chip-' + v.id">
+                                    <p-checkbox [binary]="true" [ngModel]="v.on" (onChange)="toggleVet(v.id)" [inputId]="'calendar-vet-' + v.id" />
+                                    <span class="w-[22px] h-[22px] shrink-0 rounded-full grid place-items-center text-[10px] font-bold bg-primary text-primary-contrast" aria-hidden="true">{{ v.initials }}</span>
+                                    <span class="text-sm">{{ v.name }}</span>
+                                </label>
+                            }
+                            @if (hiddenIdleCount()) {
+                                <button type="button" class="mt-1 px-2 py-1.5 text-left text-sm text-primary font-semibold cursor-pointer hover:underline" (click)="showIdleVets.set(true)" data-testid="calendar-vet-idle">
+                                    +{{ hiddenIdleCount() }} hekimin bu gün randevusu yok
+                                </button>
+                            }
+                        </div>
+                    </p-popover>
                     <div class="relative hidden lg:grid gap-3 items-start" [class]="railShown() ? 'lg:grid-cols-[minmax(0,1fr)_290px]' : ''">
-                        <!-- Sağ paneli açıp kapatan küçük dil: hep aynı yerde, sağ çizgiden "Klinikte" hizasında dışarı çıkar; açıkken ›, kapalıyken ‹.
-                             Seçim tarayıcıda hatırlanır; kapalıyken takvim tüm genişliği alır. -->
-                        @if (showRail()) {
+                        <!-- Geniş ekranda (1440 px ve üstü) sağ paneli açıp kapatan küçük dil: hep aynı yerde, sağ çizgiden "Klinikte" hizasında dışarı çıkar;
+                             açıkken ›, kapalıyken ‹. Seçim tarayıcıda hatırlanır; kapalıyken takvim tüm genişliği alır. -->
+                        @if (wideScreen() && showRail()) {
                             <button
                                 type="button"
                                 class="absolute top-3 -right-4 z-40 grid place-items-center w-4 h-10 rounded-r-md border border-l-0 border-surface bg-surface-0 dark:bg-surface-900 text-muted-color shadow-sm cursor-pointer hover:text-primary hover:border-primary"
@@ -390,37 +425,35 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                         @if (railShown()) {
                             <aside class="flex flex-col gap-3 min-w-0">
                                 @if (inClinic(); as list) {
-                                    <section class="rounded-lg border border-surface bg-surface-0 dark:bg-surface-900 px-3.5 py-3" aria-labelledby="calendar-in-clinic-title" data-testid="calendar-in-clinic">
-                                        <h3 id="calendar-in-clinic-title" class="m-0 text-[15px] font-semibold">
-                                            <button type="button" class="w-full flex items-center gap-2 text-left cursor-pointer" [attr.aria-expanded]="inClinicOpen()" (click)="toggleInClinic()" data-testid="calendar-in-clinic-toggle">
-                                                Klinikte <span class="ml-auto text-xs font-semibold text-amber-600 dark:text-amber-400">{{ list.length }} hasta</span>
-                                                <i class="pi !text-xs text-muted-color" [class]="inClinicOpen() ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i>
-                                            </button>
-                                        </h3>
-                                        @if (inClinicOpen()) {
-                                            <p class="m-0 mt-0.5 mb-2 text-xs text-muted-color">Kabulden · {{ clockText(nowMinute() ?? 0) }}</p>
-                                            @for (p of list; track p.key) {
-                                                <div class="flex items-center gap-2.5 py-1.5 border-t border-surface-100 dark:border-surface-800">
-                                                    <span class="w-[34px] h-[34px] shrink-0 rounded-full grid place-items-center text-[13px] font-bold" [class]="p.waiting ? 'bg-amber-400 text-amber-950' : 'bg-primary text-primary-contrast'" aria-hidden="true">{{ p.initials }}</span>
-                                                    <span class="min-w-0">
-                                                        <b class="block text-sm truncate">{{ p.petName }} · {{ p.clientName }}</b>
-                                                        <span class="block text-xs font-semibold truncate" [class]="p.waiting ? 'text-amber-600 dark:text-amber-400' : 'text-primary'">{{ p.status }}</span>
-                                                        @if (p.detail) {
-                                                            <span class="block text-xs text-muted-color truncate">{{ p.detail }}</span>
-                                                        }
-                                                    </span>
-                                                </div>
-                                            } @empty {
-                                                <p class="m-0 text-sm text-muted-color">Şu an klinikte bekleyen hasta yok.</p>
-                                            }
-                                            <a pButton [routerLink]="todayRoute" size="small" class="w-full mt-2">Bugün sayfasında aç</a>
-                                        }
-                                    </section>
+                                    <ng-container *ngTemplateOutlet="inClinicPanel; context: { $implicit: list, overlay: false }" />
                                 }
                                 @if (showFinder()) {
-                                    <app-appointment-free-slot-finder [clinicId]="clinicId!" [vets]="vets()" [canCreate]="canPick()" [refreshKey]="loadCount()" (pick)="onFreeSlotPick($event)" />
+                                    <app-appointment-free-slot-finder [clinicId]="clinicId!" [vets]="vets()" [canCreate]="canPick()" [refreshKey]="loadCount()" [date]="selectedDate()" (pick)="onFreeSlotPick($event)" />
                                 }
                             </aside>
+                        }
+                        <!-- 1440 px altında panel ızgaranın üstüne açılır; sütunlar daralmaz (R-02 A). -->
+                        @if (overlayShown(); as panel) {
+                            <div
+                                class="absolute top-0 right-0 z-40 w-[18.5rem] max-w-full max-h-[min(40rem,calc(100vh-9rem))] overflow-y-auto rounded-lg bg-surface-0 dark:bg-surface-900 shadow-lg"
+                                data-testid="calendar-overlay-panel"
+                            >
+                                @if (panel === 'clinic') {
+                                    <ng-container *ngTemplateOutlet="inClinicPanel; context: { $implicit: inClinic() ?? [], overlay: true }" />
+                                } @else {
+                                    <app-appointment-free-slot-finder
+                                        class="block bg-surface-0 dark:bg-surface-900"
+                                        [clinicId]="clinicId!"
+                                        [vets]="vets()"
+                                        [canCreate]="canPick()"
+                                        [refreshKey]="loadCount()"
+                                        [date]="selectedDate()"
+                                        [closable]="true"
+                                        (pick)="onFreeSlotPick($event)"
+                                        (closed)="overlayPanel.set(null)"
+                                    />
+                                }
+                            </div>
                         }
                     </div>
                 }
@@ -445,6 +478,51 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                 </div>
             }
         </div>
+
+        <!-- "Klinikte": geniş ekranda sağ panelde katlanır; dar ekranda ızgaranın üstüne açılan panelde kapat düğmesiyle. -->
+        <ng-template #inClinicPanel let-list let-overlay="overlay">
+            <section class="rounded-lg border border-surface bg-surface-0 dark:bg-surface-900 px-3.5 py-3" aria-labelledby="calendar-in-clinic-title" data-testid="calendar-in-clinic">
+                <h3 id="calendar-in-clinic-title" class="m-0 text-[15px] font-semibold">
+                    @if (overlay) {
+                        <span class="flex items-center gap-2">
+                            Klinikte <span class="text-xs font-semibold text-amber-600 dark:text-amber-400">{{ list.length }} hasta</span>
+                            <button
+                                type="button"
+                                class="ml-auto grid place-items-center w-8 h-8 rounded-md text-muted-color hover:text-color hover:bg-surface-100 dark:hover:bg-surface-800 cursor-pointer"
+                                aria-label="Klinikte panelini kapat"
+                                (click)="overlayPanel.set(null)"
+                                data-testid="calendar-in-clinic-close"
+                            >
+                                <i class="pi pi-times !text-xs" aria-hidden="true"></i>
+                            </button>
+                        </span>
+                    } @else {
+                        <button type="button" class="w-full flex items-center gap-2 text-left cursor-pointer" [attr.aria-expanded]="inClinicOpen()" (click)="toggleInClinic()" data-testid="calendar-in-clinic-toggle">
+                            Klinikte <span class="ml-auto text-xs font-semibold text-amber-600 dark:text-amber-400">{{ list.length }} hasta</span>
+                            <i class="pi !text-xs text-muted-color" [class]="inClinicOpen() ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i>
+                        </button>
+                    }
+                </h3>
+                @if (overlay || inClinicOpen()) {
+                    <p class="m-0 mt-0.5 mb-2 text-xs text-muted-color">Kabulden · {{ clockText(nowMinute() ?? 0) }}</p>
+                    @for (p of list; track p.key) {
+                        <div class="flex items-center gap-2.5 py-1.5 border-t border-surface-100 dark:border-surface-800">
+                            <span class="w-[34px] h-[34px] shrink-0 rounded-full grid place-items-center text-[13px] font-bold" [class]="p.waiting ? 'bg-amber-400 text-amber-950' : 'bg-primary text-primary-contrast'" aria-hidden="true">{{ p.initials }}</span>
+                            <span class="min-w-0">
+                                <b class="block text-sm truncate">{{ p.petName }} · {{ p.clientName }}</b>
+                                <span class="block text-xs font-semibold truncate" [class]="p.waiting ? 'text-amber-600 dark:text-amber-400' : 'text-primary'">{{ p.status }}</span>
+                                @if (p.detail) {
+                                    <span class="block text-xs text-muted-color truncate">{{ p.detail }}</span>
+                                }
+                            </span>
+                        </div>
+                    } @empty {
+                        <p class="m-0 text-sm text-muted-color">Şu an klinikte bekleyen hasta yok.</p>
+                    }
+                    <a pButton [routerLink]="todayRoute" size="small" class="w-full mt-2">Bugün sayfasında aç</a>
+                }
+            </section>
+        </ng-template>
 
         <app-calendar-bubble />
 
@@ -642,11 +720,11 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         return this.chipVetIds().map((id) => {
             const name = names.get(id) || this.selectedDayItems().find((i) => i.veterinarianUserId === id)?.veterinarianName || 'Hekim';
 
-            return { id, name: name.replace(/^Dr\.\s*/i, ''), initials: initials(name), on: shown.has(id) };
+            return { id, name: shortVetName(name), initials: initials(name), on: shown.has(id) };
         });
     });
     /** Sütunu açık hekimler: "Yalnız benim" ya da çipte gizlenmemiş olanlar. */
-    private readonly shownVetIds = computed(() => {
+    readonly shownVetIds = computed(() => {
         const prefs = this.vetPrefs();
 
         if (prefs.onlyMine && this.canOnlyMine()) {
@@ -696,7 +774,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         const columns = this.shownVetIds().map((id) => {
             const own = items.filter((i) => i.veterinarianUserId === id);
 
-            return column(id, id, names.get(id) || own[0]?.veterinarianName || 'Hekim', own);
+            return column(id, id, shortVetName(names.get(id) || own[0]?.veterinarianName || 'Hekim'), own);
         });
         const mineOnly = this.vetPrefs().onlyMine && this.canOnlyMine();
 
@@ -784,9 +862,18 @@ export class AppointmentsCalendarPageComponent implements OnInit {
             });
     });
     readonly showRail = computed(() => this.showFinder() || this.inClinic() !== null);
+    /** 1440 px ve üstünde sağ panel ızgaranın yanında durur; altında kapalı gelir, düğmeyle ızgaranın üstüne açılır (R-02 A). */
+    readonly wideScreen = signal(false);
     readonly railOpen = signal(readSectionOpen('rail'));
     readonly inClinicOpen = signal(readSectionOpen('inClinic'));
-    readonly railShown = computed(() => this.showRail() && this.railOpen());
+    readonly railShown = computed(() => this.wideScreen() && this.showRail() && this.railOpen());
+    /** Dar ekranda açık panel; bir anda biri açık, kapanınca hatırlanmaz. */
+    readonly overlayPanel = signal<'clinic' | 'free' | null>(null);
+    readonly overlayShown = computed(() => {
+        const panel = this.wideScreen() ? null : this.overlayPanel();
+
+        return (panel === 'clinic' && this.inClinic() !== null) || (panel === 'free' && this.showFinder()) ? panel : null;
+    });
 
     /** Günün özeti, tek satır: "28 randevu · 24 tamamlandı (%86) · 3 klinikte · sıradaki 15:30 Sansa · 12 aşı bekliyor · 1 gelmedi". */
     readonly summary = computed(() => {
@@ -843,6 +930,8 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     });
     /** Gün görünümünde hekim çipleri varken filtre panelindeki Hekim listesi gizlenir (aynı seçim iki yerde olmasın). */
     readonly vetBarShown = computed(() => this.vetChips().length > 1 || this.hiddenIdleCount() > 0);
+    /** "Hekimler 3/5": sütunu açık hekim / klinik hekimi. */
+    readonly vetCountLabel = computed(() => `${this.shownVetIds().length}/${this.activeVetIds().length}`);
 
     /** Gün görünümündeki randevu blokları; ızgara o günün çalışma saati ile randevularının birleşimine ölçeklenir (aşı genişletmez). */
     private readonly viewBlocks = computed(() => layoutBlocks(this.selectedDayItems()));
@@ -924,7 +1013,16 @@ export class AppointmentsCalendarPageComponent implements OnInit {
     private readonly clock = setInterval(() => this.tick(), 60_000);
 
     constructor() {
-        inject(DestroyRef).onDestroy(() => clearInterval(this.clock));
+        const destroyRef = inject(DestroyRef);
+        const wide = window.matchMedia(WIDE_RAIL_MEDIA_QUERY);
+        const updateWide = () => this.wideScreen.set(wide.matches);
+
+        updateWide();
+        wide.addEventListener('change', updateWide);
+        destroyRef.onDestroy(() => {
+            clearInterval(this.clock);
+            wide.removeEventListener('change', updateWide);
+        });
         this.tick();
     }
 
@@ -1303,6 +1401,16 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         return this.viewMode() === mode ? 'bg-primary text-primary-contrast font-semibold shadow-sm' : 'text-muted-color hover:text-color';
     }
 
+    panelButtonClass(panel: 'clinic' | 'free'): string {
+        const base = 'inline-flex items-center gap-1.5 h-8 px-3 rounded-full border whitespace-nowrap font-semibold cursor-pointer ';
+
+        return base + (this.overlayPanel() === panel ? 'border-primary bg-primary-50 dark:bg-primary-950 text-primary' : 'border-surface bg-surface-0 dark:bg-surface-900 hover:border-primary');
+    }
+
+    toggleOverlayPanel(panel: 'clinic' | 'free'): void {
+        this.overlayPanel.set(this.overlayPanel() === panel ? null : panel);
+    }
+
     toggleRail(): void {
         this.railOpen.set(!this.railOpen());
         writeSectionOpen('rail', this.railOpen());
@@ -1489,6 +1597,11 @@ export class AppointmentsCalendarPageComponent implements OnInit {
                 return 'Randevu takvimine dön';
         }
     }
+}
+
+/** Sütun başlığı ve hekim menüsünde "Dr." öneki yazılmaz: 1280'de dar sütunda ad sığar (R-02). */
+function shortVetName(name: string): string {
+    return name.replace(/^Dr\.\s*/i, '');
 }
 
 /** Ayın ilk günü (yyyy-MM-01), `step` ay ileri ya da geri. */

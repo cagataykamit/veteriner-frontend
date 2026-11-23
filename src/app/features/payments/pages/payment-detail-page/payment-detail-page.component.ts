@@ -1,17 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
-import { appointmentTypeDisplayLabel } from '@/app/entities/appointment/utils/appointment-type.utils';
-import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
-import type { PaymentDetailVm } from '@/app/entities/payment/models/payment-vm.model';
+import type { PaymentAllocationVm, PaymentDetailVm } from '@/app/entities/payment/models/payment-vm.model';
 import { PaymentsService } from '@/app/entities/payment/services/payments.service';
 import { paymentMethodLabel } from '@/app/entities/payment/utils/payment-method.utils';
-import { DetailRelatedSummariesService } from '@/app/entities/patient/services/detail-related-summaries.service';
-import { sliceDetailRelatedList } from '@/app/shared/panel/detail-related-list.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
-import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
@@ -23,27 +17,22 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PAYMENTS_CORRECT_CLAIM, PAYMENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
-import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
-import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-link/app-detail-see-all-link.component';
-import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-detail-row-link.component';
 
 @Component({
     selector: 'app-payment-detail-page',
     standalone: true,
     imports: [
-        AppDetailRowLinkComponent, AppDetailSeeAllLinkComponent, CommonModule,
+        CommonModule,
         RouterLink,
         ButtonModule,
         AppPageHeaderComponent,
         AppDetailIdentityCardComponent,
         AppDetailSubjectLineComponent,
         AppLoadingStateComponent,
-        AppEmptyStateComponent,
         AppErrorStateComponent,
-        ReasonConfirmDialogComponent,
-        TrDateTimePipe
+        ReasonConfirmDialogComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -136,58 +125,32 @@ import { AppDetailRowLinkComponent } from '@/app/shared/ui/detail-row-link/app-d
             </app-detail-identity-card>
 
 
-            <!-- Satır ızgarası: ilgili muayeneler | son randevular (6/6, eşit yükseklik); notlar tam genişlik. -->
-            <div class="@container flex flex-col gap-4">
-                <div class="grid grid-cols-12 gap-4">
-                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-6">
-                        <h5 class="mt-0 mb-3">İlgili muayeneler</h5>
-                        @if (exLoading()) {
-                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
-                        } @else if (exError()) {
-                            <p class="text-muted-color m-0">{{ exError() }}</p>
-                        } @else if (exItemsView().total === 0) {
-                            <app-empty-state message="Bağlamsal muayene bulunamadı." />
-                        } @else {
-                            <ul class="list-none m-0 p-0">
-                                @for (row of exItemsView().displayed; track row.id) {
-                                    <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0">
-                                        <div class="flex flex-wrap gap-2 justify-between items-center">
-                                            <span class="text-muted-color text-sm">{{ row.examinedAtUtc | trDateTime }}</span>
-                                            <app-detail-row-link [link]="['/panel/examinations', row.id]" [ariaLabel]="'Muayene detayı: ' + (row.examinedAtUtc | trDateTime)" />
-                                        </div>
-                                        <div class="font-medium break-words">{{ row.visitReason }}</div>
-                                    </li>
-                                }
-                            </ul>
-                            <app-detail-see-all-link link="/panel/examinations" [queryParams]="examinationsLinkQuery(p)" [itemCount]="exItemsView().displayed.length" />
+            <!-- Ödemenin hangi ücretlere sayıldığı ilk ekranda (K-04); randevu ve muayene bağı kimlik kartında. Notlar altta. -->
+            <div class="flex flex-col gap-4">
+                <section class="card mb-0" aria-labelledby="payment-allocations-title" data-testid="payment-allocations">
+                    <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-3">
+                        <h5 id="payment-allocations-title" class="m-0">Kapatılan ücretler</h5>
+                        @if (p.clientId) {
+                            <a routerLink="/panel/charges" [queryParams]="{ clientId: p.clientId }" class="text-primary text-sm font-medium no-underline touch:touch-hit">Müşterinin ücretleri →</a>
                         }
                     </div>
-                    <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-6">
-                        <h5 class="mt-0 mb-3">Son randevular (hasta)</h5>
-                        @if (!p.petId) {
-                            <app-empty-state [message]="p.hasMultiplePets ? 'Ödeme birden fazla hastaya ait; randevu özeti gösterilemiyor.' : 'Hasta bilgisi yok; randevu özeti gösterilemiyor.'" />
-                        } @else if (apptLoading()) {
-                            <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
-                        } @else if (apptError()) {
-                            <p class="text-muted-color m-0">{{ apptError() }}</p>
-                        } @else if (apptItemsView().total === 0) {
-                            <app-empty-state [message]="copy.listEmptyMessage" />
-                        } @else {
-                            <ul class="list-none m-0 p-0">
-                                @for (row of apptItemsView().displayed; track row.id) {
-                                    <li class="py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0">
-                                        <div class="flex flex-wrap gap-2 justify-between items-center">
-                                            <span class="text-muted-color text-sm">{{ row.scheduledAtUtc | trDateTime }}</span>
-                                            <app-detail-row-link [link]="['/panel/appointments', row.id]" [ariaLabel]="'Randevu detayı: ' + (row.scheduledAtUtc | trDateTime)" />
-                                        </div>
-                                        <div class="font-medium break-words">{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
-                                    </li>
-                                }
-                            </ul>
-                            <app-detail-see-all-link link="/panel/appointments" [queryParams]="{ petId: p.petId }" [itemCount]="apptItemsView().displayed.length" />
-                        }
-                    </div>
-                </div>
+                    @if (allocLoading()) {
+                        <p class="text-muted-color text-sm m-0">{{ copy.loadingDefault }}</p>
+                    } @else if (allocError()) {
+                        <app-error-state [detail]="allocError()!" (retry)="loadAllocations(p.id)" />
+                    } @else if (allocations().length === 0) {
+                        <p class="field-empty m-0">Bu ödeme bir ücrete sayılmadı{{ p.creditedAmount > 0 ? '; tutar müşteri kredisinde' : '' }}.</p>
+                    } @else {
+                        <ul class="list-none m-0 p-0">
+                            @for (row of allocations(); track row.chargeId) {
+                                <li class="flex gap-3 items-baseline justify-between py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0" data-testid="payment-allocation">
+                                    <span class="min-w-0 break-words">{{ row.description }}</span>
+                                    <span class="shrink-0 font-semibold tabular-nums">{{ money(row.amount, p) }}</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
                 <div class="card mb-0">
                     <h5 class="mt-0 mb-3">Notlar</h5>
                     @if (p.note === emptyMark) {
@@ -215,7 +178,6 @@ export class PaymentDetailPageComponent implements OnInit {
     private readonly route = inject(ActivatedRoute);
     private readonly router = inject(Router);
     private readonly paymentsService = inject(PaymentsService);
-    private readonly related = inject(DetailRelatedSummariesService);
     private readonly auth = inject(AuthService);
     readonly ro = inject(TenantReadOnlyContextService);
 
@@ -233,30 +195,22 @@ export class PaymentDetailPageComponent implements OnInit {
     private readonly loader = new RouteEntityLoader<PaymentDetailVm>({
         fetch: (id) => this.paymentsService.getPaymentById(id),
         invalidIdMessage: 'Geçersiz ödeme.',
-        onLoaded: (x) => this.loadRelatedBlocks(x)
+        onLoaded: (x) => this.loadAllocations(x.id)
     });
 
     readonly loading = this.loader.loading;
     readonly error = this.loader.error;
     readonly payment = this.loader.value;
 
-    readonly exLoading = signal(false);
-    readonly exError = signal<string | null>(null);
-    readonly exItems = signal<ExaminationListItemVm[]>([]);
-
-    readonly apptLoading = signal(false);
-    readonly apptError = signal<string | null>(null);
-    readonly apptItems = signal<AppointmentListItemVm[]>([]);
-
-    readonly exItemsView = computed(() => sliceDetailRelatedList(this.exItems()));
-    readonly apptItemsView = computed(() => sliceDetailRelatedList(this.apptItems()));
+    readonly allocLoading = signal(false);
+    readonly allocError = signal<string | null>(null);
+    readonly allocations = signal<PaymentAllocationVm[]>([]);
 
     readonly formatPaidAtUtc = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly methodLabel = paymentMethodLabel;
-    readonly typeDisplay = appointmentTypeDisplayLabel;
-    /** İlgili muayene listesiyle aynı bağlam: hasta biliniyorsa petId, yoksa müşteri. */
-    examinationsLinkQuery(p: PaymentDetailVm): Record<string, string> | null {
-        return p.petId ? { petId: p.petId } : p.clientId ? { clientId: p.clientId } : null;
+
+    money(amount: number, p: PaymentDetailVm): string {
+        return formatMoney(amount, p.currency || 'TRY');
     }
 
     moneyLine(p: PaymentDetailVm): string {
@@ -302,30 +256,17 @@ export class PaymentDetailPageComponent implements OnInit {
         this.loader.reload();
     }
 
-    private loadRelatedBlocks(p: PaymentDetailVm): void {
-        this.exLoading.set(true);
-        this.exError.set(null);
-        this.related.loadRelatedExaminationsForPaymentContext(p.petId, p.clientId).subscribe({
+    loadAllocations(paymentId: string): void {
+        this.allocLoading.set(true);
+        this.allocError.set(null);
+        this.paymentsService.getPaymentAllocations(paymentId).subscribe({
             next: (items) => {
-                this.exItems.set(items);
-                this.exLoading.set(false);
+                this.allocations.set(items);
+                this.allocLoading.set(false);
             },
             error: (e: Error) => {
-                this.exError.set(panelHttpFailureMessage(e, 'Muayeneler yüklenemedi.'));
-                this.exLoading.set(false);
-            }
-        });
-
-        this.apptLoading.set(true);
-        this.apptError.set(null);
-        this.related.loadRecentAppointmentsForPaymentPetContext(p.petId).subscribe({
-            next: (items) => {
-                this.apptItems.set(items);
-                this.apptLoading.set(false);
-            },
-            error: (e: Error) => {
-                this.apptError.set(panelHttpFailureMessage(e, 'Randevular yüklenemedi.'));
-                this.apptLoading.set(false);
+                this.allocError.set(panelHttpFailureMessage(e, 'Kapatılan ücretler yüklenemedi.'));
+                this.allocLoading.set(false);
             }
         });
     }

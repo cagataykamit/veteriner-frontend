@@ -15,6 +15,7 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppPhoneListComponent, type PhoneListAction, type PhoneListItem } from '@/app/shared/ui/phone-list/app-phone-list.component';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -22,6 +23,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { CLIENTS_CREATE_CLAIM, CLIENTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { formatUtcIsoAsLocalDateDisplay } from '@/app/shared/utils/date.utils';
 import { RowLinkDirective } from '@/app/shared/ui/row-link/row-link.directive';
 
 type ClientsListState = {
@@ -45,6 +47,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
         ButtonModule,
         InputTextModule,
         AppListHeaderComponent,
+        AppPhoneListComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
         AppErrorStateComponent,
@@ -59,7 +62,7 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
             <div class="flex flex-col gap-4">
                 <app-list-header class="pb-3 border-b border-surface-200 dark:border-surface-700" title="Müşteriler" [count]="totalItems()">
                     <app-filter-field label="Arama" labelFor="clientSearch" [active]="isSearchActive()" width="grow">
-                        <app-search-input inputId="clientSearch" placeholder="Ad, e-posta, telefon…" [(value)]="searchInput" (searchRequested)="applySearch()" />
+                        <app-search-input inputId="clientSearch" hint="Ad, e-posta, telefon" [(value)]="searchInput" (searchRequested)="applySearch()" />
                     </app-filter-field>
                     <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                     @if (canCreateClient && !ro.mutationBlocked()) {
@@ -122,36 +125,8 @@ const CLIENTS_LIST_STATE_KEY = 'panel:clients:listState';
                             </p-table>
                         </div>
 
-                        <div class="lg:hidden space-y-3">
-                            @for (row of displayedRows(); track row.id) {
-                                <div [appRowLink]="['/panel/clients', row.id]" class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
-                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
-                                        <a [routerLink]="['/panel/clients', row.id]" class="text-primary no-underline break-words">{{ row.fullName }}</a>
-                                    </div>
-                                    <div class="space-y-2 mb-3 min-w-0 text-sm">
-                                        <div>
-                                            <span class="text-muted-color font-medium">Telefon: </span>
-                                            <span class="break-words">{{ formatClientPhoneForDisplay(row.phone) }}</span>
-                                        </div>
-                                        <div>
-                                            <span class="text-muted-color font-medium">E-posta: </span>
-                                            <span class="break-all">{{ row.email }}</span>
-                                        </div>
-                                    </div>
-                                    @if (row.createdAtUtc) {
-                                        <div class="text-xs text-muted-color mb-3 min-w-0">Kayıt: {{ row.createdAtUtc | trDate }}</div>
-                                    }
-                                    <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
-                                        <app-row-action-button action="detail" [link]="['/panel/clients', row.id]" />
-                                        @if (canUpdateClient && !ro.mutationBlocked()) {
-                                            <app-row-action-button action="edit" [link]="['/panel/clients', row.id, 'edit']" />
-                                        } @else if (canUpdateClient && ro.mutationBlocked()) {
-                                            <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        </div>
+                        <!-- Telefonda ortak gün başlıklı satır listesi (G-04): dokununca dolu alanlar ve yazılı eylemler açılır. -->
+                        <app-phone-list class="lg:hidden" [items]="phoneItems()" />
 
                         <div class="lg:hidden mt-4">
                             <p-paginator
@@ -209,7 +184,30 @@ export class ClientsListPageComponent implements OnInit {
     searchInput = '';
 
     readonly displayedRows = computed(() => this.rawItems());
-    readonly canCreateClient = this.auth.hasOperationClaim(CLIENTS_CREATE_CLAIM);
+
+    /** Telefon satırları (G-04): ad ve telefon (yoksa e-posta); açılınca dolu alanlar, boş alan yazılmaz. */
+    readonly phoneItems = computed<PhoneListItem[]>(() =>
+        this.displayedRows().map((row) => {
+            // Liste yanıtında boş alan "—" gelebilir; telefon yoksa e-posta yazılır.
+            const known = (v: string | null | undefined) => (v && v.trim() !== '—' ? v : null);
+            const phone = known(row.phone) ? formatClientPhoneForDisplay(row.phone) : null;
+            const email = known(row.email);
+            const actions: PhoneListAction[] = this.canUpdateClient && !this.ro.mutationBlocked() ? [{ label: 'Düzenle', icon: 'pi pi-pencil', link: ['/panel/clients', row.id, 'edit'] }] : [];
+
+            return {
+                id: row.id,
+                title: row.fullName,
+                sub: phone || email,
+                fields: [
+                    { label: 'Telefon', value: phone },
+                    { label: 'E-posta', value: email },
+                    { label: 'Kayıt', value: row.createdAtUtc ? formatUtcIsoAsLocalDateDisplay(row.createdAtUtc) : null }
+                ],
+                detailLink: ['/panel/clients', row.id],
+                actions
+            };
+        })
+    );    readonly canCreateClient = this.auth.hasOperationClaim(CLIENTS_CREATE_CLAIM);
     readonly canUpdateClient = this.auth.hasOperationClaim(CLIENTS_UPDATE_CLAIM);
 
     ngOnInit(): void {

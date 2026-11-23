@@ -75,7 +75,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
             <form appFormSubmit appFocusFirstField [formGroup]="form" (ngSubmit)="onSubmit()">
                 <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
-                    <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="clientId" [error]="apiFieldErrors().clientId ? apiFieldErrors().clientId : form.controls.clientId.invalid && form.controls.clientId.touched ? 'Zorunlu alan.' : null" [required]="true">
+                    <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="clientId" [error]="apiFieldErrors().clientId ? apiFieldErrors().clientId : form.controls.clientId.invalid && form.controls.clientId.touched ? 'Müşteri seçimi zorunludur.' : null" [required]="true">
                         <app-client-search inputId="clientId" formControlName="clientId" />
                     </app-form-field>
 
@@ -208,7 +208,7 @@ const DUPLICATE_MISMATCH_MESSAGE ='Bu form için ödeme daha önce kaydedilmiş 
                         <p-select inputId="method" [options]="methodOptions" formControlName="method" optionLabel="label" optionValue="value" class="w-full" />
                     </app-form-field>
                     <app-cash-register-select fieldClass="col-span-12 md:col-span-6 lg:col-span-3" [clinicId]="activeClinicId" [method]="methodValue()" [(value)]="cashRegisterId" [disabled]="busy()" />
-                    <app-form-field class="col-span-12 md:col-span-6 lg:col-span-3" label="Ödeme tarihi / saati" fieldId="paidAtLocal" [error]="form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched ? 'Yıl 4 haneli olmalıdır.' : form.controls.paidAtLocal.hasError('paymentDateTooFarPast') && form.controls.paidAtLocal.touched ? paymentDateTooFarPastMessage : apiFieldErrors().paidAtLocal ? apiFieldErrors().paidAtLocal : form.controls.paidAtLocal.hasError('required') && form.controls.paidAtLocal.touched ? 'Zorunlu alan.' : null" [required]="true">
+                    <app-form-field class="col-span-12 md:col-span-6 lg:col-span-3" label="Ödeme tarihi / saati" fieldId="paidAtLocal" [error]="form.controls.paidAtLocal.hasError('dateYearInvalid') && form.controls.paidAtLocal.touched ? 'Yıl 4 haneli olmalıdır.' : form.controls.paidAtLocal.hasError('paymentDateTooFarPast') && form.controls.paidAtLocal.touched ? paymentDateTooFarPastMessage : apiFieldErrors().paidAtLocal ? apiFieldErrors().paidAtLocal : form.controls.paidAtLocal.hasError('required') && form.controls.paidAtLocal.touched ? 'Ödeme tarihi / saati zorunludur.' : null" [required]="true">
                         <app-date-input inputId="paidAtLocal" type="datetime-local" formControlName="paidAtLocal" [min]="paymentDateMinAllowed" limit="past" />
                     </app-form-field>
                     <app-form-field class="col-span-12" label="Not" fieldId="note" [error]="apiFieldErrors().note ? apiFieldErrors().note : null">

@@ -32,7 +32,8 @@ describe('TodayOpenVisitsChipComponent', () => {
         const fixture = TestBed.createComponent(TodayOpenVisitsChipComponent);
 
         fixture.componentRef.setInput('kind', kind);
-        fixture.componentRef.setInput('text', 'Çip');
+        fixture.componentRef.setInput('label', 'Çip');
+        fixture.componentRef.setInput('value', '1');
         Object.entries(inputs).forEach(([k, v]) => fixture.componentRef.setInput(k, v));
         fixture.detectChanges();
         // Panel içeriği gövdeye eklenir: açılışı doğrudan tetikleyip çizilen şablonu oku.

@@ -41,6 +41,8 @@ export interface ReportHubSummaryDto {
         endOfDayUnchargedVisitCount: number | null;
         overdueVaccinationCount: number | null;
         lowStockProductCount: number | null;
+        /** Önceki günlerden kalan, hâlâ planlı randevu (§11); `Visits.Read` ve `Appointments.Read` yoksa null. */
+        overdueAppointmentCount: number | null;
     };
 }
 

@@ -63,7 +63,7 @@ export type VisitCorrectionTarget = Pick<TodayItemVm, 'visitId' | 'petName' | 'c
                                 </ng-template>
                             </p-select>
                             @if (form.controls.action.invalid && form.controls.action.touched) {
-                                <small class="text-danger">Zorunlu alan.</small>
+                                <small class="text-danger">Yapılacak düzeltme zorunludur.</small>
                             }
                             @if (selectedAction() === 'Mistaken') {
                                 <p class="text-sm text-muted-color mt-2 mb-0">{{ mistakenDescription }}</p>

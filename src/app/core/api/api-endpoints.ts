@@ -327,6 +327,8 @@ export const ApiEndpoints = {
         /** Query: `Page`, `PageSize`, `Search`, `Method`, `paidFromUtc`, `paidToUtc` (iki uç dahil) (+ `ClientId`, `PetId`, `clinicId`). */
         list: () => `/api/v1/payments`,
         byId: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}`,
+        /** GET: ödemenin ücretlere tahsisleri (hangi ücrete ne kadar; `Payments.Read`). */
+        allocations: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}/allocations`,
         /** POST `{ reason }`; 204 (`Payments.Correct`). */
         void: (id: string) => `/api/v1/payments/${encodeURIComponent(id)}/void`
     },

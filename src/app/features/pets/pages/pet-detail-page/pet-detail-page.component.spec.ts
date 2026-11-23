@@ -20,6 +20,7 @@ import { ImportedHistoryService } from '@/app/entities/imported-history/services
 import { VitalMeasurementsService } from '@/app/entities/vital-measurement/services/vital-measurements.service';
 import { AiService } from '@/app/entities/ai/services/ai.service';
 import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
+import { VisitsService } from '@/app/entities/visit/services/visits.service';
 
 const pet: PetDetailVm = {
     petAlerts: NO_PET_ALERTS,
@@ -114,6 +115,7 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
                 { provide: ImportedHistoryService, useValue: { getPetClinicalRecords: () => of({ items: [], page: 1, pageSize: 10, totalItems: 0, totalPages: 0 }) } },
                 { provide: VitalMeasurementsService, useValue: { getSeries: () => of({ points: [], truncated: false, examinationsOmitted: false }) } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
+                { provide: VisitsService, useValue: { startVisit: () => of({}), getVeterinarians: () => of([]) } },
                 { provide: AppointmentsService, useValue: { getAppointments: () => of({ items: [], page: 1, pageSize: 200, totalItems: 0, totalPages: 0 }) } },
                 {
                     provide: PetsService,
@@ -161,14 +163,17 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
 
         expect(el().querySelector('[data-testid="pet-deceased-badge"]')?.textContent).toContain('14.10.2026');
         expect(el().querySelector('a[href^="/panel/examinations/new"]')).toBeNull();
-        expect(el().querySelector('[data-testid="pet-status-action"]')?.textContent).toContain('Aktife al');
+        // Durum eylemi başlıkta değil, "…" menüsünde (M-03).
+        expect(el().querySelector('[data-testid="pet-more-actions"]')).not.toBeNull();
+        expect(fixture.componentInstance.moreMenuItems().map((i) => i.label)).toEqual(['Aktife al']);
     });
 
     it('aktif hayvanda rozet yok, "Vefat olarak işaretle" sunulur; durum yanıtı kartı ve rowVersion\'ı günceller', () => {
         create();
         expect(el().querySelector('[data-testid="pet-deceased-badge"]')).toBeNull();
         expect(el().querySelector('a[href^="/panel/examinations/new"]')).not.toBeNull();
-        expect(el().querySelector('[data-testid="pet-status-action"]')?.textContent).toContain('Vefat olarak işaretle');
+        expect(el().textContent).not.toContain('Vefat olarak işaretle');
+        expect(fixture.componentInstance.moreMenuItems().map((i) => i.label)).toEqual(['Vefat olarak işaretle']);
 
         fixture.componentInstance.onStatusChanged({ status: 'Deceased', deceasedOn: null, rowVersion: 'new' });
         fixture.detectChanges();
@@ -178,10 +183,23 @@ describe('PetDetailPageComponent (hasta kartı)', () => {
         expect(el().querySelector('a[href^="/panel/examinations/new"]')).toBeNull();
     });
 
+    it('son geliş bekliyorsa (klinikte) eylem çubuğu Muayene başlat yerine Muayeneye al gösterir (M-02)', () => {
+        create();
+        fixture.componentInstance.summary.set({ ...summary, lastVisit: { state: 'Ok', data: { id: 'vis1', arrivedAtUtc: '2026-10-14T08:00:00Z', careStatus: 'Waiting', clinicName: null } } });
+        fixture.detectChanges();
+
+        expect(fixture.componentInstance.openVisit()).toEqual({ visitId: 'vis1', waiting: true });
+        expect(el().querySelector('a[href^="/panel/examinations/new"]')).toBeNull();
+        expect(el().querySelector('[data-testid="patient-action-bar"]')?.textContent).toContain('Muayeneye al');
+
+        fixture.componentInstance.summary.set({ ...summary, lastVisit: { state: 'Ok', data: { id: 'vis1', arrivedAtUtc: '2026-10-14T08:00:00Z', careStatus: 'Completed', clinicName: null } } });
+        expect(fixture.componentInstance.openVisit()).toBeNull();
+    });
+
     it('Pets.Update yoksa durum eylemi sunulmaz', () => {
         claims = new Set(['Examinations.Create']);
         create();
-        expect(el().querySelector('[data-testid="pet-status-action"]')).toBeNull();
+        expect(el().querySelector('[data-testid="pet-more-actions"]')).toBeNull();
     });
 
     it('başlıkta ad ve kimlik satırı (muayene kilosuyla), Düzenle, Yapılacaklar, klinik özet ve zaman çizelgesi tek sayfada', () => {

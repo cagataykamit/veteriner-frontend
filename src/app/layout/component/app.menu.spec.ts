@@ -318,16 +318,16 @@ describe('AppMenu', () => {
             para.focus();
             key(para, 'ArrowRight');
             fixture.detectChanges();
-            expect(itemLabels()).toEqual(['Ücretler', 'Ücret bekleyenler', 'Ödemeler', 'Satışlar', 'e-Belgeler']);
+            expect(itemLabels()).toEqual(['Ücretler', 'Ücret bekleyenler', 'Ödemeler', 'Satışlar', 'e-Belgeler', 'Kasa']);
             expect(document.activeElement).toBe(items()[0]);
 
             key(items()[0], 'ArrowDown');
             expect(document.activeElement).toBe(items()[1]);
             key(items()[1], 'ArrowUp');
             key(items()[0], 'ArrowUp');
-            expect(document.activeElement).toBe(items()[4]);
+            expect(document.activeElement).toBe(items()[5]);
 
-            key(items()[4], 'Escape');
+            key(items()[5], 'Escape');
             fixture.detectChanges();
             expect(panels()).toEqual([]);
             expect(document.activeElement).toBe(para);

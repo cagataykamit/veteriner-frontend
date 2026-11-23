@@ -47,7 +47,7 @@
                     @if (kpi.deltaText) {
                         <div
                             class="text-sm mt-2"
-                            [class.text-green-600]="kpi.delta?.direction === 'up'"
+                            [class.text-success]="kpi.delta?.direction === 'up'"
                             [class.text-danger]="kpi.delta?.direction === 'down'"
                             [class.text-muted-color]="!kpi.delta || kpi.delta.direction === 'flat'"
                         >
@@ -66,8 +66,9 @@
 
     @if (collectionRatio(); as ratio) {
         <p class="text-sm text-muted-color mt-0 mb-4" data-testid="perf-collection-ratio">
+            <!-- Açıklama simgenin arkasında kalınca %100'ü geçen oran yanlış gibi görünüyordu (Y-02); kısa açıklama satırda. -->
             Tahsilat / ciro: <span class="font-medium text-color">{{ ratio }}</span>
-            <i class="pi pi-info-circle text-xs ml-1" title="Önceki dönemin ücretlerine yapılan ödemeler de tahsilata girer; bu yüzden %100'ü geçebilir." aria-label="Önceki dönemin ücretlerine yapılan ödemeler de tahsilata girer; bu yüzden %100'ü geçebilir."></i>
+            · önceki dönemlerin ücretlerine yapılan ödemeler de sayıldığı için %100'ü geçebilir.
         </p>
     }
 

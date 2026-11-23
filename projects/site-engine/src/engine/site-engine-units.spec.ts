@@ -169,6 +169,20 @@ describe('buildSiteVm', () => {
         expect(forbiddenCopy('Tamamen açık bir yaklaşım; sözcük içinde kalanlar sayılmaz: yaşamama')).toEqual([]);
     });
 
+    it('iletişim yolu ana sayfadaki bölüme, yoksa iletişim sayfasına gider; ikisi de yoksa bağlantı yoktur (W-02)', () => {
+        const config = sampleConfig();
+
+        expect(buildSiteVm(config, voice, NOW).contactPath).toBe('/#contact');
+
+        const noSection = { ...config, structure: { ...config.structure, homeSections: config.structure.homeSections.filter((section) => section.type !== 'contact') } };
+
+        expect(buildSiteVm(noSection, voice, NOW).contactPath).toBe('/iletisim');
+
+        const bare = { ...noSection, structure: { ...noSection.structure, pages: { ...noSection.structure.pages, iletisim: false } } };
+
+        expect(buildSiteVm(bare, voice, NOW).contactPath).toBeNull();
+    });
+
     it('telefon ve e-posta güvenli bağlantıya çevrilir', () => {
         const vm = buildSiteVm(patchClinic(sampleConfig(), { phone: '+90 (555) 000 00 00', whatsapp: '0555 000 00 00', email: 'ornek@example.com' }), voice, NOW);
 

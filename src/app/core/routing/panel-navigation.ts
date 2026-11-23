@@ -7,6 +7,7 @@ import {
     APPOINTMENTS_READ_CLAIM,
     BREEDS_CREATE_CLAIM,
     BREEDS_UPDATE_CLAIM,
+    CASH_REGISTERS_MANAGE_CLAIM,
     CASH_REGISTERS_READ_CLAIM,
     CHARGES_READ_CLAIM,
     CLINICAL_SNIPPETS_CREATE_CLAIM,
@@ -136,6 +137,10 @@ export const HOSPITALIZATION_WARDS_ROUTE = `${DEFINITIONS_ROUTE}/hospitalization
 export const APPOINTMENT_REASONS_ROUTE = `${DEFINITIONS_ROUTE}/appointment-reasons`;
 export const APPOINTMENT_RESOURCES_ROUTE = `${DEFINITIONS_ROUTE}/appointment-resources`;
 export const VACCINATION_SCHEDULE_ROUTE = `${DEFINITIONS_ROUTE}/vaccination-schedule`;
+/** Kasa ve gelir/gider türü tanımları (S-05): Raporlar › Kasa sayfasından Tanımlar'a taşındı. */
+export const CASH_REGISTER_DEFINITIONS_ROUTE = `${DEFINITIONS_ROUTE}/cash-registers`;
+/** Para › Kasa sekmesi (S-05): bakiye, para girişi / çıkışı / aktarım ve bugünün hareketleri. */
+export const CASH_REGISTER_ROUTE = '/panel/cash-registers';
 export const ONLINE_BOOKING_SETTINGS_ROUTE = '/panel/settings/online-booking';
 export const APPOINTMENT_REQUESTS_ROUTE = '/panel/appointments/requests';
 
@@ -229,12 +234,13 @@ export const REPORT_SECTIONS: readonly CardSection[] = [
                 description: 'Günün ücret, tahsilat ve açık işleri; işlem dökümü ve yazdırma.'
             },
             {
-                label: 'Kasa',
+                // Adres eskisiyle aynı (rapor anahtarı `cash-registers`); günlük işlem Para › Kasa sekmesinde (S-05).
+                label: 'Kasa hareketleri',
                 icon: 'pi pi-fw pi-box',
                 route: `${REPORTS_ROUTE}/cash-registers`,
                 claims: [CASH_REGISTERS_READ_CLAIM],
                 planFeature: 'CashManagement',
-                description: 'Kasa hareketleri, kasaya giriş/çıkış, kasalar arası aktarım ve kasa tanımları.'
+                description: 'Kasa bazında nakit hareketleri; tarih aralığı, CSV ve Excel.'
             },
             {
                 label: 'Ödeme hareketleri',
@@ -406,7 +412,9 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
                 { label: 'Ücret bekleyenler', route: '/panel/charges/pending', claims: [CHARGES_READ_CLAIM] },
                 { label: 'Ödemeler', route: '/panel/payments', claims: [PAYMENTS_READ_CLAIM] },
                 { label: 'Satışlar', route: '/panel/sales', claims: [SALES_READ_CLAIM] },
-                { label: 'e-Belgeler', route: '/panel/e-documents', claims: [EDOCUMENTS_READ_CLAIM], badge: 'eDocumentReminders' }
+                { label: 'e-Belgeler', route: '/panel/e-documents', claims: [EDOCUMENTS_READ_CLAIM], badge: 'eDocumentReminders' },
+                // Kasa günlük işlem aracıdır (S-05 A): para işinin sekmesi; izin ve paket kilidi eski Raporlar › Kasa kartıyla aynı.
+                { label: 'Kasa', route: CASH_REGISTER_ROUTE, claims: [CASH_REGISTERS_READ_CLAIM], planFeature: 'CashManagement' }
             ], { badge: 'eDocumentReminders', badgeText: 'belgesi kesilmemiş ödenmiş ücret' }),
             tabbedEntry('Stok', 'fa-solid fa-fw fa-boxes-stacked', [
                 { label: 'Ürünler', route: '/panel/products', claims: [PRODUCTS_READ_CLAIM] },
@@ -521,6 +529,15 @@ export const DEFINITION_ENTRIES: readonly CardEntry[] = [
         claims: [VACCINE_DEFINITIONS_UPDATE_CLAIM],
         planFeature: 'VaccinationWizard',
         description: 'Türe göre aşıların başlangıç haftası, doz sayısı ve tekrarı; hasta kartında aşı planı önerisi buradan çıkar.'
+    },
+    {
+        label: 'Kasalar ve gelir/gider türleri',
+        icon: 'pi pi-fw pi-box',
+        route: CASH_REGISTER_DEFINITIONS_ROUTE,
+        // Tanımları kasa yönetim yetkisi düzenler (eski Raporlar › Kasa sayfasındaki tanım kartıyla aynı izin ve paket kilidi).
+        claims: [CASH_REGISTERS_MANAGE_CLAIM],
+        planFeature: 'CashManagement',
+        description: 'Kasalar ve kasaya giriş/çıkışın gelir/gider türleri; silinmez, pasife alınır.'
     }
 ];
 
@@ -622,7 +639,7 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 icon: 'pi pi-fw pi-book',
                 route: DEFINITIONS_ROUTE,
                 claims: DEFINITION_ENTRIES.flatMap((e) => e.claims ?? []),
-                description: 'Tür, ırk, ürün kategorisi, tanı/şikâyet sözlüğü, muayene şablonları, metin parçaları, yatış konumları, oda ve cihazlar gibi referans kayıtları.'
+                description: 'Tür, ırk, ürün kategorisi, tanı/şikâyet sözlüğü, muayene şablonları, metin parçaları, yatış konumları, oda ve cihazlar, kasalar gibi referans kayıtları.'
             }
         ]
     },

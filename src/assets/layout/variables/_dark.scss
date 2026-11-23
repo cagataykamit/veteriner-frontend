@@ -15,11 +15,19 @@
     }
 }
 
-/* Koyu temada gri düğme/sekme, gri kart üstünde sınırsız kalıyordu (bileşen sınırı ~1.2:1); WCAG 1.4.11 için ≥3:1 sınır. */
+/*
+ * Koyu temada gri düğme/sekme, gri kart üstünde sınırsız kalıyordu (bileşen sınırı ~1.2:1); WCAG 1.4.11 için ≥3:1 sınır.
+ * Segment grubunda (SelectButton) sınır tek tek seçilmeyen seçeneklere değil grubun dışına çizilir: parlak çerçeve seçili
+ * olmayanı seçiliden ağır gösteriyordu (G-15).
+ */
 :root[class*='app-dark'] {
     .p-button.p-button-secondary:not(.p-button-text),
-    .p-togglebutton:not(.p-togglebutton-checked) {
+    .p-togglebutton:not(.p-togglebutton-checked):not(.p-selectbutton .p-togglebutton) {
         border: 1px solid var(--p-surface-500);
+    }
+
+    .p-selectbutton {
+        box-shadow: 0 0 0 1px var(--p-surface-500);
     }
 }
 

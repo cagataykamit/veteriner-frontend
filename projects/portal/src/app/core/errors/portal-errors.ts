@@ -92,6 +92,8 @@ export const PORTAL_NETWORK_ERROR_MESSAGE = 'Sunucuya ulaşılamadı. İnternet 
 export const PORTAL_RATE_LIMIT_MESSAGE = 'Çok fazla deneme yapıldı. Lütfen biraz bekleyip tekrar deneyin.';
 export const PORTAL_SERVER_ERROR_MESSAGE = 'Beklenmeyen bir sorun oluştu. Lütfen daha sonra tekrar deneyin.';
 export const PORTAL_GENERIC_ERROR_MESSAGE = 'İşlem tamamlanamadı. Lütfen tekrar deneyin.';
+/** Tek kullanımlık kod (giriş, parola sıfırlama) doğrulanamadı (PO-05): kısa; sunucu yanlış / süresi dolmuş / kilit ayrımı yapmaz. */
+export const PORTAL_CODE_INVALID_MESSAGE = 'Kod yanlış ya da süresi dolmuş. Yeni kod isteyin.';
 /** `/me` bağında `isClinicPortalEnabled=false` (§12): klinik seçimi ve kabuk aynı metni gösterir. */
 export const PORTAL_CLINIC_CLOSED_MESSAGE = 'Bu klinik portal erişimini geçici olarak kapattı; bilgi için kliniğinizle iletişime geçin.';
 /** `/me` bağında `isPortalServiceAvailable=false` (§12.1): ticari bilgi (paket) yazılmaz; sahip hakları açık kalır. */

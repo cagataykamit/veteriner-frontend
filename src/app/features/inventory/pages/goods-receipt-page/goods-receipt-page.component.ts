@@ -140,7 +140,82 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
                         @if (scanNotice(); as notice) {
                             <p class="text-danger text-sm mt-0 mb-2" role="alert" data-testid="gr-scan-notice">{{ notice }}</p>
                         }
-                        <div class="overflow-x-auto">
+                        @if (phone()) {
+                            <!-- Telefonda (S-03): girilen satır tek satır özete iner, aynı anda tek satır açık düzenlenir; eksik zorunlu seri/lot özet satırında kırmızı. -->
+                            <div class="rounded-border border border-surface-200 dark:border-surface-700 overflow-hidden" data-testid="gr-phone-lines">
+                                @for (line of lines.controls; track line; let i = $index) {
+                                    @if (openLine() === line) {
+                                        <div class="p-3 flex flex-col gap-3 border-b border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800" [attr.data-testid]="'gr-row-' + i">
+                                            <div class="flex items-start gap-2">
+                                                <span class="pt-3 text-sm text-muted-color tabular-nums w-5 shrink-0">{{ i + 1 }}</span>
+                                                <div class="flex-1 min-w-0">
+                                                    <label class="block text-xs font-medium text-muted-color mb-1" [attr.for]="'gr-product-' + i">Ürün *</label>
+                                                    <ng-container *ngTemplateOutlet="productField; context: { $implicit: line, i: i }" />
+                                                </div>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label class="block text-xs font-medium text-muted-color mb-1" [attr.for]="'gr-qty-' + i">Miktar *</label>
+                                                    <input pInputText class="w-full" [id]="'gr-qty-' + i" type="number" inputmode="decimal" step="any" min="0" [formControl]="line.controls.quantity" [class.p-invalid]="line.controls.quantity.invalid && line.controls.quantity.touched" />
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-medium text-muted-color mb-1" [attr.for]="'gr-cost-' + i">Birim maliyet</label>
+                                                    <input pInputText class="w-full" [id]="'gr-cost-' + i" type="number" inputmode="decimal" step="0.01" min="0" [formControl]="line.controls.unitCost" />
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-medium text-muted-color mb-1" [attr.for]="'gr-lot-' + i">Seri / lot no @if (requiresLot(line)) {<span class="text-danger">· Zorunlu</span>}</label>
+                                                    <input
+                                                        pInputText
+                                                        class="w-full"
+                                                        [id]="'gr-lot-' + i"
+                                                        type="text"
+                                                        autocomplete="off"
+                                                        [formControl]="line.controls.lotNumber"
+                                                        [attr.maxlength]="lotMax"
+                                                        [attr.aria-required]="requiresLot(line)"
+                                                        [class.p-invalid]="line.controls.lotNumber.touched && line.hasError('lotRequired')"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-medium text-muted-color mb-1" [attr.for]="'gr-expiry-' + i">SKT @if (requiresLot(line)) {<span class="text-danger">· Zorunlu</span>}</label>
+                                                    <app-date-input [inputId]="'gr-expiry-' + i" type="date" [formControl]="line.controls.expiryDate" limit="planned" />
+                                                </div>
+                                            </div>
+                                            @if (rowNotes(line, i); as notes) {
+                                                <ng-container *ngTemplateOutlet="rowNotesField; context: { $implicit: notes, line: line, i: i }" />
+                                            }
+                                            <div class="flex items-center gap-2">
+                                                <button pButton type="button" (click)="closeLine(line)" data-testid="gr-line-done"><i class="p-button-icon pi pi-check"></i>Tamam</button>
+                                                <button pButton type="button" severity="danger" [outlined]="true" [disabled]="lines.length === 1" (click)="removeLine(i)" data-testid="gr-line-remove"><i class="p-button-icon pi pi-trash"></i>Sil</button>
+                                                <span class="ml-auto text-sm">Tutar <b class="tabular-nums">{{ lineTotalText(line) }}</b></span>
+                                            </div>
+                                        </div>
+                                    } @else {
+                                        @let s = lineSummary(line, i);
+                                        <button
+                                            type="button"
+                                            class="w-full flex items-center gap-3 min-h-(--touch-target) px-3 py-2 text-left bg-transparent border-0 border-b border-surface-200 dark:border-surface-700 cursor-pointer text-color"
+                                            aria-expanded="false"
+                                            (click)="openLine.set(line)"
+                                            [attr.data-testid]="'gr-line-summary-' + i"
+                                        >
+                                            <span class="text-sm text-muted-color tabular-nums w-5 shrink-0">{{ i + 1 }}</span>
+                                            <span class="flex-1 min-w-0">
+                                                <span class="block truncate font-medium">{{ s.title }}</span>
+                                                @if (s.detail) {
+                                                    <span class="block truncate text-sm text-muted-color tabular-nums">{{ s.detail }}</span>
+                                                }
+                                                @if (s.problem) {
+                                                    <span class="block text-sm text-danger" data-testid="gr-line-problem"><i class="pi pi-exclamation-circle text-xs mr-1" aria-hidden="true"></i>{{ s.problem }}</span>
+                                                }
+                                            </span>
+                                            <span class="shrink-0 text-sm font-semibold tabular-nums">{{ lineTotalText(line) }}</span>
+                                            <i class="pi pi-chevron-down text-xs text-muted-color" aria-hidden="true"></i>
+                                        </button>
+                                    }
+                                }
+                            </div>
+                        } @else {                        <div class="overflow-x-auto">
                             <table class="w-full border-collapse" style="min-width: 52rem" formArrayName="lines">
                                 <thead>
                                     <tr class="text-left text-sm text-muted-color">
@@ -159,34 +234,7 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
                                         <tr [formGroupName]="i" (keydown.enter)="onRowEnter($event, i)" class="align-top" [attr.data-testid]="'gr-row-' + i">
                                             <td class="p-2 text-muted-color text-sm pt-4">{{ i + 1 }}</td>
                                             <td class="p-2">
-                                                <p-autocomplete
-                                                    [inputId]="'gr-product-' + i"
-                                                    formControlName="product"
-                                                    [suggestions]="suggestions()"
-                                                    (completeMethod)="onProductSearch($event)"
-                                                    optionLabel="label"
-                                                    [delay]="250"
-                                                    [minQueryLength]="2"
-                                                    [autoHighlight]="true"
-                                                    [fluid]="true"
-                                                    placeholder="Barkod veya ürün adı"
-                                                    [showEmptyMessage]="true"
-                                                    [appInlineCreate]="productCreate()"
-                                                    appendTo="body"
-                                                >
-                                                    <ng-template #empty><app-inline-create-option /></ng-template>
-                                                    <ng-template #item let-p>
-                                                        <div class="flex flex-col">
-                                                            <span>{{ p.label }}</span>
-                                                            @if (p.barcode) {
-                                                                <span class="text-xs text-muted-color">Barkod: {{ p.barcode }}</span>
-                                                            }
-                                                        </div>
-                                                    </ng-template>
-                                                </p-autocomplete>
-                                                @if (line.controls.product.touched && line.hasError('productMissing')) {
-                                                    <small class="text-danger">Listeden bir ürün seçin.</small>
-                                                }
+                                                <ng-container *ngTemplateOutlet="productField; context: { $implicit: line, i: i }" />
                                             </td>
                                             <td class="p-2">
                                                 <input
@@ -231,16 +279,8 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
                                         @if (rowNotes(line, i); as notes) {
                                             <tr [attr.data-testid]="'gr-row-notes-' + i">
                                                 <td></td>
-                                                <td colspan="7" class="px-2 pb-3 flex flex-col gap-1 text-sm">
-                                                    @for (n of notes.errors; track n) {
-                                                        <span class="text-red-600 dark:text-red-400" role="alert">{{ n }}</span>
-                                                    }
-                                                    @if (notes.expired) {
-                                                        <label class="flex items-start gap-2 cursor-pointer" [formGroupName]="i">
-                                                            <input type="checkbox" formControlName="acknowledgeExpired" [attr.data-testid]="'gr-ack-' + i" class="mt-0.5" />
-                                                            <span>Bu satırın son kullanma tarihi geçmiş; süresi geçmiş partiyi kabul ediyorum.</span>
-                                                        </label>
-                                                    }
+                                                <td colspan="7" class="px-2 pb-3">
+                                                    <ng-container *ngTemplateOutlet="rowNotesField; context: { $implicit: notes, line: line, i: i }" />
                                                 </td>
                                             </tr>
                                         }
@@ -248,6 +288,7 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
                                 </tbody>
                             </table>
                         </div>
+                        }
                         <div class="flex flex-wrap items-center justify-between gap-3 mt-3">
                             <div class="flex items-center gap-3">
                                 <button pButton type="button" severity="secondary" [disabled]="lines.length >= maxLines" (click)="addLine()"><i class="p-button-icon pi pi-plus"></i>Satır ekle</button>
@@ -272,6 +313,50 @@ function toProductPick(p: Pick<ProductListItemVm, 'id' | 'name' | 'sku' | 'barco
                 </form>
             }
         </div>
+        <!-- Ürün alanı ve satır notları tabloda ve telefonda aynı (tek yer); alan grubu bağlamı gerekmesin diye [formControl]. -->
+        <ng-template #productField let-line let-i="i">
+            <p-autocomplete
+                [inputId]="'gr-product-' + i"
+                [formControl]="line.controls.product"
+                [suggestions]="suggestions()"
+                (completeMethod)="onProductSearch($event)"
+                optionLabel="label"
+                [delay]="250"
+                [minQueryLength]="2"
+                [autoHighlight]="true"
+                [fluid]="true"
+                placeholder="Barkod veya ürün adı"
+                [showEmptyMessage]="true"
+                [appInlineCreate]="productCreate()"
+                appendTo="body"
+            >
+                <ng-template #empty><app-inline-create-option /></ng-template>
+                <ng-template #item let-p>
+                    <div class="flex flex-col">
+                        <span>{{ p.label }}</span>
+                        @if (p.barcode) {
+                            <span class="text-xs text-muted-color">Barkod: {{ p.barcode }}</span>
+                        }
+                    </div>
+                </ng-template>
+            </p-autocomplete>
+            @if (line.controls.product.touched && line.hasError('productMissing')) {
+                <small class="text-danger">Listeden bir ürün seçin.</small>
+            }
+        </ng-template>
+        <ng-template #rowNotesField let-notes let-line="line" let-i="i">
+            <div class="flex flex-col gap-1 text-sm">
+                @for (n of notes.errors; track n) {
+                    <span class="text-danger" role="alert">{{ n }}</span>
+                }
+                @if (notes.expired) {
+                    <label class="flex items-start gap-2 cursor-pointer">
+                        <input type="checkbox" [formControl]="line.controls.acknowledgeExpired" [attr.data-testid]="'gr-ack-' + i" class="mt-0.5" />
+                        <span>Bu satırın son kullanma tarihi geçmiş; süresi geçmiş partiyi kabul ediyorum.</span>
+                    </label>
+                }
+            </div>
+        </ng-template>
         <app-quick-product-dialog [(visible)]="quickProductOpen" [initialName]="quickProductName()" [kinds]="stockKinds" (productCreated)="onQuickProductCreated($event)" />
     `
 })
@@ -315,6 +400,10 @@ export class GoodsReceiptPageComponent implements OnInit, HasUnsavedChanges {
     readonly submitError = signal<string | null>(null);
     readonly result = signal<GoodsReceiptResultVm | null>(null);
     readonly scanNotice = signal<string | null>(null);
+    /** Telefon genişliği (S-03): ürün satırları tablo yerine özet satırlar; aynı anda tek satır açık. */
+    readonly phone = signal(false);
+    /** Telefonda açık düzenlenen satır; yeni ve barkodla dolan satır açılır. */
+    readonly openLine = signal<GoodsReceiptLineGroup | null>(null);
     private readonly lineErrors = signal<Readonly<Record<number, string>>>({});
 
     /** Form açılışında bir kez üretilir; hata sonrası tekrar denemelerde aynı kalır, yalnız yeni mal kabulde yenilenir. */
@@ -341,6 +430,8 @@ export class GoodsReceiptPageComponent implements OnInit, HasUnsavedChanges {
     }
 
     ngOnInit(): void {
+        this.watchPhoneViewport();
+        this.openLine.set(this.lines.at(0));
         const q = this.route.snapshot.queryParamMap;
 
         this.loadClinics(q.get('clinicId')?.trim() || this.auth.getClinicId()?.trim() || '');
@@ -397,9 +488,10 @@ export class GoodsReceiptPageComponent implements OnInit, HasUnsavedChanges {
 
                 line.patchValue({ product: toProductPick(p) });
                 line.markAsDirty();
+                this.openLine.set(line);
                 const index = this.lines.controls.indexOf(line);
 
-                setTimeout(() => document.querySelector<HTMLInputElement>(`[data-testid="gr-row-${index}"] input[formcontrolname="quantity"]`)?.focus());
+                setTimeout(() => document.querySelector<HTMLInputElement>(`[data-testid="gr-row-${index}"] input[formcontrolname="quantity"], #gr-qty-${index}`)?.focus());
             },
             error: (e: Error) => this.scanNotice.set(e.message)
         });
@@ -414,12 +506,17 @@ export class GoodsReceiptPageComponent implements OnInit, HasUnsavedChanges {
 
         this.lines.push(line);
         this.lines.markAsDirty();
+        this.openLine.set(line);
 
         return line;
     }
 
     removeLine(index: number): void {
         if (this.lines.length > 1) {
+            if (this.openLine() === this.lines.at(index)) {
+                this.openLine.set(null);
+            }
+
             this.lines.removeAt(index);
             this.lines.markAsDirty();
             this.lineErrors.set({});
@@ -479,8 +576,41 @@ export class GoodsReceiptPageComponent implements OnInit, HasUnsavedChanges {
         return errors.length > 0 || expired ? { errors, expired } : null;
     }
 
-    onSubmit(): void {
-        if (this.ro.mutationBlocked() || this.submitting()) {
+    /** "Tamam": satır özete iner; eksik zorunlu alan özet satırında görünsün diye dokunulmuş sayılır. */
+    closeLine(line: GoodsReceiptLineGroup): void {
+        line.markAllAsTouched();
+        this.openLine.set(null);
+    }
+
+    /** Telefon özet satırı: ürün; miktar × birim maliyet · lot · SKT (ay.yıl); eksik zorunlu alan ya da satır hatası kırmızı. */
+    lineSummary(line: GoodsReceiptLineGroup, index: number): { title: string; detail: string; problem: string | null } {
+        const { product, quantity, unitCost, lotNumber, expiryDate } = line.getRawValue();
+        const title = product ? (typeof product === 'string' ? product : product.label) : 'Boş satır';
+        const detail = product
+            ? [
+                  quantity != null && `${quantity} × ${MONEY.format(Number(unitCost) || 0)}`,
+                  lotNumber?.trim() && `Lot ${lotNumber.trim()}`,
+                  expiryDate && `SKT ${expiryDate.slice(5, 7)}.${expiryDate.slice(0, 4)}`
+              ]
+                  .filter(Boolean)
+                  .join(' · ')
+            : 'Dokunup ürün seçin';
+        const missing =
+            product && line.hasError('productMissing') ? 'Listeden bir ürün seçin' : line.hasError('lotRequired') || line.hasError('expiryRequired') ? 'Seri/lot ve SKT zorunlu' : null;
+
+        return { title, detail, problem: this.lineErrors()[index] ?? missing ?? this.rowNotes(line, index)?.errors[0] ?? null };
+    }
+
+    private watchPhoneViewport(): void {
+        const query = window.matchMedia('(max-width: 575px)');
+        const update = () => this.phone.set(query.matches);
+
+        update();
+        query.addEventListener('change', update);
+        this.destroyRef.onDestroy(() => query.removeEventListener('change', update));
+    }
+
+    onSubmit(): void {        if (this.ro.mutationBlocked() || this.submitting()) {
             return;
         }
 
@@ -515,6 +645,7 @@ export class GoodsReceiptPageComponent implements OnInit, HasUnsavedChanges {
         this.form.reset({ clinicId });
         this.lines.clear();
         this.lines.push(createGoodsReceiptLineGroup(this.fb));
+        this.openLine.set(this.lines.at(0));
         this.requestId = crypto.randomUUID();
         this.attempted.set(false);
         this.submitError.set(null);

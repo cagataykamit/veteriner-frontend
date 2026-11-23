@@ -56,6 +56,7 @@ export const PANEL_COPY = {
     registerFilterProduct: 'Ürün',
     registerFilterVeterinarian: 'Veteriner',
     reportsApplyFilter: 'Filtrele',
+    reportsExport: 'Dışa aktar',
     reportsExportCsv: 'CSV indir',
     reportsExportXlsx: 'Excel indir',
     reportsExportPdf: 'PDF indir',
@@ -263,6 +264,8 @@ export const REPORT_HUB_COPY = {
         endOfDayAction: 'Gün sonunu aç',
         overdueVaccinations: (n: number) => `${n} aşının zamanı son 1 ayda geçti`,
         overdueVaccinationsHint: 'Sahiplerine hatırlatın · Aşılar',
+        overdueAppointments: (n: number) => `${n} randevu gecikmiş, hâlâ planlı`,
+        overdueAppointmentsHint: 'Arayın ya da iptal edin · Randevu takvimi',
         lowStock: (n: number) => `${n} üründe stok asgari seviyenin altında`,
         lowStockHint: 'Sipariş zamanı · Stok durumu'
     },

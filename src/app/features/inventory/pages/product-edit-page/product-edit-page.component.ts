@@ -60,6 +60,13 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                 <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
                     <app-form-error-summary />
                     <div class="grid grid-cols-12 gap-4">
+                        <div [class]="canReadCategories ? 'col-span-12 md:col-span-6 flex flex-col gap-1' : 'col-span-12 flex flex-col gap-1'">
+                            <label for="productNameEdit" class="block text-sm font-medium text-muted-color">Ürün adı *</label>
+                            <input id="productNameEdit" pInputText class="w-full" type="text" formControlName="name" autocomplete="off" />
+                            @if (form.controls.name.invalid && form.controls.name.touched) {
+                                <small class="text-danger">Ürün adı zorunludur.</small>
+                            }
+                        </div>
                         @if (canReadCategories) {
                             <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
                                 <label for="productCategoryIdEdit" class="block text-sm font-medium text-muted-color">Kategori</label>
@@ -82,13 +89,6 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                                 </p-select>
                             </div>
                         }
-                        <div [class]="canReadCategories ? 'col-span-12 md:col-span-6 flex flex-col gap-1' : 'col-span-12 flex flex-col gap-1'">
-                            <label for="productNameEdit" class="block text-sm font-medium text-muted-color">Ürün adı *</label>
-                            <input id="productNameEdit" pInputText class="w-full" type="text" formControlName="name" autocomplete="off" />
-                            @if (form.controls.name.invalid && form.controls.name.touched) {
-                                <small class="text-danger">Ürün adı zorunludur.</small>
-                            }
-                        </div>
                         <div class="col-span-12 md:col-span-6 flex flex-col gap-1">
                             <label for="skuEdit" class="block text-sm font-medium text-muted-color">SKU</label>
                             <input id="skuEdit" pInputText class="w-full" type="text" formControlName="sku" autocomplete="off" />
@@ -114,9 +114,6 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                                 }
                             }
                         </div>
-                        <app-form-field class="col-span-12 md:col-span-4" label="Para birimi" fieldId="currencyEdit" [error]="form.controls.currency.invalid && form.controls.currency.touched ? 'Para birimi zorunludur.' : null" [required]="true">
-                            <p-select inputId="currencyEdit" formControlName="currency" [options]="currencyOptions" optionLabel="label" optionValue="value" class="w-full" />
-                        </app-form-field>
                         <app-product-tax-fields [form]="form" idPrefix="productEdit" [currentVatRate]="originalVatRate()" />
                         <app-product-classification-fields [form]="form" idPrefix="productEdit" [originalKind]="originalKind()" />
                         <div class="col-span-12 flex flex-col gap-1">
@@ -166,12 +163,6 @@ export class ProductEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly originalKind = signal<ProductKindApi | null>(null);
     /** Kayıtlı KDV oranı; seçenek listesinde yoksa (ör. içe aktarılmış %18) listeye eklenir. */
     readonly originalVatRate = signal<number | null>(null);
-
-    readonly currencyOptions = [
-        { label: 'TRY', value: 'TRY' },
-        { label: 'USD', value: 'USD' },
-        { label: 'EUR', value: 'EUR' }
-    ];
 
     readonly form = createProductUpsertFormGroup(this.fb);
 

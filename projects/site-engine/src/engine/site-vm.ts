@@ -104,6 +104,11 @@ export interface SiteVm {
     readonly navPrimary: readonly LinkVm[];
     readonly navMore: readonly LinkVm[];
     readonly cta: CtaVm | null;
+    /**
+     * Saat ve iletişim bilgisinin yolu: ana sayfadaki iletişim bölümü, yoksa iletişim sayfası; ikisi de yoksa bağlantı çizilmez, boş
+     * çapaya gidilmez (W-02). Giriş bölümünün durum çipi buraya gider; K-01 düzeninde ayrı "Hizmetlere bak" bağlantısı yoktur.
+     */
+    readonly contactPath: string | null;
     readonly homeSections: readonly HomeSectionType[];
     readonly siteName: string;
 }
@@ -280,6 +285,7 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
     const bookingHref = safeHref(clinic.bookingUrl);
     const cta: CtaVm | null = bookingHref ? { label: copy.ctaPrimary, path: null, href: bookingHref } : telHref ? { label: 'Hemen ara', path: null, href: telHref } : null;
     const homeSections = structure.homeSections.filter((section) => section.on && hasContent[section.type]).map((section) => section.type);
+    const contactPath = homeSections.includes('contact') ? '/#contact' : pages.iletisim ? '/iletisim' : null;
     const isShown = (type: HomeSectionType, page: PageKey): boolean => homeSections.includes(type) || pages[page];
     // Hizmet kartları ikonludur; hizmet fotoğrafı yalnız hizmetin kendi sayfasında çizilir.
     const drawn: readonly (SiteImage | null)[] = [
@@ -333,6 +339,7 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
         navPrimary,
         navMore,
         cta,
+        contactPath,
         homeSections,
         siteName: config.publish.siteName.trim() || name
     };

@@ -10,10 +10,10 @@ import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants'
     imports: [RouterModule, AppFloatingConfigurator, ButtonModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: ` <app-floating-configurator />
-        <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen overflow-hidden">
-            <div class="flex flex-col items-center justify-center">
+        <div class="public-page public-site public-auth-page">
+            <div class="public-auth-shell">
                 <div class="public-auth-card-frame">
-                    <div class="public-auth-card-inner w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 sm:px-20 flex flex-col items-center">
+                    <div class="public-auth-card-inner flex flex-col items-center">
                         <img [src]="brand.icon" alt="Vetinity" class="mb-4 h-[52px] w-[52px] md:h-[58px] md:w-[58px] shrink-0 object-contain dark:hidden" width="58" height="58" />
                         <img [src]="brand.iconDark" alt="Vetinity" class="mb-4 hidden h-[52px] w-[52px] md:h-[58px] md:w-[58px] shrink-0 object-contain dark:block" width="58" height="58" />
                         <span class="public-notfound-code font-bold text-3xl">404</span>

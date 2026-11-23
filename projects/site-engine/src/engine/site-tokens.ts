@@ -108,6 +108,7 @@ export function buildSiteTokens(design: SiteDesign): Record<string, string> {
         '--s-btn-size': button.size,
         '--s-btn-weight': button.weight,
         '--s-gutter': 'clamp(20px, 3.2cqi, 40px)',
+        // Bölümler arası boşluk iki bölümün payı toplanınca masaüstünde büyük bant oluyordu (W-04); en çok 2 × 88 px.
         '--s-space': 'clamp(56px, 7cqi, 88px)',
         '--s-max': '1260px',
         'color-scheme': dark ? 'dark' : 'light'

@@ -7,7 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { PortalAuthApi } from '@portal/app/core/auth/portal-auth.api';
-import { PORTAL_ERROR_CODES, portalErrorMessage } from '@portal/app/core/errors/portal-errors';
+import { PORTAL_CODE_INVALID_MESSAGE, PORTAL_ERROR_CODES, portalErrorMessage } from '@portal/app/core/errors/portal-errors';
 import { PortalBrandHeader, PortalFooter } from '@portal/app/layout/portal-brand.component';
 import {
     normalizeOneTimeCode,
@@ -28,7 +28,7 @@ type ResetStep = 'request' | 'confirm' | 'done';
 export const RESET_CODE_SENT_MESSAGE = 'Bu e-posta adresiyle bir hesap varsa parola sıfırlama kodu gönderildi. Kod 10 dakika geçerlidir.';
 
 const RESET_ERROR_OVERRIDES = {
-    [PORTAL_ERROR_CODES.invalidCredentials]: 'Kod doğrulanamadı. Kod yanlış, süresi dolmuş ya da hesap geçici olarak kilitli olabilir; yeni kod isteyip tekrar deneyin.',
+    [PORTAL_ERROR_CODES.invalidCredentials]: PORTAL_CODE_INVALID_MESSAGE,
     [PORTAL_ERROR_CODES.validation]: 'Yeni parola kurallara uymuyor.'
 };
 

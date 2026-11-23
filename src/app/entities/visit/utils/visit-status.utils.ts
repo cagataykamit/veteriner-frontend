@@ -52,12 +52,15 @@ function todayStatusTone(item: TodayItemVm): TodayStatusTone {
     return item.appointmentStatus === 'Completed' ? 'completed' : 'planned';
 }
 
-/** Durum hücresi: tek satır metin; yanlış işaretli satırda süre yazılmaz (iş kapanmıştır). */
+/**
+ * Durum hücresi: tek satır metin; yanlış işaretli satırda süre yazılmaz (iş kapanmıştır). Önceki günden açık gelişte de yazılmaz:
+ * süreyi "n gündür açık" rozeti söyler (B-03, aynı bilgi bir kez).
+ */
 export function todayStatusOf(item: TodayItemVm, now: Date): TodayStatus {
     const tone = todayStatusTone(item);
     let detail: string | null = null;
 
-    if (!item.isVoided && (tone === 'waiting' || tone === 'inProgress')) {
+    if (!item.isVoided && carriedOverDays(item, now) === null && (tone === 'waiting' || tone === 'inProgress')) {
         detail = formatElapsedSince(item.arrivedAtUtc, now);
     } else if (tone === 'planned') {
         detail = formatScheduledOffset(item.scheduledAtUtc, now);
@@ -331,15 +334,35 @@ export function formatElapsedSince(arrivedAtUtc: string | null, now: Date): stri
     return minutes >= 24 * 60 ? `${Math.floor(minutes / (24 * 60))} gün` : durationText(minutes);
 }
 
-/** Bugün satırındaki geliş zamanı: bugünse yalnız saat, önceki günden açık kalmışsa tarih ve saat (H15). */
-export function formatTodayArrival(arrivedAtUtc: string | null, now: Date): string {
+/**
+ * Bugün satırındaki geliş zamanı: bugünse yalnız saat, önceki günden açık kalmışsa tarih ve saat (H15). `short` saat hücresi içindir:
+ * yılsız gün ve ay ("19.11 05:37"), dar sütunda tek satıra sığsın (B-03).
+ */
+export function formatTodayArrival(arrivedAtUtc: string | null, now: Date, short = false): string {
     const time = formatUtcIsoAsLocalTimeDisplay(arrivedAtUtc);
 
     if (!arrivedAtUtc || toIstanbulDateInputValue(arrivedAtUtc) === toIstanbulDateInputValue(now.toISOString())) {
         return time;
     }
 
-    return `${formatUtcIsoAsLocalDateDisplay(arrivedAtUtc)} ${time}`;
+    const date = formatUtcIsoAsLocalDateDisplay(arrivedAtUtc);
+
+    return `${short ? date.slice(0, 5) : date} ${time}`;
+}
+
+/**
+ * Önceki günden açık gelişin kaç takvim günüdür açık olduğu (İstanbul günü; dün gelen 1). Satırdaki tek "n gündür açık" rozetinin
+ * kaynağıdır (B-03). Önceki günden kalmayan, gelişi olmayan ya da yatıştaki hasta (taburcuya kadar bilerek açık) için `null`.
+ */
+export function carriedOverDays(item: Pick<TodayItemVm, 'isCarriedOver' | 'hasActiveHospitalization' | 'arrivedAtUtc'>, now: Date): number | null {
+    if (!item.isCarriedOver || item.hasActiveHospitalization || !item.arrivedAtUtc) {
+        return null;
+    }
+
+    const day = (ymd: string) => Date.UTC(+ymd.slice(0, 4), +ymd.slice(5, 7) - 1, +ymd.slice(8, 10));
+    const days = Math.round((day(toIstanbulDateInputValue(now.toISOString())) - day(toIstanbulDateInputValue(item.arrivedAtUtc))) / 86_400_000);
+
+    return Math.max(1, days);
 }
 
 /** Yatış süresi: bir günden kısaysa saat/dakika, değilse tam gün sayısı. */
@@ -358,10 +381,13 @@ export function formatHospitalizationStay(admittedAtUtc: string | null, now: Dat
 /** Açık (Bekliyor/Devam ediyor) bir geliş bu süreyi aşarsa satırda yalnız görsel "unutulmuş olabilir" ipucu gösterilir (iş kuralı yok). */
 export const FORGOTTEN_VISIT_HOURS = 12;
 
-/** Açık geliş `FORGOTTEN_VISIT_HOURS` saati aştı mı? Kapalı/planlı satır ve geçersiz geliş için `false`. */
+/**
+ * Açık geliş `FORGOTTEN_VISIT_HOURS` saati aştı mı? Kapalı/planlı satır ve geçersiz geliş için `false`. Önceki günden açık gelişte de
+ * `false`: "n gündür açık" rozeti aynı şeyi söyler (B-03).
+ */
 export function isPossiblyForgottenVisit(item: TodayItemVm, now: Date): boolean {
     // Yatıştaki hastanın gelişi taburcuya kadar bilerek açık kalır (kullanıcı kararı 2026-11-19).
-    const open = (item.careStatus === 'Waiting' || item.careStatus === 'InProgress') && !item.hasActiveHospitalization;
+    const open = (item.careStatus === 'Waiting' || item.careStatus === 'InProgress') && !item.hasActiveHospitalization && carriedOverDays(item, now) === null;
     const arrived = open ? parseUtcApiInstantIsoString(item.arrivedAtUtc) : null;
 
     return !!arrived && now.getTime() - arrived.getTime() >= FORGOTTEN_VISIT_HOURS * 3_600_000;

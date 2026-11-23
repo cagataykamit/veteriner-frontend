@@ -85,13 +85,36 @@ describe('ClinicPortalSettingsPageComponent', () => {
 
         const rows = el.querySelectorAll('[data-testid="portal-rule-row"]');
 
+        // Satırlar kategori sırasıyla: işlem iletileri, hatırlatmalar, ticari iletiler.
         expect(rows).toHaveLength(2);
-        expect(rows[0].textContent).toContain('Randevu hatırlatması');
-        expect(rows[0].textContent).toContain('Tercihe bağlı');
-        expect(rows[0].textContent).toContain('Yapılandırılmadı');
-        expect(rows[0].textContent).toContain('Personel elle');
-        expect(rows[1].textContent).toContain('Her zaman');
-        expect(rows[1].textContent).toContain('Kapalı');
+        expect(rows[1].textContent).toContain('Randevu hatırlatması');
+        expect(rows[1].textContent).toContain('Tercihe bağlı');
+        expect(rows[1].textContent).toContain('Yapılandırılmadı');
+        expect(rows[1].textContent).toContain('Personel elle');
+        expect(rows[0].textContent).toContain('Her zaman');
+        expect(rows[0].textContent).toContain('Kapalı');
+    });
+
+    it('tablo kategori gruplarıyla, sütun notlarıyla; çiple filtrelenir; "Personel elle" nötr gri (A-04)', async () => {
+        await create();
+
+        const groups = Array.from(el.querySelectorAll('[data-testid^="portal-rule-group-"]')).map((g) => g.textContent?.replace(/\s+/g, ''));
+
+        expect(groups).toEqual(['İşlemiletileriHastasahibinintercihiylekapanmaz.1bildirim', 'HatırlatmalarHastasahibiportaldankapatabilir.1bildirim']);
+        expect(el.querySelector('[data-testid="portal-rules"] thead')?.textContent).toContain('Henüz hazır değil');
+        expect(el.querySelector('[data-testid="portal-rules"] thead')?.textContent).toContain('Personel elle açar');
+        const reminder = fixture.componentInstance.rules()![0];
+
+        expect(fixture.componentInstance.modeSeverity(reminder, 'WhatsAppLink')).toBe('secondary');
+        expect(fixture.componentInstance.modeIcon(reminder, 'WhatsAppLink')).toBe('pi pi-user');
+
+        const chips = Array.from(el.querySelectorAll<HTMLButtonElement>('[data-testid="portal-rule-filter"] button'));
+
+        expect(chips.map((c) => c.textContent?.replace(/\s+/g, ' ').trim())).toEqual(['Tümü2', 'İşlem iletileri1', 'Hatırlatmalar1']);
+        chips[2].click();
+        fixture.detectChanges();
+        expect(el.querySelectorAll('[data-testid="portal-rule-row"]')).toHaveLength(1);
+        expect(el.querySelector('[data-testid="portal-rule-row"]')?.textContent).toContain('Randevu hatırlatması');
     });
 
     it('kapatma onay diyaloğu etkiyi anlatır; onaylanınca PUT isEnabled=false', async () => {

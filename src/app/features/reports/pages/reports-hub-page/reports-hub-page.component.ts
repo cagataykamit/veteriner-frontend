@@ -106,6 +106,19 @@ const PERIODS: readonly ReportHubPeriod[] = ['today', 'week', 'month'];
                     </div>
                 }
             </section>
+        } @else if (awaitingSummary()) {
+            <!-- İlk özet gelene kadar bandın tek satırlık yeri ayrılır (bant satırıyla aynı yapı ve ölçü); bant gelince kartlar aşağı kaymaz. -->
+            <section class="card !mb-5 !p-0" aria-hidden="true" data-testid="attention-placeholder">
+                <div class="px-4 pt-2.5 pb-1.5 text-sm"><span class="inline-block w-40 rounded bg-surface-200 dark:bg-surface-700 animate-pulse">&nbsp;</span></div>
+                <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 px-4 py-2">
+                    <span class="w-11 shrink-0 text-xl">&nbsp;</span>
+                    <span class="grow min-w-0 basis-[calc(100%-3.5rem)] sm:basis-0">
+                        <span class="inline-block w-64 max-w-full rounded bg-surface-200 dark:bg-surface-700 animate-pulse">&nbsp;</span>
+                        <small class="block text-[12.5px]">&nbsp;</small>
+                    </span>
+                    <span class="ml-14 sm:ml-0 w-24 h-[30px] rounded-lg bg-surface-200 dark:bg-surface-700 animate-pulse touch:min-h-(--touch-target)"></span>
+                </div>
+            </section>
         }
 
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 transition-opacity" [class.opacity-60]="loading() && summary()" [attr.aria-busy]="loading()" data-testid="question-grid">
@@ -159,6 +172,12 @@ const PERIODS: readonly ReportHubPeriod[] = ['today', 'week', 'month'];
                                     </div>
                                 </div>
                             }
+                        </div>
+                    } @else if (awaitingSummary()) {
+                        <!-- Sayı gelene kadar aynı ölçüde yer tutucu: kart veri gelince büyümez. -->
+                        <div class="mt-3.5 mb-3 min-h-14" aria-hidden="true" data-testid="figure-placeholder">
+                            <div class="text-[28px] leading-tight"><span class="inline-block w-32 rounded-md bg-surface-200 dark:bg-surface-700 animate-pulse">&nbsp;</span></div>
+                            <div class="mt-1 text-[13px]"><span class="inline-block w-44 max-w-full rounded bg-surface-200 dark:bg-surface-700 animate-pulse">&nbsp;</span></div>
                         </div>
                     } @else {
                         <div class="mt-3"></div>
@@ -223,6 +242,8 @@ export class ReportsHubPageComponent implements OnInit {
     readonly loadError = signal(false);
     /** Yeni dönemin sayıları yüklenirken kartlar soluk; eski sayılar yeni dönemin adıyla görünmez. */
     readonly loading = signal(true);
+    /** Henüz hiç özet yok ve istek sürüyor: bant ve kart sayıları için aynı ölçüde yer tutucu çizilir (açılışta düzen kaymaz). */
+    readonly awaitingSummary = computed(() => this.loading() && !this.summary());
 
     /** Etiketler gelen yanıtın dönemine bağlıdır: dönem değişip yanıt gelmeden kart eski dönemin adıyla kalır. */
     readonly questions = computed(() => visibleQuestions(this.reports, this.summary(), this.summary()?.period ?? this.period()));

@@ -1,7 +1,13 @@
 /**
- * Herkese açık hukuki metinler (ADR-024). Kaynak: ürün deposu `legal/` taslakları; metin aynen aktarılır,
- * köşeli parantezli alanlar doldurulmadan bırakılır.
+ * Herkese açık hukuki metinler (ADR-024). Kaynak: ürün deposu `legal/` metinleri; yer tutucular 2026-11-23 kullanıcı
+ * kararıyla dolduruldu. İletişim e-postası, unvan ve deneme süresi ortak sabitlerden okunur.
  */
+
+import { VETINITY_CONTACT_EMAIL, VETINITY_LEGAL_ENTITY_NAME } from '@/app/core/support/vetinity-support.constants';
+import { PRICING_TRIAL_DAYS } from '@/app/entities/subscription/utils/pricing-plan.utils';
+
+/** Metinde taraf olarak Vetinity: unvan girilince `Unvan ("Vetinity")`, girilmeden yalnız "Vetinity". */
+const VETINITY_PARTY = VETINITY_LEGAL_ENTITY_NAME ? `${VETINITY_LEGAL_ENTITY_NAME} ("Vetinity")` : 'Vetinity';
 
 /**
  * Taslak uyarısı — tek yer. `null`: bant ve `noindex` yok (2026-11-09 kullanıcı kararı: hukukçu görüşü beklenmez, metinler yayında).
@@ -51,7 +57,7 @@ export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
     title: 'Vetinity Gizlilik Politikası',
     shortTitle: 'Gizlilik Politikası',
     subtitle: 'kullanıcı / site ziyaretçisi',
-    statusLine: 'Son güncelleme: 2026-11-20',
+    statusLine: 'Son güncelleme: 2026-11-23',
     description: "Vetinity'nin kendi kullanıcılarına ve site ziyaretçilerine ilişkin kişisel verilerin işlenmesi.",
     intro: [
         [
@@ -63,7 +69,7 @@ export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
     sections: [
         {
             heading: '1. Veri sorumlusu',
-            paragraphs: ['[Şirket unvanı], [adres], [MERSİS/ticaret sicil no], [iletişim e-postası]. 6698 sayılı Kanun kapsamında veri sorumlusudur.']
+            paragraphs: [`${VETINITY_PARTY}, 6698 sayılı Kanun kapsamında veri sorumlusudur. İletişim: ${VETINITY_CONTACT_EMAIL}.`]
         },
         {
             heading: '2. Hangi verileri işleriz',
@@ -75,7 +81,7 @@ export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
                 "Bot koruması: kayıt ve kod isteklerinde Cloudflare Turnstile'ın işlediği IP adresi ve tarayıcı/cihaz bilgisi gibi teknik sinyaller.",
                 'Yapay zekâ kullanımı: yapay zekâ özelliği açık kliniklerde hangi kullanıcının hangi özelliği ne zaman kullandığı, token sayısı, tahmini maliyet ve sonuç. Gönderilen ve üretilen metin bu kayıtta tutulmaz.',
                 'İletişim: destek talepleri ve yazışmalar.',
-                'Çerezler: oturum için zorunlu çerezler; zorunlu olmayan çerez/analitik kullanılırsa açık rıza alınır [çerez politikası eklenecek].'
+                'Çerezler: yalnız zorunlu çerezler kullanılır; analitik, ölçüm veya reklam çerezi kullanılmaz.'
             ]
         },
         {
@@ -87,7 +93,7 @@ export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
         {
             heading: '4. Aktarım',
             paragraphs: [
-                'Barındırma ve altyapı, ödeme (iyzico), e-posta/SMS gönderimi, güvenlik doğrulaması (Cloudflare Turnstile; Cloudflare, Inc., ABD), destek ve muhasebe/hukuk danışmanlığı sağlayıcılarına; mevzuatın zorunlu kıldığı hallerde yetkili kurumlara. Yurt dışına aktarım: güvenlik doğrulaması için Cloudflare, Inc. (ABD); klinikte açıldığında yapay zekâ özellikleri için Anthropic PBC (ABD). Yapay zekâ isteklerine hesap bilgileriniz (ad, e-posta) eklenmez; klinik kayıtlarına elle yazılmış metinde adınız geçiyorsa gönderilen metinde yer alabilir. Yurt dışına aktarım Kanun m.9\'a uygun olmadıkça yapılmaz. Verileriniz satılmaz.'
+                'Barındırma ve altyapı, ödeme (iyzico), e-posta gönderimi (Google LLC, ABD), güvenlik doğrulaması (Cloudflare Turnstile; Cloudflare, Inc., ABD), destek ve muhasebe/hukuk danışmanlığı sağlayıcılarına; mevzuatın zorunlu kıldığı hallerde yetkili kurumlara. Yurt dışına aktarım: e-posta gönderimi için Google LLC (ABD); güvenlik doğrulaması için Cloudflare, Inc. (ABD); klinikte açıldığında yapay zekâ özellikleri için Anthropic PBC (ABD). Yapay zekâ isteklerine hesap bilgileriniz (ad, e-posta) eklenmez; klinik kayıtlarına elle yazılmış metinde adınız geçiyorsa gönderilen metinde yer alabilir. Yurt dışına aktarım Kanun m.9\'a uygun olmadıkça yapılmaz. Verileriniz satılmaz.'
             ]
         },
         {
@@ -105,7 +111,7 @@ export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
         {
             heading: '7. Haklarınız ve başvuru',
             paragraphs: [
-                "Kanun m.11 kapsamındaki haklar (öğrenme, bilgi isteme, düzeltme, silme/yok etme, aktarılan kişilere bildirme, itiraz, zarar giderim) için [başvuru e-postası/adresi]'ne başvurabilirsiniz; en geç 30 gün içinde yanıtlanır. Kişisel Verileri Koruma Kurulu'na şikâyet hakkınız saklıdır."
+                `Kanun m.11 kapsamındaki haklar (öğrenme, bilgi isteme, düzeltme, silme/yok etme, aktarılan kişilere bildirme, itiraz, zarar giderim) için ${VETINITY_CONTACT_EMAIL} adresine başvurabilirsiniz; en geç 30 gün içinde yanıtlanır. Kişisel Verileri Koruma Kurulu'na şikâyet hakkınız saklıdır.`
             ]
         },
         {
@@ -121,13 +127,13 @@ export const TERMS_OF_USE_DOCUMENT: LegalDocumentDef = {
     title: 'Vetinity Kullanım Şartları',
     shortTitle: 'Kullanım Şartları',
     subtitle: 'klinik abonelik sözleşmesi',
-    statusLine: 'Son güncelleme: 2026-11-09',
+    statusLine: 'Son güncelleme: 2026-11-23',
     description: "Vetinity ile Vetinity'yi kullanan veteriner kliniği arasındaki abonelik ve kullanım şartları.",
     sections: [
         {
             heading: '1. Taraflar ve kapsam',
             paragraphs: [
-                'Bu şartlar, [Şirket unvanı] ("Vetinity") ile Vetinity\'yi kullanan veteriner kliniği veya hekimi ("Klinik") arasındadır. Vetinity, klinik yönetimi için bulut tabanlı yazılım hizmeti ("Hizmet") sunar. Hizmeti kullanmak veya kayıt olmakla şartları kabul etmiş olursunuz; kabul eden kişi Kliniği temsil yetkisine sahip olduğunu beyan eder.'
+                `Bu şartlar, ${VETINITY_PARTY} ile Vetinity'yi kullanan veteriner kliniği veya hekimi ("Klinik") arasındadır. Vetinity, klinik yönetimi için bulut tabanlı yazılım hizmeti ("Hizmet") sunar. Hizmeti kullanmak veya kayıt olmakla şartları kabul etmiş olursunuz; kabul eden kişi Kliniği temsil yetkisine sahip olduğunu beyan eder.`
             ]
         },
         {
@@ -149,7 +155,7 @@ export const TERMS_OF_USE_DOCUMENT: LegalDocumentDef = {
         {
             heading: '4. Deneme, abonelik ve ödeme',
             paragraphs: [
-                'Deneme süresi [süre] gündür; süre sonunda ücretli pakete geçilmezse hesap salt okunur olur [TRIAL ilkelerine göre] ve veriler [süre] boyunca saklanır. Ücretler, paket ve fatura dönemi uygulama içinde belirtilir; ödeme iyzico aracılığıyla alınır. İptal ve iade: [iade/iptal kuralları]. Fiyat değişikliği, yürürlüğe girmeden en az [30] gün önce bildirilir.'
+                `Deneme süresi ${PRICING_TRIAL_DAYS} gündür; süre sonunda ücretli pakete geçilmezse ya da ücretli dönem yenilenmezse hesap salt okunur olur; veriler silinmez ve Klinik bu süre boyunca verisini dışa aktarabilir. Ücretler, paket ve fatura dönemi uygulama içinde belirtilir; ödeme iyzico aracılığıyla alınır. İptal ve iade: abonelik ödenen dönem için peşin alınır; iptal edilen abonelik ödenmiş dönemin sonuna kadar kullanılır, kısmi iade yapılmaz. Fiyat değişikliği, yürürlüğe girmeden en az 30 gün önce bildirilir.`
             ]
         },
         {
@@ -179,25 +185,25 @@ export const TERMS_OF_USE_DOCUMENT: LegalDocumentDef = {
         {
             heading: '8. Kullanılabilirlik ve değişiklikler',
             paragraphs: [
-                'Vetinity makul çabayla kesintisiz hizmet hedefler; bakım ve mücbir sebepler hariç tutulur, kesintisizlik garanti edilmez [hizmet seviyesi: pilot sonrası]. Hizmet ve şartlar değiştirilebilir; önemli değişiklikler önceden bildirilir ve yeni sürümün kabulü sürümlü olarak kaydedilir.'
+                'Vetinity makul çabayla kesintisiz hizmet hedefler; bakım ve mücbir sebepler hariç tutulur, kesintisizlik garanti edilmez.Hizmet ve şartlar değiştirilebilir; önemli değişiklikler önceden bildirilir ve yeni sürümün kabulü sürümlü olarak kaydedilir.'
             ]
         },
         {
             heading: '9. Sorumluluk sınırı',
             paragraphs: [
-                "Kasıt ve ağır kusur hariç, Vetinity'nin toplam sorumluluğu son [12] ayda ödenen bedelle sınırlıdır; dolaylı zararlar (kâr kaybı, itibar kaybı, klinik hekimlik sonuçları) kapsam dışıdır."
+                "Kasıt ve ağır kusur hariç, Vetinity'nin toplam sorumluluğu son 12 ayda ödenen bedelle sınırlıdır; dolaylı zararlar (kâr kaybı, itibar kaybı, klinik hekimlik sonuçları) kapsam dışıdır."
             ]
         },
         {
             heading: '10. Fesih',
             paragraphs: [
-                'Taraflar [30] gün önceden yazılı bildirimle sona erdirebilir; şartların ağır ihlalinde Vetinity erişimi derhal askıya alabilir. Fesihte Klinik verisini dışa aktarma süresi tanınır [süre].'
+                "Taraflar 30 gün önceden yazılı bildirimle sona erdirebilir; şartların ağır ihlalinde Vetinity erişimi derhal askıya alabilir. Klinik hesabın kapatılmasını yazılı olarak (e-postayla) talep ederse talepten itibaren 30 gün içinde verisini dışa aktarabilir; bu süre sonunda veriler 90 gün içinde silinir ya da anonimleştirilir. Yasal saklama yükümlülüğü bulunanlar o süre kadar ayrı tutulur."
             ]
         },
         {
             heading: '11. Uygulanacak hukuk',
             paragraphs: [
-                'Türkiye Cumhuriyeti hukuku; yetkili mahkeme ve icra daireleri [şehir] mahkemeleridir. Tüketici işlemleri için emredici hükümler saklıdır.'
+                'Türkiye Cumhuriyeti hukuku uygulanır. Türkiye Cumhuriyeti mahkemeleri ve icra daireleri yetkilidir; tüketici işlemlerinde emredici hükümler saklıdır.'
             ]
         }
     ]
@@ -209,13 +215,13 @@ export const DATA_PROCESSING_AGREEMENT_DOCUMENT: LegalDocumentDef = {
     title: 'Vetinity Veri İşleme Sözleşmesi',
     shortTitle: 'Veri İşleme Sözleşmesi',
     subtitle: 'Klinik = veri sorumlusu, Vetinity = veri işleyen',
-    statusLine: 'Son güncelleme: 2026-11-20',
+    statusLine: 'Son güncelleme: 2026-11-23',
     description: "Klinik adına Vetinity'de işlenen müşteri ve hasta verilerine ilişkin veri işleme sözleşmesi.",
     sections: [
         {
             heading: '1. Taraflar ve konu',
             paragraphs: [
-                'Veri sorumlusu: abonelik kaydındaki Klinik. Veri işleyen: [Şirket unvanı] ("Vetinity"). Konu: Vetinity\'nin, Hizmeti sunarken Klinik adına işlediği kişisel veriler (müşteri ve hasta sahibi kimlik/iletişim/finans verileri, hayvana ilişkin kayıtlar).'
+                `Veri sorumlusu: abonelik kaydındaki Klinik. Veri işleyen: ${VETINITY_PARTY}. Konu: Vetinity'nin, Hizmeti sunarken Klinik adına işlediği kişisel veriler (müşteri ve hasta sahibi kimlik/iletişim/finans verileri, hayvana ilişkin kayıtlar).`
             ]
         },
         {
@@ -230,8 +236,8 @@ export const DATA_PROCESSING_AGREEMENT_DOCUMENT: LegalDocumentDef = {
                 "a) Verileri yalnız Klinik'in yazılı (Hizmet kullanımıyla verilen) talimatları doğrultusunda işler.",
                 'b) Verilere erişen personelin gizlilik yükümlülüğü altında olmasını sağlar.',
                 'c) Kanun m.12 uyarınca uygun teknik ve idari tedbirleri alır (rol/izin kontrolü, iletişimde şifreleme, denetim kaydı, yedekleme, erişim kısıtı).',
-                'd) Alt işleyenleri (barındırma, ödeme, bildirim sağlayıcıları; yapay zekâ özellikleri için Anthropic PBC, ABD) [liste ve güncelleme usulü] hakkında Kliniği bilgilendirir ve alt işleyenlere aynı seviyede yükümlülük getirir.',
-                'e) Veri ihlalini öğrendiğinde gecikmeksizin [48 saat içinde] Kliniğe bildirir.',
+                'd) Alt işleyenlere (barındırma, ödeme, bildirim sağlayıcıları; e-posta gönderimi için Google LLC, ABD; yapay zekâ özellikleri için Anthropic PBC, ABD) aynı seviyede yükümlülük getirir. Güncel alt işleyen listesi bu sayfada yayımlanır; değişiklik, yürürlüğe girmeden en az 30 gün önce Kliniğe e-postayla bildirilir.',
+                'e) Veri ihlalini öğrendiğinde gecikmeksizin, en geç 48 saat içinde Kliniğe bildirir.',
                 'f) İlgili kişi taleplerinde Kliniğe makul yardımda bulunur; doğrudan gelen talepleri Kliniğe yönlendirir.',
                 "g) Kanun'a uyumun kanıtlanması için gerekli bilgiyi sağlar ve makul denetime katlanır.",
                 "h) Yapay zekâ özellikleri her klinikte kapalı başlar; Klinik'in talebiyle Vetinity açar. Açıkken yalnız istenen işlem için gereken klinik kayıtlar (hayvanın geçmişi, muayene, tanı, tedavi ve aşı kayıtları, kullanıcının yazdığı metin) yapay zekâ sağlayıcısına gönderilir. Göndermeden önce hasta sahibinin adı, e-posta adresi, telefon, kimlik ve mikroçip gibi uzun numaralar ve hayvanın adı metinden çıkarılır; müşteri kaydı gönderilmez. Bu temizleme serbest metindeki her kişisel veriyi yakalamayabilir; Klinik serbest metin alanlarına gereksiz kişisel veri yazmamayı taahhüt eder. Gönderilen metin Vetinity'de saklanmaz; yalnız kullanım kaydı (kullanıcı, özellik, zaman, token, tahmini maliyet, sonuç) tutulur. Yapay zekâ çıktısı taslaktır; kullanıcı kontrol edip onaylamadan kayda geçmez."
@@ -246,13 +252,13 @@ export const DATA_PROCESSING_AGREEMENT_DOCUMENT: LegalDocumentDef = {
         {
             heading: '5. Yurt dışı aktarım',
             paragraphs: [
-                "Veriler Türkiye'de [barındırma yeri] tutulur. Yurt dışına aktarım Kanun m.9'a uygun olmadıkça yapılmaz. Klinik için yapay zekâ özellikleri açıldığında madde 3(h)'deki veriler, işlemin yapılması için Anthropic PBC'ye (Amerika Birleşik Devletleri) aktarılır; özellik kapalı klinikte bu aktarım olmaz."
+                "Veriler Vetinity'nin Türkiye'de kiraladığı sunucularda barındırılır. Yurt dışına aktarım Kanun m.9'a uygun olmadıkça yapılmaz. Hizmetin gönderdiği e-postalar (hatırlatma, bildirim, giriş kodu) Google LLC'nin (Amerika Birleşik Devletleri) e-posta altyapısıyla iletilir; alıcı adresi ve e-posta içeriği bu aktarıma girer. Klinik için yapay zekâ özellikleri açıldığında madde 3(h)'deki veriler, işlemin yapılması için Anthropic PBC'ye (Amerika Birleşik Devletleri) aktarılır; özellik kapalı klinikte bu aktarım olmaz."
             ]
         },
         {
             heading: '6. Süre sonu',
             paragraphs: [
-                'Sonlandırmada Klinik verisini dışa aktarabilir; [süre] sonunda Vetinity verileri siler/anonimleştirir ve talep halinde yazılı teyit verir. Yasal saklama zorunluluğu bulunanlar o süre kadar ayrı tutulur.'
+                'Abonelik ya da deneme bittiğinde hesap salt okunur olur; veriler silinmez ve Klinik verisini dışa aktarabilir. Klinik hesabın kapatılmasını yazılı olarak (e-postayla) talep ederse talepten itibaren 30 gün içinde verisini dışa aktarabilir; bu süre sonunda Vetinity verileri 90 gün içinde siler ya da anonimleştirir ve talep halinde yazılı teyit verir. Yasal saklama yükümlülüğü bulunanlar o süre kadar ayrı tutulur.'
             ]
         },
         {

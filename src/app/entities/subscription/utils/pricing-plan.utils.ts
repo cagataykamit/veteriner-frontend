@@ -25,6 +25,9 @@ export interface PricingPlanDef {
 /** Fiyatların vergi notu (ADR-035: KDV hariç; backend `vatIncluded: false`). */
 export const PRICING_VAT_NOTE = 'KDV hariç';
 
+/** Ücretsiz deneme süresi (gün); backend `SubscriptionTrialDefaults.TrialDays` ile aynı. Paket kartları ve kullanım şartları buradan okur. */
+export const PRICING_TRIAL_DAYS = 14;
+
 /** VERİ — paket metni (ADR-035 tablosu). Fiyat ve sınır backend'den. */
 export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
     {
@@ -33,7 +36,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         title: 'Temel',
         description: 'Tek şubeli, küçük ekipli klinik',
         recommended: false,
-        trialDays: 14
+        trialDays: PRICING_TRIAL_DAYS
     },
     {
         slug: 'pro',
@@ -41,7 +44,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         title: 'Profesyonel',
         description: 'Tek şubeli, ekibi büyüyen klinik',
         recommended: true,
-        trialDays: 14
+        trialDays: PRICING_TRIAL_DAYS
     },
     {
         slug: 'premium',
@@ -49,7 +52,7 @@ export const PRICING_PLAN_DEFS: readonly PricingPlanDef[] = [
         title: 'Kurumsal',
         description: 'Birden çok şubesi ya da büyük ekibi olan klinik',
         recommended: false,
-        trialDays: 14
+        trialDays: PRICING_TRIAL_DAYS
     }
 ];
 
@@ -116,7 +119,7 @@ export interface PricingFeatureRowDef {
 }
 
 const ALL: Readonly<Record<PricingPlanSlug, PricingFeatureCell>> = { basic: true, pro: true, premium: true };
-/** Profesyonel ve Kurumsal (TIER-003…008, 018; ADR-035). Portal 2026-11-16'dan beri tüm paketlerde. */
+/** Profesyonel ve Kurumsal (TIER-003…005, 008, 018; ADR-035). Portal 2026-11-16'dan, kamerayla barkod 2026-11-23'ten beri tüm paketlerde. */
 const PRO_AND_UP: Readonly<Record<PricingPlanSlug, PricingFeatureCell>> = { basic: false, pro: true, premium: true };
 const PREMIUM_ONLY: Readonly<Record<PricingPlanSlug, PricingFeatureCell>> = { basic: false, pro: false, premium: true };
 
@@ -166,7 +169,7 @@ export const PRICING_FEATURE_ROWS: readonly PricingFeatureRowDef[] = [
     },
     { group: 'Para ve stok', label: 'Ürün ve stok takibi', detail: 'Düşük ve süresi geçmiş stok görünür', plans: ALL },
     { group: 'Para ve stok', label: 'Mal kabul, parti ve son kullanma tarihi', plans: ALL },
-    { group: 'Para ve stok', label: 'Kamerayla barkod okutma', detail: 'Telefon kamerasıyla mal kabulde, satışta ve ürün aramasında', key: 'mobileBarcode', plans: PRO_AND_UP },
+    { group: 'Para ve stok', label: 'Kamerayla barkod okutma', detail: 'Telefon kamerasıyla mal kabulde, satışta ve ürün aramasında', key: 'mobileBarcode', plans: ALL },
     { group: 'Para ve stok', label: 'Muayenesiz doğrudan satış', plans: ALL },
     { group: 'Web sitesi ve randevu', label: 'Klinik web sitesi', detail: 'Panelden kendiniz yaparsınız: dört hazır tasarım, sihirbazla çok sayfalı site, yayından önce önizleme', key: 'clinicSite', plans: ALL },
     { group: 'Web sitesi ve randevu', label: "Veteriner bul'da listelenme", detail: 'İl ve ilçeye göre; isteğe bağlı ve ücretsiz', key: 'vetFinder', plans: ALL },

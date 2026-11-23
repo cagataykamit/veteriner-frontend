@@ -72,6 +72,15 @@ export interface PaymentDetailDto {
     cashRegisterName?: string | null;
 }
 
+/** GET /payments/{id}/allocations satırı: hangi ücrete ne kadar sayıldı. */
+export interface PaymentAllocationItemDto {
+    id: string;
+    chargeId: string;
+    chargeDescription?: string | null;
+    amount?: number | string | null;
+    createdAtUtc?: string | null;
+}
+
 export interface PaymentCreateRequestDto {
     clinicId: string;
     clientId: string;

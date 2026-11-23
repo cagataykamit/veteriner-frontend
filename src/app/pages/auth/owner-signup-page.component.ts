@@ -60,18 +60,18 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
     imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RadioButtonModule, RippleModule, RouterLink, PublicLegalLinksComponent, LegalConsentCheckboxComponent, DiscountCodeFieldComponent, ExampleClinicSummaryComponent, SignupEmailVerificationComponent, TrDatePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="public-page bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden py-8">
-            <div class="flex flex-col items-center justify-center w-full max-w-3xl px-4">
+        <div class="public-page public-site public-auth-page">
+            <div class="public-auth-shell public-auth-shell--wide">
                 <div class="public-auth-card-frame">
-                    <div class="public-auth-card-inner w-full bg-surface-0 dark:bg-surface-900 py-12 px-8 sm:px-16">
+                    <div class="public-auth-card-inner">
                         @if (successResult(); as res) {
-                            <div class="text-center mb-6">
-                                <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex mb-6">
-                                    <img [src]="brand.logoFull" alt="Vetinity" class="h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden" width="120" height="30" />
-                                    <img [src]="brand.logoFullDark" alt="Vetinity" class="hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block" width="120" height="30" />
+                            <div class="public-auth-header">
+                                <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex">
+                                    <img [src]="brand.logoFull" alt="Vetinity" class="public-auth-logo block dark:hidden" width="120" height="30" />
+                                    <img [src]="brand.logoFullDark" alt="Vetinity" class="public-auth-logo hidden dark:block" width="120" height="30" />
                                 </a>
-                                <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-2">Kayıt tamamlandı</div>
-                                <span class="text-muted-color font-medium">Deneme süreniz başladı. Aşağıdaki tarihlerle giriş yapabilirsiniz.</span>
+                                <div class="public-auth-title">Kayıt tamamlandı</div>
+                                <span class="public-auth-subtitle">Deneme süreniz başladı. Aşağıdaki tarihlerle giriş yapabilirsiniz.</span>
                             </div>
                             @if (res.exampleClinic; as example) {
                                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 mb-6 text-left" data-testid="signup-example-clinic-card">
@@ -108,18 +108,18 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
                                 <a routerLink="/paketler" class="public-brand-link no-underline text-sm">Paketlere dön</a>
                             </div>
                         } @else {
-                            <div class="text-center mb-8">
-                                <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex mb-6">
-                                    <img [src]="brand.logoFull" alt="Vetinity" class="h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:hidden" width="120" height="30" />
-                                    <img [src]="brand.logoFullDark" alt="Vetinity" class="hidden h-auto w-[5.5rem] sm:w-24 md:w-[7.5rem] dark:block" width="120" height="30" />
+                            <div class="public-auth-header">
+                                <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex">
+                                    <img [src]="brand.logoFull" alt="Vetinity" class="public-auth-logo block dark:hidden" width="120" height="30" />
+                                    <img [src]="brand.logoFullDark" alt="Vetinity" class="public-auth-logo hidden dark:block" width="120" height="30" />
                                 </a>
-                                <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-2">Hesap oluştur</div>
-                                <span class="text-muted-color font-medium">Deneme paketiyle işletmenizi tek adımda başlatın</span>
+                                <div class="public-auth-title">Hesap oluştur</div>
+                                <span class="public-auth-subtitle">Deneme paketiyle işletmenizi tek adımda başlatın</span>
                             </div>
 
                             <div class="flex flex-col gap-6">
                                 <div>
-                                    <div id="signup-plan-label" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Paket seçin *</div>
+                                    <div id="signup-plan-label" class="public-auth-label">Paket seçin *</div>
                                     <div role="radiogroup" aria-labelledby="signup-plan-label" class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                         @for (option of planOptions(); track option.def.slug) {
                                             <button
@@ -152,7 +152,7 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
                                 </div>
 
                                 <div>
-                                    <label for="tenantName" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Klinik / işletme adı *</label>
+                                    <label for="tenantName" class="public-auth-label">Klinik / işletme adı *</label>
                                     <input pInputText id="tenantName" type="text" class="w-full" [(ngModel)]="tenantName" (ngModelChange)="clearFieldError('tenantName')" [attr.aria-invalid]="fieldError('tenantName') ? true : null" autocomplete="organization" />
                                     @if (fieldError('tenantName'); as error) {
                                         <small class="text-danger block mt-1" role="alert">{{ error }}</small>
@@ -161,14 +161,14 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label for="clinicName" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">İlk klinik adı *</label>
+                                        <label for="clinicName" class="public-auth-label">İlk klinik adı *</label>
                                         <input pInputText id="clinicName" type="text" class="w-full" [(ngModel)]="clinicName" (ngModelChange)="clearFieldError('clinicName')" [attr.aria-invalid]="fieldError('clinicName') ? true : null" autocomplete="organization" />
                                         @if (fieldError('clinicName'); as error) {
                                             <small class="text-danger block mt-1" role="alert">{{ error }}</small>
                                         }
                                     </div>
                                     <div>
-                                        <label for="clinicCity" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Şehir *</label>
+                                        <label for="clinicCity" class="public-auth-label">Şehir *</label>
                                         <input pInputText id="clinicCity" type="text" class="w-full" [(ngModel)]="clinicCity" (ngModelChange)="clearFieldError('clinicCity')" [attr.aria-invalid]="fieldError('clinicCity') ? true : null" autocomplete="address-level2" />
                                         @if (fieldError('clinicCity'); as error) {
                                             <small class="text-danger block mt-1" role="alert">{{ error }}</small>
@@ -177,7 +177,7 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
                                 </div>
 
                                 <div>
-                                    <label for="fullName" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Adınız soyadınız *</label>
+                                    <label for="fullName" class="public-auth-label">Adınız soyadınız *</label>
                                     <input
                                         pInputText
                                         id="fullName"
@@ -198,7 +198,7 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
                                 </div>
 
                                 <div>
-                                    <label for="taxIdentityNumber" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Vergi numarası ya da TC kimlik no{{ taxIdentityRequired() ? ' *' : '' }}</label>
+                                    <label for="taxIdentityNumber" class="public-auth-label">Vergi numarası ya da TC kimlik no{{ taxIdentityRequired() ? ' *' : '' }}</label>
                                     <input
                                         pInputText
                                         id="taxIdentityNumber"
@@ -221,7 +221,7 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
                                 <app-signup-email-verification [disabled]="submitting()" [turnstileSiteKey]="turnstileSiteKey()" (verifiedChange)="onEmailVerified($event)" />
 
                                 <div>
-                                    <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium mb-2">Şifre *</label>
+                                    <label for="password" class="public-auth-label">Şifre *</label>
                                     <p class="text-sm text-muted-color m-0 mb-2">{{ passwordPolicyHint }}</p>
                                     <p-password id="password" [(ngModel)]="password" placeholder="Şifre" [toggleMask]="true" class="w-full" [fluid]="true" [feedback]="false" />
                                     @if (passwordFieldError()) {
@@ -232,7 +232,7 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
                                 <app-discount-code-field inputId="signupDiscountCode" [disabled]="submitting()" [(code)]="discountCode" (validated)="discountValidation.set($event)" />
 
                                 <fieldset class="border-0 p-0 m-0 min-w-0" data-testid="signup-start-mode">
-                                    <legend class="block text-surface-900 dark:text-surface-0 font-medium mb-2 p-0">Nasıl başlayalım?</legend>
+                                    <legend class="public-auth-label p-0">Nasıl başlayalım?</legend>
                                     <div class="flex flex-col gap-3">
                                         <label for="startModeExample" class="flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors" [class]="startModeCardClass('example')">
                                             <p-radiobutton inputId="startModeExample" name="startMode" value="example" [disabled]="submitting()" [ngModel]="startMode()" (ngModelChange)="startMode.set($event)" />
@@ -269,9 +269,9 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
                                     </div>
                                 }
 
-                                <div class="text-center flex flex-col gap-2">
+                                <div class="text-center flex flex-col items-center gap-2">
                                     <a routerLink="/auth/login" class="public-brand-link no-underline">Zaten hesabınız var mı? Giriş yapın</a>
-                                    <a routerLink="/paketler" class="text-muted-color font-medium no-underline text-sm">Paketlere dön</a>
+                                    <a routerLink="/paketler" class="inline-flex min-h-11 items-center text-muted-color font-medium no-underline text-sm">Paketlere dön</a>
                                 </div>
                             </div>
                         }

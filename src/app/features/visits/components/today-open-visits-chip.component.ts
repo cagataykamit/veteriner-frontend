@@ -33,15 +33,14 @@ export function chargeLinkParams(row: OpenItemVisitVm): Record<string, string> {
     template: `
         <button
             type="button"
-            class="inline-flex items-center gap-1 rounded-border border px-2 py-0.5 text-sm cursor-pointer bg-transparent touch:min-h-(--touch-target)"
-            [class]="tone()"
+            [class]="chipClass()"
             [attr.title]="title()"
             aria-haspopup="dialog"
             [attr.aria-expanded]="open()"
             (click)="panel.toggle($event)"
             [attr.data-testid]="'open-items-chip-' + kind()"
         >
-            <i [class]="icon()" aria-hidden="true"></i>{{ text() }}
+            <i [class]="icon()" aria-hidden="true"></i>{{ label() }} <b class="tabular-nums">{{ value() }}</b>
             <i class="pi text-[0.65rem]" [class]="open() ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i>
         </button>
 
@@ -65,22 +64,22 @@ export function chargeLinkParams(row: OpenItemVisitVm): Record<string, string> {
                     } @else {
                         <ul class="list-none m-0 p-0 max-h-80 overflow-y-auto flex flex-col divide-y divide-surface-200 dark:divide-surface-700">
                             @for (r of d.items; track r.visitId) {
-                                <li class="flex items-center gap-3 py-2" data-testid="open-items-row">
+                                <li class="flex items-center gap-2 py-1 min-h-(--touch-target)" data-testid="open-items-row">
                                     <span class="flex-1 min-w-0 text-sm leading-tight">
                                         <span class="block truncate font-medium">{{ r.petName }} · {{ r.clientName }}</span>
                                         <span class="block truncate text-xs text-muted-color">{{ detail(r) }}</span>
                                     </span>
                                     @if (kind() === 'Uncharged') {
                                         @if (canAddCharge()) {
-                                            <a pButton size="small" [text]="true" [routerLink]="chargeRoute" [queryParams]="chargeParams(r)" (click)="panel.hide()" data-testid="open-items-add-charge">Ücret ekle</a>
+                                            <a pButton size="small" [text]="true" class="shrink-0 touch:min-h-(--touch-target)" [routerLink]="chargeRoute" [queryParams]="chargeParams(r)" (click)="panel.hide()" data-testid="open-items-add-charge">Ücret ekle</a>
                                         }
                                         @if (canCompleteVisit() && r.careStatus === 'Completed') {
-                                            <button pButton type="button" size="small" [text]="true" severity="secondary" title="Gerçekten ücretsiz bir gelişse listeden çıkar" (click)="panel.hide(); markNoCharge.emit(r)" data-testid="open-items-mark-no-charge">Ücretsiz</button>
+                                            <button pButton type="button" size="small" [text]="true" severity="secondary" class="shrink-0 touch:min-h-(--touch-target)" title="Gerçekten ücretsiz bir gelişse listeden çıkar" (click)="panel.hide(); markNoCharge.emit(r)" data-testid="open-items-mark-no-charge">Ücretsiz</button>
                                         }
                                     } @else if (r.careStatus === 'InProgress' && canCompleteVisit()) {
-                                        <button pButton type="button" size="small" [text]="true" (click)="panel.hide(); complete.emit(r)" data-testid="open-items-complete">Tamamla</button>
+                                        <button pButton type="button" size="small" [text]="true" class="shrink-0 touch:min-h-(--touch-target)" (click)="panel.hide(); complete.emit(r)" data-testid="open-items-complete">Tamamla</button>
                                     } @else if (r.careStatus !== 'InProgress' && canCorrectVisit()) {
-                                        <button pButton type="button" size="small" [text]="true" title="Tamamlandı ya da yanlış geliş olarak düzelt" (click)="panel.hide(); correct.emit(r)" data-testid="open-items-correct">Düzelt</button>
+                                        <button pButton type="button" size="small" [text]="true" class="shrink-0 touch:min-h-(--touch-target)" title="Tamamlandı ya da yanlış geliş olarak düzelt" (click)="panel.hide(); correct.emit(r)" data-testid="open-items-correct">Düzelt</button>
                                     }
                                 </li>
                             }
@@ -99,10 +98,13 @@ export class TodayOpenVisitsChipComponent {
     private readonly destroyRef = inject(DestroyRef);
 
     readonly kind = input.required<OpenItemVisitKind>();
-    readonly text = input.required<string>();
+    readonly label = input.required<string>();
+    /** Sayı ve birimi ("11 geliş"); kalın yazılır. */
+    readonly value = input.required<string>();
     readonly title = input('');
     readonly icon = input('');
-    readonly tone = input('');
+    /** Çipin bütün görünümü şeridin tek ton kuralından gelir (`today-open-items`). */
+    readonly chipClass = input('');
     /** Ücret oluşturma yetkisi var ve işletme salt okunur değil. */
     readonly canAddCharge = input(false);
     /** Devam eden gelişi tamamlama (`Visits.Update`) ve işletme salt okunur değil. */

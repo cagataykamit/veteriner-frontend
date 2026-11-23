@@ -58,27 +58,31 @@ describe('PortalNotificationPreferencesComponent (bildirim tercihleri)', () => {
     describe('push', () => {
         beforeEach(() => create());
 
-        it('sağlayıcı yokken "yakında" açıklaması görünür ve tercih yine kaydedilir: PUT pushEnabled', async () => {
+        it('sağlayıcı yokken çalışmayan "Anlık bildirim" seçeneği gösterilmez (PO-06)', async () => {
             await load();
 
-            expect(switchOf('push').disabled).toBe(false);
-            expect(el.querySelector('[data-testid=push-hint]')?.textContent).toContain('Anlık bildirimler henüz etkin değil');
+            expect(switchOf('push')).toBeNull();
+            expect(el.textContent).not.toContain('henüz etkin değil');
+        });
 
+        it('sağlayıcı varken tercih kaydedilir: PUT pushEnabled', async () => {
+            await load(prefs(), { enabled: false, available: true, deviceCount: 0 });
+
+            expect(el.querySelector('[data-testid=push-hint]')?.textContent).toContain('anlık bildirim olarak da gelir');
             switchOf('push').click();
             const put = http.expectOne(accountUrl);
 
             expect(put.request.method).toBe('PUT');
             expect(put.request.body).toEqual({ pushEnabled: true });
-            put.flush({ push: { enabled: true, available: false, deviceCount: 0 } });
+            put.flush({ push: { enabled: true, available: true, deviceCount: 1 } });
             await settle();
 
             expect(switchOf('push').checked).toBe(true);
             expect(el.textContent).toContain('Anlık bildirimler açıldı.');
-            expect(el.querySelector('[data-testid=push-note]')).toBeNull();
         });
 
         it('push kaydı başarısızsa anahtar eski değere döner', async () => {
-            await load();
+            await load(prefs(), { enabled: false, available: true, deviceCount: 0 });
 
             switchOf('push').click();
             http.expectOne(accountUrl).flush({ status: 500 }, { status: 500, statusText: 'Server Error' });
@@ -147,16 +151,13 @@ describe('PortalNotificationPreferencesComponent (bildirim tercihleri)', () => {
             expect(el.querySelector('[data-testid=push-note]')?.textContent).toContain('bildirim izni alınamadı');
         });
 
-        it('sağlayıcı yokken destekleyen cihazda da jeton istenmez', async () => {
+        it('sağlayıcı yokken destekleyen cihazda da anahtar yok, jeton istenmez', async () => {
             const obtainToken = vi.fn(() => Promise.resolve('fcm-token'));
 
             await create([LINK_MERKEZ], fakeDevice(obtainToken));
             await load(prefs());
 
-            switchOf('push').click();
-            http.expectOne(accountUrl).flush({ push: { enabled: true, available: false, deviceCount: 0 } });
-            await settle();
-
+            expect(switchOf('push')).toBeNull();
             expect(obtainToken).not.toHaveBeenCalled();
             http.expectNone(deviceUrl);
         });
@@ -253,7 +254,7 @@ describe('PortalNotificationPreferencesComponent (bildirim tercihleri)', () => {
     it('klinik portalı kapattıysa bağ tercihleri istenmez, yalnız hesap tercihi görünür', async () => {
         await create([{ ...LINK_MERKEZ, isClinicPortalEnabled: false }]);
 
-        http.expectOne(accountUrl).flush({ push: { enabled: false, available: false, deviceCount: 0 } });
+        http.expectOne(accountUrl).flush({ push: { enabled: false, available: true, deviceCount: 0 } });
         http.expectNone(linkUrl());
         await settle();
 

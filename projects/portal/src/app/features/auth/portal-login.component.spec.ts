@@ -4,9 +4,9 @@ import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { PortalAuthApi } from '@portal/app/core/auth/portal-auth.api';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
-import { PORTAL_ERROR_CODES, PORTAL_RATE_LIMIT_MESSAGE } from '@portal/app/core/errors/portal-errors';
+import { PORTAL_CODE_INVALID_MESSAGE, PORTAL_ERROR_CODES, PORTAL_RATE_LIMIT_MESSAGE } from '@portal/app/core/errors/portal-errors';
 import { buttonByText, problem, TEST_ME, testTokens, typeInto } from '@portal/app/testing/portal-testing';
-import { LOGIN_CODE_INVALID_MESSAGE, LOGIN_CODE_SENT_MESSAGE, LOGIN_PASSWORD_INVALID_MESSAGE, PortalLoginComponent } from './portal-login.component';
+import { LOGIN_CODE_SENT_MESSAGE, LOGIN_PASSWORD_INVALID_MESSAGE, PortalLoginComponent } from './portal-login.component';
 import { PortalHumanVerificationService } from '@portal/app/core/security/portal-human-verification.service';
 
 describe('PortalLoginComponent (kod ve parola girişi)', () => {
@@ -124,7 +124,7 @@ describe('PortalLoginComponent (kod ve parola girişi)', () => {
         typeInto(el, '#login-code', '000000');
         await click('Doğrula ve giriş yap');
 
-        expect(el.querySelector('[role=alert]')?.textContent).toContain(LOGIN_CODE_INVALID_MESSAGE);
+        expect(el.querySelector('[role=alert]')?.textContent).toContain(PORTAL_CODE_INVALID_MESSAGE);
         expect(session.startSession).not.toHaveBeenCalled();
     });
 

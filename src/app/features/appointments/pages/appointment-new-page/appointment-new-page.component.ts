@@ -88,7 +88,7 @@ interface AppointmentSlot {
                     <app-form-field class="col-span-12 md:col-span-6" label="Hasta" fieldId="petId" [error]="apiFieldErrors().petId ? apiFieldErrors().petId : form.controls.petId.invalid && form.controls.petId.touched ? 'Hasta seçimi zorunludur.' : null" [required]="true">
                         <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" [activeOnly]="true" />
                     </app-form-field>
-                    <app-form-field class="col-span-12 md:col-span-6" label="Randevu tarihi" fieldId="scheduledDate" [error]="form.controls.scheduledDate.hasError('dateYearInvalid') && form.controls.scheduledDate.touched ? 'Yıl 4 haneli olmalıdır.' : apiFieldErrors().scheduledAtLocal ? apiFieldErrors().scheduledAtLocal : form.controls.scheduledDate.hasError('tooFarPast') && form.controls.scheduledDate.touched ? 'En fazla 7 gün öncesine kadar randevu açılabilir.' : form.controls.scheduledDate.hasError('tooFarFuture') && form.controls.scheduledDate.touched ? 'En fazla 2 yıl ileriye randevu açılabilir.' : form.controls.scheduledDate.hasError('required') && form.controls.scheduledDate.touched ? 'Randevu tarihi seçilmelidir.' : null" [required]="true">
+                    <app-form-field class="col-span-12 md:col-span-6" label="Randevu tarihi" fieldId="scheduledDate" [error]="form.controls.scheduledDate.hasError('dateYearInvalid') && form.controls.scheduledDate.touched ? 'Yıl 4 haneli olmalıdır.' : apiFieldErrors().scheduledAtLocal ? apiFieldErrors().scheduledAtLocal : form.controls.scheduledDate.hasError('tooFarPast') && form.controls.scheduledDate.touched ? 'En fazla 7 gün öncesine kadar randevu açılabilir.' : form.controls.scheduledDate.hasError('tooFarFuture') && form.controls.scheduledDate.touched ? 'En fazla 2 yıl ileriye randevu açılabilir.' : form.controls.scheduledDate.hasError('required') && form.controls.scheduledDate.touched ? 'Randevu tarihi zorunludur.' : null" [required]="true">
                         <app-date-input inputId="scheduledDate" type="date" formControlName="scheduledDate" [min]="minScheduledDate()" [max]="maxScheduledDate()" />
                     </app-form-field>
                     <div class="col-span-12 md:col-span-6">
@@ -105,11 +105,11 @@ interface AppointmentSlot {
                             panelStyleClass="vet-time-select-panel"
                         />
                         @if (form.controls.scheduledTime.invalid && form.controls.scheduledTime.touched) {
-                            <small class="text-danger">Randevu saati seçilmelidir.</small>
+                            <small class="text-danger">Randevu saati zorunludur.</small>
                         } @else if (workingHoursLoadError(); as whErr) {
                             <small class="text-danger">{{ whErr }}</small>
                         } @else if (form.controls.scheduledDate.value && timeOptions().length === 0) {
-                            <small class="text-amber-600">Seçilen gün için uygun randevu saati bulunmuyor.</small>
+                            <small class="text-warn">Seçilen gün için uygun randevu saati bulunmuyor.</small>
                             @if (nextAvailableSlot(); as next) {
                                 <button pButton type="button" size="small" [text]="true" class="p-0 mt-1" data-testid="appointment-next-slot" (click)="selectSlot(next)">
                                     <i class="p-button-icon pi pi-calendar-plus"></i>İlk uygun gün: {{ next.label }}
@@ -680,6 +680,14 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
     }
 
     private rebuildTimeOptions(): void {
+        // Çalışma saatleri ve randevu ayarı gelmeden saat listesi kurulmaz; seçili saat (takvim hücresinden gelen) silinmez. Yanıtlar
+        // her sırayla gelebilir; ayar önce gelirse boş çalışma saatiyle kurulan liste saati siliyordu.
+        if ((!this.workingHoursLoaded && !this.workingHoursLoadError()) || !this.appointmentSettingsLoaded) {
+            this.timeOptions.set([]);
+
+            return;
+        }
+
         this.prefillFirstAvailableSlot();
         const date = this.form.controls.scheduledDate.value.trim();
         const duration = Math.trunc(Number(this.form.controls.durationMinutes.value));

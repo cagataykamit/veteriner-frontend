@@ -34,6 +34,17 @@ describe('PublicTopbarComponent', () => {
         expect(host.querySelector('#public-mobile-menu')).toBeNull();
     });
 
+    it('telefonda logo 30 px, md ve üstünde 40 px', () => {
+        const { host } = setup();
+        const logos = Array.from(host.querySelectorAll<HTMLImageElement>('header .ps-topbar-logo img'));
+
+        expect(logos.length).toBe(2);
+        logos.forEach((img) => {
+            expect(img.classList).toContain('h-[30px]');
+            expect(img.classList).toContain('md:h-[40px]');
+        });
+    });
+
     it('"İçeriğe atla" bağlantısı ana içeriğe odaklanır', () => {
         const { host } = setup();
         const main = document.createElement('main');

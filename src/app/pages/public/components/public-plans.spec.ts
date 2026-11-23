@@ -70,6 +70,7 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         // Portal 2026-11-16'dan beri tüm paketlerde (ADR-035): Temel'in sayımında, üst paket farkında değil.
         expect(labels('pro')).not.toContain('Hasta sahibi portalı');
         expect(labels('pro')).not.toContain('Portaldan randevu talebi');
+        expect(labels('pro')).not.toContain('Kamerayla barkod okutma');
         expect(labels('pro')).not.toContain('Bugün ekranı ve geliş takibi');
         expect(labels('pro')).not.toContain('Çok klinik yönetimi ve klinikler arası yetki');
 
@@ -106,7 +107,6 @@ describe('Paket verisi (pricing-plan.utils)', () => {
             'Bekleme listesi',
             'Otomatik aşı sihirbazı',
             'Çoklu kasa ve kasa yönetimi',
-            'Kamerayla barkod okutma',
             'Otomatik hatırlatıcılar',
             'Gelişmiş raporlar',
             'Klinikler özeti',
@@ -124,7 +124,8 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         ]);
         expect(PRICING_FEATURE_ROWS.filter((r) => r.plans.premium === false)).toEqual([]);
 
-        for (const key of ['clinicSite', 'vetFinder', 'onlineBooking', 'reminderReplies', 'dataExport']) {
+        // Kamerayla barkod 2026-11-23 kullanıcı kararıyla tüm paketlerde (ADR-035).
+        for (const key of ['clinicSite', 'vetFinder', 'onlineBooking', 'reminderReplies', 'dataExport', 'mobileBarcode']) {
             expect(plansOf(key), key).toEqual({ basic: true, pro: true, premium: true });
         }
     });
@@ -389,7 +390,7 @@ describe('PublicPlanComparisonComponent', () => {
     });
 
     it('alan bantları: sıra numarası ve karar verilmiş satır sayısı', () => {
-        const el = render(READY);
+        const el = render(READY).querySelector('table')!;
 
         expect(texts(el, '.public-plan-compare-group-no')).toEqual(['1', '2']);
         expect(texts(el, '[data-group-count]')).toEqual(['1 özellik', '2 özellik']);
@@ -434,6 +435,54 @@ describe('PublicPlanComparisonComponent', () => {
         expect(texts(el, 'tbody th[scope="row"]')).toEqual(['Yatış takibi']);
         expect(texts(el, '[data-group-title]')).toEqual(['Günlük iş']);
         expect(texts(el, '[data-group-count]')).toEqual(['1 özellik']);
+    });
+
+    it('telefon (T-04): paket seçici önerilen paketle açılır, farklar açık başlar; pakette olmayan satır soluk ve hangi pakette olduğunu söyler', () => {
+        const fixture = TestBed.createComponent(PublicPlanComparisonComponent);
+
+        fixture.componentRef.setInput('pricing', READY);
+        fixture.componentRef.setInput('featureRows', SAMPLE_ROWS);
+        fixture.detectChanges();
+        const phone = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('[data-plan-phone]')!;
+        const radios = Array.from(phone.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
+
+        expect(phone.classList).toContain('md:hidden');
+        expect(radios.map((r) => [r.textContent?.trim(), r.getAttribute('aria-checked')])).toEqual([
+            ['Temel', 'false'],
+            ['Profesyonel', 'true'],
+            ['Kurumsal', 'false']
+        ]);
+        expect(phone.querySelector('[data-phone-price]')?.textContent).toContain('₺1.000');
+        expect(phone.querySelector('[data-phone-price]')?.textContent).toContain('/ ay, KDV hariç');
+        expect(phone.querySelector<HTMLInputElement>('[data-phone-only-differences]')!.checked).toBe(true);
+        expect(phone.querySelector('[data-phone-count]')?.textContent?.trim()).toBe('1 fark gösteriliyor; 2 özellik her pakette aynı.');
+        expect(phone.querySelectorAll('[data-phone-row]')).toHaveLength(1);
+        expect(phone.querySelector('[data-phone-row]')?.textContent).toContain('Var');
+
+        radios[0].click();
+        fixture.detectChanges();
+        const off = phone.querySelector('[data-phone-row]')!;
+
+        expect(off.classList).toContain('plan-phone-row--off');
+        expect(off.textContent).toContain('Yok');
+        expect(off.querySelector('[data-phone-available]')?.textContent?.trim()).toBe("Profesyonel ve Kurumsal'da var");
+        expect(phone.querySelector('[data-phone-price]')?.textContent).toContain('₺500');
+
+        const toggle = phone.querySelector<HTMLInputElement>('[data-phone-only-differences]')!;
+
+        toggle.checked = false;
+        toggle.dispatchEvent(new Event('change'));
+        fixture.detectChanges();
+        expect(phone.querySelectorAll('[data-phone-row]')).toHaveLength(3);
+        expect(phone.querySelector('[data-phone-count]')?.textContent?.trim()).toBe('3 özelliğin tamamı gösteriliyor.');
+        // Masaüstü tablosu değişmedi: anahtarı kapalı başlar.
+        expect((fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>('[data-only-differences]')!.checked).toBe(false);
+    });
+
+    it('telefon: yalnız Kurumsal\'da olan satır "Kurumsal\'da var"', () => {
+        const el = render(READY, [{ group: 'Yönetim', label: 'API erişimi', plans: { basic: false, pro: false, premium: true } }]);
+
+        expect(el.querySelector('[data-phone-available]')?.textContent?.trim()).toBe("Kurumsal'da var");
     });
 
     it('satır etiketi tabloda satır adının yanında', () => {

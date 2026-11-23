@@ -263,6 +263,33 @@ describe('SiteRendererComponent', () => {
             expect(host.querySelectorAll('site-map path').length).toBeLessThanOrEqual(2);
         });
 
+        it('giriş bölümü olmayan bir yere bağlanmaz: hizmet yokken hizmet çapası yoktur, çip iletişime gider (W-02)', async () => {
+            const host = await render(patchContent(sampleConfig(), { services: [] }));
+            const links = [...host.querySelectorAll('site-hero a[href]')].map((link) => link.getAttribute('href'));
+
+            expect(links.filter((href) => href?.includes('#services'))).toEqual([]);
+            expect(host.querySelector('site-hero a.chip')?.getAttribute('href')).toBe('#contact');
+
+            const noContact = patchClinic(sampleConfig(), { phone: '', email: '', address: '', district: '', city: '' });
+            const bare = await render({ ...noContact, structure: { ...noContact.structure, pages: { ...noContact.structure.pages, iletisim: false } } });
+
+            expect(bare.querySelector('site-hero a.chip')).toBeNull();
+            expect(bare.querySelector('site-hero p.chip')).not.toBeNull();
+        });
+
+        it('iletişim sayfasında alt bilgi telefon, e-posta ve adresi tekrar yazmaz (W-04)', async () => {
+            const home = await render(sampleConfig());
+
+            expect(home.querySelector('site-footer a[href^="tel:"]')).not.toBeNull();
+
+            const contact = await render(sampleConfig(), { path: '/iletisim' });
+
+            expect(contact.querySelector('site-footer a[href^="tel:"]')).toBeNull();
+            expect(contact.querySelector('site-footer a[href^="mailto:"]')).toBeNull();
+            expect(contact.querySelector('site-footer address')).toBeNull();
+            expect(contact.querySelector('site-contact a[href^="tel:"]')).not.toBeNull();
+        });
+
         it('saat girilmemişse durum çipi ve saat kartı çizilmez', async () => {
             const host = await render(patchClinic(sampleConfig(), { workingDays: [] }));
 

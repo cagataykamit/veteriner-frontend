@@ -77,7 +77,8 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
             @if (reasons().length === 0) {
                 <app-empty-state message="Bu klinikte tanımlı randevu nedeni yok." [hint]="canWrite() ? 'Aşı, kontrol, muayene gibi nedenleri süreleriyle ekleyin; online talepte yalnız sistemin Diğer seçeneği görünür.' : ''" />
             }
-            <div class="overflow-x-auto">
+            <!-- Telefonda satırlar "etiket | değer" kartına döner; sütunlar kesilmez, işlemler görünür (A-06). -->
+            <div class="overflow-x-auto table-stack-phone">
                 <p-table [value]="reasons()" [tableStyle]="{ 'min-width': '44rem' }">
                     <ng-template #header>
                         <tr>
@@ -94,15 +95,15 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                     <ng-template #body let-reason>
                         <tr data-testid="reason-row">
                             <td class="font-medium" [class.text-muted-color]="!reason.isActive">{{ reason.name }}</td>
-                            <td>{{ reason.defaultDurationMinutes }} dk</td>
-                            <td>
+                            <td data-label="Süre">{{ reason.defaultDurationMinutes }} dk</td>
+                            <td data-label="Online">
                                 {{ reason.isOnlineBookable ? 'Görünür' : 'Gizli' }}
                                 @if (reason.isActive && isUrgentOnline(reason.name, reason.isOnlineBookable)) {
                                     <i class="pi pi-exclamation-triangle text-amber-600 dark:text-amber-400 ml-1" [title]="urgentWarning" data-testid="reason-urgent-online"></i>
                                 }
                             </td>
-                            <td class="text-sm">{{ vetNames(reason) }}</td>
-                            <td><app-status-tag [label]="reason.isActive ? 'Aktif' : 'Pasif'" [severity]="reason.isActive ? 'success' : 'warn'" /></td>
+                            <td class="text-sm" data-label="Uygun hekimler">{{ vetNames(reason) }}</td>
+                            <td data-label="Durum"><app-status-tag [label]="reason.isActive ? 'Aktif' : 'Pasif'" [severity]="reason.isActive ? 'success' : 'warn'" /></td>
                             @if (canWrite()) {
                                 <td>
                                     <div class="flex flex-wrap gap-x-3 gap-y-1 items-center">
@@ -121,10 +122,10 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                         <!-- Sistem seçeneği: klinik tanımlamaz ve kapatamaz; yalnız bilgi için gösterilir (ADR-042 eki). -->
                         <tr data-testid="reason-other-row">
                             <td class="font-medium">{{ other.name }}</td>
-                            <td>{{ other.durationMinutes }} dk</td>
-                            <td>Her zaman</td>
-                            <td class="text-sm">Tüm hekimler</td>
-                            <td><app-status-tag label="Sistem" severity="secondary" /></td>
+                            <td data-label="Süre">{{ other.durationMinutes }} dk</td>
+                            <td data-label="Online">Her zaman</td>
+                            <td class="text-sm" data-label="Uygun hekimler">Tüm hekimler</td>
+                            <td data-label="Durum"><app-status-tag label="Sistem" severity="secondary" /></td>
                             @if (canWrite()) {
                                 <td class="text-sm text-muted-color">Müşteri ne için geldiğini yazar</td>
                             }

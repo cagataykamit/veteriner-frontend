@@ -32,110 +32,107 @@ import { TenantRolePipe } from '@/app/shared/pipes/tenant-role.pipe';
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <p-toast position="top-right" />
-        <div class="flex justify-center w-full">
-            <div class="w-full max-w-4xl">
-                <app-page-header title="Hesabım" description="Hesap bilgilerinizi görüntüleyin ve giriş şifrenizi yönetin." />
-                @if (showPasswordChangedBanner()) {
-                    <p class="mb-4 m-0 text-sm font-medium">Şifreniz güncellendi.</p>
-                }
+        <app-page-header title="Hesabım" description="Hesap bilgilerinizi görüntüleyin ve giriş şifrenizi yönetin." />
+        @if (showPasswordChangedBanner()) {
+            <p class="mb-4 m-0 text-sm font-medium">Şifreniz güncellendi.</p>
+        }
 
-                <div class="w-full bg-surface-0 dark:bg-surface-900 rounded-2xl shadow-md border border-surface-200 dark:border-surface-700 overflow-hidden">
-                    <div class="border-b border-surface-200 dark:border-surface-700 bg-surface-50/60 dark:bg-surface-800/40 px-6 py-5 md:px-12 md:py-6">
-                        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div class="flex items-center gap-4 min-w-0">
-                                @if (summary(); as s) {
-                                    <div
-                                        class="shrink-0 flex items-center justify-center w-14 h-14 rounded-full text-lg font-semibold tracking-tight bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-200 ring-2 ring-primary-200/60 dark:ring-primary-700/50"
-                                        aria-hidden="true"
-                                    >
-                                        {{ avatarInitials(s) }}
-                                    </div>
-                                    <div class="min-w-0">
-                                        <div class="font-semibold text-surface-900 dark:text-surface-0 truncate">
-                                            {{ displayName(s) }}
-                                        </div>
-                                        <div class="text-sm text-muted-color truncate mt-0.5">{{ s.email }}</div>
-                                    </div>
-                                } @else if (summaryLoading()) {
-                                    <div class="shrink-0 w-14 h-14 rounded-full bg-surface-200 dark:bg-surface-700 animate-pulse" aria-hidden="true"></div>
-                                    <div class="min-w-0 flex-1">
-                                        <div class="h-5 w-36 max-w-full rounded bg-surface-200 dark:bg-surface-700 animate-pulse"></div>
-                                        <div class="h-4 w-48 max-w-full rounded bg-surface-200 dark:bg-surface-700 animate-pulse mt-2"></div>
-                                    </div>
-                                } @else {
-                                    <div
-                                        class="shrink-0 flex items-center justify-center w-14 h-14 rounded-full text-lg font-semibold bg-surface-200 text-muted-color dark:bg-surface-700 ring-2 ring-surface-300/60 dark:ring-surface-600/50"
-                                        aria-hidden="true"
-                                    >
-                                        ?
-                                    </div>
-                                    <div class="min-w-0">
-                                        <div class="font-semibold text-surface-900 dark:text-surface-0">Hesap</div>
-                                        <div class="text-sm text-muted-color mt-0.5">Profil bilgisi yüklenemedi</div>
-                                    </div>
-                                }
+        <!-- Diğer ayar sayfalarıyla aynı düz kart, sola yaslı (A-07: ortalanmış gölgeli kart eski şablondu). -->
+        <div class="card p-0 overflow-hidden">
+            <div class="border-b border-surface-200 dark:border-surface-700 bg-surface-50/60 dark:bg-surface-800/40 px-6 py-5 md:px-12 md:py-6">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex items-center gap-4 min-w-0">
+                        @if (summary(); as s) {
+                            <div
+                                class="shrink-0 flex items-center justify-center w-14 h-14 rounded-full text-lg font-semibold tracking-tight bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-200 ring-2 ring-primary-200/60 dark:ring-primary-700/50"
+                                aria-hidden="true"
+                            >
+                                {{ avatarInitials(s) }}
                             </div>
-
-                            <a pButton severity="secondary" class="shrink-0 w-full sm:w-auto" routerLink="/panel/settings/account/change-password"><i class="p-button-icon pi pi-lock"></i>Şifre değiştir</a>
-                        </div>
-                    </div>
-
-                    <div class="px-6 py-4 md:px-12 md:py-8">
-                        @if (summaryLoading()) {
-                            <p class="text-muted-color text-sm m-0 py-2">Hesap bilgileri yükleniyor…</p>
-                        } @else if (summaryError()) {
-                            <p class="text-danger text-sm m-0 py-2" role="alert">{{ summaryError() }}</p>
-                        } @else if (summary(); as s) {
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50/50 dark:bg-surface-800/30 p-4 min-w-0">
-                                    <div class="text-sm text-muted-color mb-1">Kurum</div>
-                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">
-                                        {{ optionalName(s.tenantName) }}
-                                    </div>
+                            <div class="min-w-0">
+                                <div class="font-semibold text-surface-900 dark:text-surface-0 truncate">
+                                    {{ displayName(s) }}
                                 </div>
-                                <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50/50 dark:bg-surface-800/30 p-4 min-w-0">
-                                    <div class="text-sm text-muted-color mb-1">Aktif klinik</div>
-                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">
-                                        {{ optionalName(s.activeClinicName) }}
-                                    </div>
-                                </div>
-                                <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50/50 dark:bg-surface-800/30 p-4 min-w-0">
-                                    <div class="text-sm text-muted-color mb-1">Yetki kapsamı</div>
-                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0">
-                                        {{ scopeLabel(s.isTenantWide) }}
-                                    </div>
-                                </div>
-                                <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50/50 dark:bg-surface-800/30 p-4 min-w-0">
-                                    <div class="text-sm text-muted-color mb-1">Roller</div>
-                                    @if (s.roles.length > 0) {
-                                        <div class="flex flex-wrap gap-1.5">
-                                            @for (role of s.roles; track role) {
-                                                <span
-                                                    class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-primary-50 text-primary-800 border border-primary-200/80 dark:bg-primary-900/25 dark:text-primary-200 dark:border-primary-700/50"
-                                                >
-                                                    {{ role | tenantRole }}
-                                                </span>
-                                            }
-                                        </div>
-                                    } @else {
-                                        <span class="text-sm text-muted-color">{{ rolesEmptyLabel }}</span>
-                                    }
-                                </div>
+                                <div class="text-sm text-muted-color truncate mt-0.5">{{ s.email }}</div>
                             </div>
-                            <form class="mt-6" [formGroup]="displayNameForm" (ngSubmit)="saveDisplayName()">
-                                <label for="displayName" class="block text-sm font-medium text-muted-color mb-2">Görünen ad</label>
-                                <div class="flex flex-col gap-2 sm:flex-row">
-                                    <input id="displayName" pInputText class="w-full" formControlName="displayName" [maxlength]="displayNameMax" autocomplete="name" />
-                                    <button pButton type="submit" class="max-sm:self-start" [disabled]="displayNameSaving() || displayNameControl.pristine"><i class="p-button-icon" [class]="displayNameSaving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
-                                </div>
-                                <small class="text-muted-color block mt-1"> Hasta kabulünde sorumlu hekim olarak bu ad gösterilir. Boş bırakırsanız e-postanızdan türetilen ad kullanılır. </small>
-                                @if (displayNameError()) {
-                                    <small class="text-danger block mt-1" role="alert">{{ displayNameError() }}</small>
-                                }
-                            </form>
+                        } @else if (summaryLoading()) {
+                            <div class="shrink-0 w-14 h-14 rounded-full bg-surface-200 dark:bg-surface-700 animate-pulse" aria-hidden="true"></div>
+                            <div class="min-w-0 flex-1">
+                                <div class="h-5 w-36 max-w-full rounded bg-surface-200 dark:bg-surface-700 animate-pulse"></div>
+                                <div class="h-4 w-48 max-w-full rounded bg-surface-200 dark:bg-surface-700 animate-pulse mt-2"></div>
+                            </div>
+                        } @else {
+                            <div
+                                class="shrink-0 flex items-center justify-center w-14 h-14 rounded-full text-lg font-semibold bg-surface-200 text-muted-color dark:bg-surface-700 ring-2 ring-surface-300/60 dark:ring-surface-600/50"
+                                aria-hidden="true"
+                            >
+                                ?
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-semibold text-surface-900 dark:text-surface-0">Hesap</div>
+                                <div class="text-sm text-muted-color mt-0.5">Profil bilgisi yüklenemedi</div>
+                            </div>
                         }
                     </div>
+
+                    <a pButton severity="secondary" class="shrink-0 w-full sm:w-auto" routerLink="/panel/settings/account/change-password"><i class="p-button-icon pi pi-lock"></i>Şifre değiştir</a>
                 </div>
+            </div>
+
+            <div class="px-6 py-4 md:px-12 md:py-8">
+                @if (summaryLoading()) {
+                    <p class="text-muted-color text-sm m-0 py-2">Hesap bilgileri yükleniyor…</p>
+                } @else if (summaryError()) {
+                    <p class="text-danger text-sm m-0 py-2" role="alert">{{ summaryError() }}</p>
+                } @else if (summary(); as s) {
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50/50 dark:bg-surface-800/30 p-4 min-w-0">
+                            <div class="text-sm text-muted-color mb-1">Kurum</div>
+                            <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">
+                                {{ optionalName(s.tenantName) }}
+                            </div>
+                        </div>
+                        <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50/50 dark:bg-surface-800/30 p-4 min-w-0">
+                            <div class="text-sm text-muted-color mb-1">Aktif klinik</div>
+                            <div class="text-sm font-medium text-surface-900 dark:text-surface-0 break-words">
+                                {{ optionalName(s.activeClinicName) }}
+                            </div>
+                        </div>
+                        <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50/50 dark:bg-surface-800/30 p-4 min-w-0">
+                            <div class="text-sm text-muted-color mb-1">Yetki kapsamı</div>
+                            <div class="text-sm font-medium text-surface-900 dark:text-surface-0">
+                                {{ scopeLabel(s.isTenantWide) }}
+                            </div>
+                        </div>
+                        <div class="rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50/50 dark:bg-surface-800/30 p-4 min-w-0">
+                            <div class="text-sm text-muted-color mb-1">Roller</div>
+                            @if (s.roles.length > 0) {
+                                <div class="flex flex-wrap gap-1.5">
+                                    @for (role of s.roles; track role) {
+                                        <span
+                                            class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-primary-50 text-primary-800 border border-primary-200/80 dark:bg-primary-900/25 dark:text-primary-200 dark:border-primary-700/50"
+                                        >
+                                            {{ role | tenantRole }}
+                                        </span>
+                                    }
+                                </div>
+                            } @else {
+                                <span class="text-sm text-muted-color">{{ rolesEmptyLabel }}</span>
+                            }
+                        </div>
+                    </div>
+                    <form class="mt-6" [formGroup]="displayNameForm" (ngSubmit)="saveDisplayName()">
+                        <label for="displayName" class="block text-sm font-medium text-muted-color mb-2">Görünen ad</label>
+                        <div class="flex flex-col gap-2 sm:flex-row">
+                            <input id="displayName" pInputText class="w-full" formControlName="displayName" [maxlength]="displayNameMax" autocomplete="name" />
+                            <button pButton type="submit" class="max-sm:self-start" [disabled]="displayNameSaving() || displayNameControl.pristine"><i class="p-button-icon" [class]="displayNameSaving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>Kaydet</button>
+                        </div>
+                        <small class="text-muted-color block mt-1"> Hasta kabulünde sorumlu hekim olarak bu ad gösterilir. Boş bırakırsanız e-postanızdan türetilen ad kullanılır. </small>
+                        @if (displayNameError()) {
+                            <small class="text-danger block mt-1" role="alert">{{ displayNameError() }}</small>
+                        }
+                    </form>
+                }
             </div>
         </div>
     `

@@ -20,6 +20,7 @@ import { AppEmptyStateComponent } from '@/app/shared/ui/empty-state/app-empty-st
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
@@ -40,6 +41,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         AdministrationRowMarksComponent,
         AdministrationVoidDialogComponent,
         AppListHeaderComponent,
+        AppListFiltersComponent,
         AppLoadingStateComponent,
         AppEmptyStateComponent,
         AppErrorStateComponent,
@@ -50,36 +52,39 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="card">
-            <app-list-header class="mb-4" title="Uygulamalar" [count]="totalItems()" />
-            <div class="flex flex-wrap items-end gap-3 mb-4 rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                <app-filter-field label="Ürün" labelId="lblAdminProduct" [active]="!!productId" width="select">
-                    <p-select
-                        ariaLabelledBy="lblAdminProduct"
-                        inputId="adminProduct"
-                        [options]="productOptions()"
-                        [(ngModel)]="productId"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="Tümü"
-                        [filter]="true"
-                        filterBy="label"
-                        [showClear]="true"
-                        class="w-full"
-                        (ngModelChange)="applyFilters()"
-                    />
-                </app-filter-field>
-                <app-filter-field label="İptal edilenler" labelFor="adminVoided" [active]="includeVoided" width="select">
-                    <label class="flex items-center gap-2 h-[2.5rem]">
-                        <p-checkbox inputId="adminVoided" [binary]="true" [(ngModel)]="includeVoided" (ngModelChange)="applyFilters()" />
-                        <span class="text-sm">İptal edilenleri göster</span>
-                    </label>
-                </app-filter-field>
-                @if (petId) {
-                    <div class="flex items-center gap-2 pb-1">
-                        <app-status-tag label="Hasta filtresi" severity="info" />
-                        <button pButton type="button" size="small" severity="secondary" [text]="true" (click)="clearPet()"><i class="p-button-icon pi pi-times"></i>Temizle</button>
-                    </div>
-                }
+            <div class="mb-4 rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                <app-list-header title="Uygulamalar" [count]="totalItems()">
+                    <app-list-filters [showClear]="false">
+                        <app-filter-field label="Ürün" labelId="lblAdminProduct" [active]="!!productId" width="select">
+                            <p-select
+                                ariaLabelledBy="lblAdminProduct"
+                                inputId="adminProduct"
+                                [options]="productOptions()"
+                                [(ngModel)]="productId"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Tümü"
+                                [filter]="true"
+                                filterBy="label"
+                                [showClear]="true"
+                                class="w-full"
+                                (ngModelChange)="applyFilters()"
+                            />
+                        </app-filter-field>
+                        <app-filter-field label="İptal edilenler" labelFor="adminVoided" [active]="includeVoided" width="select">
+                            <label class="flex items-center gap-2 h-[2.5rem]">
+                                <p-checkbox inputId="adminVoided" [binary]="true" [(ngModel)]="includeVoided" (ngModelChange)="applyFilters()" />
+                                <span class="text-sm">İptal edilenleri göster</span>
+                            </label>
+                        </app-filter-field>
+                        @if (petId) {
+                            <div class="flex items-center gap-2 pb-1">
+                                <app-status-tag label="Hasta filtresi" severity="info" />
+                                <button pButton type="button" size="small" severity="secondary" [text]="true" (click)="clearPet()"><i class="p-button-icon pi pi-times"></i>Temizle</button>
+                            </div>
+                        }
+                    </app-list-filters>
+                </app-list-header>
             </div>
 
             @if (error()) {

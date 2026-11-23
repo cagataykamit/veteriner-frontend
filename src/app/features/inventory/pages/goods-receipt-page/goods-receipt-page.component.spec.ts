@@ -51,6 +51,46 @@ describe('GoodsReceiptPageComponent', () => {
 
     const fillFirstLine = (product: GoodsReceiptProductPick, extra: Record<string, unknown> = {}) => cmp.lines.at(0).patchValue({ product, quantity: 2, ...extra });
 
+    it('S-03 telefon: girilen satır tek satır özete iner, aynı anda tek satır açık; eksik zorunlu seri/lot özette kırmızı; Sil Tamam\'ın sağında', async () => {
+        const narrow = vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true, addEventListener: () => undefined, removeEventListener: () => undefined } as unknown as MediaQueryList);
+
+        await setup();
+        const root = fixture.nativeElement as HTMLElement;
+
+        expect(root.querySelector('table')).toBeNull();
+        expect(root.querySelector('[data-testid="gr-row-0"]')).not.toBeNull();
+
+        fillFirstLine(vaccine, { unitCost: 45 });
+        cmp.addLine();
+        fixture.detectChanges();
+
+        expect(cmp.openLine()).toBe(cmp.lines.at(1));
+        const summary = root.querySelector('[data-testid="gr-line-summary-0"]')!;
+
+        expect(summary.textContent).toContain('Kuduz aşısı (V1)');
+        expect(summary.textContent).toContain('2 × 45,00');
+        expect(summary.querySelector('[data-testid="gr-line-problem"]')?.textContent).toContain('Seri/lot ve SKT zorunlu');
+        expect(summary.querySelector('.text-danger')).not.toBeNull();
+
+        const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-testid="gr-row-1"] button')).map((b) => b.textContent?.trim());
+
+        expect(buttons.indexOf('Sil')).toBe(buttons.indexOf('Tamam') + 1);
+
+        (summary as HTMLButtonElement).click();
+        fixture.detectChanges();
+        expect(root.querySelectorAll('[data-testid^="gr-row-"]').length).toBe(1);
+        expect(root.querySelector('[data-testid="gr-row-0"]')).not.toBeNull();
+
+        cmp.lines.at(0).patchValue({ lotNumber: 'A24117', expiryDate: '2030-06-30' });
+        root.querySelector<HTMLButtonElement>('[data-testid="gr-line-done"]')!.click();
+        fixture.detectChanges();
+        const done = root.querySelector('[data-testid="gr-line-summary-0"]')!;
+
+        expect(done.textContent).toContain('Lot A24117 · SKT 06.2030');
+        expect(done.querySelector('[data-testid="gr-line-problem"]')).toBeNull();
+        narrow.mockRestore();
+    });
+
     it('düşük stok kısayolu: ürün ve önerilen miktar ilk satıra ön dolu gelir', async () => {
         await setup({ productId: 'p1', quantity: '7' });
         expect(products.getById).toHaveBeenCalledWith('p1');

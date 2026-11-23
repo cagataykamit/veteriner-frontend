@@ -218,6 +218,22 @@ export function billingProfileFieldValidators(field: OrganizationBillingProfileF
     return validators;
 }
 
+/** Zorunlu alan mesajı alanın adını söyler (G-16: "<Alan> zorunludur." tek biçim). */
+const BILLING_PROFILE_FIELD_LABELS: Readonly<Record<OrganizationBillingProfileFormFieldKey, string>> = {
+    companyName: 'Firma adı',
+    legalCompanyName: 'Resmi firma adı',
+    taxOffice: 'Vergi dairesi',
+    taxNumber: 'Vergi numarası',
+    companyPhone: 'Firma telefon numarası',
+    invoiceProvince: 'İl',
+    invoiceDistrict: 'İlçe',
+    invoiceNeighborhood: 'Mahalle / Semt',
+    invoiceStreet: 'Sokak / Cadde',
+    invoiceBuildingName: 'Bina adı',
+    invoiceBuildingNo: 'Bina no',
+    invoiceDoorNo: 'Kapı no'
+};
+
 export function billingProfileFieldErrorMessage(
     field: OrganizationBillingProfileFormFieldKey,
     errors: ValidationErrors | null
@@ -231,7 +247,7 @@ export function billingProfileFieldErrorMessage(
     }
 
     if (errors['required']) {
-        return 'Bu alan zorunludur.';
+        return `${BILLING_PROFILE_FIELD_LABELS[field]} zorunludur.`;
     }
 
     if (errors['trimmedMinLength']) {

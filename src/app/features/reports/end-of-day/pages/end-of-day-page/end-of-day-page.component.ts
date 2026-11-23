@@ -69,10 +69,13 @@ interface OpenItemRow {
                 periodHint="Tek gün için başlangıç ve bitiş tarihini aynı seçin; varsayılan bugündür. En çok bir yıllık aralık seçilebilir."
                 searchPlaceholder=""
                 [activeBadges]="false"
+                [printable]="true"
+                [printDisabled]="state.loading()"
+                (print)="print()"
             >
                 @if (canDaily) {
                     <ng-container ngProjectAs="[extraFilters]">
-                        <app-filter-field label="Tür" labelId="eodRepKindLabel" [active]="false" width="select">
+                        <app-filter-field label="Tür" labelId="eodRepKindLabel" [active]="!!state.extraInputs['kind']" [badge]="false" width="select">
                             <p-select
                                 ariaLabelledBy="eodRepKindLabel"
                                 inputId="eodRepKind"
@@ -86,7 +89,7 @@ interface OpenItemRow {
                                 [showClear]="true"
                             />
                         </app-filter-field>
-                        <app-filter-field label="Ödeme türü" labelId="eodRepMethodLabel" [active]="false" width="select">
+                        <app-filter-field label="Ödeme türü" labelId="eodRepMethodLabel" [active]="!!state.extraInputs['paymentMethod']" [badge]="false" width="select">
                             <p-select
                                 ariaLabelledBy="eodRepMethodLabel"
                                 inputId="eodRepMethod"
@@ -100,7 +103,7 @@ interface OpenItemRow {
                                 [showClear]="true"
                             />
                         </app-filter-field>
-                        <app-filter-field label="İşlemi yapan" labelId="eodRepUserLabel" [active]="false" width="select">
+                        <app-filter-field label="İşlemi yapan" labelId="eodRepUserLabel" [active]="!!state.extraInputs['performedByUserId']" [badge]="false" width="select">
                             <p-select
                                 ariaLabelledBy="eodRepUserLabel"
                                 inputId="eodRepUser"
@@ -116,7 +119,6 @@ interface OpenItemRow {
                         </app-filter-field>
                     </ng-container>
                 }
-                <button pButton type="button" barActions severity="secondary" [outlined]="true" (click)="print()" [disabled]="state.loading()"><i class="p-button-icon pi pi-print"></i>{{ copy.registerPrint }}</button>
             </app-report-filter-bar>
 
             <div class="eod-print-head">

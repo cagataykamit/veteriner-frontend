@@ -97,7 +97,7 @@ import { tenantRoleLabel } from '@/app/core/auth/tenant-role-labels';
                         <p class="text-danger text-sm mb-3 m-0" role="alert">{{ roleActionError() }}</p>
                     }
                     @if (claimsOptionsError()) {
-                        <p class="text-orange-600 dark:text-orange-400 text-sm mb-3 m-0" role="status">{{ claimsOptionsError() }}</p>
+                        <p class="text-warn text-sm mb-3 m-0" role="status">{{ claimsOptionsError() }}</p>
                     }
                     @if (canManageTenantAccess() && !m.isCurrentUser) {
                         <div class="flex flex-col sm:flex-row flex-wrap gap-3 items-end pb-3 mb-3 border-b border-surface-200 dark:border-surface-700">
@@ -156,7 +156,7 @@ import { tenantRoleLabel } from '@/app/core/auth/tenant-role-labels';
                             · {{ effectivePermissionSummary().groupCount }} {{ copy.tenantMemberSummaryGroupsPart }}
                         </p>
                         @if (matrixLoadError(); as mxErr) {
-                            <p class="text-xs text-orange-600 dark:text-orange-400 m-0 mb-2" role="status">{{ mxErr }}</p>
+                            <p class="text-xs text-warn m-0 mb-2" role="status">{{ mxErr }}</p>
                         }
                         @if (canManageTenantAccess()) {
                             <button pButton type="button" class="p-button-outlined" (click)="openPermissionSummary()"><i class="p-button-icon pi pi-list"></i>{{ copy.tenantMemberViewPermissionSummaryButton }}</button>
@@ -233,7 +233,7 @@ import { tenantRoleLabel } from '@/app/core/auth/tenant-role-labels';
                         <p class="text-danger text-sm mb-3 m-0" role="alert">{{ clinicActionError() }}</p>
                     }
                     @if (clinicsPickerError()) {
-                        <p class="text-orange-600 dark:text-orange-400 text-sm mb-3 m-0" role="status">{{ clinicsPickerError() }}</p>
+                        <p class="text-warn text-sm mb-3 m-0" role="status">{{ clinicsPickerError() }}</p>
                     }
                     @if (canManageTenantAccess() && !m.isCurrentUser) {
                         <div class="flex flex-col sm:flex-row flex-wrap gap-3 items-end pb-3 mb-3 border-b border-surface-200 dark:border-surface-700">

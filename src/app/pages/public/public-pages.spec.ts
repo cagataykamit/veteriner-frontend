@@ -216,6 +216,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(cards.length).toBe(PUBLIC_FEATURE_GROUPS.flatMap((g) => g.cards).length);
         expect(plans('Klinik web sitesi')).toBe('Tüm paketlerde');
         expect(plans('Çoklu kasa ve kasa yönetimi')).toBe('Profesyonel ve Kurumsal paketlerinde');
+        expect(plans('Kamerayla barkod okutma')).toBe('Tüm paketlerde');
         expect(plans('Şubeler özeti')).toBe('Kurumsal paketinde');
         expect(root().textContent).toContain('İYS');
         expect(root().textContent).not.toMatch(/en iyi|bir numara|yalnızca bizde/i);
@@ -233,16 +234,16 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(support).toContain('e-postayla göndermezsiniz');
     });
 
-    it('geçiş: aktarılır / aktarılmaz listeleri geçiş sayfasında ve ana sayfada aynı', async () => {
+    it('geçiş: aktarılanlar listesi geçiş sayfasında ve ana sayfada aynı; aktarılmayanlar tanıtımda sayılmaz', async () => {
         const included = ['Müşteri ve hasta notları', 'Geçmiş işlem ve kontroller (dışa aktarımda varsa, klinik geçmişe not olarak)', 'Açık bakiye (borç ve alacak)', 'Ürün ve hizmet kartları (fiyat, KDV oranı ve alış fiyatıyla)'];
-        const excluded = 'Geçmiş randevular (randevu olarak)';
 
         for (const path of [PUBLIC_PATHS.migration, PUBLIC_PATHS.home]) {
             await harness.navigateByUrl(path);
             harness.detectChanges();
             const items = texts('li span');
 
-            expect(items).toEqual(expect.arrayContaining([...included, excluded]));
+            expect(items).toEqual(expect.arrayContaining(included));
+            expect(root().textContent).not.toMatch(/aktarılmaz/i);
             expect(root().textContent).not.toMatch(/alacak \(fazla ödeme\)|alacak bakiyesi/i);
         }
     });

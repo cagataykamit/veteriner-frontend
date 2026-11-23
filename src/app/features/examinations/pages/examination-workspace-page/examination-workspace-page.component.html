@@ -83,10 +83,10 @@
                 }
                 <form [formGroup]="selectionForm">
                     <div class="grid grid-cols-12 gap-4">
-                        <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="clientId" [error]="selectionForm.controls.clientId.invalid && selectionForm.controls.clientId.touched ? 'Zorunlu alan.' : apiFieldErrors().clientId ? apiFieldErrors().clientId : null" [required]="true">
+                        <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="clientId" [error]="selectionForm.controls.clientId.invalid && selectionForm.controls.clientId.touched ? 'Müşteri seçimi zorunludur.' : apiFieldErrors().clientId ? apiFieldErrors().clientId : null" [required]="true">
                             <app-client-search inputId="clientId" formControlName="clientId" />
                         </app-form-field>
-                        <app-form-field class="col-span-12 md:col-span-6" label="Hasta" fieldId="petId" [error]="selectionForm.controls.petId.invalid && selectionForm.controls.petId.touched ? 'Zorunlu alan.' : apiFieldErrors().petId ? apiFieldErrors().petId : null" [required]="true">
+                        <app-form-field class="col-span-12 md:col-span-6" label="Hasta" fieldId="petId" [error]="selectionForm.controls.petId.invalid && selectionForm.controls.petId.touched ? 'Hasta seçimi zorunludur.' : apiFieldErrors().petId ? apiFieldErrors().petId : null" [required]="true">
                             <app-pet-search inputId="petId" formControlName="petId" [clientId]="selectionForm.controls.clientId.value" [activeOnly]="true" />
                         </app-form-field>
                     </div>
@@ -97,21 +97,16 @@
             }
         }
 
-        <!-- Hasta bağlamı | form: kırılım içerik alanına göre (detay sayfasıyla aynı: ≥56rem iki sütun). -->
+        <!-- Form | hasta bağlamı: kırılım içerik alanına göre (detay sayfasıyla aynı: ≥56rem iki sütun, bağlam sağda, K-02). -->
         <div class="@container grid grid-cols-12 gap-4 items-start">
-            @if (contextPetId(); as pid) {
-                <aside class="col-span-12 @4xl:col-span-4 @4xl:sticky @4xl:top-20 min-w-0" data-testid="patient-context-aside">
-                    <app-examination-patient-context [petId]="pid" [excludeExaminationId]="isEdit ? examinationId : null" />
-                </aside>
-            }
             <form appFormSubmit class="col-span-12 min-w-0" [ngClass]="{ '@4xl:col-span-8': !!contextPetId() }" [formGroup]="form" (ngSubmit)="onSubmit()">
                 <app-form-error-summary />
                 <div class="card mb-4">
                     <div class="grid grid-cols-12 gap-4">
-                        <app-form-field class="col-span-12 md:col-span-6" label="Muayene tarihi" fieldId="examinationDate" [error]="form.controls.examinationDate.hasError('dateYearInvalid') && form.controls.examinationDate.touched ? 'Yıl 4 haneli olmalıdır.' : form.controls.examinationDate.hasError('required') && form.controls.examinationDate.touched ? 'Muayene tarihi seçilmelidir.' : apiFieldErrors().examinationDate ? apiFieldErrors().examinationDate : null" [required]="true">
+                        <app-form-field class="col-span-12 md:col-span-6" label="Muayene tarihi" fieldId="examinationDate" [error]="form.controls.examinationDate.hasError('dateYearInvalid') && form.controls.examinationDate.touched ? 'Yıl 4 haneli olmalıdır.' : form.controls.examinationDate.hasError('required') && form.controls.examinationDate.touched ? 'Muayene tarihi zorunludur.' : apiFieldErrors().examinationDate ? apiFieldErrors().examinationDate : null" [required]="true">
                             <app-date-input inputId="examinationDate" type="date" formControlName="examinationDate" [min]="dateInputMin" limit="past" />
                         </app-form-field>
-                        <app-form-field class="col-span-12 md:col-span-6" label="Muayene saati" fieldId="examinationTime" [error]="form.controls.examinationTime.invalid && form.controls.examinationTime.touched ? 'Muayene saati seçilmelidir.' : apiFieldErrors().examinationTime ? apiFieldErrors().examinationTime : null" [required]="true">
+                        <app-form-field class="col-span-12 md:col-span-6" label="Muayene saati" fieldId="examinationTime" [error]="form.controls.examinationTime.invalid && form.controls.examinationTime.touched ? 'Muayene saati zorunludur.' : apiFieldErrors().examinationTime ? apiFieldErrors().examinationTime : null" [required]="true">
                             <p-select
                                 inputId="examinationTime"
                                 formControlName="examinationTime"
@@ -257,12 +252,18 @@
                     } @else if (submitError()) {
                         <p class="text-danger mt-4 mb-0" role="alert">{{ submitError() }}</p>
                     }
-                    <div class="flex flex-wrap gap-2 mt-4">
-                        <button pButton type="submit" [disabled]="saveDisabled() || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
-                        <button pButton type="button" severity="secondary" (click)="onCancel()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
-                    </div>
+                </div>
+                <!-- Kaydet satırı formun son çocuğu: uzun formda ekranın altına yapışır (G-11, _utils.scss). -->
+                <div class="card mb-0 flex flex-wrap gap-2">
+                    <button pButton type="submit" [disabled]="saveDisabled() || submitting()"><i class="p-button-icon" [class]="submitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>{{ copy.buttonSave }}</button>
+                    <button pButton type="button" severity="secondary" (click)="onCancel()" [disabled]="submitting()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonCancel }}</button>
                 </div>
             </form>
+            @if (contextPetId(); as pid) {
+                <aside class="col-span-12 @4xl:col-span-4 @4xl:sticky @4xl:top-20 min-w-0" data-testid="patient-context-aside">
+                    <app-examination-patient-context [petId]="pid" [excludeExaminationId]="isEdit ? examinationId : null" />
+                </aside>
+            }
         </div>
     }
 

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, DestroyRef, OnInit, computed, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ElementRef, OnInit, computed, effect, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { EDocumentIssueDialogComponent } from '@/app/entities/e-document/components/e-document-issue-dialog.component';
 import type { EDocumentSource } from '@/app/entities/e-document/models/e-document.model';
 import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
@@ -14,6 +14,7 @@ import { DrawerModule } from 'primeng/drawer';
 import { VisitCheckoutPanelComponent } from '@/app/entities/visit-checkout/components/visit-checkout-panel.component';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
 import { AppointmentNoShowDialogComponent } from '@/app/entities/appointment/components/appointment-no-show-dialog.component';
+import { SelectModule } from 'primeng/select';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
@@ -68,6 +69,7 @@ import {
     type TodayStatus,
     type TodayStatusTone,
     type WaitAlertLevel,
+    carriedOverDays,
     isPossiblyForgottenVisit,
     waitAlertLevel,
     waitAlertTitle
@@ -101,8 +103,10 @@ type TodayListRow = { kind: 'group'; id: string; group: TodayGroup } | { kind: '
 
 interface TodayColumn {
     label: string;
-    /** `<col>` ve başlık genişliği; dar kapsayıcıda gizlenen sütunun gövde hücresi de aynı `@max-[…]:hidden` sınıfını taşır. */
+    /** Başlık hücresi genişliği; dar kapsayıcıda gizlenen sütunun gövde hücresi de aynı `@max-[…]:hidden` sınıfını taşır. */
     className: string;
+    /** `className`'deki `@max-[n rem]:hidden` eşiği (colspan hesabı için; ikisi birlikte değişir). */
+    hiddenBelowRem?: number;
 }
 
 /** Bitmiş iş: daha alçak, soluk satır (Tamamlandı, Gelmedi, yanlış işaretlenen). */
@@ -126,6 +130,7 @@ const SUMMARY_ORDER: readonly TodayStatusTone[] = ['planned', 'waiting', 'inProg
         ButtonModule,
         DialogModule,
         FormsModule,
+        SelectModule,
         SelectButtonModule,
         MenuModule,
         RouterLink,
@@ -210,6 +215,7 @@ export class TodayPageComponent implements OnInit {
     readonly rows = computed(() => this.buildRows(this.groups(), this.showCompleted()));
     /** Listede hiçbir satırda sorumlu hekim yoksa Hekim sütunu çizilmez (her satırda "—" yer kaplamasın). */
     readonly hasVet = computed(() => (this.today()?.items ?? []).some((i) => !!i.responsibleVeterinarianName));
+    private readonly hasCarriedOver = computed(() => (this.today()?.items ?? []).some((i) => !!i.scheduledAtUtc && carriedOverDays(i, this.now()) !== null));
     /**
      * Sütun genişlikleri taslak A ile aynı (px): Saat dar, Hasta ve Müşteri geniş, Neden / not kalan yeri alır, İşlem sağa yaslı.
      * Kapsayıcı genişliğine göre (kapsayıcı sorgusu; ekran/yakınlaştırma değil): <72 rem Hekim gizlenir (ad Hasta hücresine iner) ve Hasta /
@@ -217,14 +223,49 @@ export class TodayPageComponent implements OnInit {
      * (Tailwind kaynaktan tarar).
      */
     readonly columns = computed<TodayColumn[]>(() => [
-        { label: 'Saat', className: 'w-[80px]' },
+        // Önceki günden kalan gelişte saatin altındaki not tarihlidir ("19.11 05:37 geldi"); tek satıra sığsın diye sütun genişler (B-03).
+        { label: 'Saat', className: this.hasCarriedOver() ? 'w-[128px]' : 'w-[80px]' },
         { label: 'Hasta', className: 'w-[220px] @max-[72rem]:w-auto' },
         { label: 'Müşteri', className: 'w-[230px] @max-[72rem]:w-auto' },
-        ...(this.hasVet() ? [{ label: 'Hekim', className: 'w-[160px] @max-[72rem]:hidden' }] : []),
+        ...(this.hasVet() ? [{ label: 'Hekim', className: 'w-[160px] @max-[72rem]:hidden', hiddenBelowRem: 72 }] : []),
         { label: 'Durum', className: 'w-[180px]' },
-        { label: 'Neden / not', className: 'w-auto @max-[64rem]:hidden' },
+        { label: 'Neden / not', className: 'w-auto @max-[64rem]:hidden', hiddenBelowRem: 64 },
         { label: 'İşlem', className: 'w-[230px] @max-[50rem]:w-[120px]' }
     ]);
+    /** Tablo kapsayıcısının genişliği (rem); kapsayıcı sorgusuyla aynı ölçü. Ölçülmeden önce `null` (tüm sütunlar sayılır). */
+    private readonly tableWidthRem = signal<number | null>(null);
+    /**
+     * Ara başlık ve "tamamlananlar" satırının `colspan`'ı görünen sütun sayısıdır (B-06): gizli sütunu da sayan colspan sabit düzende
+     * fazladan boş bir sütun açıyor, başlık şeridi ve satırlar karttan kısa kalıyordu.
+     */
+    readonly visibleColumnCount = computed(() => {
+        const width = this.tableWidthRem();
+
+        return this.columns().filter((c) => width === null || !c.hiddenBelowRem || width >= c.hiddenBelowRem).length;
+    });
+    private readonly tableBox = viewChild<ElementRef<HTMLElement>>('tableBox');
+    /**
+     * Telefonda "⋯" menüsündeki hızlı işlemler (B-01): geniş ekrandaki düğmelerle aynı yetki kuralı; salt okunurda pasif. Yetkisi olmayan
+     * işlem hiç yazılmaz.
+     */
+    readonly quickMenuItems = computed<MenuItem[]>(() => {
+        const disabled = this.ro.mutationBlocked();
+        const items: MenuItem[] = [];
+
+        if (this.canCreateAppointment) {
+            items.push({ label: 'Yeni randevu', icon: 'pi pi-calendar-plus', routerLink: '/panel/appointments/new', disabled });
+        }
+
+        if (this.canCreateExamination) {
+            items.push({ label: 'Yeni muayene', icon: 'pi pi-file-edit', routerLink: '/panel/examinations/new', disabled });
+        }
+
+        if (this.canQuickSell) {
+            items.push({ label: 'Hızlı satış', icon: 'pi pi-shopping-cart', routerLink: '/panel/sales/new', disabled });
+        }
+
+        return items;
+    });
     /** Başlığın yanında soluk tarih ve saat ("Çarşamba, 19 Kasım · 15:20"); her yenilemede güncellenir. */
     readonly headerNote = computed(() => `${formatWeekdayDayMonthDisplay(this.now())} · ${formatTimeDisplay(this.now())}`);
     /** Liste başlığındaki sayım ("1 bekleniyor · 2 sırada …"); yalnız günlük listede. */
@@ -310,8 +351,8 @@ export class TodayPageComponent implements OnInit {
     };
     readonly waitAlertClass: Record<WaitAlertLevel, string> = {
         none: '',
-        warning: 'font-semibold text-orange-600 dark:text-orange-400',
-        critical: 'font-semibold text-red-600 dark:text-red-400'
+        warning: 'font-semibold text-warn',
+        critical: 'font-semibold text-danger'
     };
     readonly waitAlertIcon: Record<WaitAlertLevel, string> = {
         none: '',
@@ -341,8 +382,26 @@ export class TodayPageComponent implements OnInit {
         this.startWithScope();
     }
 
-    private watchCompactViewport(): void {
-        const query = window.matchMedia(COMPACT_MEDIA_QUERY);
+    constructor() {
+        // Tablo kapsayıcısı liste yüklenince çizilir; genişliği değiştikçe görünen sütun sayısı güncellenir (B-06).
+        effect((onCleanup) => {
+            const box = this.tableBox()?.nativeElement;
+
+            if (!box || typeof ResizeObserver === 'undefined') {
+                this.tableWidthRem.set(null);
+
+                return;
+            }
+
+            const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+            const observer = new ResizeObserver(() => this.tableWidthRem.set(box.clientWidth / rem));
+
+            observer.observe(box);
+            onCleanup(() => observer.disconnect());
+        });
+    }
+
+    private watchCompactViewport(): void {        const query = window.matchMedia(COMPACT_MEDIA_QUERY);
         const update = () => this.compact.set(query.matches);
 
         update();
@@ -397,13 +456,23 @@ export class TodayPageComponent implements OnInit {
         return this.time(item.scheduledAtUtc ?? item.arrivedAtUtc);
     }
 
-    /** Saatin altındaki küçük not: randevusuzsa "randevusuz", klinikteki randevulu hastada "geldi 14:56"; bitmiş işte yok. */
+    /**
+     * Saatin altındaki tek satır not: randevusuzsa "randevusuz", klinikteki randevulu hastada "14:56 geldi", önceki günden kalmışsa
+     * "19.11 05:37 geldi" (B-03); bitmiş işte yok.
+     */
     timeNote(item: TodayItemVm, done: boolean): string | null {
         if (!item.scheduledAtUtc) {
             return item.arrivedAtUtc ? 'randevusuz' : null;
         }
 
-        return item.arrivedAtUtc && !done ? `geldi ${this.arrival(item.arrivedAtUtc)}` : null;
+        return item.arrivedAtUtc && !done ? `${formatTodayArrival(item.arrivedAtUtc, this.now(), true)} geldi` : null;
+    }
+
+    /** Önceki günden açık gelişin tek rozeti: "3 gündür açık" (açıklaması ipucunda); değilse `null`. */
+    carriedOverLabel(item: TodayItemVm): string | null {
+        const days = carriedOverDays(item, this.now());
+
+        return days === null ? null : `${days} gündür açık`;
     }
 
     /** Hekim baş harfleri ("Dr." gibi unvanlar atlanır): "Dr. Ece Yılmaz" → "EY". */

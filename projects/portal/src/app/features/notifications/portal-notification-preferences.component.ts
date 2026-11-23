@@ -21,8 +21,8 @@ type PreferenceKey = 'push' | 'reminders' | 'marketing';
 /**
  * Bildirim tercihleri (PORTAL-007, sözleşme §10): hesap düzeyi anlık bildirim (push, MOBILE-003 §14) ve seçili klinikteki hatırlatma
  * (§5.11 ile aynı alan) ile ticari ileti onayı. Anahtar değişince hemen kaydedilir; kayıt sürerken anahtarlar kilitlenir, hata
- * olursa sunucudaki değer korunur. İşlem iletileri tercihle kapanmaz. Push sağlayıcısı yokken ve ticari gönderim kapalıyken tercih
- * yine saklanır. Cihaz jetonu `PortalPushDevice`'tan gelir (tarayıcıda yok; mağaza paketinde MOBILE-002).
+ * olursa sunucudaki değer korunur. İşlem iletileri tercihle kapanmaz. Push sağlayıcısı yokken anlık bildirim seçeneği gösterilmez;
+ * ticari gönderim kapalıyken onay yine saklanır. Cihaz jetonu `PortalPushDevice`'tan gelir (tarayıcıda yok; mağaza paketinde MOBILE-002).
  */
 @Component({
     selector: 'portal-notification-preferences',
@@ -42,27 +42,26 @@ type PreferenceKey = 'push' | 'reminders' | 'marketing';
                     <portal-error-state [message]="account.error()" (retry)="account.retry()" />
                 }
                 @default {
+                    <!-- Sağlayıcı yokken çalışmayan seçenek gösterilmez (PO-06); kayıtlı tercih sunucuda kalır. -->
                     @if (account.data(); as a) {
-                        <label class="portal-check">
-                            <input
-                                type="checkbox"
-                                role="switch"
-                                data-testid="push-switch"
-                                [checked]="a.push.enabled"
-                                [disabled]="saving() !== null"
-                                [attr.aria-checked]="a.push.enabled"
-                                aria-describedby="account-push-hint"
-                                (change)="togglePush($any($event.target))"
-                            />
-                            <span>
-                                Anlık bildirim
-                                <span id="account-push-hint" class="portal-field-hint" data-testid="push-hint">{{
-                                    a.push.available
-                                        ? '"Verilerimle ilgili talep" yanıtları cihazınıza anlık bildirim olarak da gelir.'
-                                        : 'Anlık bildirimler henüz etkin değil. Tercihiniz şimdiden kaydedilir; etkinleştiğinde yeniden sorulmaz.'
-                                }}</span>
-                            </span>
-                        </label>
+                        @if (a.push.available) {
+                            <label class="portal-check">
+                                <input
+                                    type="checkbox"
+                                    role="switch"
+                                    data-testid="push-switch"
+                                    [checked]="a.push.enabled"
+                                    [disabled]="saving() !== null"
+                                    [attr.aria-checked]="a.push.enabled"
+                                    aria-describedby="account-push-hint"
+                                    (change)="togglePush($any($event.target))"
+                                />
+                                <span>
+                                    Anlık bildirim
+                                    <span id="account-push-hint" class="portal-field-hint" data-testid="push-hint">"Verilerimle ilgili talep" yanıtları cihazınıza anlık bildirim olarak da gelir.</span>
+                                </span>
+                            </label>
+                        }
                         @if (pushNote(); as note) {
                             <div class="portal-note" data-testid="push-note">
                                 <i class="fa-solid fa-circle-info" aria-hidden="true"></i>

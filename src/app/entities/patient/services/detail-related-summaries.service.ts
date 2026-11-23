@@ -1,7 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { map, type Observable, of } from 'rxjs';
 import { AppointmentsService } from '@/app/entities/appointment/services/appointments.service';
-import { ClientsService } from '@/app/entities/client/services/clients.service';
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import { ExaminationsService } from '@/app/entities/examination/services/examinations.service';
 import type { ExaminationListItemVm } from '@/app/entities/examination/models/examination-vm.model';
@@ -45,7 +44,6 @@ export class DetailRelatedSummariesService {
     private readonly vaccinations = inject(VaccinationsService);
     private readonly examinations = inject(ExaminationsService);
     private readonly appointments = inject(AppointmentsService);
-    private readonly clients = inject(ClientsService);
     private readonly pets = inject(PetsService);
     private readonly payments = inject(PaymentsService);
     private readonly treatments = inject(TreatmentsService);
@@ -238,38 +236,6 @@ export class DetailRelatedSummariesService {
                 return sortIsoDesc(rows, (x) => x.scheduledAtUtc).slice(0, DETAIL_RELATED_LIST_LIMIT);
             })
         );
-    }
-
-    /**
-     * Ödeme bağlamı: ilgili muayeneler — önce hayvan, yoksa müşteri listesi.
-     * Ödeme DTO’sunda `examinationId` yoksa tam eşleşme yapılamaz; bağlamsal kısa liste.
-     */
-    loadRelatedExaminationsForPaymentContext(petId: string | null, clientId: string | null): Observable<ExaminationListItemVm[]> {
-        const pid = petId?.trim();
-        const cid = clientId?.trim();
-
-        if (pid) {
-            return this.loadRecentExaminationsForPet(pid);
-        }
-
-        if (cid) {
-            return this.clients.getClientRecentSummary(cid).pipe(
-                map((s) => (s.examinations ?? []).slice(0, DETAIL_RELATED_LIST_LIMIT))
-            );
-        }
-
-        return of([]);
-    }
-
-    /** Ödeme detayı: aynı hayvana ait son randevular (planlanan zamana göre, en yeni önce). */
-    loadRecentAppointmentsForPaymentPetContext(petId: string | null): Observable<AppointmentListItemVm[]> {
-        const pid = petId?.trim();
-
-        if (!pid) {
-            return of([]);
-        }
-
-        return this.loadRecentAppointmentsForPetChronological(pid);
     }
 }
 

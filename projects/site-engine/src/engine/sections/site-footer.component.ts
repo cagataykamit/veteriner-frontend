@@ -3,7 +3,10 @@ import { SECTION_DIRECTIVES, SiteSection } from '../site-context';
 import { SECTION_BASE } from '../section-base';
 import { SiteLogoComponent } from '../site-parts.component';
 
-/** Alt bilgi: yazı işareti, adres ve iletişim, sayfa bağlantıları; altta ad, sosyal hesaplar ve Vetinity ibaresi. */
+/**
+ * Alt bilgi: yazı işareti, adres ve iletişim, sayfa bağlantıları; altta ad, sosyal hesaplar ve Vetinity ibaresi. İletişim sayfası
+ * telefon, e-posta ve adresi zaten gösterdiği için orada alt bilgi bunları tekrar yazmaz (W-04).
+ */
 @Component({
     selector: 'site-footer',
     standalone: true,
@@ -20,7 +23,7 @@ import { SiteLogoComponent } from '../site-parts.component';
                             <p class="muted">{{ v.slogan }}</p>
                         }
                     </div>
-                    @if (v.address || v.telHref || v.mailHref) {
+                    @if (!site.onContactPage() && (v.address || v.telHref || v.mailHref)) {
                         <div class="info">
                             @if (v.address) {
                                 <address class="muted">
