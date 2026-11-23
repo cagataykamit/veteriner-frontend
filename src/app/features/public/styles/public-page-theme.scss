@@ -759,6 +759,11 @@ html.public-site-root {
     color: var(--vetinity-teal);
 }
 
+/* Giriş ve davet sayfalarında çip yazısı koyu teal: açık zeminde AA (marka teali 3:1 kalıyordu) */
+.public-auth-page .public-brand-chip {
+    color: var(--ps-accent);
+}
+
 /*
  * Düğmeler: birincil lacivert hap (koyu temada krem zemin, lacivert yazı; tanıtım birincil düğmesiyle aynı). Diğer düğmeler (Kod
  * gönder, Doğrula) lacivert çerçeveli. Devre dışı düğme iki temada da gri: etkin olanla karışmaz (L-03).
