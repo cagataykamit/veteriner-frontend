@@ -25,6 +25,14 @@ import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { ConfirmationService } from 'primeng/api';
 import { joinPresent } from '@/app/shared/utils/labels.utils';
 
+interface ProductInfoField {
+    readonly label: string;
+    readonly value: string;
+    readonly numeric?: boolean;
+    readonly testId?: string;
+    readonly title?: string;
+}
+
 @Component({
     selector: 'app-product-detail-page',
     standalone: true,
@@ -110,40 +118,29 @@ import { joinPresent } from '@/app/shared/utils/labels.utils';
                 <div class="grid grid-cols-12 gap-4">
                     <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-8 @container">
                         <h5 class="mt-0 mb-3">Ürün bilgileri</h5>
+                        <!-- Hasta kartındaki desen (G-05): dolu alanlar görünür, boşlar "Boş alanları göster" ile açılır. -->
+                        @let fields = infoFields(p);
                         <dl [class]="tileGridClass">
-                            <div>
-                                <dt>Farmakolojik şekil</dt>
-                                <dd [class]="p.pharmacologicalForm === emptyMark ? 'field-empty' : 'font-medium'">{{ p.pharmacologicalForm }}</dd>
-                            </div>
-                            <div>
-                                <dt>Takdim şekli</dt>
-                                <dd [class]="p.presentationForm === emptyMark ? 'field-empty' : 'font-medium'">{{ p.presentationForm }}</dd>
-                            </div>
-                            <div>
-                                <dt>Ambalaj</dt>
-                                <dd [class]="p.packaging === emptyMark ? 'field-empty' : 'font-medium'">{{ p.packaging }}</dd>
-                            </div>
-                            <div>
-                                <dt>Üretici</dt>
-                                <dd [class]="p.manufacturer === emptyMark ? 'field-empty' : 'font-medium'">{{ p.manufacturer }}</dd>
-                            </div>
-                            <div>
-                                <dt>Barkod</dt>
-                                <dd [class]="p.barcode === emptyMark ? 'field-empty' : 'font-medium tabular-nums'">{{ p.barcode }}</dd>
-                            </div>
-                            <div>
-                                <dt>Kategori</dt>
-                                <dd [class]="p.categoryName === emptyMark ? 'field-empty' : 'font-medium'">{{ p.categoryName }}</dd>
-                            </div>
-                            <div>
-                                <dt>KDV oranı</dt>
-                                <dd class="font-medium" data-testid="product-vat-rate">{{ p.vatRateLabel }}</dd>
-                            </div>
-                            <div>
-                                <dt title="Bilgi amaçlıdır; stok değeri ve ücret hesabında kullanılmaz.">Alış fiyatı (bilgi amaçlı)</dt>
-                                <dd [class]="p.purchasePriceText === emptyMark ? 'field-empty' : 'font-medium tabular-nums'" data-testid="product-purchase-price">{{ p.purchasePriceText }}</dd>
-                            </div>
+                            @for (f of fields.filled; track f.label) {
+                                <div>
+                                    <dt [attr.title]="f.title ?? null">{{ f.label }}</dt>
+                                    <dd class="font-medium" [class.tabular-nums]="f.numeric" [attr.data-testid]="f.testId ?? null">{{ f.value }}</dd>
+                                </div>
+                            }
+                            @if (showEmptyFields()) {
+                                @for (f of fields.empty; track f.label) {
+                                    <div>
+                                        <dt [attr.title]="f.title ?? null">{{ f.label }}</dt>
+                                        <dd class="field-empty" [attr.data-testid]="f.testId ?? null">{{ f.value }}</dd>
+                                    </div>
+                                }
+                            }
                         </dl>
+                        @if (fields.empty.length > 0) {
+                            <button type="button" class="mt-3 p-0 border-0 bg-transparent text-primary text-sm font-medium cursor-pointer" data-testid="toggle-empty-fields" (click)="showEmptyFields.set(!showEmptyFields())">
+                                {{ showEmptyFields() ? 'Boş alanları gizle' : 'Boş alanları göster (' + fields.empty.length + ')' }}
+                            </button>
+                        }
                     </div>
                     <div class="card mb-0 h-full min-w-0 col-span-12 @4xl:col-span-4">
                         <h5 class="mt-0 mb-3">Açıklama</h5>
@@ -205,6 +202,24 @@ export class ProductDetailPageComponent implements OnInit {
 
     readonly emptyMark = '—';
     protected readonly tileGridClass = DETAIL_TILE_GRID_CLASS;
+    readonly showEmptyFields = signal(false);
+
+    /** "Ürün bilgileri" kutuları: dolu olanlar ve boşlar (`—`) ayrı; boşlar istenince gösterilir. */
+    protected infoFields(p: ProductDetailVm): { filled: ProductInfoField[]; empty: ProductInfoField[] } {
+        const fields: ProductInfoField[] = [
+            { label: 'Farmakolojik şekil', value: p.pharmacologicalForm },
+            { label: 'Takdim şekli', value: p.presentationForm },
+            { label: 'Ambalaj', value: p.packaging },
+            { label: 'Üretici', value: p.manufacturer },
+            { label: 'Barkod', value: p.barcode, numeric: true },
+            { label: 'Kategori', value: p.categoryName },
+            { label: 'KDV oranı', value: p.vatRateLabel, testId: 'product-vat-rate' },
+            { label: 'Alış fiyatı (bilgi amaçlı)', value: p.purchasePriceText, numeric: true, testId: 'product-purchase-price', title: 'Bilgi amaçlıdır; stok değeri ve ücret hesabında kullanılmaz.' }
+        ];
+        const isEmpty = (f: ProductInfoField) => !f.value?.trim() || f.value.trim() === this.emptyMark;
+
+        return { filled: fields.filter((f) => !isEmpty(f)), empty: fields.filter(isEmpty) };
+    }
     /** Hizmetin stoğu, partisi ve stok işlemi yoktur (ADR-018). */
     readonly isStockTracked = (p: Pick<ProductDetailVm, 'kind'>) => isStockTrackedKind(p.kind);
 

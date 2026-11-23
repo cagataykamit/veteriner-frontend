@@ -39,6 +39,13 @@ function speciesName(v: string | null | undefined): string {
     return v?.trim() ? v : '-';
 }
 
+/** Kilo gösterimi: bilinmeyen ya da 0 kilo "—" (listede "0" ve telefonda "0 kg" yazılmaz, G-05). */
+function weightDisplay(v: number | null | undefined): string {
+    const n = Number(v);
+
+    return v != null && Number.isFinite(n) && n > 0 ? formatVitalNumber('weightKg', n) : EM;
+}
+
 /** Form/raw değer → güvenli trim (`type="date"` / `number` kenar durumları). */
 function trimFormText(value: unknown): string {
     if (value == null) {
@@ -405,8 +412,7 @@ export function mapCreatePetToApiBody(req: CreatePetRequest): PetCreateRequestDt
 }
 
 export function mapPetListItemDtoToVm(dto: PetListItemDto): PetListItemVm {
-    const weightStr =
-        dto.weight != null && !Number.isNaN(Number(dto.weight)) ? formatVitalNumber('weightKg', Number(dto.weight)) : EM;
+    const weightStr = weightDisplay(dto.weight);
 
     return {
         id: dto.id,
@@ -469,8 +475,7 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
     const ex = dto.examinationsSummary;
     const ap = dto.appointmentsSummary;
 
-    const weightStr =
-        dto.weight != null && !Number.isNaN(Number(dto.weight)) ? formatVitalNumber('weightKg', Number(dto.weight)) : EM;
+    const weightStr = weightDisplay(dto.weight);
 
     return {
         petAlerts,

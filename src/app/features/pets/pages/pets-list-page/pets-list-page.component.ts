@@ -29,6 +29,7 @@ import { PETS_CREATE_CLAIM, PETS_UPDATE_CLAIM } from '@/app/core/auth/operation-
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { AiEntryButtonComponent } from '@/app/entities/ai/components/ai-entry-button.component';
 import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
+import { joinPresent } from '@/app/shared/utils/labels.utils';
 
 type PetsListState = {
     search: string;
@@ -312,7 +313,7 @@ export class PetsListPageComponent implements OnInit {
     phoneDetailLine(row: PetListItemVm): string {
         const known = (v: string) => !!v && v !== '—';
 
-        return [known(row.colorName) ? `Renk: ${row.colorName}` : '', known(row.weight) ? `${row.weight} kg` : ''].filter(Boolean).join(' · ');
+        return joinPresent([known(row.colorName) ? `Renk: ${row.colorName}` : '', known(row.weight) ? `${row.weight} kg` : ''], ' · ');
     }
 
     readonly displayedRows = computed(() => this.rawItems());

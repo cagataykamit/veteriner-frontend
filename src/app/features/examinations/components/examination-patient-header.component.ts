@@ -9,12 +9,13 @@ import { speciesEmoji } from '@/app/shared/utils/species-icon.utils';
 import { NO_PET_ALERTS } from '@/app/shared/pet-alerts/pet-alerts.utils';
 import { PetAlertBadgesComponent } from '@/app/shared/pet-alerts/pet-alert-badges.component';
 import { formatClientPhoneForDisplay } from '@/app/shared/utils/phone-display.utils';
+import { joinPresent } from '@/app/shared/utils/labels.utils';
 
 const EM = '—';
 
 /**
  * Hasta satırı (muayene kimlik kartının içinde; müşteri/hasta kartıyla aynı dil): hasta (tür simgesi, tür · ırk · yaş, uyarı rozetleri)
- * ve sahip (telefon, e-posta). Veri `GET /pets/{id}` ve `GET /clients/{id}` ile alınır; yüklenemeyen/olmayan alan `—` gösterilir.
+ * ve sahip (telefon, e-posta). Veri `GET /pets/{id}` ve `GET /clients/{id}` ile alınır; ad yoksa `—`, boş ikincil parça yazılmaz.
  */
 @Component({
     selector: 'app-examination-patient-header',
@@ -33,7 +34,9 @@ const EM = '—';
                     } @else {
                         <span class="ml-1 font-medium">{{ petName() }}</span>
                     }
-                    <span class="text-muted-color text-sm"> · {{ speciesBreed() }} · {{ age() }}</span>
+                    @if (petMeta()) {
+                        <span class="text-muted-color text-sm"> · {{ petMeta() }}</span>
+                    }
                 </span>
                 <span class="min-w-0">
                     <span class="text-muted-color">Müşteri:</span>
@@ -42,7 +45,9 @@ const EM = '—';
                     } @else {
                         <span class="ml-1">{{ clientName() }}</span>
                     }
-                    <span class="text-muted-color text-sm"> · {{ phone() }} · {{ email() }}</span>
+                    @if (clientMeta()) {
+                        <span class="text-muted-color text-sm"> · {{ clientMeta() }}</span>
+                    }
                 </span>
             </p>
             @if (petAlerts().flags.length > 0) {
@@ -86,9 +91,17 @@ export class ExaminationPatientHeaderComponent {
 
         return parts.length ? parts.join(' · ') : EM;
     });
-    readonly age = computed(() => formatPetAgeTr(this.pet()?.birthDate) ?? EM);
-    readonly phone = computed(() => formatClientPhoneForDisplay(this.client()?.phone ?? EM));
-    readonly email = computed(() => this.client()?.email ?? EM);
+    /** Ad yanındaki ikincil parçalar (tür · ırk · yaş, telefon · e-posta): boş parça ayırıcısıyla birlikte yazılmaz (G-05). */
+    readonly petMeta = computed(() => {
+        const p = this.pet();
+
+        return joinPresent([p?.speciesName, p?.breed, formatPetAgeTr(p?.birthDate)], ' · ');
+    });
+    readonly clientMeta = computed(() => {
+        const c = this.client();
+
+        return joinPresent([formatClientPhoneForDisplay(c?.phone), c?.email], ' · ');
+    });
 
     constructor() {
         effect(() => {
