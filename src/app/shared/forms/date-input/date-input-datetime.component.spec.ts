@@ -25,19 +25,36 @@ describe('DateInputComponent — tarih-saat alanı (aşı formu)', () => {
     let fixture: ComponentFixture<HostComponent>;
     const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
     const input = () => fixture.nativeElement.querySelector('input') as HTMLInputElement;
-    const panel = () => document.querySelector('.p-datepicker-panel') as HTMLElement | null;
+    /** Bu alanın paneli (girdinin `aria-controls`'u): sayfada kapanmakta olan başka bir panel seçilmez. */
+    let panelId = '';
+    const panel = () => (panelId ? document.getElementById(panelId) : null);
     const control = () => fixture.componentInstance.control;
     const button = (label: string) => panel()!.querySelector(`button[aria-label="${label}"]`) as HTMLElement;
     const todayPrefix = () => formatDateInputValue('date', new Date());
+
+    // Olumlu beklentiler koşulla beklenir (yükte kararlı); kısa sabit bekleme yalnız "değişmemeli" denetimlerinde kalır.
+    /** Panel açık, gövdeye taşınmış ve giriş animasyonu bitmiş: içindeki düğmeler yerinde durur. */
+    const shown = async () => {
+        await expect.poll(() => input().getAttribute('aria-expanded')).toBe('true');
+        panelId = input().getAttribute('aria-controls') ?? '';
+        await expect.poll(() => panel()?.parentElement === document.body && !panel()!.hasAttribute('data-enter-active')).toBe(true);
+    };
+
+    /** Panel kapandı ve DOM'dan kalktı (kapanma animasyonu yük altında sürebilir). */
+    const closed = async () => {
+        await expect.poll(() => input().getAttribute('aria-expanded')).not.toBe('true');
+        await expect.poll(() => panel()).toBeNull();
+    };
 
     const open = async (value: string) => {
         control().setValue(value);
         await fixture.whenStable();
         await userEvent.click(input());
-        await expect.poll(() => panel()).not.toBeNull();
+        await shown();
     };
 
     beforeEach(async () => {
+        panelId = '';
         await TestBed.configureTestingModule({ imports: [HostComponent], providers: [providePrimeNG({ translation: PRIMENG_TR })] }).compileComponents();
         fixture = TestBed.createComponent(HostComponent);
         document.body.appendChild(fixture.nativeElement);
@@ -72,16 +89,23 @@ describe('DateInputComponent — tarih-saat alanı (aşı formu)', () => {
 
     it('gün seçilip saat okla ayarlanınca Enter seçimi korur ve paneli kapatır', async () => {
         await open('');
-        await userEvent.click([...panel()!.querySelectorAll('td span')].find((s) => s.textContent?.trim() === '10') as HTMLElement);
-        await expect.poll(() => control().value.startsWith(`${todayPrefix().slice(0, 8)}10T`)).toBe(true);
+        // Ayın 1'i her gün geçmiş ya da bugündür ("geçmiş" sınırında seçilebilir); ızgaranın ilk "1"i bu ayındır.
+        await userEvent.click([...panel()!.querySelectorAll('td span')].find((s) => s.textContent?.trim() === '1') as HTMLElement);
+        await expect.poll(() => control().value.startsWith(`${todayPrefix().slice(0, 8)}01T`)).toBe(true);
+        // PrimeNG gün seçiminden 150 ms sonra paneli kendisi kapatır (hideOnDateTimeSelect). Ok bu zamanlayıcıyla yarışmasın:
+        // kapanma beklenir, panel yeniden açılır.
+        await closed();
+        await userEvent.click(input());
+        await shown();
+        const before = control().value;
+
         await userEvent.click(button('Önceki saat'));
-        await wait(50);
+        await expect.poll(() => control().value).not.toBe(before);
         const picked = control().value;
 
         await userEvent.keyboard('{Enter}');
-        await wait(50);
+        await closed();
         expect(control().value).toBe(picked);
-        await expect.poll(() => panel() === null || panel()!.hasAttribute('data-leave-active')).toBe(true);
     });
 
     it('boş alanda Enter panelde görünen tarih ve saati seçer (önceden hiçbir şey yazmıyordu)', async () => {
