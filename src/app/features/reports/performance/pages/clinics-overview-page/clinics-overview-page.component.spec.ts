@@ -83,8 +83,8 @@ describe('ClinicsOverviewPageComponent (TIER-007)', () => {
         expect(params.has('clinicId')).toBe(false);
         expect(text('overview-row-c1')).toContain('Merkez');
         expect(text('overview-row-c1')).toContain('₺2.000,00');
-        expect(text('overview-row-c1')).toContain('+%100');
-        expect(text('overview-row-c2')).toContain('+%0');
+        expect(text('overview-row-c1')).toContain('%100 artış');
+        expect(text('overview-row-c2')).toContain('aynı');
         expect(text('overview-total')).toContain('Toplam');
         expect(text('overview-total')).toContain('₺3.000,00');
         expect(text('overview-previous-period')).toContain('25.10.2026 – 31.10.2026');

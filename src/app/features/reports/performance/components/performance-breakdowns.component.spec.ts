@@ -69,7 +69,7 @@ describe('PerformanceBreakdownsComponent (TIER-004)', () => {
         expect(params.get('from')).toBe('2026-11-01');
         expect(params.get('compare')).toBe('true');
         expect(q('perf-veterinarians')?.textContent).toContain('Dr. Ayşe');
-        expect(q('perf-veterinarians')?.textContent).toContain('Atanmamış');
+        expect(q('perf-veterinarians')?.textContent).toContain('Hekimi belli değil');
         expect(q('perf-line-kinds')?.textContent).toContain('Hizmet');
         expect(q('perf-items')?.textContent).toContain('Genel muayene');
         expect(q('perf-species')).toBeNull();
@@ -99,7 +99,7 @@ describe('PerformanceBreakdownsComponent (TIER-004)', () => {
         const d = dto();
         const rows = breakdownRows(d.current.byVeterinarian, d.previous!.byVeterinarian, (r) => ({ key: r.veterinarianUserId ?? '-', name: r.name, count: r.examinationCount, amount: r.netChargeAmount }), true);
 
-        expect(rows[0].deltaText).toBe('+%50');
+        expect(rows[0].deltaText).toBe('%50 artış');
         expect(rows[1].deltaText).toBe('yeni');
         expect(breakdownRows(d.current.byVeterinarian, null, (r) => ({ key: r.name, name: r.name, count: null, amount: r.netChargeAmount }), false)[0].deltaText).toBeNull();
     });

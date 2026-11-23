@@ -52,7 +52,10 @@ export function performanceDelta(current: number | null | undefined, previous: n
     };
 }
 
-/** Tablo hücresi için kısa fark: "+%12", "−%5"; önceki dönem 0 iken "yeni" (ya da ikisi de 0 ise "—"); fark yoksa `null`. */
+/**
+ * Tablo hücresi için kısa fark: "%12 artış", "%5 düşüş", fark yoksa "aynı" ("−%96,4" işaret ve yüzde yan yana okunmuyordu, Y-02);
+ * önceki dönem 0 iken "yeni" (ya da ikisi de 0 ise "—"); karşılaştırma yoksa `null`.
+ */
 export function deltaPercentText(delta: PerformanceDelta | null): string | null {
     if (delta == null) {
         return null;
@@ -62,7 +65,11 @@ export function deltaPercentText(delta: PerformanceDelta | null): string | null 
         return delta.diff === 0 ? '—' : 'yeni';
     }
 
-    return `${delta.diff >= 0 ? '+' : '−'}${formatPercent(Math.abs(delta.percent))}`;
+    if (delta.diff === 0) {
+        return 'aynı';
+    }
+
+    return `${formatPercent(Math.abs(delta.percent))} ${delta.diff > 0 ? 'artış' : 'düşüş'}`;
 }
 
 /**
