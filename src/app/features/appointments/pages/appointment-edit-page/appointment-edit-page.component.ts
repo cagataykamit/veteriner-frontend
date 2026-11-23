@@ -93,7 +93,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         <app-form-field class="col-span-12 md:col-span-6" label="Hasta" fieldId="petId" [error]="apiFieldErrors().petId ? apiFieldErrors().petId : form.controls.petId.invalid && form.controls.petId.touched ? 'Hasta seçimi zorunludur.' : null" [required]="true">
                             <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                         </app-form-field>
-                        <app-form-field class="col-span-12 md:col-span-6" label="Randevu tarihi" fieldId="scheduledDate" [error]="form.controls.scheduledDate.hasError('dateYearInvalid') && form.controls.scheduledDate.touched ? 'Yıl 4 haneli olmalıdır.' : apiFieldErrors().scheduledAtLocal ? apiFieldErrors().scheduledAtLocal : form.controls.scheduledDate.hasError('required') && form.controls.scheduledDate.touched ? 'Randevu tarihi seçilmelidir.' : null" [required]="true">
+                        <app-form-field class="col-span-12 md:col-span-6" label="Randevu tarihi" fieldId="scheduledDate" [error]="form.controls.scheduledDate.hasError('dateYearInvalid') && form.controls.scheduledDate.touched ? 'Yıl 4 haneli olmalıdır.' : apiFieldErrors().scheduledAtLocal ? apiFieldErrors().scheduledAtLocal : form.controls.scheduledDate.hasError('required') && form.controls.scheduledDate.touched ? 'Randevu tarihi zorunludur.' : null" [required]="true">
                             <app-date-input inputId="scheduledDate" type="date" formControlName="scheduledDate" [min]="dateInputMin" [max]="maxScheduledDate()" />
                         </app-form-field>
                         <div class="col-span-12 md:col-span-6">
@@ -111,7 +111,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                                 [disabled]="timeOptions().length === 0 || !!workingHoursLoadError()"
                             />
                             @if (form.controls.scheduledTime.invalid && form.controls.scheduledTime.touched) {
-                                <small class="text-danger">Randevu saati seçilmelidir.</small>
+                                <small class="text-danger">Randevu saati zorunludur.</small>
                             } @else if (workingHoursLoadError(); as whErr) {
                                 <small class="text-danger">{{ whErr }}</small>
                             } @else if (form.controls.scheduledDate.value && timeOptions().length === 0) {
