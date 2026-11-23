@@ -2,7 +2,7 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { type Observable, of, throwError } from 'rxjs';
+import { isObservable, type Observable, of, Subject, throwError } from 'rxjs';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -32,7 +32,14 @@ describe('AppointmentNewPageComponent — varsayılanlar (H1)', () => {
         availability = () => throwError(() => new Error('yok'));
     });
 
-    const create = (hours: ClinicWorkingHourVm[], query: Record<string, string> = {}, enforceWorkingHours = true) => {
+    const settingsOf = (enforceWorkingHours: boolean) => ({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 30, enforceWorkingHours });
+
+    const create = (
+        hours: ClinicWorkingHourVm[] | Observable<ClinicWorkingHourVm[]>,
+        query: Record<string, string> = {},
+        enforceWorkingHours = true,
+        settings: Observable<ReturnType<typeof settingsOf>> = of(settingsOf(enforceWorkingHours))
+    ) => {
         TestBed.configureTestingModule({
             imports: [AppointmentNewPageComponent],
             providers: [
@@ -43,7 +50,7 @@ describe('AppointmentNewPageComponent — varsayılanlar (H1)', () => {
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } },
                 { provide: AuthService, useValue: { getClinicId: () => 'c1', getClinicName: () => 'Merkez', getUserId: () => 'u1', hasOperationClaim: () => true } },
                 { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => false } },
-                { provide: ClinicsService, useValue: { getWorkingHours: () => of(hours), getAppointmentSettings: () => of({ defaultAppointmentDurationMinutes: 30, slotIntervalMinutes: 30, enforceWorkingHours }) } },
+                { provide: ClinicsService, useValue: { getWorkingHours: () => (isObservable(hours) ? hours : of(hours)), getAppointmentSettings: () => settings } },
                 { provide: OnlineBookingService, useValue: { availability: (_clinicId: string, reasonId: string | null) => availability(reasonId) } }
             ]
         });
@@ -123,6 +130,21 @@ describe('AppointmentNewPageComponent — varsayılanlar (H1)', () => {
         expect(cmp.form.controls.scheduledDate.value).toBe('2026-11-18');
         expect(cmp.form.controls.scheduledTime.value).toBe('14:00');
         expect(cmp.form.controls.veterinarianUserId.value).toBe('v2');
+    });
+
+    it('randevu ayarı çalışma saatlerinden önce gelse de takvimden gelen saat silinmez', () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date('2026-11-16T10:10:00+03:00'));
+        const hours = new Subject<ClinicWorkingHourVm[]>();
+        const settings = new Subject<ReturnType<typeof settingsOf>>();
+        const cmp = create(hours, { date: '2026-11-18', time: '10:00', room: 'r1' }, true, settings);
+
+        settings.next(settingsOf(true));
+        expect(cmp.form.controls.scheduledTime.value).toBe('10:00');
+        hours.next([0, 1, 2, 3, 4, 5, 6].map((d) => day(d)));
+
+        expect(cmp.form.getRawValue()).toEqual(expect.objectContaining({ scheduledDate: '2026-11-18', scheduledTime: '10:00', roomResourceId: 'r1' }));
+        expect(cmp.timeOptions().some((o) => o.value === '10:00')).toBe(true);
     });
 
     it('takvimin kaynak sütunundan gelen oda ya da cihaz formu doldurur', () => {
