@@ -34,7 +34,7 @@ const FOLLOW_UP_LIMIT = 3;
                     <p class="m-0 field-empty" data-testid="state-forbidden"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Bu bilgiyi görme yetkiniz yok</p>
                 }
                 @default {
-                    <p class="m-0 text-orange-600 dark:text-orange-400 text-sm" data-testid="state-unavailable"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ label }} alınamadı</p>
+                    <p class="m-0 text-warn text-sm" data-testid="state-unavailable"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ label }} alınamadı</p>
                 }
             }
         </ng-template>
@@ -47,7 +47,7 @@ const FOLLOW_UP_LIMIT = 3;
                 <app-loading-state message="Klinik özet yükleniyor…" />
             } @else if (error()) {
                 <div class="flex flex-wrap items-center gap-3" data-testid="summary-error">
-                    <p class="m-0 text-orange-600 dark:text-orange-400"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ error() }}</p>
+                    <p class="m-0 text-warn"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ error() }}</p>
                     <button pButton type="button" size="small" class="p-button-secondary" (click)="retry.emit()"><i class="pi pi-refresh"></i>Tekrar dene</button>
                 </div>
             } @else if (summary(); as s) {

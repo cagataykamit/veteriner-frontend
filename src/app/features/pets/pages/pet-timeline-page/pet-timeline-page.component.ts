@@ -84,7 +84,7 @@ const PAGE_SIZE = 20;
             @if (nextCursor()) {
                 <div class="flex flex-col items-center gap-2 mt-4">
                     @if (loadMoreError()) {
-                        <p class="m-0 text-orange-600 dark:text-orange-400" data-testid="load-more-error">{{ loadMoreError() }}</p>
+                        <p class="m-0 text-warn" data-testid="load-more-error">{{ loadMoreError() }}</p>
                     }
                     <button pButton type="button" class="p-button-secondary" [disabled]="loadingMore()" data-testid="load-more" (click)="loadMore()"><i class="pi pi-angle-down"></i>{{ loadingMore() ? 'Yükleniyor…' : 'Daha fazla yükle' }}</button>
                 </div>

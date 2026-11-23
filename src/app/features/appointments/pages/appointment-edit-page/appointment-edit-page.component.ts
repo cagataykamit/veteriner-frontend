@@ -115,7 +115,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                             } @else if (workingHoursLoadError(); as whErr) {
                                 <small class="text-danger">{{ whErr }}</small>
                             } @else if (form.controls.scheduledDate.value && timeOptions().length === 0) {
-                                <small class="text-amber-600">Seçilen gün için uygun randevu saati bulunmuyor.</small>
+                                <small class="text-warn">Seçilen gün için uygun randevu saati bulunmuyor.</small>
                             }
                             @if (clinicSlotIntervalMinutes(); as startIntervalMinutes) {
                                 <small class="block text-muted-color mt-1">Bu klinikte randevular {{ startIntervalMinutes }} dakikalık aralıklarla başlatılır.</small>

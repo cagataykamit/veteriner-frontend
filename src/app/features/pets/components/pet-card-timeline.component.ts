@@ -45,7 +45,7 @@ export const PET_CARD_TIMELINE_LIMIT = 10;
                 <p class="m-0 text-muted-color text-sm">Yükleniyor…</p>
             } @else if (error()) {
                 <div class="flex flex-wrap items-center gap-3" data-testid="timeline-error">
-                    <p class="m-0 text-orange-600 dark:text-orange-400"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ error() }}</p>
+                    <p class="m-0 text-warn"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>{{ error() }}</p>
                     <button pButton type="button" size="small" severity="secondary" (click)="reload()"><i class="pi pi-refresh"></i>Tekrar dene</button>
                 </div>
             } @else {
@@ -53,7 +53,7 @@ export const PET_CARD_TIMELINE_LIMIT = 10;
                     <p class="mt-0 mb-2 text-muted-color text-sm" data-testid="omitted-note" role="note"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Yetkiniz olmadığı için gösterilmiyor: {{ omitted }}</p>
                 }
                 @if (filter() === 'all' && payments()?.state === 'error') {
-                    <p class="mt-0 mb-2 text-orange-600 dark:text-orange-400 text-sm" data-testid="payments-unavailable"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Ödemeler alınamadı; liste ödemesiz gösteriliyor.</p>
+                    <p class="mt-0 mb-2 text-warn text-sm" data-testid="payments-unavailable"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Ödemeler alınamadı; liste ödemesiz gösteriliyor.</p>
                 }
                 @if (items().length === 0) {
                     <p class="m-0 text-muted-color" data-testid="timeline-empty">Bu filtreye uyan kayıt yok.</p>

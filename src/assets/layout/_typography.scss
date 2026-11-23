@@ -59,6 +59,11 @@
         margin: 1rem 0;
     }
 
+    // Form ipucu ve alan mesajı (`<small>`) en az 12 px (G-14): tarayıcının `smaller` küçültmesi 14 px kökte 11,2 px veriyordu.
+    small {
+        font-size: max(12px, 0.8em);
+    }
+
     p {
         margin: 0 0 1rem 0;
         line-height: 1.5;

@@ -103,14 +103,16 @@ export const VetinityPreset = definePreset(Aura, {
             light: {
                 primary: { color: '{primary.600}', contrastColor: '#ffffff', hoverColor: '{primary.700}', activeColor: '{primary.800}' },
                 text: { color: '{surface.900}', hoverColor: '{surface.950}', mutedColor: '{surface.600}', hoverMutedColor: '{surface.700}' },
+                /* Devre dışı alan yazısı ("Kayıtlı filtre seçin") surface.500 / surface.200 ile 3,9:1 kalıyordu (G-14); surface.600 ≈ 6:1. */
+                formField: { disabledColor: '{surface.600}' },
                 /* Yapay zekâ tonu (`--p-ai-*`, Tailwind `ai`): yalnız AI taslağı işareti, başka yerde kullanılmaz (ux/ai-arayuz-tasarim.md). */
                 ai: { color: '#6d4fc2', background: '#f5f2ff', borderColor: '#c9bbf5' }
             },
             dark: {
                 /* Koyu yüzey Aura varsayılanı (zinc, nötr gri) kalır; slate (lacivert tonlu) kullanıcı tarafından istenmedi (2026-11-09). */
                 primary: { color: '{primary.400}', contrastColor: '#042f2e', hoverColor: '{primary.300}', activeColor: '{primary.200}' },
-                /* Aura yer tutucusu (surface.500) koyu alanda 4.07:1 kalıyordu; surface.400 ≈ 7:1 (H19). */
-                formField: { placeholderColor: '{surface.400}' },
+                /* Aura yer tutucusu (surface.500) koyu alanda 4.07:1 kalıyordu; surface.400 ≈ 7:1 (H19). Devre dışı yazı surface.300 (G-14: 4,1:1 idi). */
+                formField: { placeholderColor: '{surface.400}', disabledColor: '{surface.300}' },
                 ai: { color: '#c4b5fd', background: '#1e1830', borderColor: '#4c3f78' }
             }
         }

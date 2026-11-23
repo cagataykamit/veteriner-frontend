@@ -47,7 +47,7 @@
                     @if (kpi.deltaText) {
                         <div
                             class="text-sm mt-2"
-                            [class.text-green-600]="kpi.delta?.direction === 'up'"
+                            [class.text-success]="kpi.delta?.direction === 'up'"
                             [class.text-danger]="kpi.delta?.direction === 'down'"
                             [class.text-muted-color]="!kpi.delta || kpi.delta.direction === 'flat'"
                         >

@@ -97,7 +97,7 @@ const KNOWN_CARE_STATUSES: ReadonlySet<string> = new Set(['Waiting', 'InProgress
                             } @else if (v.state === 'Forbidden') {
                                 <span class="text-muted-color text-sm"><i class="pi pi-lock mr-1" aria-hidden="true"></i>yetki yok</span>
                             } @else {
-                                <span class="text-orange-600 dark:text-orange-400 text-sm">alınamadı</span>
+                                <span class="text-warn text-sm">alınamadı</span>
                             }
                         } @else {
                             <span class="text-muted-color text-sm">…</span>

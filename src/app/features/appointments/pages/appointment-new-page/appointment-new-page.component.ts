@@ -109,7 +109,7 @@ interface AppointmentSlot {
                         } @else if (workingHoursLoadError(); as whErr) {
                             <small class="text-danger">{{ whErr }}</small>
                         } @else if (form.controls.scheduledDate.value && timeOptions().length === 0) {
-                            <small class="text-amber-600">Seçilen gün için uygun randevu saati bulunmuyor.</small>
+                            <small class="text-warn">Seçilen gün için uygun randevu saati bulunmuyor.</small>
                             @if (nextAvailableSlot(); as next) {
                                 <button pButton type="button" size="small" [text]="true" class="p-0 mt-1" data-testid="appointment-next-slot" (click)="selectSlot(next)">
                                     <i class="p-button-icon pi pi-calendar-plus"></i>İlk uygun gün: {{ next.label }}

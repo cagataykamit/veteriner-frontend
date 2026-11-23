@@ -64,7 +64,7 @@
                                         <td class="py-2 pr-3 text-right whitespace-nowrap">
                                             <span class="block">{{ cell.text }}</span>
                                             @if (cell.deltaText) {
-                                                <span class="block text-xs" [class.text-green-600]="cell.direction === 'up'" [class.text-danger]="cell.direction === 'down'" [class.text-muted-color]="cell.direction === 'flat'">{{ cell.deltaText }}</span>
+                                                <span class="block text-xs" [class.text-success]="cell.direction === 'up'" [class.text-danger]="cell.direction === 'down'" [class.text-muted-color]="cell.direction === 'flat'">{{ cell.deltaText }}</span>
                                             }
                                         </td>
                                     }
@@ -79,7 +79,7 @@
                                         <td class="py-2 pr-3 text-right whitespace-nowrap">
                                             <span class="block">{{ cell.text }}</span>
                                             @if (cell.deltaText) {
-                                                <span class="block text-xs font-normal" [class.text-green-600]="cell.direction === 'up'" [class.text-danger]="cell.direction === 'down'" [class.text-muted-color]="cell.direction === 'flat'">{{ cell.deltaText }}</span>
+                                                <span class="block text-xs font-normal" [class.text-success]="cell.direction === 'up'" [class.text-danger]="cell.direction === 'down'" [class.text-muted-color]="cell.direction === 'flat'">{{ cell.deltaText }}</span>
                                             }
                                         </td>
                                     }
@@ -110,7 +110,7 @@
                                 <dd class="m-0 font-medium">
                                     {{ cell.text }}
                                     @if (cell.deltaText) {
-                                        <span class="text-xs font-normal ml-1" [class.text-green-600]="cell.direction === 'up'" [class.text-danger]="cell.direction === 'down'" [class.text-muted-color]="cell.direction === 'flat'">{{ cell.deltaText }}</span>
+                                        <span class="text-xs font-normal ml-1" [class.text-success]="cell.direction === 'up'" [class.text-danger]="cell.direction === 'down'" [class.text-muted-color]="cell.direction === 'flat'">{{ cell.deltaText }}</span>
                                     }
                                 </dd>
                             </div>

@@ -156,7 +156,7 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
                                     }
                                 }
                                 @case ('error') {
-                                    <span class="text-orange-600 dark:text-orange-400 text-sm">alınamadı</span>
+                                    <span class="text-warn text-sm">alınamadı</span>
                                 }
                                 @default {
                                     <span class="text-muted-color text-sm">…</span>
@@ -181,7 +181,7 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
                                     }
                                 }
                                 @case ('error') {
-                                    <span class="text-orange-600 dark:text-orange-400 text-sm">alınamadı</span>
+                                    <span class="text-warn text-sm">alınamadı</span>
                                 }
                                 @default {
                                     <span class="text-muted-color text-sm">…</span>
