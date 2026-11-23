@@ -158,7 +158,7 @@ export interface SiteDesign {
     readonly radius: RadiusKey;
     readonly logoPlacement: LogoPlacement;
     readonly character: CharacterKey;
-    /** Eski bölüm paketi seçimi: kayıtlarla uyum için saklanır, çizimi değiştirmez (K-01, tek düzen). */
+    /** Bölüm türü başına seçili alternatifin anahtarı. */
     readonly sections: Readonly<Record<SectionType, string>>;
 }
 

@@ -1,29 +1,33 @@
 import type { Type } from '@angular/core';
 import type { SectionType } from '../model/site.model';
-import { SiteAboutComponent } from './sections/site-about.component';
-import { SiteContactComponent } from './sections/site-contact.component';
-import { SiteFeaturesComponent } from './sections/site-features.component';
-import { SiteFooterComponent } from './sections/site-footer.component';
-import { SiteGalleryComponent } from './sections/site-gallery.component';
-import { SiteGuideComponent } from './sections/site-guide.component';
-import { SiteHeroComponent } from './sections/site-hero.component';
-import { SiteNavComponent } from './sections/site-nav.component';
-import { SiteServicesComponent } from './sections/site-services.component';
-import { SiteTeamComponent } from './sections/site-team.component';
+import { FRIENDLY_PACK } from './packs/friendly/friendly.pack';
+import { MODERN_PACK } from './packs/modern/modern.pack';
+import { NATURE_PACK } from './packs/nature/nature.pack';
+import { PREMIUM_PACK } from './packs/premium/premium.pack';
 
 /**
- * Bölüm türü → bileşen. Sitenin tek düzeni vardır (K-01); dört konsept yalnız token ile ayrılır (`site-concepts`, `site-tokens`).
- * Eski kayıtlardaki `design.sections` seçimi saklanır ama çizimi değiştirmez.
+ * Bölüm kayıt defteri: bölüm türü + alternatif anahtarı + bileşen + etiket. Sihirbaz seçenekleri buradan okur, motor bileşeni
+ * buradan alır. Yeni tasarım paketi yalnız bu listeye eklenir; sihirbaz kodu değişmez.
  */
-export const SECTION_COMPONENTS: Readonly<Record<SectionType, Type<unknown>>> = {
-    nav: SiteNavComponent,
-    hero: SiteHeroComponent,
-    about: SiteAboutComponent,
-    services: SiteServicesComponent,
-    team: SiteTeamComponent,
-    features: SiteFeaturesComponent,
-    gallery: SiteGalleryComponent,
-    guide: SiteGuideComponent,
-    contact: SiteContactComponent,
-    footer: SiteFooterComponent
-};
+export interface SectionAlternative {
+    readonly type: SectionType;
+    readonly key: string;
+    readonly label: string;
+    readonly note: string;
+    readonly component: Type<unknown>;
+}
+
+const PACKS: readonly (readonly SectionAlternative[])[] = [MODERN_PACK, PREMIUM_PACK, FRIENDLY_PACK, NATURE_PACK];
+
+export const SECTION_REGISTRY: readonly SectionAlternative[] = PACKS.flat();
+
+export function sectionAlternatives(type: SectionType): readonly SectionAlternative[] {
+    return SECTION_REGISTRY.filter((alternative) => alternative.type === type);
+}
+
+/** Kayıtta olmayan anahtar (eski kayıt, kaldırılmış paket) sayfayı bozmaz: türün ilk alternatifi çizilir. */
+export function findAlternative(type: SectionType, key: string): SectionAlternative {
+    const list = sectionAlternatives(type);
+
+    return list.find((alternative) => alternative.key === key) ?? list[0];
+}

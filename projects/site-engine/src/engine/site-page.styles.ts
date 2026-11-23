@@ -3,19 +3,19 @@
  * göre ayrı öğelerdir.
  */
 export const PAGE_HEAD_STYLES = `
-    /* Sayfa başlığı: üst çubukla aynı yumuşak zemin. */
+    /* Sayfa başlığı: duruşu seçili hero'dan gelir. */
     .page-head {
-        padding-block: clamp(28px, 4cqi, 56px) clamp(32px, 4.4cqi, 64px);
+        padding-block: clamp(40px, 7cqi, 96px) clamp(24px, 3cqi, 48px);
+        color: var(--s-ink);
     }
 
     .ttl {
-        font-size: calc(var(--s-head-scale) * clamp(34px, 4.4cqi, 54px));
+        font-size: calc(var(--s-head-scale) * clamp(42px, 7cqi, 112px));
     }
 
     .ld {
-        max-width: 52ch;
-        margin-top: 14px;
-        color: var(--s-muted);
+        max-width: 48ch;
+        margin-top: 16px;
         font-size: 18px;
         line-height: 1.5;
     }
@@ -35,6 +35,37 @@ export const PAGE_HEAD_STYLES = `
         --icon: 16px;
     }
 
+    .page-head[data-style='modern'] {
+        border-bottom: 1px solid var(--s-line);
+    }
+
+    .page-head[data-style='premium'] {
+        border-bottom: 1px solid var(--s-line);
+        text-align: center;
+    }
+
+    .page-head[data-style='premium'] .ld {
+        margin-inline: auto;
+        color: var(--s-muted);
+    }
+
+    .page-head[data-style='friendly'] .inner {
+        padding-block: clamp(24px, 4cqi, 56px);
+        border-radius: var(--s-radius-img);
+        background: var(--s-tint);
+        color: var(--s-on-tint);
+    }
+
+    .page-head[data-style='friendly'] {
+        padding-inline: var(--s-gutter);
+        padding-top: 16px;
+    }
+
+    .page-head[data-style='nature'] .ttl {
+        font-style: italic;
+        color: var(--s-primary-text);
+    }
+
     .lost {
         display: grid;
         gap: 20px;
@@ -43,7 +74,7 @@ export const PAGE_HEAD_STYLES = `
     }
 
     .lost h1 {
-        font-size: calc(var(--s-head-scale) * clamp(32px, 4.4cqi, 54px));
+        font-size: calc(var(--s-head-scale) * clamp(36px, 6cqi, 80px));
     }
 `;
 
@@ -52,7 +83,7 @@ export const PAGE_READING_STYLES = `
     .detail {
         display: grid;
         gap: 28px;
-        padding-block: clamp(32px, 4.4cqi, 64px) clamp(32px, 5cqi, 72px);
+        padding-block: clamp(24px, 4cqi, 56px) clamp(32px, 5cqi, 72px);
     }
 
     .prose p,
@@ -103,7 +134,7 @@ export const PAGE_READING_STYLES = `
 
     .reading {
         max-width: 760px;
-        padding-block: clamp(32px, 4.4cqi, 64px) var(--s-space);
+        padding-block: 8px var(--s-space);
     }
 
     .reading figure {
@@ -150,7 +181,7 @@ export const PAGE_INFO_STYLES = `
     /* SSS, acil ve randevu çağrısı, şubeler. */
     .faq {
         max-width: 880px;
-        padding-block: clamp(24px, 3cqi, 40px) var(--s-space);
+        padding-block: 8px var(--s-space);
     }
 
     details {
@@ -193,7 +224,7 @@ export const PAGE_INFO_STYLES = `
         justify-items: start;
         gap: 20px;
         max-width: 880px;
-        padding-block: clamp(32px, 4.4cqi, 64px) var(--s-space);
+        padding-block: 8px var(--s-space);
     }
 
     .callout site-hours {
@@ -269,7 +300,7 @@ export const PAGE_INFO_STYLES = `
     .branches {
         display: grid;
         gap: 20px;
-        padding-block: clamp(32px, 4.4cqi, 64px) var(--s-space);
+        padding-block: 8px var(--s-space);
     }
 
     .branches article {

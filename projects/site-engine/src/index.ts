@@ -4,6 +4,7 @@
  */
 export * from './model/site.model';
 export { SiteRendererComponent } from './engine/site-renderer.component';
+export { findAlternative, SECTION_REGISTRY, sectionAlternatives, type SectionAlternative } from './engine/section-registry';
 export { conceptByKey, designFromConcept, SITE_CONCEPTS, SITE_PALETTES, type SiteConcept, type SitePalette } from './engine/site-concepts';
 export { SITE_FONTS, fontByKey, type SiteFont } from './engine/site-fonts';
 export { buildSiteTokens, colorWarnings, GROUNDS, groundOf, RADIUS_OPTIONS, type ContrastWarning } from './engine/site-tokens';

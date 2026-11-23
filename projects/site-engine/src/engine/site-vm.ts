@@ -1,7 +1,7 @@
 import { PAGE_DEFS, type CopyKey, type HomeSectionType, type PageKey, type SiteBranch, type SiteConfig, type SiteCopy, type SiteFaq, type SiteFeature, type SiteImage } from '../model/site.model';
 import { clinicStatus, hasWorkingHours, hoursGroups, nextSlotDays, type ClinicStatus, type HoursGroup, type SlotDayVm } from './site-hours';
 import { safeHref, safeImage, safeImageSrc, socialLinks, type SocialVm } from './site-links';
-import { isStockPhoto, STOCK_GALLERY, stockArticlePhoto, stockSectionPhoto, stockServicePhoto, type SectionPhotoSlot } from './stock-photos';
+import { isStockPhoto, STOCK_GALLERY, STOCK_PHOTOS, stockArticlePhoto, stockSectionPhoto, stockServicePhoto, type StockSlot } from './stock-photos';
 
 export interface ServiceVm {
     readonly slug: string;
@@ -53,7 +53,7 @@ export interface WordmarkVm {
 }
 
 /**
- * Sitenin çizime hazır hâli. Bölümler yalnız bunu okur; boş veri burada elenir, bölüm boşsa görünmez. `pages` de içeriğe
+ * Sitenin çizime hazır hâli. Bölüm alternatifleri yalnız bunu okur; boş veri burada elenir, bölüm boşsa görünmez. `pages` de içeriğe
  * göre düzeltilir: açık ama boş sayfa menüye girmez, adresi "bulunamadı" olur. Bağlantı ve görsel adresleri `site-links`'ten geçmiştir.
  * Klinik görsel yüklemediyse hazır fotoğraf gelir (K7); yüklenemeyen adres `unavailable` ile düşer, bölüm görselsiz düzenini çizer.
  */
@@ -84,8 +84,8 @@ export interface SiteVm {
     readonly heroImage: SiteImage | null;
     readonly aboutImage: SiteImage | null;
     readonly featuresImage: SiteImage | null;
-    /** Bölüm fotoğrafları: kliniğin yüklediği, yoksa konseptin hazır karesi (K7); yüklenemeyen düşer. */
-    readonly photos: Readonly<Record<SectionPhotoSlot, SiteImage | null>>;
+    /** Hazır fotoğraf yuvaları (K7); bölümler kliniğin görseli yoksa buradan okur, yüklenemeyen düşer. */
+    readonly stock: Readonly<Record<StockSlot, SiteImage | null>>;
     /** Sitede hazır fotoğraf çiziliyor: "temsili görsel" ibaresi görünür. */
     readonly usesStock: boolean;
     readonly aboutParagraphs: readonly string[];
@@ -104,11 +104,8 @@ export interface SiteVm {
     readonly navPrimary: readonly LinkVm[];
     readonly navMore: readonly LinkVm[];
     readonly cta: CtaVm | null;
-    /**
-     * Saat ve iletişim bilgisinin yolu: ana sayfadaki iletişim bölümü, yoksa iletişim sayfası; ikisi de yoksa bağlantı çizilmez, boş
-     * çapaya gidilmez (W-02). Giriş bölümünün durum çipi buraya gider; K-01 düzeninde ayrı "Hizmetlere bak" bağlantısı yoktur.
-     */
-    readonly contactPath: string | null;
+    /** Giriş bölümündeki ikinci bağlantı: hizmetler gösteriliyorsa oraya, yoksa iletişime; ikisi de yoksa çizilmez (W-02). */
+    readonly heroLink: LinkVm | null;
     readonly homeSections: readonly HomeSectionType[];
     readonly siteName: string;
 }
@@ -240,12 +237,7 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
     const heroImage = uploaded(content.heroImage);
     const aboutImage = uploaded(content.aboutImage);
     const featuresImage = uploaded(content.featuresImage);
-    const { conceptKey } = config.design;
-    const photos: Record<SectionPhotoSlot, SiteImage | null> = {
-        hero: heroImage ?? usable(stockSectionPhoto(conceptKey, 'hero')),
-        about: aboutImage ?? usable(stockSectionPhoto(conceptKey, 'about')),
-        features: featuresImage ?? usable(stockSectionPhoto(conceptKey, 'features'))
-    };
+    const stock = Object.fromEntries(Object.entries(STOCK_PHOTOS).map(([slot, image]) => [slot, usable(image)])) as Record<StockSlot, SiteImage | null>;
     const faqs = content.faqs.filter((faq) => faq.question.trim() && faq.answer.trim());
     const branches = content.branches.filter((branch) => branch.name.trim()).map((branch) => ({ ...branch, phone: displayPhone(branch.phone) }));
     const emergencyText = content.emergencyText.trim();
@@ -285,14 +277,24 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
     const bookingHref = safeHref(clinic.bookingUrl);
     const cta: CtaVm | null = bookingHref ? { label: copy.ctaPrimary, path: null, href: bookingHref } : telHref ? { label: 'Hemen ara', path: null, href: telHref } : null;
     const homeSections = structure.homeSections.filter((section) => section.on && hasContent[section.type]).map((section) => section.type);
-    const contactPath = homeSections.includes('contact') ? '/#contact' : pages.iletisim ? '/iletisim' : null;
+    const heroLink: LinkVm | null = homeSections.includes('services')
+        ? { label: copy.ctaSecondary, path: '/#services' }
+        : pages.hizmetler
+          ? { label: copy.ctaSecondary, path: '/hizmetler' }
+          : homeSections.includes('contact')
+            ? { label: 'İletişim', path: '/#contact' }
+            : pages.iletisim
+              ? { label: 'İletişim', path: '/iletisim' }
+              : null;
     const isShown = (type: HomeSectionType, page: PageKey): boolean => homeSections.includes(type) || pages[page];
-    // Hizmet kartları ikonludur; hizmet fotoğrafı yalnız hizmetin kendi sayfasında çizilir.
+    const { sections } = config.design;
+    const sectionPhoto = (slot: string): SiteImage | null => usable(STOCK_PHOTOS[slot as StockSlot] ?? null);
     const drawn: readonly (SiteImage | null)[] = [
-        photos.hero,
-        ...(isShown('about', 'hakkimizda') ? [photos.about] : []),
-        ...(isShown('features', 'hakkimizda') && features.length ? [photos.features] : []),
-        ...(pages.hizmetDetay ? services.map((service) => service.image) : []),
+        heroImage ?? usable(stockSectionPhoto(sections.hero, 'hero')),
+        sectionPhoto(`${sections.hero}-hero-2`),
+        ...(isShown('about', 'hakkimizda') ? [aboutImage ?? usable(stockSectionPhoto(sections.about, 'about')), sectionPhoto(`${sections.about}-about-2`)] : []),
+        ...(isShown('features', 'hakkimizda') && features.length ? [featuresImage ?? usable(stockSectionPhoto(sections.features, 'features'))] : []),
+        ...(isShown('services', 'hizmetler') ? services.map((service) => service.image) : []),
         ...(isShown('guide', 'rehber') ? articles.map((article) => article.image) : []),
         ...(isShown('gallery', 'galeri') ? gallery : [])
     ];
@@ -322,7 +324,7 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
         heroImage,
         aboutImage,
         featuresImage,
-        photos,
+        stock,
         usesStock: drawn.some(isStockPhoto),
         aboutParagraphs,
         services,
@@ -339,7 +341,7 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
         navPrimary,
         navMore,
         cta,
-        contactPath,
+        heroLink,
         homeSections,
         siteName: config.publish.siteName.trim() || name
     };
