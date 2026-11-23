@@ -23,6 +23,8 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
+import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { LAB_RESULTS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -55,6 +57,8 @@ const parseLabResultStatusFilter = (raw: unknown): LabResultStatus | '' =>
         ButtonModule,
         InputTextModule,
         AppListHeaderComponent,
+        AppListFiltersComponent,
+        FilterFieldComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
         AppContextFilterChipComponent,
@@ -76,27 +80,22 @@ const parseLabResultStatusFilter = (raw: unknown): LabResultStatus | '' =>
         <div class="card">
             <div class="flex flex-col gap-4">
                 <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
-                    <app-list-header class="mb-3" title="Lab sonuçları" [count]="totalItems()">
-                        <div class="flex-1 min-w-0">
-                            <label for="lrSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
-                            <app-search-input inputId="lrSearch" placeholder="Test adı, müşteri veya hasta…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
-                        </div>
-                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
+                    <app-list-header title="Lab sonuçları" [count]="totalItems()">
+                        <app-filter-field label="Arama" labelFor="lrSearch" [active]="!!searchInput.trim()" width="grow">
+                            <app-search-input inputId="lrSearch" hint="Test adı, müşteri veya hasta" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                        </app-filter-field>
+                        <app-list-filters (clear)="resetFilters()">
+                            <app-filter-field label="İstem tarihi (başlangıç)" labelFor="lrFrom" [active]="!!fromDateInput" width="date">
+                                <app-date-input inputId="lrFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                            <app-filter-field label="İstem tarihi (bitiş)" labelFor="lrTo" [active]="!!toDateInput" width="date">
+                                <app-date-input inputId="lrTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                            <app-filter-field label="Durum" labelFor="lrStatus" [active]="!!statusInput" width="select">
+                                <p-select inputId="lrStatus" [options]="statusOptions" optionLabel="label" optionValue="value" [(ngModel)]="statusInput" (ngModelChange)="applyFilters()" class="w-full" />
+                            </app-filter-field>
+                        </app-list-filters>
                     </app-list-header>
-                    <div class="grid grid-cols-12 gap-3 items-end">
-                        <div class="col-span-12 md:col-span-4">
-                            <label for="lrFrom" class="block text-xs font-medium text-muted-color mb-1">İstem tarihi (başlangıç)</label>
-                            <app-date-input inputId="lrFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                        </div>
-                        <div class="col-span-12 md:col-span-4">
-                            <label for="lrTo" class="block text-xs font-medium text-muted-color mb-1">İstem tarihi (bitiş)</label>
-                            <app-date-input inputId="lrTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                        </div>
-                        <div class="col-span-12 md:col-span-4">
-                            <label for="lrStatus" class="block text-xs font-medium text-muted-color mb-1">Durum</label>
-                            <p-select inputId="lrStatus" [options]="statusOptions" optionLabel="label" optionValue="value" [(ngModel)]="statusInput" (ngModelChange)="applyFilters()" class="w-full" />
-                        </div>
-                    </div>
                 </div>
                 @if (loading()) {
                     <app-loading-state message="Liste yükleniyor…" />

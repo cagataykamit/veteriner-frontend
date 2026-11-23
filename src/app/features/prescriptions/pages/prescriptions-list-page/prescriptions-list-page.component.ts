@@ -19,6 +19,7 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { PRESCRIPTIONS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -54,6 +55,7 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
         ButtonModule,
         InputTextModule,
         AppListHeaderComponent,
+        AppListFiltersComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
         AppContextFilterChipComponent,
@@ -77,35 +79,34 @@ const PRESCRIPTIONS_LIST_STATE_KEY = 'panel:prescriptions:listState';
         <div class="card">
             <div class="flex flex-col gap-4">
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                    <app-list-header class="mb-3" title="Reçeteler" [count]="totalItems()">
+                    <app-list-header title="Reçeteler" [count]="totalItems()">
                         <app-filter-field label="Arama" labelFor="rxSearch" [active]="isSearchActive()" width="grow">
-                            <app-search-input inputId="rxSearch" placeholder="Başlık, müşteri veya hasta…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                            <app-search-input inputId="rxSearch" hint="Başlık, müşteri veya hasta" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
-                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
+                        <app-list-filters (clear)="resetFilters()">
+                            <app-filter-field label="Başlangıç" labelFor="rxFrom" [active]="isFromDateActive()" width="date">
+                                <app-date-input inputId="rxFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                            <app-filter-field label="Bitiş" labelFor="rxTo" [active]="isToDateActive()" width="date">
+                                <app-date-input inputId="rxTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                            <app-filter-field label="HBS durumu" labelId="rxHbsLabel" [active]="!!activeHbsStatus()" width="select">
+                                <p-select
+                                    ariaLabelledBy="rxHbsLabel"
+                                    inputId="rxHbs"
+                                    [options]="hbsOptions"
+                                    [(ngModel)]="hbsStatusInput"
+                                    (ngModelChange)="scheduleApply()"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    placeholder="Tümü"
+                                    [showClear]="true"
+                                    class="w-full"
+                                    data-testid="rx-hbs-filter"
+                                />
+                            </app-filter-field>
+                        </app-list-filters>
                     </app-list-header>
-                    <div class="flex flex-wrap items-end gap-3">
-                        <app-filter-field label="Başlangıç" labelFor="rxFrom" [active]="isFromDateActive()" width="date">
-                            <app-date-input inputId="rxFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                        <app-filter-field label="Bitiş" labelFor="rxTo" [active]="isToDateActive()" width="date">
-                            <app-date-input inputId="rxTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                        <app-filter-field label="HBS durumu" labelId="rxHbsLabel" [active]="!!activeHbsStatus()" width="select">
-                            <p-select
-                                ariaLabelledBy="rxHbsLabel"
-                                inputId="rxHbs"
-                                [options]="hbsOptions"
-                                [(ngModel)]="hbsStatusInput"
-                                (ngModelChange)="scheduleApply()"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Tümü"
-                                [showClear]="true"
-                                class="w-full"
-                                data-testid="rx-hbs-filter"
-                            />
-                        </app-filter-field>
-                    </div>
                 </div>
                 @if (loading()) {
                     <app-loading-state message="Reçete listesi yükleniyor…" />

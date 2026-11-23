@@ -19,6 +19,7 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { examinationStatusLabel, examinationStatusSeverity, isExaminationEditable } from '@/app/entities/examination/utils/examination-status.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -50,6 +51,7 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
         ButtonModule,
         InputTextModule,
         AppListHeaderComponent,
+        AppListFiltersComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
         AppContextFilterChipComponent,
@@ -71,20 +73,19 @@ const EXAMINATIONS_LIST_STATE_KEY = 'panel:examinations:listState';
         <div class="card">
             <div class="flex flex-col gap-4">
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                    <app-list-header class="mb-3" title="Muayeneler" [count]="totalItems()">
+                    <app-list-header title="Muayeneler" [count]="totalItems()">
                         <app-filter-field label="Arama" labelFor="exSearch" [active]="isSearchActive()" width="grow">
-                            <app-search-input inputId="exSearch" placeholder="Sebep, bulgu, değerlendirme, not; müşteri, hasta, tür veya ırk…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                            <app-search-input inputId="exSearch" hint="Sebep, bulgu, değerlendirme, not; müşteri, hasta, tür veya ırk" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
-                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
+                        <app-list-filters (clear)="resetFilters()">
+                            <app-filter-field label="Başlangıç" labelFor="exFrom" [active]="isFromDateActive()" width="date">
+                                <app-date-input inputId="exFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                            <app-filter-field label="Bitiş" labelFor="exTo" [active]="isToDateActive()" width="date">
+                                <app-date-input inputId="exTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                        </app-list-filters>
                     </app-list-header>
-                    <div class="flex flex-wrap items-end gap-3">
-                        <app-filter-field label="Başlangıç" labelFor="exFrom" [active]="isFromDateActive()" width="date">
-                            <app-date-input inputId="exFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                        <app-filter-field label="Bitiş" labelFor="exTo" [active]="isToDateActive()" width="date">
-                            <app-date-input inputId="exTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                    </div>
                 </div>
                 @if (loading()) {
                     <app-loading-state message="Muayene listesi yükleniyor…" />

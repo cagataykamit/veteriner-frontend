@@ -22,6 +22,7 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -59,6 +60,7 @@ const RECEIVING_CARE_ONLY = 'true';
         InputTextModule,
         SelectModule,
         AppListHeaderComponent,
+        AppListFiltersComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
         AppErrorStateComponent,
@@ -83,63 +85,62 @@ const RECEIVING_CARE_ONLY = 'true';
             }
             <div class="flex flex-col gap-4">
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                    <app-list-header class="mb-3" title="Aşılar" [count]="totalItems()">
+                    <app-list-header title="Aşılar" [count]="totalItems()">
                         <app-filter-field label="Arama" labelFor="vacSearch" [active]="isSearchActive()" width="grow">
-                            <app-search-input inputId="vacSearch" placeholder="Aşı adı, not; müşteri, hasta, tür veya ırk…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                            <app-search-input inputId="vacSearch" hint="Aşı adı, not; müşteri, hasta, tür veya ırk" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
-                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
+                        <app-list-filters (clear)="resetFilters()">
+                            <app-filter-field label="Durum" labelId="lblVacStatus" [active]="isStatusActive()" width="select">
+                                <p-select
+                                    ariaLabelledBy="lblVacStatus"
+                                    inputId="vacStatus"
+                                    [options]="statusOptions"
+                                    [(ngModel)]="statusFilter"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [placeholder]="copy.filterPlaceholderAll"
+                                    class="w-full"
+                                    [showClear]="true"
+                                    (ngModelChange)="scheduleApply()"
+                                />
+                            </app-filter-field>
+                            <app-filter-field label="Hasta" labelId="lblVacReceivingCare" [active]="isReceivingCareActive()" width="select">
+                                <p-select
+                                    ariaLabelledBy="lblVacReceivingCare"
+                                    inputId="vacReceivingCare"
+                                    [options]="receivingCareOptions"
+                                    [(ngModel)]="receivingCareFilter"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [placeholder]="copy.filterPlaceholderAll"
+                                    class="w-full"
+                                    [showClear]="true"
+                                    (ngModelChange)="scheduleApply()"
+                                />
+                            </app-filter-field>
+                            <app-filter-field label="HBS durumu" labelId="lblVacHbs" [active]="!!hbsStatusFilter" width="select">
+                                <p-select
+                                    ariaLabelledBy="lblVacHbs"
+                                    inputId="vacHbs"
+                                    [options]="hbsOptions"
+                                    [(ngModel)]="hbsStatusFilter"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [placeholder]="copy.filterPlaceholderAll"
+                                    class="w-full"
+                                    data-testid="vac-hbs-filter"
+                                    [showClear]="true"
+                                    (ngModelChange)="scheduleApply()"
+                                />
+                            </app-filter-field>
+                            <app-filter-field label="Başlangıç" labelFor="vacFrom" [active]="isFromDateActive()" width="date">
+                                <app-date-input inputId="vacFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                            <app-filter-field label="Bitiş" labelFor="vacTo" [active]="isToDateActive()" width="date">
+                                <app-date-input inputId="vacTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                        </app-list-filters>
                     </app-list-header>
-                    <div class="flex flex-wrap items-end gap-3">
-                        <app-filter-field label="Durum" labelId="lblVacStatus" [active]="isStatusActive()" width="select">
-                            <p-select
-                                ariaLabelledBy="lblVacStatus"
-                                inputId="vacStatus"
-                                [options]="statusOptions"
-                                [(ngModel)]="statusFilter"
-                                optionLabel="label"
-                                optionValue="value"
-                                [placeholder]="copy.filterPlaceholderAll"
-                                class="w-full"
-                                [showClear]="true"
-                                (ngModelChange)="scheduleApply()"
-                            />
-                        </app-filter-field>
-                        <app-filter-field label="Hasta" labelId="lblVacReceivingCare" [active]="isReceivingCareActive()" width="select">
-                            <p-select
-                                ariaLabelledBy="lblVacReceivingCare"
-                                inputId="vacReceivingCare"
-                                [options]="receivingCareOptions"
-                                [(ngModel)]="receivingCareFilter"
-                                optionLabel="label"
-                                optionValue="value"
-                                [placeholder]="copy.filterPlaceholderAll"
-                                class="w-full"
-                                [showClear]="true"
-                                (ngModelChange)="scheduleApply()"
-                            />
-                        </app-filter-field>
-                        <app-filter-field label="HBS durumu" labelId="lblVacHbs" [active]="!!hbsStatusFilter" width="select">
-                            <p-select
-                                ariaLabelledBy="lblVacHbs"
-                                inputId="vacHbs"
-                                [options]="hbsOptions"
-                                [(ngModel)]="hbsStatusFilter"
-                                optionLabel="label"
-                                optionValue="value"
-                                [placeholder]="copy.filterPlaceholderAll"
-                                class="w-full"
-                                data-testid="vac-hbs-filter"
-                                [showClear]="true"
-                                (ngModelChange)="scheduleApply()"
-                            />
-                        </app-filter-field>
-                        <app-filter-field label="Başlangıç" labelFor="vacFrom" [active]="isFromDateActive()" width="date">
-                            <app-date-input inputId="vacFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                        <app-filter-field label="Bitiş" labelFor="vacTo" [active]="isToDateActive()" width="date">
-                            <app-date-input inputId="vacTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                    </div>
                 </div>
                 @if (loading()) {
                     <app-loading-state message="Aşı listesi yükleniyor…" />

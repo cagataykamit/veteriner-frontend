@@ -28,6 +28,7 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -63,6 +64,7 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
         SelectModule,
         SelectButtonModule,
         AppListHeaderComponent,
+        AppListFiltersComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
         AppContextFilterChipComponent,
@@ -85,55 +87,54 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
         <div class="card">
             <div class="flex flex-col gap-4">
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                    <app-list-header class="mb-3" title="Randevular" [count]="totalItems()">
+                    <app-list-header title="Randevular" [count]="totalItems()">
                         <app-filter-field label="Arama" labelFor="apptSearch" [active]="isSearchActive()" width="grow">
-                            <app-search-input inputId="apptSearch" placeholder="Not; müşteri, hasta, tür veya ırk metni…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                            <app-search-input inputId="apptSearch" hint="Not; müşteri, hasta, tür veya ırk" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
-                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canCreateAppointment && !ro.mutationBlocked()) {
                             <a actions routerLink="/panel/appointments/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni randevu</a>
                         } @else if (canCreateAppointment && ro.mutationBlocked()) {
                             <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni randevu (salt okunur)</button>
                         }
+                        <app-list-filters (clear)="resetFilters()">
+                            <app-filter-field label="Dönem" labelId="lblApptPeriod" width="select">
+                                <p-selectbutton
+                                    [options]="periodOptions"
+                                    [ngModel]="period()"
+                                    (ngModelChange)="setPeriod($event)"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [allowEmpty]="false"
+                                    [disabled]="isRangeActive()"
+                                    ariaLabelledBy="lblApptPeriod"
+                                    data-testid="appt-period"
+                                />
+                                @if (isRangeActive()) {
+                                    <small class="block mt-1 text-xs text-muted-color">Tarih aralığı seçili: aralık eskiden yeniye sıralanır.</small>
+                                }
+                            </app-filter-field>
+                            <app-filter-field label="Durum" labelId="lblApptStatus" [active]="isStatusActive()" width="select">
+                                <p-select
+                                    ariaLabelledBy="lblApptStatus"
+                                    inputId="apptStatus"
+                                    [options]="statusOptions"
+                                    [(ngModel)]="statusFilter"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [placeholder]="copy.filterPlaceholderAll"
+                                    class="w-full"
+                                    [showClear]="true"
+                                    (ngModelChange)="scheduleApply()"
+                                />
+                            </app-filter-field>
+                            <app-filter-field label="Başlangıç" labelFor="apptFrom" [active]="isFromDateActive()" width="date">
+                                <app-date-input inputId="apptFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                            <app-filter-field label="Bitiş" labelFor="apptTo" [active]="isToDateActive()" width="date">
+                                <app-date-input inputId="apptTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                        </app-list-filters>
                     </app-list-header>
-                    <div class="flex flex-wrap items-end gap-3">
-                        <app-filter-field label="Dönem" labelId="lblApptPeriod" width="select">
-                            <p-selectbutton
-                                [options]="periodOptions"
-                                [ngModel]="period()"
-                                (ngModelChange)="setPeriod($event)"
-                                optionLabel="label"
-                                optionValue="value"
-                                [allowEmpty]="false"
-                                [disabled]="isRangeActive()"
-                                ariaLabelledBy="lblApptPeriod"
-                                data-testid="appt-period"
-                            />
-                            @if (isRangeActive()) {
-                                <small class="block mt-1 text-xs text-muted-color">Tarih aralığı seçili: aralık eskiden yeniye sıralanır.</small>
-                            }
-                        </app-filter-field>
-                        <app-filter-field label="Durum" labelId="lblApptStatus" [active]="isStatusActive()" width="select">
-                            <p-select
-                                ariaLabelledBy="lblApptStatus"
-                                inputId="apptStatus"
-                                [options]="statusOptions"
-                                [(ngModel)]="statusFilter"
-                                optionLabel="label"
-                                optionValue="value"
-                                [placeholder]="copy.filterPlaceholderAll"
-                                class="w-full"
-                                [showClear]="true"
-                                (ngModelChange)="scheduleApply()"
-                            />
-                        </app-filter-field>
-                        <app-filter-field label="Başlangıç" labelFor="apptFrom" [active]="isFromDateActive()" width="date">
-                            <app-date-input inputId="apptFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                        <app-filter-field label="Bitiş" labelFor="apptTo" [active]="isToDateActive()" width="date">
-                            <app-date-input inputId="apptTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                    </div>
                 </div>
                 <!-- İptal bildirimi + "Geri al"; ardından bekleme listesi (TIER-018): "uygun X kişi var", uyan kimse yoksa çizilmez. -->
                 @if (lastCancel(); as c) {

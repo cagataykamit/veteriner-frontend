@@ -22,6 +22,7 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -54,6 +55,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
         InputTextModule,
         SelectModule,
         AppListHeaderComponent,
+        AppListFiltersComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
         AppContextFilterChipComponent,
@@ -74,39 +76,38 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
         <div class="card">
             <div class="flex flex-col gap-4">
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                    <app-list-header class="mb-3" title="Ödemeler" [count]="totalItems()">
+                    <app-list-header title="Ödemeler" [count]="totalItems()">
                         <app-filter-field label="Arama" labelFor="paySearch" [active]="isSearchActive()" width="grow">
-                            <app-search-input inputId="paySearch" placeholder="Not, para birimi; müşteri, hasta, tür veya ırk, e-posta, telefon…" [(value)]="searchInput" (searchRequested)="applySearch()" />
+                            <app-search-input inputId="paySearch" hint="Not, para birimi; müşteri, hasta, tür veya ırk, e-posta, telefon" [(value)]="searchInput" (searchRequested)="applySearch()" />
                         </app-filter-field>
-                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canCreatePayment && !ro.mutationBlocked()) {
                             <a actions routerLink="/panel/payments/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni ödeme</a>
                         } @else if (canCreatePayment && ro.mutationBlocked()) {
                             <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni ödeme (salt okunur)</button>
                         }
+                        <app-list-filters (clear)="resetFilters()">
+                            <app-filter-field label="Yöntem" labelId="lblPayMethod" [active]="isMethodActive()" width="select">
+                                <p-select
+                                    ariaLabelledBy="lblPayMethod"
+                                    inputId="payMethod"
+                                    [options]="methodOptions"
+                                    [(ngModel)]="methodFilter"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [placeholder]="copy.filterPlaceholderAll"
+                                    class="w-full"
+                                    [showClear]="true"
+                                    (ngModelChange)="scheduleApply()"
+                                />
+                            </app-filter-field>
+                            <app-filter-field label="Ödeme tarihi (başlangıç)" labelFor="payFrom" [active]="isFromDateActive()" width="date">
+                                <app-date-input inputId="payFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                            <app-filter-field label="Ödeme tarihi (bitiş)" labelFor="payTo" [active]="isToDateActive()" width="date">
+                                <app-date-input inputId="payTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                        </app-list-filters>
                     </app-list-header>
-                    <div class="flex flex-wrap items-end gap-3">
-                        <app-filter-field label="Yöntem" labelId="lblPayMethod" [active]="isMethodActive()" width="select">
-                            <p-select
-                                ariaLabelledBy="lblPayMethod"
-                                inputId="payMethod"
-                                [options]="methodOptions"
-                                [(ngModel)]="methodFilter"
-                                optionLabel="label"
-                                optionValue="value"
-                                [placeholder]="copy.filterPlaceholderAll"
-                                class="w-full"
-                                [showClear]="true"
-                                (ngModelChange)="scheduleApply()"
-                            />
-                        </app-filter-field>
-                        <app-filter-field label="Ödeme tarihi (başlangıç)" labelFor="payFrom" [active]="isFromDateActive()" width="date">
-                            <app-date-input inputId="payFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                        <app-filter-field label="Ödeme tarihi (bitiş)" labelFor="payTo" [active]="isToDateActive()" width="date">
-                            <app-date-input inputId="payTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                    </div>
                 </div>
                 @if (loading()) {
                     <app-loading-state message="Ödeme listesi yükleniyor…" />

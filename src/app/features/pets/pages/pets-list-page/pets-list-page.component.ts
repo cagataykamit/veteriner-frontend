@@ -22,6 +22,7 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -55,6 +56,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         InputTextModule,
         SelectModule,
         AppListHeaderComponent,
+        AppListFiltersComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
         AppErrorStateComponent,
@@ -73,11 +75,10 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         <div class="card">
             <div class="flex flex-col gap-4">
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                    <app-list-header class="mb-3" title="Hastalar" [count]="totalItems()">
+                    <app-list-header title="Hastalar" [count]="totalItems()">
                         <app-filter-field label="Arama" labelFor="petSearch" [active]="isSearchActive()" width="grow">
-                            <app-search-input inputId="petSearch" placeholder="Hasta, tür, ırk, mikroçip; sahip adı veya telefonu…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                            <app-search-input inputId="petSearch" hint="Hasta, tür, ırk, mikroçip; sahip adı veya telefonu" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
-                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         <!-- Doğal dille arama (AI-006) kayıt yazmaz: salt okunur kiracıda da görünür; görünürlüğü AI durumu belirler. -->
                         <app-ai-entry-button actions label="Yapay zekâ ile ara" [active]="aiSearchOpen()" (pressed)="aiPanel.openSearch()" />
                         @if (canCreatePet && !ro.mutationBlocked()) {
@@ -85,27 +86,27 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                         } @else if (canCreatePet && ro.mutationBlocked()) {
                             <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni hasta (salt okunur)</button>
                         }
+                        <app-list-filters (clear)="resetFilters()">
+                            <app-filter-field label="Tür" labelId="lblPetSpecies" [active]="isSpeciesActive()" width="select">
+                                <p-select
+                                    ariaLabelledBy="lblPetSpecies"
+                                    inputId="petSpecies"
+                                    [options]="speciesOptions()"
+                                    [(ngModel)]="speciesIdInput"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [placeholder]="copy.filterPlaceholderAll"
+                                    class="w-full"
+                                    [showClear]="true"
+                                    [loading]="loadingSpecies()"
+                                    (ngModelChange)="scheduleApply()"
+                                />
+                            </app-filter-field>
+                            <app-filter-field label="Durum" labelId="lblPetStatus" [active]="isStatusActive()" width="select">
+                                <p-select ariaLabelledBy="lblPetStatus" inputId="petStatus" [options]="statusOptions" [(ngModel)]="statusInput" optionLabel="label" optionValue="value" class="w-full" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                        </app-list-filters>
                     </app-list-header>
-                    <div class="flex flex-wrap items-end gap-3">
-                        <app-filter-field label="Tür" labelId="lblPetSpecies" [active]="isSpeciesActive()" width="select">
-                            <p-select
-                                ariaLabelledBy="lblPetSpecies"
-                                inputId="petSpecies"
-                                [options]="speciesOptions()"
-                                [(ngModel)]="speciesIdInput"
-                                optionLabel="label"
-                                optionValue="value"
-                                [placeholder]="copy.filterPlaceholderAll"
-                                class="w-full"
-                                [showClear]="true"
-                                [loading]="loadingSpecies()"
-                                (ngModelChange)="scheduleApply()"
-                            />
-                        </app-filter-field>
-                        <app-filter-field label="Durum" labelId="lblPetStatus" [active]="isStatusActive()" width="select">
-                            <p-select ariaLabelledBy="lblPetStatus" inputId="petStatus" [options]="statusOptions" [(ngModel)]="statusInput" optionLabel="label" optionValue="value" class="w-full" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                    </div>
                 </div>
                 @if (loading()) {
                     <app-loading-state message="Hasta listesi yükleniyor…" />

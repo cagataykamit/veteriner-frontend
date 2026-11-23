@@ -18,6 +18,8 @@ import { AppContextFilterChipComponent } from '@/app/shared/ui/context-filter-ch
 import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list-empty-state.component';
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
+import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { debouncedAction } from '@/app/shared/ui/search-input/debounced-action';
@@ -43,6 +45,8 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         DateInputComponent,
         SearchInputComponent,
         AppListHeaderComponent,
+        AppListFiltersComponent,
+        FilterFieldComponent,
         AppContextFilterChipComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
@@ -61,41 +65,35 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
         <div class="card">
             <div class="flex flex-col gap-4">
                 <div class="pb-3 border-b border-surface-200 dark:border-surface-700">
-                    <app-list-header class="mb-3" title="Görüntüleme" [count]="totalItems()">
-                        <div class="flex-1 min-w-0">
-                            <label for="imgSearch" class="block text-xs font-medium text-muted-color mb-1">Arama</label>
-                            <app-search-input inputId="imgSearch" placeholder="Hasta, müşteri veya açıklama…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
-                        </div>
-                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
+                    <app-list-header title="Görüntüleme" [count]="totalItems()">
+                        <app-filter-field label="Arama" labelFor="imgSearch" [active]="!!searchInput.trim()" width="grow">
+                            <app-search-input inputId="imgSearch" hint="Hasta, müşteri veya açıklama" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                        </app-filter-field>
+                        <app-list-filters (clear)="resetFilters()">
+                            <app-filter-field label="Tür" labelFor="imgModalityFilter" [active]="!!modalityInput" width="select">
+                                <p-select
+                                    inputId="imgModalityFilter"
+                                    [options]="modalityOptions"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [(ngModel)]="modalityInput"
+                                    (ngModelChange)="applyFilters()"
+                                    [showClear]="true"
+                                    placeholder="Tüm türler"
+                                    class="w-full"
+                                />
+                            </app-filter-field>
+                            <app-filter-field label="Tarih (başlangıç)" labelFor="imgFrom" [active]="!!fromDateInput" width="date">
+                                <app-date-input inputId="imgFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                            <app-filter-field label="Tarih (bitiş)" labelFor="imgTo" [active]="!!toDateInput" width="date">
+                                <app-date-input inputId="imgTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                            <app-filter-field label="Durum" labelFor="imgStatus" [active]="!!statusInput" width="select">
+                                <p-select inputId="imgStatus" [options]="statusOptions" optionLabel="label" optionValue="value" [(ngModel)]="statusInput" (ngModelChange)="applyFilters()" class="w-full" />
+                            </app-filter-field>
+                        </app-list-filters>
                     </app-list-header>
-                    <div class="grid grid-cols-12 gap-3 items-end">
-                        <div class="col-span-12 md:col-span-3">
-                            <label for="imgModalityFilter" class="block text-xs font-medium text-muted-color mb-1">Tür</label>
-                            <p-select
-                                inputId="imgModalityFilter"
-                                [options]="modalityOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                [(ngModel)]="modalityInput"
-                                (ngModelChange)="applyFilters()"
-                                [showClear]="true"
-                                placeholder="Tüm türler"
-                                class="w-full"
-                            />
-                        </div>
-                        <div class="col-span-12 md:col-span-3">
-                            <label for="imgFrom" class="block text-xs font-medium text-muted-color mb-1">Tarih (başlangıç)</label>
-                            <app-date-input inputId="imgFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                        </div>
-                        <div class="col-span-12 md:col-span-3">
-                            <label for="imgTo" class="block text-xs font-medium text-muted-color mb-1">Tarih (bitiş)</label>
-                            <app-date-input inputId="imgTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="past" (ngModelChange)="scheduleApply()" />
-                        </div>
-                        <div class="col-span-12 md:col-span-3">
-                            <label for="imgStatus" class="block text-xs font-medium text-muted-color mb-1">Durum</label>
-                            <p-select inputId="imgStatus" [options]="statusOptions" optionLabel="label" optionValue="value" [(ngModel)]="statusInput" (ngModelChange)="applyFilters()" class="w-full" />
-                        </div>
-                    </div>
                 </div>
 
                 @if (loading()) {
