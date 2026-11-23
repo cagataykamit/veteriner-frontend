@@ -1,4 +1,4 @@
-import { PRODUCTS_READ_CLAIM, VACCINATIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { APPOINTMENTS_READ_CLAIM, PRODUCTS_READ_CLAIM, VACCINATIONS_READ_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import { type CardEntry, type NavigationEntry, REPORT_SECTIONS, REPORTS_ROUTE, visibleEntries, visibleGroups } from '@/app/core/routing/panel-navigation';
 import type { ReportHubPeriod, ReportHubSeriesPointDto, ReportHubSummaryDto } from '@/app/features/reports/hub/models/report-hub-summary.model';
 import { reportKeyFromRoute } from '@/app/entities/report-preference/services/report-preferences.service';
@@ -168,6 +168,20 @@ export function attentionRows(summary: ReportHubSummaryDto | null, hasClaim: Has
             queryParams: { overdue: 'true' }
         },
         { claims: [VACCINATIONS_READ_CLAIM] }
+    );
+
+    // B-02: Bugün'den taşındı; takvimdeki "Gecikmiş" durumuyla aynı gün bazlı sayı, izin Bugün'deki eski çiple aynı (sözleşme §11).
+    add(
+        a.overdueAppointmentCount,
+        {
+            key: 'overdueAppointments',
+            text: c.overdueAppointments(a.overdueAppointmentCount ?? 0),
+            hint: c.overdueAppointmentsHint,
+            action: c.openList,
+            route: '/panel/appointments/calendar',
+            queryParams: { view: 'month', states: 'Overdue' }
+        },
+        { claims: [VISITS_READ_CLAIM, APPOINTMENTS_READ_CLAIM], requireAllClaims: true }
     );
 
     add(

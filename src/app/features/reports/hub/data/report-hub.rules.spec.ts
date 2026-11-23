@@ -61,7 +61,8 @@ function summary(overrides: Partial<ReportHubSummaryDto> = {}): ReportHubSummary
             hbsNotEnteredVaccinations: { count: 5, oldestAtUtc: '2026-11-19T08:00:00Z' },
             endOfDayUnchargedVisitCount: 3,
             overdueVaccinationCount: 0,
-            lowStockProductCount: 2
+            lowStockProductCount: 2,
+            overdueAppointmentCount: 0
         },
         ...overrides
     };
@@ -136,6 +137,16 @@ describe('report-hub.rules (ADR-052, tasarım B)', () => {
         const low = attentionRows(summary(), has([PRODUCTS_READ_CLAIM]), now)[0];
 
         expect([low.route, low.queryParams]).toEqual(['/panel/stocks', { isBelowMinimum: 'true' }]);
+    });
+
+    it('B-02: gecikmiş randevu satırı Bugün çipinin izniyle (geliş ve randevu okuma) görünür', () => {
+        const withOverdue = summary({ attention: { ...summary().attention, overdueAppointmentCount: 29 } });
+        const row = attentionRows(withOverdue, has(ALL)).find((r) => r.key === 'overdueAppointments');
+
+        expect(row?.text).toBe('29 randevu gecikmiş, hâlâ planlı');
+        expect([row?.route, row?.queryParams]).toEqual(['/panel/appointments/calendar', { view: 'month', states: 'Overdue' }]);
+        expect(attentionRows(withOverdue, has([APPOINTMENTS_READ_CLAIM])).map((r) => r.key)).not.toContain('overdueAppointments');
+        expect(attentionRows(withOverdue, has([VISITS_READ_CLAIM])).map((r) => r.key)).not.toContain('overdueAppointments');
     });
 
     it('arama Türkçe harf farkını yok sayar ve anahtar kelimeye bakar', () => {
