@@ -282,6 +282,7 @@ export function mapClientDetailDtoToVm(dto: ClientDetailDto): ClientDetailVm {
         preferredContactChannel: parseClientContactChannel(dto.preferredContactChannel),
         invoicing: mapClientInvoicingSummaryDtoToVm(dto.invoicing),
         notes: trimmedOrNull(dto.notes),
+        deletedAtUtc: dto.deletedAtUtc ?? null,
         ...mapClientKvkkConsentDtoToVm(dto)
     };
 }

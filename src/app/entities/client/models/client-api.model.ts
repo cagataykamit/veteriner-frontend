@@ -52,6 +52,8 @@ export interface ClientDetailDto {
     invoicing?: ClientInvoicingSummaryDto | null;
     /** Kliniğin iç notu (≤ 4000, `PET_STATUS_CLIENT_CONTACT_API_CONTRACT.md` §2.1); yalnız detayda döner, portala açılmaz. */
     notes?: string | null;
+    /** Doluysa müşteri silinmiş (ADR-054); kart "Silindi" bandıyla açılır, yazma 409 `Clients.Deleted`. */
+    deletedAtUtc?: string | null;
 }
 
 /** Fatura alıcısı türü; `null` = belirtilmemiş. */

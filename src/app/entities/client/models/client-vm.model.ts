@@ -29,6 +29,8 @@ export interface ClientDetailVm {
     rowVersion: string | null;
     /** Kliniğin iç notu (satır sonları korunur); boşsa `null`. */
     notes: string | null;
+    /** Silinme anı (UTC, ADR-054); `null` = aktif. Silinen kart salt okunur açılır. */
+    deletedAtUtc: string | null;
 }
 
 /** Müşteri kartındaki "Fatura bilgileri" satırı; TCKN/VKN yalnız maskeli gelir. */

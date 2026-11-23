@@ -21,6 +21,7 @@ const client: ClientDetailVm = {
     kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null, templateVersion: null, templateHash: null },
     invoicing: null,
     notes: null,
+    deletedAtUtc: null,
     rowVersion: 'rv1'
 };
 

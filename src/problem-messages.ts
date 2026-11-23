@@ -9,6 +9,7 @@ import { VISIT_PANEL_PROBLEM_MESSAGES } from '@/app/entities/visit/utils/visit-e
 import { VITAL_MEASUREMENT_PANEL_PROBLEM_MESSAGES } from '@/app/entities/vital-measurement/utils/vital-measurement-error.utils';
 import { OWNER_PORTAL_PROBLEM_MESSAGES } from '@/app/features/clients/utils/owner-portal-error.utils';
 import { REMINDER_PANEL_PROBLEM_MESSAGES } from '@/app/features/reminders/utils/reminder-error.utils';
+import { RECORD_DELETION_PROBLEM_MESSAGES } from '@/app/entities/record-deletion/utils/record-deletion-error.utils';
 import { SALE_PANEL_PROBLEM_MESSAGES } from '@/app/features/sales/utils/sale-error.utils';
 import { registerProblemMessages } from '@/app/shared/utils/api-error.utils';
 
@@ -29,6 +30,7 @@ export function registerPanelProblemMessages(): void {
         HOSPITALIZATION_PANEL_PROBLEM_MESSAGES,
         VITAL_MEASUREMENT_PANEL_PROBLEM_MESSAGES,
         EXAMINATION_FINALIZE_PROBLEM_MESSAGES,
-        OWNER_PORTAL_PROBLEM_MESSAGES
+        OWNER_PORTAL_PROBLEM_MESSAGES,
+        RECORD_DELETION_PROBLEM_MESSAGES
     ]);
 }

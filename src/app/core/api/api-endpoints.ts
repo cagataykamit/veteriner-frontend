@@ -169,7 +169,12 @@ export const ApiEndpoints = {
     clients: {
         /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order` (canonical — @see docs/BACKEND-INTEGRATION.md). */
         list: () => `/api/v1/clients`,
+        /** GET; DELETE `Clients.Delete` yumuşak siler, hastaları da (`CLIENT_PET_DELETION_API_CONTRACT.md` §2). */
         byId: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}`,
+        /** POST `Clients.Delete`; 204, birlikte silinen hastalar da geri gelir (§2). */
+        restore: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/restore`,
+        /** GET `Clients.Delete`; `page`, `pageSize`, `search`; en son silinen önce (§2). */
+        deleted: () => `/api/v1/clients/deleted`,
         /** POST: müşteri + hayvan tek işlemde (`Clients.Create` ve `Pets.Create`); Visit açmaz. */
         quickRegister: () => `/api/v1/clients/quick-register`,
         recentSummary: (id: string) => `/api/v1/clients/${encodeURIComponent(id)}/recent-summary`,
@@ -207,7 +212,12 @@ export const ApiEndpoints = {
     pets: {
         /** Query: `Page`, `PageSize`, `Search`, `Sort`, `Order`, `SpeciesId`, `ClientId`, `Status` (+ opsiyonel legacy `Species` — @see docs/BACKEND-INTEGRATION.md). */
         list: () => `/api/v1/pets`,
+        /** GET; DELETE `Pets.Delete` yumuşak siler (`CLIENT_PET_DELETION_API_CONTRACT.md` §3). */
         byId: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}`,
+        /** POST `Pets.Delete`; 204, müşterisi silinmişse 409 `Pets.ClientDeleted` (§3). */
+        restore: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/restore`,
+        /** GET `Pets.Delete`; `page`, `pageSize`, `search` (yalnız hasta alanları); en son silinen önce (§3). */
+        deleted: () => `/api/v1/pets/deleted`,
         /** PUT: aktif/vefat (`rowVersion` zorunlu; `PET_STATUS_CLIENT_CONTACT_API_CONTRACT.md` §1). */
         status: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/status`,
         historySummary: (id: string) => `/api/v1/pets/${encodeURIComponent(id)}/history-summary`,

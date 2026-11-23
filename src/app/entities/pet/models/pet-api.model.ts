@@ -80,6 +80,10 @@ export interface PetDetailDto {
     deceasedOn?: string | null;
     /** Base64 eşzamanlılık belirteci; `PUT /pets/{id}/status` için zorunlu. */
     rowVersion?: string | null;
+    /** Doluysa hasta silinmiş (ADR-054); yazma 409 `Pets.Deleted`. */
+    deletedAtUtc?: string | null;
+    /** Müşterisiyle birlikte silindi; müşteri geri yüklenince hasta da gelir. */
+    deletedWithClient?: boolean | null;
 }
 
 /** `PUT /pets/{id}/status` gövdesi ve yanıtı (`PET_STATUS_CLIENT_CONTACT_API_CONTRACT.md` §1). */

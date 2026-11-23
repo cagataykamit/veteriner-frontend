@@ -500,6 +500,8 @@ export function mapPetDetailDtoToVm(dto: PetDetailDto): PetDetailVm {
         clientPhone: canonicalPetDetailOwnerPhone(dto),
         clientEmail: canonicalPetDetailClientEmail(dto),
         ...petStatusFields(dto),
+        deletedAtUtc: dto.deletedAtUtc ?? null,
+        deletedWithClient: dto.deletedWithClient === true,
         vaccinationsSummary: {
             totalCount: vac?.totalCount ?? 0,
             items: (vac?.items ?? []).map((x) => ({
