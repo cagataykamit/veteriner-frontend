@@ -9,9 +9,11 @@ export type StatusTagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'dan
     standalone: true,
     imports: [CommonModule, TagModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    template: ` <p-tag [value]="label()" [severity]="severity()" /> `
+    template: ` <p-tag [value]="label()" [severity]="severity()" [icon]="icon()" /> `
 })
 export class AppStatusTagComponent {
     readonly label = input.required<string>();
     readonly severity = input<StatusTagSeverity>('secondary');
+    /** İsteğe bağlı PrimeIcons sınıfı; aynı renkteki iki durumu ayırmak için (ör. "Personel elle" ile "Kapalı"). */
+    readonly icon = input<string | undefined>(undefined);
 }
