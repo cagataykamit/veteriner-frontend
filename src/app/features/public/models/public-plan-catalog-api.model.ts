@@ -6,6 +6,8 @@ export interface PublicSubscriptionPlanDto {
     /** Kuruş, KDV hariç; fiyat yapılandırılmamışsa `null`. */
     monthlyPriceMinor?: number | null;
     yearlyPriceMinor?: number | null;
+    /** Klinik başına aylık yapay zekâ kredisi (ADR-044 madde 5; backend `Ai:PlanMonthlyCredits`). */
+    monthlyAiCredits?: number | null;
 }
 
 export interface PublicSubscriptionPlanCatalogDto {

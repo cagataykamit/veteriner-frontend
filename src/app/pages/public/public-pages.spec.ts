@@ -8,17 +8,29 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { PUBLIC_ANCHOR_SCROLL_OFFSET_PX, PublicLayoutComponent } from './public-layout.component';
 import { appRoutes } from '@/app.routes';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
+import { PUBLIC_AI_FEATURES, PUBLIC_AI_RULES, PUBLIC_AI_SECTION } from '@/app/features/public/utils/public-ai-content.utils';
 import { PUBLIC_CONTACT_CARD_ROWS, PUBLIC_CONTACT_EMAIL } from '@/app/features/public/utils/public-contact-content.utils';
 import { PUBLIC_EDOCUMENT_SECTION, PUBLIC_EDOCUMENT_STEPS } from '@/app/features/public/utils/public-edocument-content.utils';
 import { PUBLIC_FAQ_CATEGORIES, PUBLIC_HOME_FAQS, PUBLIC_PACKAGES_FAQ_CATEGORY_ID, publicFaqsOf } from '@/app/features/public/utils/public-faq-content.utils';
 import { PUBLIC_FEATURE_GROUPS, PUBLIC_FEATURE_SECTIONS } from '@/app/features/public/utils/public-features-content.utils';
-import { PUBLIC_HOME_AUDIENCE, PUBLIC_HOME_DAY_FLOW } from '@/app/features/public/utils/public-home-content.utils';
+import {
+    PUBLIC_HOME_AUDIENCE,
+    PUBLIC_HOME_DAY_FLOW,
+    PUBLIC_HOME_HERO,
+    PUBLIC_HOME_PHONE_HERO_CHIP,
+    PUBLIC_HOME_SECTIONS,
+    PUBLIC_HOME_TIMELINE_MARKS,
+    PUBLIC_HOME_TRUST
+} from '@/app/features/public/utils/public-home-content.utils';
+import { PUBLIC_MIGRATION_INCLUDED } from '@/app/features/public/utils/public-migration-content.utils';
+import { PUBLIC_HOME_TIMELINE_VISUALS } from '@/app/features/public/utils/public-screenshot-crops.utils';
+import { PUBLIC_PHONE_MEDIA_QUERY } from '@/app/features/public/utils/public-viewport.utils';
 import { PUBLIC_NAV_ITEMS, PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { PUBLIC_REGISTERS } from '@/app/features/public/utils/public-registers-content.utils';
 import { PUBLIC_SCREENSHOTS, type PublicScreenshotKey } from '@/app/features/public/utils/public-screenshots.utils';
 import { PUBLIC_SITE_DESIGNS, PUBLIC_SITE_SHOWCASE, publicSiteDesignSrc } from '@/app/features/public/utils/public-site-showcase-content.utils';
 import { SITE_CONCEPTS } from '@site-engine';
-import { PRICING_FEATURE_ROWS, PRICING_NOT_AVAILABLE, PRICING_ON_REQUEST_TEXT, PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { PRICING_AI_CREDITS_ROW, PRICING_FEATURE_ROWS, PRICING_ON_REQUEST_TEXT, PRICING_PLAN_DEFS } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import type { PublicSubscriptionPlanCatalogDto } from '@/app/features/public/models/public-plan-catalog-api.model';
 import { PUBLIC_ABOUT_PAGE_META, PUBLIC_CONTACT_PAGE_META, PUBLIC_FAQ_PAGE_META, PUBLIC_FEATURES_PAGE_META, PUBLIC_HOME_PAGE_META, PUBLIC_LOGO_PATH, PUBLIC_MIGRATION_PAGE_META, PUBLIC_OG_IMAGE_PATH, PUBLIC_PACKAGES_PAGE_META, PUBLIC_REGISTERS_PAGE_META, PUBLIC_SITE_ORIGIN, publicOrganizationJsonLd } from '@/app/features/public/utils/public-seo.utils';
 
@@ -28,9 +40,9 @@ const PLAN_CATALOG: PublicSubscriptionPlanCatalogDto = {
     vatIncluded: false,
     yearlyBilledMonths: 10,
     plans: [
-        { planCode: 'Basic', name: 'Basic', maxUsers: 3, monthlyPriceMinor: 89000, yearlyPriceMinor: 890000 },
-        { planCode: 'Pro', name: 'Pro', maxUsers: 5, monthlyPriceMinor: 179000, yearlyPriceMinor: 1790000 },
-        { planCode: 'Premium', name: 'Premium', maxUsers: 15, monthlyPriceMinor: 379000, yearlyPriceMinor: 3790000 }
+        { planCode: 'Basic', name: 'Basic', maxUsers: 3, monthlyPriceMinor: 89000, yearlyPriceMinor: 890000, monthlyAiCredits: 0 },
+        { planCode: 'Pro', name: 'Pro', maxUsers: 5, monthlyPriceMinor: 179000, yearlyPriceMinor: 1790000, monthlyAiCredits: 500 },
+        { planCode: 'Premium', name: 'Premium', maxUsers: 15, monthlyPriceMinor: 379000, yearlyPriceMinor: 3790000, monthlyAiCredits: 2000 }
     ]
 };
 
@@ -92,7 +104,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
             expect(root().querySelector('footer a[href="/gizlilik"]')).not.toBeNull();
         });
 
-        it(`${page.path}: ön sürüm ve yer tutucu dili yok (pilot, yakında, "ekran görüntüsü gelecek", AK-6)`, async () => {
+        it(`${page.path}: ön sürüm ve yer tutucu dili yok (pilot, yakında, "ekran görüntüsü gelecek", AK-6) ve "şu an yok" listesi yok`, async () => {
             await harness.navigateByUrl(page.path);
             harness.detectChanges();
 
@@ -103,6 +115,8 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
             expect(body).not.toMatch(/ekran görüntüsü gelecek/i);
             expect(body).not.toMatch(/fiyat için (bize )?yazın/i);
             expect(body).not.toContain('AK-6');
+            // Tanıtım olmayanı saymaz, bulunanı söyler (kullanıcı kararı 2026-11-23).
+            expect(body).not.toMatch(/şu an yok|bugün yok|yapmadığımız|mali belge değildir/i);
         });
     }
 
@@ -126,7 +140,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         await harness.navigateByUrl(PUBLIC_PATHS.features);
         harness.detectChanges();
 
-        expect(texts('section[id] h2')).toEqual([...PUBLIC_FEATURE_SECTIONS, PUBLIC_EDOCUMENT_SECTION, PUBLIC_SITE_SHOWCASE, ...PUBLIC_FEATURE_GROUPS].map((s) => s.title));
+        expect(texts('section[id] h2')).toEqual([...PUBLIC_FEATURE_SECTIONS, PUBLIC_EDOCUMENT_SECTION, PUBLIC_AI_SECTION, PUBLIC_SITE_SHOWCASE, ...PUBLIC_FEATURE_GROUPS].map((s) => s.title));
         const shots: PublicScreenshotKey[] = [...PUBLIC_FEATURE_SECTIONS.map((s) => s.screenshot), 'klinikSitesi', ...PUBLIC_FEATURE_GROUPS.flatMap((g) => (g.shot ? [g.shot.screenshot] : []))];
         const images = Array.from(root().querySelectorAll<HTMLImageElement>('figure.public-shot:not(.public-shot--sticker) img.public-shot-img--light'));
 
@@ -161,7 +175,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
 
         const hrefs = Array.from(root().querySelectorAll<HTMLAnchorElement>('nav[aria-label="Bölüm dizini"] a')).map((a) => a.getAttribute('href'));
 
-        expect(hrefs).toEqual([...PUBLIC_FEATURE_SECTIONS, PUBLIC_EDOCUMENT_SECTION, PUBLIC_SITE_SHOWCASE, ...PUBLIC_FEATURE_GROUPS].map((s) => `${PUBLIC_PATHS.features}#${s.id}`));
+        expect(hrefs).toEqual([...PUBLIC_FEATURE_SECTIONS, PUBLIC_EDOCUMENT_SECTION, PUBLIC_AI_SECTION, PUBLIC_SITE_SHOWCASE, ...PUBLIC_FEATURE_GROUPS].map((s) => `${PUBLIC_PATHS.features}#${s.id}`));
     });
 
     it('özellikler: e-belge bölümü sağlayıcı adı yazmaz, paketi özellik tablosundan okur; üç adım, çift belge kesilmez', async () => {
@@ -178,6 +192,18 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(text).not.toMatch(/nilvera|paraşüt|parasut|logo|uyumsoft|mikro/i);
         expect(section.querySelector('[data-edocument-plans]')?.textContent?.trim()).toBe('Tüm paketlerde');
         expect(text).not.toMatch(/en iyi|bir numara|yalnızca bizde|saniyede|dakikada/i);
+    });
+
+    it('özellikler: yapay zekâ yardımcısı bölümü dizinde; beş işlev, kurallar ve Paketler bağlantısı; sağlayıcı adı yok', async () => {
+        await harness.navigateByUrl(PUBLIC_PATHS.features);
+        harness.detectChanges();
+        const section = root().querySelector<HTMLElement>(`section#${PUBLIC_AI_SECTION.id}`)!;
+
+        expect(texts('nav[aria-label="Bölüm dizini"] a')).toContain(PUBLIC_AI_SECTION.indexTitle);
+        expect(Array.from(section.querySelectorAll('[data-ai-features] h3')).map((el) => el.textContent?.trim())).toEqual(PUBLIC_AI_FEATURES.map((f) => f.title));
+        expect(Array.from(section.querySelectorAll('[data-ai-rules] li')).map((el) => el.textContent?.trim())).toEqual([...PUBLIC_AI_RULES]);
+        expect(section.querySelector(`a[href="${PUBLIC_PATHS.packages}"]`)).not.toBeNull();
+        expect(section.textContent).not.toMatch(/anthropic|claude|sesle yaz|hemen kullan/i);
     });
 
     it('özellikler: klinik web sitesi vitrini kendi bölümünde; dört tasarım, yedi adım, sihirbaz ekranı ve bağlantılar', async () => {
@@ -202,7 +228,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(section.querySelector('figure.public-shot figcaption')?.textContent).toBeTruthy();
         expect(section.querySelector('img.public-shot-img--light')?.getAttribute('alt')).toBe(PUBLIC_SCREENSHOTS.klinikSitesi.alt);
         expect(section.querySelector('[data-site-links] a')?.getAttribute('href')).toBe('/veteriner');
-        expect(section.querySelector('[data-site-address-note]')?.textContent).toContain('Kendi alan adınızı bağlamak şu an yoktur');
+        expect(section.querySelector('[data-site-address-note]')?.textContent).toContain(PUBLIC_SITE_SHOWCASE.address);
         expect(section.textContent).not.toMatch(/en iyi|bir numara|yalnızca bizde|dakikada|saniyede/i);
     });
 
@@ -340,9 +366,14 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
 
         expect(texts('table.public-plan-compare thead th')[2]).toContain('₺1.790');
         expect(table.textContent).not.toMatch(/Yıllık|\/ yıl|₺17\.900/);
-        expect(rowHeaders.length).toBe(PRICING_FEATURE_ROWS.length);
+        // Özellik tablosu + katalogdan gelen yapay zekâ kredisi satırı (değerler backend'den, sitede sayı yok).
+        expect(rowHeaders.length).toBe(PRICING_FEATURE_ROWS.length + 1);
+        const aiRow = Array.from(table.querySelectorAll('tbody tr')).find((tr) => tr.querySelector('th')?.textContent?.includes(PRICING_AI_CREDITS_ROW.label))!;
+
+        expect(Array.from(aiRow.querySelectorAll('td')).map((td) => td.textContent?.trim())).toEqual(['Yok', '500', '2.000']);
+        expect(aiRow.textContent).toContain('Talep üzerine açılır');
         PRICING_FEATURE_ROWS.forEach((r) => expect(rowHeaders.some((t) => t.startsWith(r.label)), r.label).toBe(true));
-        expect(texts('#packages-not-title + ul li')).toEqual([...PRICING_NOT_AVAILABLE]);
+        expect(root().querySelector('#packages-not-title')).toBeNull();
     });
 
     it('paketler: SoftwareApplication JSON-LD fiyatları backend kataloğundan (KDV hariç)', async () => {
@@ -414,18 +445,36 @@ describe('Ana sayfa (PublicHomePage)', () => {
     const root = (): HTMLElement => harness.fixture.nativeElement as HTMLElement;
     const texts = (selector: string): string[] => Array.from(root().querySelectorAll(selector)).map((el) => (el.textContent ?? '').trim());
 
-    it('bölümler sırayla: kime göre, akış, Türkiye, güvenlik, klinik web sitesi, geçiş, paketler, SSS, çağrı', () => {
+    it('bölümler sırayla: kime göre, akış, Türkiye, güvenlik, yapay zekâ, klinik web sitesi, geçiş, paketler, SSS, çağrı', () => {
         expect(texts('main section h2')).toEqual([
             'Kime göre?',
             'Bir günün akışı',
             "Türkiye'ye özgü",
             'Kayıtlarınız güvende ve dürüst',
+            PUBLIC_AI_SECTION.title,
             PUBLIC_SITE_SHOWCASE.homeTitle,
             'Eski programdan kayıtlarınızla geçin',
             'Paketler',
             'Sık sorulan sorular',
             '14 gün ücretsiz deneyin'
         ]);
+    });
+
+    it('yapay zekâ yardımcısı: beş işlev, taslak ve hekim onayı kuralı, talep üzerine açılır; sağlayıcı adı ve ses-yazı yok', () => {
+        const section = root().querySelector('section[aria-labelledby="public-home-ai-title"]')!;
+        const body = section.textContent ?? '';
+
+        expect(Array.from(section.querySelectorAll('[data-ai-features] strong')).map((el) => el.textContent?.trim())).toEqual(PUBLIC_AI_FEATURES.map((f) => f.title));
+        expect(texts('section[aria-labelledby="public-home-ai-title"] [data-ai-rules] li')).toEqual([...PUBLIC_AI_RULES]);
+        expect(body).toContain('hekim onaylamadan kayda geçmez');
+        expect(body).toContain('talep ettiğinizde Vetinity açar');
+        expect(body).not.toMatch(/anthropic|claude|openai|sesle yaz|ses kayd|hemen kullan/i);
+        expect(section.querySelector('a.public-btn')?.getAttribute('href')).toBe(`${PUBLIC_PATHS.features}#${PUBLIC_AI_SECTION.id}`);
+    });
+
+    it('masaüstünde telefon düzeni çizilmez', () => {
+        expect(root().querySelector('app-public-home-phone')).toBeNull();
+        expect(root().querySelector('[data-home-timeline]')).toBeNull();
     });
 
     it('klinik web sitesi kısa hali: dört tasarım görseli ve Özellikler bölümüne bağlantı; adım ve sihirbaz ekranı yok', () => {
@@ -450,10 +499,8 @@ describe('Ana sayfa (PublicHomePage)', () => {
 
         expect(shot?.alt).toBe(PUBLIC_SCREENSHOTS.bugun.alt);
         expect(shot?.getAttribute('loading')).toBe('eager');
-        const phone = hero.querySelector<HTMLImageElement>('[data-hero-phone] img.public-shot-img--light');
-
-        expect(phone?.alt).toBe(PUBLIC_SCREENSHOTS.telefonBugun.alt);
-        expect(phone?.getAttribute('loading')).toBe('lazy');
+        // Telefon ekranı telefon düzeninin zaman çizgisinde (T-03 B); masaüstü kahramanında yalnız masaüstü ekranı.
+        expect(hero.querySelector('[data-hero-phone]')).toBeNull();
     });
 
     it('kime göre: üç kart, hastane yok', () => {
@@ -508,6 +555,107 @@ describe('Ana sayfa (PublicHomePage)', () => {
         expect(section.querySelector('[data-plan="pro"]')?.textContent).toContain('₺1.790');
         expect(section.querySelector('[data-plan="premium"]')?.textContent).toContain('15 kullanıcı');
         expect(section.querySelector('[aria-label="Ödeme dönemi"]')).toBeNull();
+    });
+});
+
+/** Ana sayfanın telefon düzeni (T-03 B "Günün saatleri"): 768 px altında masaüstü bölümlerinin yerine zaman çizgisi. */
+describe('Ana sayfa telefon düzeni (T-03 B)', () => {
+    let harness: RouterTestingHarness;
+
+    beforeEach(async () => {
+        vi.spyOn(window, 'matchMedia').mockImplementation(
+            (query: string) => ({ matches: query === PUBLIC_PHONE_MEDIA_QUERY, addEventListener: () => undefined, removeEventListener: () => undefined }) as unknown as MediaQueryList
+        );
+        TestBed.configureTestingModule({
+            providers: [provideRouter(appRoutes), provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
+        });
+        harness = await RouterTestingHarness.create();
+        await harness.navigateByUrl(PUBLIC_PATHS.home);
+        harness.detectChanges();
+    });
+
+    afterEach(() => vi.restoreAllMocks());
+
+    const root = (): HTMLElement => harness.fixture.nativeElement as HTMLElement;
+    const texts = (selector: string): string[] => Array.from(root().querySelectorAll(selector)).map((el) => (el.textContent ?? '').trim());
+
+    it('bölümler sırayla: akış (yapay zekâ, defterler, güvenlik çizgide), kime göre, klinik web sitesi, geçiş, paketler, SSS, çağrı; masaüstü sekmeleri yok', () => {
+        expect(texts('h1')).toEqual([`${PUBLIC_HOME_HERO.title} ${PUBLIC_HOME_HERO.marker}`]);
+        expect(texts('main section h2')).toEqual([
+            PUBLIC_HOME_SECTIONS.flow.title,
+            PUBLIC_AI_SECTION.homeTitle,
+            PUBLIC_HOME_SECTIONS.turkey.title,
+            PUBLIC_HOME_SECTIONS.safety.title,
+            PUBLIC_HOME_SECTIONS.audience.title,
+            PUBLIC_SITE_SHOWCASE.homeTitle,
+            'Eski programdan kayıtlarınızla geçin',
+            'Paketler',
+            'Sık sorulan sorular',
+            '14 gün ücretsiz deneyin'
+        ]);
+        expect(root().querySelector('[role="tab"]')).toBeNull();
+    });
+
+    it('kahraman: durum çipi, iki düğme, üç deneme tiki ve tek kartta güven listesi; ürün görseli yok', () => {
+        const hero = root().querySelector('section[aria-labelledby="public-home-hero-title"]')!;
+
+        expect(hero.querySelector('.ps-ph-clock')?.textContent?.trim()).toBe(PUBLIC_HOME_PHONE_HERO_CHIP);
+        expect(hero.querySelector('a[href="/auth/signup"]')?.textContent?.trim()).toBe('Ücretsiz dene');
+        expect(hero.querySelector(`a[href="${PUBLIC_PATHS.contact}"]`)?.textContent?.trim()).toBe('Demo iste');
+        expect(Array.from(hero.querySelectorAll('.ps-ph-ticks li')).map((li) => li.textContent?.trim())).toEqual(['14 gün ücretsiz', 'kart gerekmez', 'satış görüşmesi yok']);
+        expect(Array.from(hero.querySelectorAll('.ps-ph-trust li')).map((li) => li.textContent?.trim())).toEqual(PUBLIC_HOME_TRUST.map((t) => t.text));
+        expect(hero.querySelector('img')).toBeNull();
+    });
+
+    it('zaman çizgisi: dört adım saatiyle, aralarında saatsiz duraklar; her adımın görseli gün akışı tablosundan', () => {
+        expect(texts('[data-home-timeline] > li > .ps-ph-time')).toEqual([
+            ...PUBLIC_HOME_DAY_FLOW.slice(0, 2).map((s) => s.time),
+            PUBLIC_AI_SECTION.timelineMark,
+            PUBLIC_HOME_DAY_FLOW[2].time,
+            PUBLIC_HOME_TIMELINE_MARKS.turkey,
+            PUBLIC_HOME_TIMELINE_MARKS.safety,
+            PUBLIC_HOME_DAY_FLOW[3].time
+        ]);
+
+        for (const step of PUBLIC_HOME_DAY_FLOW) {
+            const item = root().querySelector(`[data-home-timeline] > li[data-step="${step.id}"]`)!;
+            const visual = PUBLIC_HOME_TIMELINE_VISUALS[step.id];
+
+            expect(item.querySelector('h3')?.textContent?.trim()).toBe(step.title);
+            expect(item.querySelector<HTMLImageElement>('img.public-shot-img--light')?.alt).toBe(PUBLIC_SCREENSHOTS[visual.shot].alt);
+            expect(item.querySelector(visual.device ? '.ps-ph-device' : '.ps-ph-shot')).not.toBeNull();
+        }
+    });
+
+    it('yapay zekâ durağı: beş işlev tek sütun satırda, kurallar ve Özellikler bağlantısı', () => {
+        const stop = root().querySelector('[data-home-timeline] > li[data-step="yapay-zeka"]')!;
+
+        expect(Array.from(stop.querySelectorAll('.ps-ph-rows strong')).map((el) => el.textContent?.trim())).toEqual(PUBLIC_AI_FEATURES.map((f) => f.title));
+        expect(Array.from(stop.querySelectorAll('[data-ai-rules] li')).map((el) => el.textContent?.trim())).toEqual([...PUBLIC_AI_RULES]);
+        expect(stop.querySelector('a')?.getAttribute('href')).toBe(`${PUBLIC_PATHS.features}#${PUBLIC_AI_SECTION.id}`);
+    });
+
+    it('defterler ve KVKK: satırlar tek sütun (ad üstte, ne zaman dolduğu altta), danışman notu ve sayfa bağlantısı', () => {
+        const stop = root().querySelector('[data-home-timeline] > li[data-step="defterler"]')!;
+
+        expect(Array.from(stop.querySelectorAll('.ps-ph-rows strong')).map((el) => el.textContent?.trim())).toEqual(
+            expect.arrayContaining(PUBLIC_REGISTERS.map((r) => r.name))
+        );
+        expect(Array.from(stop.querySelectorAll('.ps-ph-rows span')).map((el) => el.textContent?.trim())).toEqual(expect.arrayContaining(PUBLIC_REGISTERS.map((r) => r.fills)));
+        expect(stop.querySelector(`a[href="${PUBLIC_PATHS.registersAndKvkk}"]`)?.textContent?.trim()).toBe(PUBLIC_HOME_SECTIONS.turkey.link);
+    });
+
+    it('klinik web sitesi bölümü canlıdaki düzende (karar bekliyor): dört tasarım görseli ve Özellikler bağlantısı', () => {
+        const section = root().querySelector<HTMLElement>('section[aria-labelledby="public-home-site-title"]')!;
+
+        expect(Array.from(section.querySelectorAll('[data-site-designs] img')).map((img) => img.getAttribute('src'))).toEqual(PUBLIC_SITE_DESIGNS.map(publicSiteDesignSrc));
+        expect(section.querySelector('a.public-btn')?.getAttribute('href')).toBe(`${PUBLIC_PATHS.features}#${PUBLIC_SITE_SHOWCASE.id}`);
+    });
+
+    it('kime göre çizgiden sonra; geçiş yalnız aktarılanları sayar, paket kartları ortak bileşenden', () => {
+        expect(texts('section[aria-labelledby="public-home-audience-title"] h3')).toEqual(PUBLIC_HOME_AUDIENCE.map((a) => a.title));
+        expect(texts('[data-migration-included] li')).toEqual(PUBLIC_MIGRATION_INCLUDED);
+        expect(texts('section[aria-labelledby="public-home-packages-title"] [data-plan] h3')).toEqual(PRICING_PLAN_DEFS.map((p) => p.title));
     });
 });
 

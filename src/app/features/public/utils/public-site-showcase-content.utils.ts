@@ -22,7 +22,7 @@ export const PUBLIC_SITE_SHOWCASE = {
     wizardCaption: 'Sihirbazın ilk adımı: solda klinik bilgileriniz, sağda yazdıkça güncellenen site önizlemesi',
     /** Sitenin yayınlandığı adres kalıbı; tasarım görsellerinin adres çubuğunda ve dipnotta. */
     address: 'www.vetinity.com/k/klinik-adiniz',
-    addressNote: 'Siteniz Vetinity adresi altında yayınlanır. Kendi alan adınızı bağlamak şu an yoktur.',
+    addressNote: 'Siteniz Vetinity adresinde yayınlanır: www.vetinity.com/k/klinik-adiniz.',
     homeTitle: 'Kliniğinizin web sitesi de panelden',
     homeLead: 'Hazır dört tasarımdan birini seçin, metinlerinizi yazın, önizleyip yayınlayın. Sitenizdeki randevu düğmesi boş saatlerinizi gösterir.',
     homeLinkLabel: 'Dört tasarımı ve adımları görün'

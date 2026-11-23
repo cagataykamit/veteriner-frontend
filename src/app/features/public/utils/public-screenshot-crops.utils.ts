@@ -16,33 +16,33 @@ export interface PublicScreenshotCrop {
  * yazı okunur kalır. Alanlar açık tema görüntüsüne göre seçildi; koyu eşler aynı piksel düzenindedir.
  */
 export const PUBLIC_SCREENSHOT_CROPS = {
-    bugunIcerik: { shot: 'bugun', x: 250, y: 62, w: 1160, h: 726 },
-    bugunBekleyenler: { shot: 'bugun', x: 268, y: 210, w: 1128, h: 368 },
-    bugunAcil: { shot: 'bugun', x: 284, y: 290, w: 770, h: 204 },
-    muayeneIcerik: { shot: 'muayene', x: 252, y: 62, w: 1158, h: 770 },
-    muayeneVital: { shot: 'muayene', x: 650, y: 420, w: 746, h: 410 },
-    kesinlestirmeKontrol: { shot: 'kesinlestirme', x: 764, y: 330, w: 367, h: 248 },
-    hastaIcerik: { shot: 'hastaKarti', x: 252, y: 62, w: 1158, h: 770 },
-    hastaKlinikOzet: { shot: 'hastaKarti', x: 268, y: 372, w: 746, h: 360 },
-    hastaBaslik: { shot: 'hastaKarti', x: 268, y: 96, w: 1128, h: 200 },
-    musteriIcerik: { shot: 'musteriBakiye', x: 252, y: 62, w: 1158, h: 770 },
-    musteriOzet: { shot: 'musteriBakiye', x: 268, y: 96, w: 1128, h: 234 },
-    musteriYapilacak: { shot: 'musteriBakiye', x: 1030, y: 408, w: 366, h: 286 },
-    stokIcerik: { shot: 'stok', x: 252, y: 62, w: 1158, h: 770 },
-    stokTablo: { shot: 'stok', x: 296, y: 320, w: 1072, h: 340 },
-    gunSonuIcerik: { shot: 'gunSonu', x: 252, y: 86, w: 1158, h: 720 },
-    gunSonuTahsilat: { shot: 'gunSonu', x: 268, y: 98, w: 1128, h: 260 },
-    gunSonuAcikIsler: { shot: 'gunSonu', x: 268, y: 644, w: 1128, h: 150 },
-    defterIcerik: { shot: 'kayitDefteri', x: 252, y: 62, w: 1158, h: 770 },
-    defterCikti: { shot: 'kayitDefteri', x: 268, y: 200, w: 700, h: 244 },
-    defterSatirlar: { shot: 'kayitDefteri', x: 268, y: 460, w: 1128, h: 300 },
-    telefonKart: { shot: 'telefonBugun', x: 0, y: 540, w: 780, h: 1050 },
-    bugunDar: { shot: 'bugun', x: 284, y: 262, w: 420, h: 240 },
-    muayeneDar: { shot: 'muayene', x: 660, y: 440, w: 400, h: 280 },
-    hastaDar: { shot: 'hastaKarti', x: 280, y: 384, w: 380, h: 226 },
-    stokDar: { shot: 'stok', x: 296, y: 322, w: 420, h: 270 },
-    gunSonuDar: { shot: 'gunSonu', x: 280, y: 112, w: 440, h: 250 },
-    defterDar: { shot: 'kayitDefteri', x: 296, y: 516, w: 520, h: 240 }
+    bugunIcerik: { shot: 'bugun', x: 250, y: 62, w: 1176, h: 620 },
+    bugunBekleyenler: { shot: 'bugun', x: 266, y: 172, w: 1146, h: 374 },
+    bugunAcil: { shot: 'bugun', x: 268, y: 224, w: 700, h: 196 },
+    muayeneIcerik: { shot: 'muayene', x: 250, y: 62, w: 1176, h: 770 },
+    muayeneVital: { shot: 'muayene', x: 266, y: 472, w: 760, h: 372 },
+    kesinlestirmeKontrol: { shot: 'kesinlestirme', x: 764, y: 334, w: 367, h: 282 },
+    hastaIcerik: { shot: 'hastaKarti', x: 250, y: 62, w: 1176, h: 770 },
+    hastaKlinikOzet: { shot: 'hastaKarti', x: 266, y: 376, w: 760, h: 368 },
+    hastaBaslik: { shot: 'hastaKarti', x: 266, y: 94, w: 1146, h: 206 },
+    musteriIcerik: { shot: 'musteriBakiye', x: 250, y: 62, w: 1176, h: 770 },
+    musteriOzet: { shot: 'musteriBakiye', x: 266, y: 94, w: 1146, h: 270 },
+    musteriYapilacak: { shot: 'musteriBakiye', x: 1040, y: 440, w: 372, h: 130 },
+    stokIcerik: { shot: 'stok', x: 250, y: 62, w: 1176, h: 770 },
+    stokTablo: { shot: 'stok', x: 296, y: 322, w: 1088, h: 340 },
+    gunSonuIcerik: { shot: 'gunSonu', x: 250, y: 60, w: 1176, h: 840 },
+    gunSonuTahsilat: { shot: 'gunSonu', x: 266, y: 68, w: 1146, h: 286 },
+    gunSonuAcikIsler: { shot: 'gunSonu', x: 266, y: 744, w: 1146, h: 152 },
+    defterIcerik: { shot: 'kayitDefteri', x: 250, y: 62, w: 1176, h: 770 },
+    defterCikti: { shot: 'kayitDefteri', x: 266, y: 200, w: 1146, h: 252 },
+    defterSatirlar: { shot: 'kayitDefteri', x: 266, y: 490, w: 1146, h: 300 },
+    telefonUst: { shot: 'telefonBugun', x: 0, y: 0, w: 780, h: 1280 },
+    bugunDar: { shot: 'bugun', x: 268, y: 252, w: 480, h: 168 },
+    muayeneDar: { shot: 'muayene', x: 280, y: 92, w: 520, h: 240 },
+    hastaDar: { shot: 'hastaKarti', x: 280, y: 392, w: 372, h: 200 },
+    stokDar: { shot: 'stok', x: 296, y: 322, w: 440, h: 270 },
+    gunSonuDar: { shot: 'gunSonu', x: 280, y: 84, w: 520, h: 240 },
+    defterDar: { shot: 'kayitDefteri', x: 296, y: 526, w: 520, h: 240 }
 } as const satisfies Record<string, PublicScreenshotCrop>;
 
 export type PublicScreenshotCropKey = keyof typeof PUBLIC_SCREENSHOT_CROPS;
@@ -106,4 +106,23 @@ export const PUBLIC_FEATURE_VISUALS: Readonly<Record<string, PublicFeatureVisual
     },
     raporlar: DAY_CLOSE_VISUAL,
     'gun-sonu': DAY_CLOSE_VISUAL
+};
+
+export interface PublicTimelineVisual {
+    readonly shot: PublicScreenshotKey;
+    /** Varsa görüntünün yalnız bu parçası. */
+    readonly crop?: PublicScreenshotCropKey;
+    /** Telefon ekranı telefon çerçevesinde gösterilir; değilse kart çerçevesinde. */
+    readonly device: boolean;
+}
+
+/**
+ * Ana sayfanın telefondaki zaman çizgisi (T-03 B): gün akışı adımı başına tek telefon ekranı (telefon çerçevesinde); anahtar adım
+ * kimliğidir.
+ */
+export const PUBLIC_HOME_TIMELINE_VISUALS: Readonly<Record<string, PublicTimelineVisual>> = {
+    gelis: { shot: 'telefonBugun', crop: 'telefonUst', device: true },
+    muayene: { shot: 'telefonMuayene', device: true },
+    tahsilat: { shot: 'telefonTahsilat', device: true },
+    'gun-sonu': { shot: 'telefonGunSonu', device: true }
 };
