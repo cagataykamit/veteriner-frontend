@@ -90,6 +90,17 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         expect(host().querySelectorAll('.legal-consent input[type="checkbox"]').length).toBe(1);
     });
 
+    it('L-01 A düzeni: geniş kart, sade başlık, bölüm başlıkları; süs çipi yok, birincil düğme ortak sınıfta', () => {
+        const groups = Array.from(host().querySelectorAll('.public-auth-group')).map((g) => g.textContent?.trim());
+
+        expect(host().querySelector('.public-auth-card')?.classList).toContain('public-auth-card--wide');
+        expect(host().querySelector('h1.public-auth-title')?.textContent?.trim()).toBe('Kliniğinizi ücretsiz deneyin');
+        expect(groups).toEqual(['Paket seçin', 'Klinik', 'Hesabınız', 'Nasıl başlayalım?']);
+        expect(host().querySelector('.public-auth-header [class*="chip"], .public-auth-header em')).toBeNull();
+        expect(host().querySelector('label[for="tenantName"]')?.classList).toContain('public-auth-label');
+        expect(submitButton()?.classList).toContain('public-auth-submit');
+    });
+
     it('kutu işaretlenmeden gönderim pasif ve istek atılmaz', () => {
         expect(submitButton()?.disabled).toBe(true);
 
