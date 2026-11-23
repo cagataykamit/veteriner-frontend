@@ -39,6 +39,13 @@ export interface PaymentDetailVm {
     examinationId: string | null;
 }
 
+/** Ödemenin kapattığı ücret satırı (GET /payments/{id}/allocations). */
+export interface PaymentAllocationVm {
+    chargeId: string;
+    description: string;
+    amount: number;
+}
+
 export interface PaymentEditVm {
     id: string;
     clientId: string;
