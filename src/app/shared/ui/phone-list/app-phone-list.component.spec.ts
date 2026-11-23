@@ -49,6 +49,14 @@ describe('AppPhoneListComponent (G-04)', () => {
         expect(days).toEqual([true, false, true]);
     });
 
+    it('boş ya da "—" alt metin ve başlık eki satırda yazılmaz', () => {
+        const { el } = render([item('a', null, null, { sub: '—', titleNote: '' })]);
+        const row = el.querySelector('[data-testid="phone-list-row"]')!;
+
+        expect(row.textContent).not.toContain('—');
+        expect(row.textContent).not.toContain('·');
+    });
+
     it('tarihsiz listede başlık yok; satıra dokununca yalnız dolu alanlar ve yazılı eylemler açılır, aynı anda tek satır', () => {
         const run = vi.fn();
         const { fixture, el } = render([

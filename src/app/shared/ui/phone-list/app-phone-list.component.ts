@@ -101,12 +101,12 @@ const isEmpty = (v: string | null | undefined) => v == null || v.trim() === '' |
                         <span class="flex-1 min-w-0">
                             <span class="block truncate font-medium"
                                 >{{ item.title }}
-                                @if (item.titleNote) {
-                                    <span class="font-normal text-muted-color">· {{ item.titleNote }}</span>
+                                @if (shown(item.titleNote); as note) {
+                                    <span class="font-normal text-muted-color">· {{ note }}</span>
                                 }
                             </span>
-                            @if (item.sub) {
-                                <span class="block truncate text-sm text-muted-color">{{ item.sub }}</span>
+                            @if (shown(item.sub); as sub) {
+                                <span class="block truncate text-sm text-muted-color">{{ sub }}</span>
                             }
                         </span>
                         @if (item.amount != null || item.status) {
@@ -197,6 +197,11 @@ export class AppPhoneListComponent {
 
     toggle(id: string): void {
         this.openId.set(this.openId() === id ? null : id);
+    }
+
+    /** Satırdaki ek metin: boş ya da "—" ise yazılmaz (G-04). */
+    shown(value: string | null | undefined): string | null {
+        return isEmpty(value) ? null : value!;
     }
 
     filled(item: PhoneListItem): PhoneListField[] {

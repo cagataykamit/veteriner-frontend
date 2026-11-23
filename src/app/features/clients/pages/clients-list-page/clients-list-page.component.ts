@@ -188,16 +188,19 @@ export class ClientsListPageComponent implements OnInit {
     /** Telefon satırları (G-04): ad ve telefon (yoksa e-posta); açılınca dolu alanlar, boş alan yazılmaz. */
     readonly phoneItems = computed<PhoneListItem[]>(() =>
         this.displayedRows().map((row) => {
-            const phone = row.phone ? formatClientPhoneForDisplay(row.phone) : null;
+            // Liste yanıtında boş alan "—" gelebilir; telefon yoksa e-posta yazılır.
+            const known = (v: string | null | undefined) => (v && v.trim() !== '—' ? v : null);
+            const phone = known(row.phone) ? formatClientPhoneForDisplay(row.phone) : null;
+            const email = known(row.email);
             const actions: PhoneListAction[] = this.canUpdateClient && !this.ro.mutationBlocked() ? [{ label: 'Düzenle', icon: 'pi pi-pencil', link: ['/panel/clients', row.id, 'edit'] }] : [];
 
             return {
                 id: row.id,
                 title: row.fullName,
-                sub: phone || row.email,
+                sub: phone || email,
                 fields: [
                     { label: 'Telefon', value: phone },
-                    { label: 'E-posta', value: row.email },
+                    { label: 'E-posta', value: email },
                     { label: 'Kayıt', value: row.createdAtUtc ? formatUtcIsoAsLocalDateDisplay(row.createdAtUtc) : null }
                 ],
                 detailLink: ['/panel/clients', row.id],
