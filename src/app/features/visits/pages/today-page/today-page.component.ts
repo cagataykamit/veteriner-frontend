@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, DestroyRef, OnInit, computed, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ElementRef, OnInit, computed, effect, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { EDocumentIssueDialogComponent } from '@/app/entities/e-document/components/e-document-issue-dialog.component';
 import type { EDocumentSource } from '@/app/entities/e-document/models/e-document.model';
 import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
@@ -105,6 +105,8 @@ interface TodayColumn {
     label: string;
     /** Başlık hücresi genişliği; dar kapsayıcıda gizlenen sütunun gövde hücresi de aynı `@max-[…]:hidden` sınıfını taşır. */
     className: string;
+    /** `className`'deki `@max-[n rem]:hidden` eşiği (colspan hesabı için; ikisi birlikte değişir). */
+    hiddenBelowRem?: number;
 }
 
 /** Bitmiş iş: daha alçak, soluk satır (Tamamlandı, Gelmedi, yanlış işaretlenen). */
@@ -225,11 +227,23 @@ export class TodayPageComponent implements OnInit {
         { label: 'Saat', className: this.hasCarriedOver() ? 'w-[128px]' : 'w-[80px]' },
         { label: 'Hasta', className: 'w-[220px] @max-[72rem]:w-auto' },
         { label: 'Müşteri', className: 'w-[230px] @max-[72rem]:w-auto' },
-        ...(this.hasVet() ? [{ label: 'Hekim', className: 'w-[160px] @max-[72rem]:hidden' }] : []),
+        ...(this.hasVet() ? [{ label: 'Hekim', className: 'w-[160px] @max-[72rem]:hidden', hiddenBelowRem: 72 }] : []),
         { label: 'Durum', className: 'w-[180px]' },
-        { label: 'Neden / not', className: 'w-auto @max-[64rem]:hidden' },
+        { label: 'Neden / not', className: 'w-auto @max-[64rem]:hidden', hiddenBelowRem: 64 },
         { label: 'İşlem', className: 'w-[230px] @max-[50rem]:w-[120px]' }
     ]);
+    /** Tablo kapsayıcısının genişliği (rem); kapsayıcı sorgusuyla aynı ölçü. Ölçülmeden önce `null` (tüm sütunlar sayılır). */
+    private readonly tableWidthRem = signal<number | null>(null);
+    /**
+     * Ara başlık ve "tamamlananlar" satırının `colspan`'ı görünen sütun sayısıdır (B-06): gizli sütunu da sayan colspan sabit düzende
+     * fazladan boş bir sütun açıyor, başlık şeridi ve satırlar karttan kısa kalıyordu.
+     */
+    readonly visibleColumnCount = computed(() => {
+        const width = this.tableWidthRem();
+
+        return this.columns().filter((c) => width === null || !c.hiddenBelowRem || width >= c.hiddenBelowRem).length;
+    });
+    private readonly tableBox = viewChild<ElementRef<HTMLElement>>('tableBox');
     /**
      * Telefonda "⋯" menüsündeki hızlı işlemler (B-01): geniş ekrandaki düğmelerle aynı yetki kuralı; salt okunurda pasif. Yetkisi olmayan
      * işlem hiç yazılmaz.
@@ -368,8 +382,26 @@ export class TodayPageComponent implements OnInit {
         this.startWithScope();
     }
 
-    private watchCompactViewport(): void {
-        const query = window.matchMedia(COMPACT_MEDIA_QUERY);
+    constructor() {
+        // Tablo kapsayıcısı liste yüklenince çizilir; genişliği değiştikçe görünen sütun sayısı güncellenir (B-06).
+        effect((onCleanup) => {
+            const box = this.tableBox()?.nativeElement;
+
+            if (!box || typeof ResizeObserver === 'undefined') {
+                this.tableWidthRem.set(null);
+
+                return;
+            }
+
+            const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+            const observer = new ResizeObserver(() => this.tableWidthRem.set(box.clientWidth / rem));
+
+            observer.observe(box);
+            onCleanup(() => observer.disconnect());
+        });
+    }
+
+    private watchCompactViewport(): void {        const query = window.matchMedia(COMPACT_MEDIA_QUERY);
         const update = () => this.compact.set(query.matches);
 
         update();

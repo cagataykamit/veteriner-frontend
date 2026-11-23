@@ -1239,6 +1239,21 @@ describe('TodayPageComponent', () => {
             expect(open.querySelector('[data-testid="today-pet-link"]')?.className).toContain('text-primary');
         });
 
+        it('B-06: ara başlığın colspan değeri görünen sütun sayısıdır (gizli Hekim / Neden sütunu boş sütun açmaz)', async () => {
+            const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'w' })] });
+            const width = (f.componentInstance as unknown as { tableWidthRem: { set(v: number): void } }).tableWidthRem;
+            const colspan = () => (f.nativeElement as HTMLElement).querySelector('[data-testid="today-group-header"] td')?.getAttribute('colspan');
+
+            width.set(66);
+            f.detectChanges();
+            expect(colspan()).toBe('6');
+            width.set(60);
+            f.detectChanges();
+            expect(colspan()).toBe('5');
+            width.set(80);
+            f.detectChanges();
+            expect(colspan()).toBe('7');
+        });
         it('taslak ölçüleri: px sütun genişlikleri, küçük soluk başlıklar, düz yazılı ara başlık; müşteri adı düz metin renginde', async () => {
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'w', clientPhone: '905439580091' })] });
             const root = f.nativeElement as HTMLElement;

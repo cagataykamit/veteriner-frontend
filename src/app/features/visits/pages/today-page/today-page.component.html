@@ -230,6 +230,7 @@
             } @else {
                 <!-- Taslak (A) ölçüleri px: başlık 12 px soluk, hücre yatay 10 px (satır sınıflarında), gövde kök yazı boyutu (14 px). PrimeNG tablo stillerini ezmek için `!`. -->
                 <div
+                    #tableBox
                     class="@container overflow-x-auto [&_th]:px-[10px]! [&_th]:py-[7px]! [&_th]:text-[12px]! [&_th]:font-semibold! [&_th]:text-muted-color! [&_th]:bg-surface-50! dark:[&_th]:bg-surface-800!"
                 >
                     <!-- Genişlik başlık hücrelerinden gelir (sabit düzen ilk satıra bakar); <col> kullanılmaz: gizli sütunun <col>'u yer tutmaya devam ediyor, başlık şeridi karttan kısa kalıyordu (B-06). -->
@@ -245,7 +246,7 @@
                             @switch (row.kind) {
                                 @case ('group') {
                                     <tr data-testid="today-group-header">
-                                        <td [attr.colspan]="columns().length" class="h-[32px] px-[10px]! pt-[9px]! pb-[5px]! text-[13px]! font-semibold text-color">
+                                        <td [attr.colspan]="visibleColumnCount()" class="h-[32px] px-[10px]! pt-[9px]! pb-[5px]! text-[13px]! font-semibold text-color">
                                             {{ row.group.title }}<ng-container *ngTemplateOutlet="groupCount; context: { $implicit: row.group.items.length }" />
                                         </td>
                                     </tr>
@@ -328,7 +329,7 @@
                                 }
                                 @case ('toggle') {
                                     <tr>
-                                        <td [attr.colspan]="columns().length" class="p-0!">
+                                        <td [attr.colspan]="visibleColumnCount()" class="p-0!">
                                             <ng-container *ngTemplateOutlet="completedToggle; context: { $implicit: row }" />
                                         </td>
                                     </tr>
