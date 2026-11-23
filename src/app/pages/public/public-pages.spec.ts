@@ -23,7 +23,7 @@ import {
     PUBLIC_HOME_TRUST
 } from '@/app/features/public/utils/public-home-content.utils';
 import { PUBLIC_MIGRATION_INCLUDED } from '@/app/features/public/utils/public-migration-content.utils';
-import { PUBLIC_HOME_TIMELINE_VISUALS, PUBLIC_SCREENSHOT_CROPS } from '@/app/features/public/utils/public-screenshot-crops.utils';
+import { PUBLIC_HOME_TIMELINE_VISUALS } from '@/app/features/public/utils/public-screenshot-crops.utils';
 import { PUBLIC_PHONE_MEDIA_QUERY } from '@/app/features/public/utils/public-viewport.utils';
 import { PUBLIC_NAV_ITEMS, PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { PUBLIC_REGISTERS } from '@/app/features/public/utils/public-registers-content.utils';
@@ -499,10 +499,8 @@ describe('Ana sayfa (PublicHomePage)', () => {
 
         expect(shot?.alt).toBe(PUBLIC_SCREENSHOTS.bugun.alt);
         expect(shot?.getAttribute('loading')).toBe('eager');
-        const phone = hero.querySelector<HTMLImageElement>('[data-hero-phone] img.public-shot-img--light');
-
-        expect(phone?.alt).toBe(PUBLIC_SCREENSHOTS.telefonBugun.alt);
-        expect(phone?.getAttribute('loading')).toBe('lazy');
+        // Telefon ekranı telefon düzeninin zaman çizgisinde (T-03 B); masaüstü kahramanında yalnız masaüstü ekranı.
+        expect(hero.querySelector('[data-hero-phone]')).toBeNull();
     });
 
     it('kime göre: üç kart, hastane yok', () => {
@@ -581,22 +579,21 @@ describe('Ana sayfa telefon düzeni (T-03 B)', () => {
     const root = (): HTMLElement => harness.fixture.nativeElement as HTMLElement;
     const texts = (selector: string): string[] => Array.from(root().querySelectorAll(selector)).map((el) => (el.textContent ?? '').trim());
 
-    it('bölümler sırayla: akış (yapay zekâ, defterler, güvenlik, web sitesi çizgide), kime göre, geçiş, paketler, SSS, çağrı; masaüstü sekmeleri yok', () => {
+    it('bölümler sırayla: akış (yapay zekâ, defterler, güvenlik çizgide), kime göre, klinik web sitesi, geçiş, paketler, SSS, çağrı; masaüstü sekmeleri yok', () => {
         expect(texts('h1')).toEqual([`${PUBLIC_HOME_HERO.title} ${PUBLIC_HOME_HERO.marker}`]);
         expect(texts('main section h2')).toEqual([
             PUBLIC_HOME_SECTIONS.flow.title,
             PUBLIC_AI_SECTION.homeTitle,
             PUBLIC_HOME_SECTIONS.turkey.title,
             PUBLIC_HOME_SECTIONS.safety.title,
-            PUBLIC_SITE_SHOWCASE.homeTitle,
             PUBLIC_HOME_SECTIONS.audience.title,
+            PUBLIC_SITE_SHOWCASE.homeTitle,
             'Eski programdan kayıtlarınızla geçin',
             'Paketler',
             'Sık sorulan sorular',
             '14 gün ücretsiz deneyin'
         ]);
         expect(root().querySelector('[role="tab"]')).toBeNull();
-        expect(root().querySelector('[data-site-designs]')).toBeNull();
     });
 
     it('kahraman: durum çipi, iki düğme, üç deneme tiki ve tek kartta güven listesi; ürün görseli yok', () => {
@@ -617,8 +614,7 @@ describe('Ana sayfa telefon düzeni (T-03 B)', () => {
             PUBLIC_HOME_DAY_FLOW[2].time,
             PUBLIC_HOME_TIMELINE_MARKS.turkey,
             PUBLIC_HOME_TIMELINE_MARKS.safety,
-            PUBLIC_HOME_DAY_FLOW[3].time,
-            PUBLIC_HOME_TIMELINE_MARKS.site
+            PUBLIC_HOME_DAY_FLOW[3].time
         ]);
 
         for (const step of PUBLIC_HOME_DAY_FLOW) {
@@ -626,7 +622,7 @@ describe('Ana sayfa telefon düzeni (T-03 B)', () => {
             const visual = PUBLIC_HOME_TIMELINE_VISUALS[step.id];
 
             expect(item.querySelector('h3')?.textContent?.trim()).toBe(step.title);
-            expect(item.querySelector<HTMLImageElement>('img.public-shot-img--light')?.alt).toBe(PUBLIC_SCREENSHOTS[PUBLIC_SCREENSHOT_CROPS[visual.crop].shot].alt);
+            expect(item.querySelector<HTMLImageElement>('img.public-shot-img--light')?.alt).toBe(PUBLIC_SCREENSHOTS[visual.shot].alt);
             expect(item.querySelector(visual.device ? '.ps-ph-device' : '.ps-ph-shot')).not.toBeNull();
         }
     });
@@ -649,23 +645,11 @@ describe('Ana sayfa telefon düzeni (T-03 B)', () => {
         expect(stop.querySelector(`a[href="${PUBLIC_PATHS.registersAndKvkk}"]`)?.textContent?.trim()).toBe(PUBLIC_HOME_SECTIONS.turkey.link);
     });
 
-    it('klinik web sitesi: tek büyük önizleme ve dört tasarım seçici; seçilen tasarımın görseli ve notu görünür', () => {
-        const stop = root().querySelector('[data-home-timeline] > li[data-step="web-sitesi"]')!;
-        const buttons = Array.from(stop.querySelectorAll<HTMLButtonElement>('[role="group"] button'));
-        const preview = (): HTMLImageElement => stop.querySelector<HTMLImageElement>('[data-site-preview] img')!;
+    it('klinik web sitesi bölümü canlıdaki düzende (karar bekliyor): dört tasarım görseli ve Özellikler bağlantısı', () => {
+        const section = root().querySelector<HTMLElement>('section[aria-labelledby="public-home-site-title"]')!;
 
-        expect(buttons.map((b) => b.textContent?.trim())).toEqual(PUBLIC_SITE_DESIGNS.map((d) => d.name));
-        expect(buttons.map((b) => b.getAttribute('aria-pressed'))).toEqual(['true', 'false', 'false', 'false']);
-        expect(preview().getAttribute('src')).toBe(publicSiteDesignSrc(PUBLIC_SITE_DESIGNS[0]));
-
-        buttons[2].click();
-        harness.detectChanges();
-
-        expect(buttons[2].getAttribute('aria-pressed')).toBe('true');
-        expect(preview().getAttribute('src')).toBe(publicSiteDesignSrc(PUBLIC_SITE_DESIGNS[2]));
-        expect(preview().alt).toBe(PUBLIC_SITE_DESIGNS[2].alt);
-        expect(stop.querySelector('[aria-live]')?.textContent).toContain(PUBLIC_SITE_DESIGNS[2].note);
-        expect(stop.querySelector('a')?.getAttribute('href')).toBe(`${PUBLIC_PATHS.features}#${PUBLIC_SITE_SHOWCASE.id}`);
+        expect(Array.from(section.querySelectorAll('[data-site-designs] img')).map((img) => img.getAttribute('src'))).toEqual(PUBLIC_SITE_DESIGNS.map(publicSiteDesignSrc));
+        expect(section.querySelector('a.public-btn')?.getAttribute('href')).toBe(`${PUBLIC_PATHS.features}#${PUBLIC_SITE_SHOWCASE.id}`);
     });
 
     it('kime göre çizgiden sonra; geçiş yalnız aktarılanları sayar, paket kartları ortak bileşenden', () => {

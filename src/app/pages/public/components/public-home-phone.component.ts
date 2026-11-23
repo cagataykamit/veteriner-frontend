@@ -1,4 +1,4 @@
-import { Component, computed, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
     PUBLIC_HOME_AUDIENCE,
@@ -14,14 +14,14 @@ import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.util
 import { PUBLIC_AI_FEATURES, PUBLIC_AI_RULES, PUBLIC_AI_SECTION } from '@/app/features/public/utils/public-ai-content.utils';
 import { PUBLIC_HOME_TIMELINE_VISUALS, type PublicTimelineVisual } from '@/app/features/public/utils/public-screenshot-crops.utils';
 import { PUBLIC_KVKK_NOTE, PUBLIC_KVKK_STEPS, PUBLIC_RECORD_SAFETY_ITEMS, PUBLIC_REGISTERS } from '@/app/features/public/utils/public-registers-content.utils';
-import { PUBLIC_SITE_DESIGN_SIZE, PUBLIC_SITE_DESIGNS, PUBLIC_SITE_SHOWCASE, publicSiteDesignSrc } from '@/app/features/public/utils/public-site-showcase-content.utils';
 import { publicSiteToneClass } from '@/app/features/public/utils/public-site-tone.utils';
 import { PublicScreenshotComponent } from './public-screenshot.component';
 
 /**
  * Ana sayfanın telefon düzeni (T-03 B "Günün saatleri", 768 px altı). Sayfa bir klinik günü gibi okunur: kahraman ve güven kartı,
- * soldaki çizgide 09:00 geliş · 09:20 muayene · 09:50 tahsilat · 19:00 gün sonu; yapay zekâ yardımcısı, defterler, KVKK, kayıt güvenliği ve klinik web
- * sitesi aynı çizgide saatsiz duraklar. Ardından "Kime göre". Geçiş, paketler, SSS ve çağrı ana sayfayla ortaktır. Metinler masaüstü
+ * soldaki çizgide 09:00 geliş · 09:20 muayene · 09:50 tahsilat · 19:00 gün sonu; yapay zekâ yardımcısı, defterler, KVKK ve kayıt güvenliği aynı
+ * çizgide saatsiz duraklar. Ardından "Kime göre". Klinik web sitesi, geçiş, paketler, SSS ve çağrı ana sayfayla ortaktır (klinik
+ * sitesi bölümü karar bekliyor, 2026-11-23: düzeni ve görselleri canlıdaki gibi). Metinler masaüstü
  * bölümleriyle aynı sabitlerden okunur; görünüş `public-site.scss` içindeki `ps-ph-` sınıfları.
  */
 @Component({
@@ -65,7 +65,7 @@ import { PublicScreenshotComponent } from './public-screenshot.component';
                             <h3 class="ps-h3">{{ step.title }}</h3>
                             <p class="ps-ph-text">{{ step.description }}</p>
                             @if (visualOf(step.id); as v) {
-                                <div [class]="v.device ? 'ps-ph-device' : 'ps-ph-shot'"><app-public-screenshot [crop]="v.crop" /></div>
+                                <div [class]="v.device ? 'ps-ph-device' : 'ps-ph-shot'"><app-public-screenshot [shot]="v.shot" [crop]="v.crop ?? null" /></div>
                             }
                         </li>
                     }
@@ -97,7 +97,7 @@ import { PublicScreenshotComponent } from './public-screenshot.component';
                             <h3 class="ps-h3">{{ step.title }}</h3>
                             <p class="ps-ph-text">{{ step.description }}</p>
                             @if (visualOf(step.id); as v) {
-                                <div [class]="v.device ? 'ps-ph-device' : 'ps-ph-shot'"><app-public-screenshot [crop]="v.crop" /></div>
+                                <div [class]="v.device ? 'ps-ph-device' : 'ps-ph-shot'"><app-public-screenshot [shot]="v.shot" [crop]="v.crop ?? null" /></div>
                             }
                         </li>
                     }
@@ -153,29 +153,12 @@ import { PublicScreenshotComponent } from './public-screenshot.component';
                             <h3 class="ps-h3">{{ step.title }}</h3>
                             <p class="ps-ph-text">{{ step.description }}</p>
                             @if (visualOf(step.id); as v) {
-                                <div [class]="v.device ? 'ps-ph-device' : 'ps-ph-shot'"><app-public-screenshot [crop]="v.crop" /></div>
+                                <div [class]="v.device ? 'ps-ph-device' : 'ps-ph-shot'"><app-public-screenshot [shot]="v.shot" [crop]="v.crop ?? null" /></div>
                             }
                             <a [routerLink]="paths.features" class="ps-ph-link">{{ sections.flow.link }}<i class="pi pi-arrow-right" aria-hidden="true"></i></a>
                         </li>
                     }
 
-                    <li class="ps-tone-sun" data-step="web-sitesi">
-                        <span class="ps-ph-time ps-ph-time--soft">{{ marks.site }}</span>
-                        <h2 id="public-home-site-title" class="public-h2">{{ site.homeTitle }}</h2>
-                        <p class="ps-ph-text ps-ph-muted">{{ site.homeLead }}</p>
-                        <figure class="ps-ph-site" data-site-preview>
-                            <img [src]="siteSrc()" [alt]="activeDesign().alt" [attr.width]="siteSize.width" [attr.height]="siteSize.height" loading="lazy" decoding="async" />
-                        </figure>
-                        <div class="ps-ph-seg" role="group" aria-label="Tasarım seçin">
-                            @for (design of designs; track design.key) {
-                                <button type="button" [attr.aria-pressed]="design.key === activeDesign().key" (click)="designKey.set(design.key)">{{ design.name }}</button>
-                            }
-                        </div>
-                        <p class="ps-ph-sitenote" aria-live="polite">
-                            <strong>{{ activeDesign().name }}:</strong> {{ activeDesign().note }}
-                        </p>
-                        <a [routerLink]="paths.features" [fragment]="site.id" class="ps-ph-link">{{ site.homeLinkLabel }}<i class="pi pi-arrow-right" aria-hidden="true"></i></a>
-                    </li>
                 </ol>
             </div>
         </section>
@@ -214,17 +197,10 @@ export class PublicHomePhoneComponent {
     readonly kvkkNote = PUBLIC_KVKK_NOTE;
     readonly safetyItems = PUBLIC_RECORD_SAFETY_ITEMS;
     readonly audience = PUBLIC_HOME_AUDIENCE;
-    readonly site = PUBLIC_SITE_SHOWCASE;
     readonly ai = PUBLIC_AI_SECTION;
     readonly aiFeatures = PUBLIC_AI_FEATURES;
     readonly aiRules = PUBLIC_AI_RULES;
-    readonly designs = PUBLIC_SITE_DESIGNS;
-    readonly siteSize = PUBLIC_SITE_DESIGN_SIZE;
     readonly toneOf = publicSiteToneClass;
-
-    readonly designKey = signal(PUBLIC_SITE_DESIGNS[0].key);
-    readonly activeDesign = computed(() => PUBLIC_SITE_DESIGNS.find((d) => d.key === this.designKey()) ?? PUBLIC_SITE_DESIGNS[0]);
-    readonly siteSrc = computed(() => publicSiteDesignSrc(this.activeDesign()));
 
     visualOf(stepId: string): PublicTimelineVisual | null {
         return PUBLIC_HOME_TIMELINE_VISUALS[stepId] ?? null;

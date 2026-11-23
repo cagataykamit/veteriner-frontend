@@ -33,7 +33,8 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
  * Ana sayfa omurgası (tasarım belgesi 5.1, ADR-035): kahraman, güven satırı, kime göre, bir günün akışı, Türkiye'ye özgü, kayıt
  * güvenliği, yapay zekâ yardımcısı, klinik web sitesi, geçiş, paketler, SSS, çağrı. Görünüş "Sıcak klinik" (`public-site.scss`): günün dört adımı dört
  * tonla ayrışır; ekranlar panel menüsü kırpılmış, büyük ve yakın çekimli. Telefonda (768 px altı) kahramandan klinik web sitesine
- * kadar olan kısım "Günün saatleri" düzenidir (`PublicHomePhoneComponent`, T-03 B); geçiş, paketler, SSS ve çağrı ortaktır.
+ * kadar olan kısım "Günün saatleri" düzenidir (`PublicHomePhoneComponent`, T-03 B); klinik web sitesi, geçiş, paketler, SSS ve
+ * çağrı ortaktır.
  */
 @Component({
     selector: 'app-public-home-page',
@@ -42,7 +43,7 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (phone()) {
-            <!-- Telefon (768 px altı): "Günün saatleri" düzeni; geçiş, paketler, SSS ve çağrı aşağıda ortak -->
+            <!-- Telefon (768 px altı): "Günün saatleri" düzeni; klinik web sitesi, geçiş, paketler, SSS ve çağrı aşağıda ortak -->
             <app-public-home-phone />
         } @else {
             <!-- 1 Kahraman: solda metin ("tek ekranda" fosforlu), sağda kalın çerçevede ekran ve yapışkan not; altında günün dört durağı -->
@@ -67,10 +68,6 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
                     <div class="ps-stage">
                         <div class="ps-stage-main ps-not-phone">
                             <app-public-screenshot crop="bugunIcerik" [eager]="true" />
-                        </div>
-                        <!-- Telefonda masaüstü ekranı yerine gerçek telefon ekranı -->
-                        <div class="ps-only-phone" data-hero-phone>
-                            <app-public-screenshot crop="telefonKart" />
                         </div>
                         <div class="ps-stage-sticker ps-not-phone">
                             <app-public-screenshot crop="bugunAcil" [sticker]="true" [caption]="heroStickerCaption" />
@@ -258,14 +255,14 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
                     </div>
                 </div>
             </section>
-
-            <!-- Klinik web sitesi: dört tasarım fotoğraf kartı gibi; ayrıntısı Özellikler'de -->
-            <section class="ps-section ps-section--tight" aria-labelledby="public-home-site-title">
-                <div class="ps-wrap">
-                    <app-public-site-showcase [compact]="true" headingId="public-home-site-title" />
-                </div>
-            </section>
         }
+
+        <!-- Klinik web sitesi: dört tasarım fotoğraf kartı gibi; ayrıntısı Özellikler'de. Telefonda da aynı düzen (karar bekliyor) -->
+        <section class="ps-section ps-section--tight" aria-labelledby="public-home-site-title">
+            <div class="ps-wrap">
+                <app-public-site-showcase [compact]="true" headingId="public-home-site-title" />
+            </div>
+        </section>
 
         <!-- 6 Geçiş: noktalı yolda üç adım, aktarılanlar. Bant rengi telefonda bölüm sırasına göre yer değiştirir (önünde "Kime göre" bantlı) -->
         <section class="ps-section" [class.ps-section--band]="!phone()" aria-labelledby="public-home-migration-title">

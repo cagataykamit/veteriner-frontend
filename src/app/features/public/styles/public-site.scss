@@ -1524,6 +1524,13 @@ $ps: '.public-page.public-site';
     margin: 0;
 }
 
+/* Telefonda alt bilgi bağlantıları da 44 px dokunma hedefi */
+@media (max-width: 767.98px) {
+    .public-site .ps-footer a {
+        min-height: 44px;
+    }
+}
+
 @media (min-width: 900px) {
     .public-site .ps-footer-grid {
         grid-template-columns: 2fr 1fr 1fr 1fr;
@@ -2148,8 +2155,7 @@ $ps: '.public-page.public-site';
 
 /* Görsel: telefon ekranı telefon çerçevesinde, masaüstü parçası kart çerçevesinde */
 .public-site .ps-ph-shot,
-.public-site .ps-ph-device,
-.public-site .ps-ph-site {
+.public-site .ps-ph-device {
     margin-top: 1rem;
 }
 
@@ -2269,62 +2275,6 @@ $ps: '.public-page.public-site';
 
 .public-site .ps-ph-link i {
     font-size: 0.875rem;
-}
-
-/* Klinik web sitesi: tek büyük önizleme, altında dört tasarım seçici */
-.public-site .ps-ph-site {
-    margin-inline: 0;
-    padding: 6px;
-    border-radius: 18px;
-    background: var(--ps-card);
-    box-shadow: var(--ps-shadow);
-}
-
-.public-site .ps-ph-site img {
-    display: block;
-    width: 100%;
-    height: auto;
-    border-radius: 13px;
-}
-
-.public-site .ps-ph-seg {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 4px;
-    margin-top: 1rem;
-    padding: 4px;
-    border: 1px solid var(--ps-rule);
-    border-radius: 16px;
-    background: var(--ps-band);
-}
-
-.public-site .ps-ph-seg button {
-    min-height: 44px;
-    border: 0;
-    border-radius: 12px;
-    background: transparent;
-    color: var(--ps-ink-2);
-    font-family: var(--ps-font-display);
-    font-size: 0.9375rem;
-    font-weight: 800;
-    cursor: pointer;
-}
-
-.public-site .ps-ph-seg button[aria-pressed='true'] {
-    background: var(--ps-ink);
-    color: var(--ps-bg);
-}
-
-#{$ps} .ps-ph-sitenote {
-    min-height: 3rem;
-    margin: 0.75rem 0 0;
-    text-align: center;
-    color: var(--ps-ink-2);
-}
-
-.public-site .ps-ph-sitenote strong {
-    font-weight: 600;
-    color: var(--ps-ink);
 }
 
 /* Yapay zekâ kuralları: tik işaretli kısa satırlar */

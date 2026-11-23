@@ -103,8 +103,7 @@ export const PUBLIC_HOME_PHONE_HERO_CHIP = 'Sabah açılıştan gün sonuna';
 /** Telefondaki zaman çizgisinde saati olmayan duraklar: günün içine yayılan işler. */
 export const PUBLIC_HOME_TIMELINE_MARKS = {
     turkey: 'Gün boyu, kendiliğinden',
-    safety: 'Her kayıtta',
-    site: 'Kapanıştan sonra da açık'
+    safety: 'Her kayıtta'
 } as const;
 
 /** Kahraman alt satırı. */
