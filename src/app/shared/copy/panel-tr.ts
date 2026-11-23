@@ -56,6 +56,7 @@ export const PANEL_COPY = {
     registerFilterProduct: 'Ürün',
     registerFilterVeterinarian: 'Veteriner',
     reportsApplyFilter: 'Filtrele',
+    reportsExport: 'Dışa aktar',
     reportsExportCsv: 'CSV indir',
     reportsExportXlsx: 'Excel indir',
     reportsExportPdf: 'PDF indir',

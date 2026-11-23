@@ -66,9 +66,45 @@ describe('ReportFilterBarComponent — müşteri/hasta seçicisi yok, yalnız ar
     it('dönem raporunda Arama var; Müşteri ve Hasta seçicileri yok', () => {
         const el = create();
 
-        expect(el.querySelector<HTMLInputElement>('#tRepSearch')?.placeholder).toBe('Müşteri, hasta veya not ile ara…');
+        // R-06: yer tutucu kısa, neyin arandığı ipucunda.
+        expect(el.querySelector<HTMLInputElement>('#tRepSearch')?.placeholder).toBe('Ara…');
+        expect(el.querySelector<HTMLInputElement>('#tRepSearch')?.title).toBe('Müşteri, hasta veya not ile ara…');
         expect(el.querySelector('app-client-search, app-pet-search')).toBeNull();
         expect(el.textContent).not.toContain('Müşteri seç');
+    });
+
+    it('G-10 tek desen: solda Filtrele ve Temizle, sağda tek Dışa aktar menüsü (PDF, Excel, CSV, Yazdır); kayıtlı filtreler tarihlerin altında', () => {
+        const state = TestBed.runInInjectionContext(() => new ReportListState<ReportListQueryBase, ReportListResultBase>({ source, stateKey: KEY, readClaim: 'Test.Read', exportFilePrefix: 'test' }));
+
+        state.init();
+        const fixture = TestBed.createComponent(ReportFilterBarComponent);
+        const printed: number[] = [];
+
+        fixture.componentRef.setInput('state', state);
+        fixture.componentRef.setInput('idPrefix', 'tRep');
+        fixture.componentRef.setInput('periodHint', '');
+        fixture.componentRef.setInput('searchPlaceholder', 'Müşteri');
+        fixture.componentRef.setInput('dateLimit', 'past');
+        fixture.componentRef.setInput('printable', true);
+        fixture.componentInstance.print.subscribe(() => printed.push(1));
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+        const actions = Array.from(el.querySelectorAll<HTMLButtonElement>('[data-testid="report-filter-actions"] > button')).map((b) => b.textContent?.trim());
+
+        expect(actions).toEqual(['Filtrele', 'Temizle', 'Dışa aktar']);
+        expect(el.textContent).not.toContain('PDF indir');
+        const panel = el.querySelector('[data-testid="list-filters-panel"]')!;
+
+        expect(panel.querySelector('#tRepFrom')).not.toBeNull();
+        expect(panel.querySelector('app-report-saved-filters')).not.toBeNull();
+        expect(el.querySelector('[data-testid="list-filter-toggle"]')).not.toBeNull();
+
+        el.querySelector<HTMLButtonElement>('[data-testid="report-export"]')!.click();
+        const items = fixture.componentInstance.exportItems();
+
+        expect(items.map((i) => i.label)).toEqual(['PDF indir', 'Excel indir', 'CSV indir', 'Yazdır']);
+        items[3].command!({});
+        expect(printed).toEqual([1]);
     });
 
     it('anlık görüntü raporunda da yalnız Arama var; yalnız tarih aralığı raporunda arama da yok', () => {

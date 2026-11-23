@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import type { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { MenuModule } from 'primeng/menu';
 import { SelectModule } from 'primeng/select';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { CASH_MOVEMENTS_CREATE_CLAIM, CASH_MOVEMENTS_VOID_CLAIM, CASH_REGISTERS_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
@@ -13,7 +15,11 @@ import { CashMovementFormsComponent } from '@/app/features/reports/cash-register
 import { CashRegisterSettingsComponent } from '@/app/features/reports/cash-registers/components/cash-register-settings.component';
 import { ymdDaysBefore } from '@/app/features/reports/end-of-day/utils/cash-count.utils';
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
+import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
+import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
+import { AppListFilterToggleComponent } from '@/app/shared/ui/list-filters/app-list-filter-toggle.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { ReasonConfirmDialogComponent } from '@/app/shared/ui/reason-confirm-dialog/reason-confirm-dialog.component';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -31,7 +37,22 @@ const MOVEMENT_KINDS: ReadonlySet<string> = new Set(['In', 'Out', 'TransferIn', 
     selector: 'app-cash-registers-page',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [FormsModule, ButtonModule, SelectModule, DateInputComponent, MoneyPipe, AppPageHeaderComponent, AppPlanUpgradeNoticeComponent, ReasonConfirmDialogComponent, CashMovementFormsComponent, CashRegisterSettingsComponent],
+    imports: [
+        FormsModule,
+        ButtonModule,
+        MenuModule,
+        SelectModule,
+        DateInputComponent,
+        MoneyPipe,
+        AppPageHeaderComponent,
+        AppPlanUpgradeNoticeComponent,
+        ReasonConfirmDialogComponent,
+        CashMovementFormsComponent,
+        CashRegisterSettingsComponent,
+        FilterFieldComponent,
+        AppListFiltersComponent,
+        AppListFilterToggleComponent
+    ],
     styles: `
         .cash-summary {
             display: grid;
@@ -92,22 +113,28 @@ const MOVEMENT_KINDS: ReadonlySet<string> = new Set(['In', 'Out', 'TransferIn', 
             @if (showReport()) {
                 <section class="card mb-4" aria-labelledby="cashReportTitle" data-testid="cash-report">
                     <h5 id="cashReportTitle" class="mt-0 mb-3">Kasa hareketleri</h5>
-                    <form class="flex flex-wrap items-end gap-3 mb-4" (ngSubmit)="loadReport()">
-                        <div>
-                            <label for="crFrom" class="block text-sm font-medium text-muted-color mb-2">Başlangıç</label>
-                            <app-date-input inputId="crFrom" name="from" [ngModel]="from()" (ngModelChange)="from.set($event)" limit="past" />
+                    <!-- Rapor filtre çubuğuyla aynı desen (G-10): alanlar, altında Filtrele · Temizle, sağda tek Dışa aktar; telefonda "Filtre (n)". -->
+                    <form class="mb-4" (ngSubmit)="loadReport()">
+                        <div class="sm:hidden flex justify-end"><app-list-filter-toggle [filters]="filters" /></div>
+                        <app-list-filters #filters [showClear]="false">
+                            <app-filter-field label="Başlangıç" labelFor="crFrom" [active]="from() !== defaultFrom" width="date">
+                                <app-date-input inputId="crFrom" name="from" [ngModel]="from()" (ngModelChange)="from.set($event)" limit="past" />
+                            </app-filter-field>
+                            <app-filter-field label="Bitiş" labelFor="crTo" [active]="to() !== defaultTo" width="date">
+                                <app-date-input inputId="crTo" name="to" [ngModel]="to()" (ngModelChange)="to.set($event)" limit="past" />
+                            </app-filter-field>
+                            <app-filter-field label="Kasa" labelFor="crRegister" [active]="!!registerFilter()" width="select">
+                                <p-select inputId="crRegister" name="register" [options]="registerOptions()" optionLabel="name" optionValue="id" [ngModel]="registerFilter()" (ngModelChange)="registerFilter.set($event)" class="w-full" />
+                            </app-filter-field>
+                        </app-list-filters>
+                        <div class="mt-4 flex flex-wrap items-center gap-2">
+                            <button pButton type="submit" [disabled]="loading()"><i class="p-button-icon pi pi-filter"></i>{{ copy.reportsApplyFilter }}</button>
+                            <button pButton type="button" severity="secondary" [text]="true" (click)="resetReportFilters()" [disabled]="loading()">{{ copy.buttonClear }}</button>
+                            <button pButton type="button" severity="secondary" [outlined]="true" class="ml-auto" aria-haspopup="menu" (click)="exportMenu.toggle($event)" [disabled]="!report() || exporting()" data-testid="cash-export">
+                                <i class="p-button-icon" [class]="exporting() ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i>{{ copy.reportsExport }}<i class="pi pi-chevron-down text-xs" aria-hidden="true"></i>
+                            </button>
+                            <p-menu #exportMenu [popup]="true" [model]="exportItems" appendTo="body" />
                         </div>
-                        <div>
-                            <label for="crTo" class="block text-sm font-medium text-muted-color mb-2">Bitiş</label>
-                            <app-date-input inputId="crTo" name="to" [ngModel]="to()" (ngModelChange)="to.set($event)" limit="past" />
-                        </div>
-                        <div class="min-w-52">
-                            <label for="crRegister" class="block text-sm font-medium text-muted-color mb-2">Kasa</label>
-                            <p-select inputId="crRegister" name="register" [options]="registerOptions()" optionLabel="name" optionValue="id" [ngModel]="registerFilter()" (ngModelChange)="registerFilter.set($event)" class="w-full" />
-                        </div>
-                        <button pButton type="submit" [disabled]="loading()"><i class="p-button-icon pi pi-search"></i>Göster</button>
-                        <button pButton type="button" severity="secondary" [outlined]="true" (click)="export('csv')" [disabled]="!report() || exporting()"><i class="p-button-icon pi pi-file"></i>CSV</button>
-                        <button pButton type="button" severity="secondary" [outlined]="true" (click)="export('xlsx')" [disabled]="!report() || exporting()"><i class="p-button-icon pi pi-file-excel"></i>Excel</button>
                     </form>
 
                     @if (reportError(); as err) {
@@ -221,9 +248,17 @@ export class CashRegistersPageComponent implements OnInit {
     readonly categories = computed(() => this.allCategories().filter((c) => c.isActive));
     readonly registerOptions = computed(() => [{ id: '', name: 'Tüm kasalar' }, ...this.allRegisters()]);
 
-    readonly from = signal(ymdDaysBefore(localDateYyyyMmDd(), 6));
-    readonly to = signal(localDateYyyyMmDd());
+    readonly copy = PANEL_COPY;
+    /** Varsayılan aralık son 7 gün; "Temizle" buna döner, filtre sayısı bundan farkı sayar. */
+    readonly defaultFrom = ymdDaysBefore(localDateYyyyMmDd(), 6);
+    readonly defaultTo = localDateYyyyMmDd();
+    readonly from = signal(this.defaultFrom);
+    readonly to = signal(this.defaultTo);
     readonly registerFilter = signal('');
+    readonly exportItems: MenuItem[] = [
+        { label: PANEL_COPY.reportsExportCsv, icon: 'pi pi-file', command: () => this.export('csv') },
+        { label: PANEL_COPY.reportsExportXlsx, icon: 'pi pi-file-excel', command: () => this.export('xlsx') }
+    ];
     readonly report = signal<CashRegisterReportDto | null>(null);
     readonly reportError = signal<string | null>(null);
     readonly loading = signal(false);
@@ -280,6 +315,13 @@ export class CashRegistersPageComponent implements OnInit {
                 }
             }
         });
+    }
+
+    resetReportFilters(): void {
+        this.from.set(this.defaultFrom);
+        this.to.set(this.defaultTo);
+        this.registerFilter.set('');
+        this.loadReport();
     }
 
     export(format: 'csv' | 'xlsx'): void {

@@ -50,11 +50,22 @@ type RegisterRow = { readonly rowNumber: number };
                 <p class="register-screen-only text-sm text-muted-color mt-0 mb-4" role="note">{{ definition.screenHint }}</p>
             }
 
-            <app-report-filter-bar class="register-screen-only block" [state]="state" idPrefix="registerRep" dateLimit="past" [periodHint]="copy.registerPeriodHint" searchPlaceholder="" [activeBadges]="false">
+            <app-report-filter-bar
+                class="register-screen-only block"
+                [state]="state"
+                idPrefix="registerRep"
+                dateLimit="past"
+                [periodHint]="copy.registerPeriodHint"
+                searchPlaceholder=""
+                [activeBadges]="false"
+                [printable]="true"
+                [printDisabled]="state.loading() || !state.report()?.items?.length"
+                (print)="print()"
+            >
                 @if (definition.extraFilters; as extra) {
                     <ng-container ngProjectAs="[extraFilters]">
                         @if (extra.product) {
-                            <app-filter-field [label]="copy.registerFilterProduct" labelId="registerRepProductLabel" [active]="false" width="select">
+                            <app-filter-field [label]="copy.registerFilterProduct" labelId="registerRepProductLabel" [active]="!!state.extraInputs['productId']" [badge]="false" width="select">
                                 <p-select
                                     ariaLabelledBy="registerRepProductLabel"
                                     inputId="registerRepProduct"
@@ -71,7 +82,7 @@ type RegisterRow = { readonly rowNumber: number };
                             </app-filter-field>
                         }
                         @if (extra.veterinarian) {
-                            <app-filter-field [label]="copy.registerFilterVeterinarian" labelId="registerRepVetLabel" [active]="false" width="select">
+                            <app-filter-field [label]="copy.registerFilterVeterinarian" labelId="registerRepVetLabel" [active]="!!state.extraInputs['veterinarianId']" [badge]="false" width="select">
                                 <p-select
                                     ariaLabelledBy="registerRepVetLabel"
                                     inputId="registerRepVet"
@@ -87,7 +98,7 @@ type RegisterRow = { readonly rowNumber: number };
                             </app-filter-field>
                         }
                         @if (extra.hbsStatus) {
-                            <app-filter-field label="HBS durumu" labelId="registerRepHbsLabel" [active]="false" width="select">
+                            <app-filter-field label="HBS durumu" labelId="registerRepHbsLabel" [active]="!!state.extraInputs['hbsStatus']" [badge]="false" width="select">
                                 <p-select
                                     ariaLabelledBy="registerRepHbsLabel"
                                     inputId="registerRepHbs"
@@ -116,7 +127,6 @@ type RegisterRow = { readonly rowNumber: number };
                         }
                     </ng-container>
                 }
-                <button pButton type="button" barActions severity="secondary" [outlined]="true" (click)="print()" [disabled]="state.loading() || !state.report()?.items?.length"><i class="p-button-icon pi pi-print"></i>{{ copy.registerPrint }}</button>
             </app-report-filter-bar>
 
             <app-report-results [state]="state" [alwaysPaginate]="true" [showSummary]="false" [emptyMessage]="copy.registerEmptyMessage" [emptyHint]="copy.registerEmptyHint">
