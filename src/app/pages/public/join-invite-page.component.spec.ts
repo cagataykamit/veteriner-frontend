@@ -67,6 +67,15 @@ describe('JoinInvitePageComponent hukuki onay (ADR-029)', () => {
         }).compileComponents();
     });
 
+    it('giriş sayfalarıyla aynı iskelette (L-01 A); durum düz metin, tıklanır görünen etiket yok', () => {
+        create(invite({ isExpired: true, requiresSignup: true }));
+
+        expect(host().querySelector('app-public-auth-shell .public-auth-card h1.public-auth-title')?.textContent?.trim()).toBe('Davet');
+        expect(host().querySelector('[data-testid="join-status"] dd')?.textContent?.trim()).toBe('Süresi dolmuş · Kayıt gerekli');
+        expect(host().querySelector('[class*="chip"]')).toBeNull();
+        expect(submitButton()).toBeUndefined();
+    });
+
     it('davetteki role gereken belgelere bağlantılı onay kutusu gösterir', () => {
         create(invite());
 
