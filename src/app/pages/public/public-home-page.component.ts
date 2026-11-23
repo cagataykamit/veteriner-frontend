@@ -4,11 +4,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { PUBLIC_HOME_FAQS } from '@/app/features/public/utils/public-faq-content.utils';
 import { PUBLIC_HOME_AUDIENCE, PUBLIC_HOME_DAY_FLOW, PUBLIC_HOME_TRIAL_LINE, PUBLIC_HOME_TRUST } from '@/app/features/public/utils/public-home-content.utils';
-import {
-    PUBLIC_MIGRATION_EXCLUDED,
-    PUBLIC_MIGRATION_HOME_STEPS,
-    PUBLIC_MIGRATION_INCLUDED
-} from '@/app/features/public/utils/public-migration-content.utils';
+import { PUBLIC_MIGRATION_HOME_STEPS, PUBLIC_MIGRATION_INCLUDED } from '@/app/features/public/utils/public-migration-content.utils';
 import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { PUBLIC_FEATURE_VISUALS } from '@/app/features/public/utils/public-screenshot-crops.utils';
 import { publicSiteToneClass } from '@/app/features/public/utils/public-site-tone.utils';
@@ -232,7 +228,7 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
             </div>
         </section>
 
-        <!-- 6 Geçiş: noktalı yolda üç adım, aktarılır / aktarılmaz -->
+        <!-- 6 Geçiş: noktalı yolda üç adım, aktarılanlar -->
         <section class="ps-section ps-section--band" aria-labelledby="public-home-migration-title">
             <div class="ps-wrap">
                 <header class="ps-head ps-head--center">
@@ -247,23 +243,13 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
                         </li>
                     }
                 </ol>
-                <div class="ps-transfer">
-                    <div class="ps-card ps-card--plain ps-tone-mint">
-                        <h3 class="ps-h3"><span class="ps-round ps-round--small" aria-hidden="true"><i class="pi pi-check"></i></span>Aktarılır</h3>
-                        <ul class="ps-list ps-ticklist" data-migration-included>
-                            @for (item of migrationIncluded; track item) {
-                                <li><i class="pi pi-check" aria-hidden="true"></i><span>{{ item }}</span></li>
-                            }
-                        </ul>
-                    </div>
-                    <div class="ps-card ps-card--quiet">
-                        <h3 class="ps-h3"><span class="ps-round ps-round--small" aria-hidden="true"><i class="pi pi-clock"></i></span>Şimdilik aktarılmaz</h3>
-                        <ul class="ps-list ps-ticklist" data-migration-excluded>
-                            @for (item of migrationExcluded; track item) {
-                                <li><i class="pi pi-minus" aria-hidden="true"></i><span>{{ item }}</span></li>
-                            }
-                        </ul>
-                    </div>
+                <div class="ps-card ps-card--plain ps-tone-mint ps-transfer">
+                    <h3 class="ps-h3"><span class="ps-round ps-round--small" aria-hidden="true"><i class="pi pi-check"></i></span>Aktarılır</h3>
+                    <ul class="ps-list ps-ticklist ps-ticklist--two" data-migration-included>
+                        @for (item of migrationIncluded; track item) {
+                            <li><i class="pi pi-check" aria-hidden="true"></i><span>{{ item }}</span></li>
+                        }
+                    </ul>
                 </div>
                 <p class="ps-more ps-center">
                     <a [routerLink]="paths.migration" class="public-btn public-btn-secondary">Geçiş adımlarının tamamı<i class="pi pi-arrow-right" aria-hidden="true"></i></a>
@@ -324,7 +310,6 @@ export class PublicHomePageComponent implements OnInit {
     readonly safetyItems = PUBLIC_RECORD_SAFETY_ITEMS;
     readonly migrationSteps = PUBLIC_MIGRATION_HOME_STEPS;
     readonly migrationIncluded = PUBLIC_MIGRATION_INCLUDED;
-    readonly migrationExcluded = PUBLIC_MIGRATION_EXCLUDED;
     readonly pricingTerms = pricingTermsText();
     readonly faqs = PUBLIC_HOME_FAQS;
     readonly pricing = this.planCatalog.state;

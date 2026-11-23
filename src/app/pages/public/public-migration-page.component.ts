@@ -3,7 +3,6 @@ import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/cor
 import { Meta, Title } from '@angular/platform-browser';
 import { publicFaqsOf } from '@/app/features/public/utils/public-faq-content.utils';
 import {
-    PUBLIC_MIGRATION_EXCLUDED,
     PUBLIC_MIGRATION_INCLUDED,
     PUBLIC_MIGRATION_STEPS,
     PUBLIC_MIGRATION_SUPPORT_POINTS,
@@ -14,7 +13,7 @@ import { PublicCtaComponent } from './components/public-cta.component';
 import { PublicFaqListComponent } from './components/public-faq-list.component';
 import { PublicPageHeaderComponent } from './components/public-page-header.component';
 
-/** Geçiş (tasarım belgesi 5.4, TIER-021): güneş tonunda dikey adım yolu, aktarılır/aktarılmaz ve geçiş desteği kutuları, sorular, çağrı. */
+/** Geçiş (tasarım belgesi 5.4, TIER-021): güneş tonunda dikey adım yolu, aktarılanlar ve geçiş desteği kutuları, sorular, çağrı. */
 @Component({
     selector: 'app-public-migration-page',
     standalone: true,
@@ -45,17 +44,9 @@ import { PublicPageHeaderComponent } from './components/public-page-header.compo
                 <aside class="ps-aside">
                     <div class="ps-card ps-card--plain ps-tone-mint">
                         <h2 class="ps-h3"><span class="ps-round ps-round--small" aria-hidden="true"><i class="pi pi-check"></i></span>Aktarılır</h2>
-                        <ul class="ps-list ps-ticklist">
+                        <ul class="ps-list ps-ticklist ps-ticklist--two">
                             @for (item of included; track item) {
                                 <li><i class="pi pi-check" aria-hidden="true"></i><span>{{ item }}</span></li>
-                            }
-                        </ul>
-                    </div>
-                    <div class="ps-card ps-card--quiet">
-                        <h2 class="ps-h3"><span class="ps-round ps-round--small" aria-hidden="true"><i class="pi pi-clock"></i></span>Şimdilik aktarılmaz</h2>
-                        <ul class="ps-list ps-ticklist">
-                            @for (item of excluded; track item) {
-                                <li><i class="pi pi-minus" aria-hidden="true"></i><span>{{ item }}</span></li>
                             }
                         </ul>
                     </div>
@@ -91,7 +82,6 @@ export class PublicMigrationPageComponent implements OnInit {
 
     readonly steps = PUBLIC_MIGRATION_STEPS;
     readonly included = PUBLIC_MIGRATION_INCLUDED;
-    readonly excluded = PUBLIC_MIGRATION_EXCLUDED;
     readonly supportPoints = PUBLIC_MIGRATION_SUPPORT_POINTS;
     readonly supportPrice = PUBLIC_MIGRATION_SUPPORT_PRICE;
     readonly faqs = publicFaqsOf('gecis');
