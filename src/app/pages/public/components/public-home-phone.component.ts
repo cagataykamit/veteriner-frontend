@@ -11,6 +11,7 @@ import {
     PUBLIC_HOME_TRUST
 } from '@/app/features/public/utils/public-home-content.utils';
 import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
+import { PUBLIC_AI_FEATURES, PUBLIC_AI_RULES, PUBLIC_AI_SECTION } from '@/app/features/public/utils/public-ai-content.utils';
 import { PUBLIC_HOME_TIMELINE_VISUALS, type PublicTimelineVisual } from '@/app/features/public/utils/public-screenshot-crops.utils';
 import { PUBLIC_KVKK_NOTE, PUBLIC_KVKK_STEPS, PUBLIC_RECORD_SAFETY_ITEMS, PUBLIC_REGISTERS } from '@/app/features/public/utils/public-registers-content.utils';
 import { PUBLIC_SITE_DESIGN_SIZE, PUBLIC_SITE_DESIGNS, PUBLIC_SITE_SHOWCASE, publicSiteDesignSrc } from '@/app/features/public/utils/public-site-showcase-content.utils';
@@ -19,7 +20,7 @@ import { PublicScreenshotComponent } from './public-screenshot.component';
 
 /**
  * Ana sayfanın telefon düzeni (T-03 B "Günün saatleri", 768 px altı). Sayfa bir klinik günü gibi okunur: kahraman ve güven kartı,
- * soldaki çizgide 09:00 geliş · 09:20 muayene · 09:50 tahsilat · 19:00 gün sonu; defterler, KVKK, kayıt güvenliği ve klinik web
+ * soldaki çizgide 09:00 geliş · 09:20 muayene · 09:50 tahsilat · 19:00 gün sonu; yapay zekâ yardımcısı, defterler, KVKK, kayıt güvenliği ve klinik web
  * sitesi aynı çizgide saatsiz duraklar. Ardından "Kime göre". Geçiş, paketler, SSS ve çağrı ana sayfayla ortaktır. Metinler masaüstü
  * bölümleriyle aynı sabitlerden okunur; görünüş `public-site.scss` içindeki `ps-ph-` sınıfları.
  */
@@ -58,8 +59,40 @@ import { PublicScreenshotComponent } from './public-screenshot.component';
                     <p class="ps-ph-lead">{{ sections.flow.lead }}</p>
                 </header>
                 <ol class="ps-list ps-ph-line" data-home-timeline>
-                    @for (step of dayFlow.slice(0, 3); track step.id; let i = $index) {
+                    @for (step of dayFlow.slice(0, 2); track step.id; let i = $index) {
                         <li [class]="toneOf(i)" [attr.data-step]="step.id">
+                            <span class="ps-ph-time">{{ step.time }}</span>
+                            <h3 class="ps-h3">{{ step.title }}</h3>
+                            <p class="ps-ph-text">{{ step.description }}</p>
+                            @if (visualOf(step.id); as v) {
+                                <div [class]="v.device ? 'ps-ph-device' : 'ps-ph-shot'"><app-public-screenshot [crop]="v.crop" /></div>
+                            }
+                        </li>
+                    }
+
+                    <li class="ps-tone-sky" data-step="yapay-zeka">
+                        <span class="ps-ph-time ps-ph-time--soft">{{ ai.timelineMark }}</span>
+                        <h2 id="public-home-ai-title" class="public-h2">{{ ai.homeTitle }}</h2>
+                        <p class="ps-ph-text ps-ph-muted">{{ ai.homeLead }}</p>
+                        <div class="ps-ph-card ps-tone-sky">
+                            <ul class="ps-list ps-ph-rows">
+                                @for (item of aiFeatures; track item.title) {
+                                    <li>
+                                        <strong>{{ item.title }}</strong><span>{{ item.text }}</span>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                        <ul class="ps-list ps-ph-rules" data-ai-rules>
+                            @for (rule of aiRules; track rule) {
+                                <li><i class="pi pi-check" aria-hidden="true"></i><span>{{ rule }}</span></li>
+                            }
+                        </ul>
+                        <a [routerLink]="paths.features" [fragment]="ai.id" class="ps-ph-link">{{ ai.homeLinkLabel }}<i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+                    </li>
+
+                    @for (step of dayFlow.slice(2, 3); track step.id) {
+                        <li class="ps-tone-sun" [attr.data-step]="step.id">
                             <span class="ps-ph-time">{{ step.time }}</span>
                             <h3 class="ps-h3">{{ step.title }}</h3>
                             <p class="ps-ph-text">{{ step.description }}</p>
@@ -182,6 +215,9 @@ export class PublicHomePhoneComponent {
     readonly safetyItems = PUBLIC_RECORD_SAFETY_ITEMS;
     readonly audience = PUBLIC_HOME_AUDIENCE;
     readonly site = PUBLIC_SITE_SHOWCASE;
+    readonly ai = PUBLIC_AI_SECTION;
+    readonly aiFeatures = PUBLIC_AI_FEATURES;
+    readonly aiRules = PUBLIC_AI_RULES;
     readonly designs = PUBLIC_SITE_DESIGNS;
     readonly siteSize = PUBLIC_SITE_DESIGN_SIZE;
     readonly toneOf = publicSiteToneClass;

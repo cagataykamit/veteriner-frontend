@@ -2,10 +2,12 @@ import { DOCUMENT } from '@angular/common';
 import { afterNextRender, Component, computed, DestroyRef, ElementRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
+import { PUBLIC_AI_FEATURES, PUBLIC_AI_RULES, PUBLIC_AI_SECTION } from '@/app/features/public/utils/public-ai-content.utils';
 import { PUBLIC_EDOCUMENT_SECTION, PUBLIC_EDOCUMENT_STEPS, publicEDocumentPlans } from '@/app/features/public/utils/public-edocument-content.utils';
 import { PUBLIC_FEATURE_GROUPS, PUBLIC_FEATURE_SECTIONS, publicFeatureCardPlans, publicFeatureGroupShotCaption } from '@/app/features/public/utils/public-features-content.utils';
 import { PUBLIC_HOME_DAY_FLOW } from '@/app/features/public/utils/public-home-content.utils';
 import { PUBLIC_FEATURE_VISUALS } from '@/app/features/public/utils/public-screenshot-crops.utils';
+import { PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { PUBLIC_FEATURES_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { publicSiteToneClass } from '@/app/features/public/utils/public-site-tone.utils';
 import { PUBLIC_SITE_SHOWCASE } from '@/app/features/public/utils/public-site-showcase-content.utils';
@@ -16,7 +18,7 @@ import { PublicSiteShowcaseComponent } from './components/public-site-showcase.c
 
 /**
  * Özellikler (tasarım belgesi 5.2): 6 bölüm, her biri kendi tonunda panel; büyük ekran, köşesinde yapışkan not gibi yakın çekim,
- * altında maddeler. Ardından e-belge, klinik web sitesi vitrini ve gün akışı dışındaki işler kart gruplarında (kartta paket etiketi; grubun
+ * altında maddeler. Ardından e-belge, yapay zekâ yardımcısı, klinik web sitesi vitrini ve gün akışı dışındaki işler kart gruplarında (kartta paket etiketi; grubun
  * ekranı varsa kartların altında, altyazıda kartın adı ve paketi). Bölüm dizini geniş ekranda solda noktalı yol, dar ekranda üstte
  * yapışkan şerittir; kaydırdıkça ekranın ortasından geçen bölüm işaretlenir.
  */
@@ -121,6 +123,35 @@ import { PublicSiteShowcaseComponent } from './components/public-site-showcase.c
                     </ul>
                 </section>
 
+                <!-- Yapay zekâ yardımcısı: beş işlev kart olarak, altında kurallar ve kredi notu -->
+                <section [id]="ai.id" data-section-spy [class]="'ps-panel ps-feature ' + toneById[ai.id]" [attr.aria-labelledby]="'feature-' + ai.id">
+                    <header class="ps-feature-head">
+                        <span class="ps-bubble ps-bubble--big" aria-hidden="true"><i class="pi pi-sparkles"></i></span>
+                        <div>
+                            <p class="ps-tagline"><span class="ps-chip">{{ ai.eyebrow }}</span></p>
+                            <h2 [id]="'feature-' + ai.id" class="public-h2">{{ ai.title }}</h2>
+                            <p class="public-lead">{{ ai.lead }}</p>
+                        </div>
+                    </header>
+                    <div class="ps-grid" data-ai-features>
+                        @for (item of aiFeatures; track item.title) {
+                            <article class="ps-card ps-card--plain">
+                                <span class="ps-round" aria-hidden="true"><i [class]="item.icon"></i></span>
+                                <h3 class="ps-h3">{{ item.title }}</h3>
+                                <p>{{ item.text }}</p>
+                            </article>
+                        }
+                    </div>
+                    <ul class="ps-list ps-points ps-points--two" data-ai-rules>
+                        @for (rule of aiRules; track rule) {
+                            <li><i class="pi pi-check" aria-hidden="true"></i><span>{{ rule }}</span></li>
+                        }
+                    </ul>
+                    <p class="ps-small m-0">
+                        {{ ai.creditsNote }} <a [routerLink]="paths.packages" class="ps-inline-link">Paketler</a>
+                    </p>
+                </section>
+
                 <section [id]="showcase.id" data-section-spy [class]="'ps-panel ps-feature--plain ' + toneById[showcase.id]" [attr.aria-labelledby]="'feature-' + showcase.id">
                     <app-public-site-showcase [headingId]="'feature-' + showcase.id" />
                 </section>
@@ -168,10 +199,15 @@ export class PublicFeaturesPageComponent implements OnInit {
     readonly edocumentTitleWords = PUBLIC_EDOCUMENT_SECTION.title.split(' ');
     readonly edocumentSteps = PUBLIC_EDOCUMENT_STEPS;
     readonly edocumentPlans = publicEDocumentPlans();
-    /** Dizin ve her bölümün tonu: altı adım sırayla dört tonu döner, e-belge onları izler, vitrin nane, kart grupları gökten başlar. Panel ve dizin noktası aynı tonu buradan alır. */
+    readonly ai = PUBLIC_AI_SECTION;
+    readonly aiFeatures = PUBLIC_AI_FEATURES;
+    readonly aiRules = PUBLIC_AI_RULES;
+    readonly paths = PUBLIC_PATHS;
+    /** Dizin ve her bölümün tonu: altı adım sırayla dört tonu döner, e-belge onları izler, yapay zekâ gök, vitrin nane, kart grupları gökten başlar. Panel ve dizin noktası aynı tonu buradan alır. */
     readonly index = [
         ...PUBLIC_FEATURE_SECTIONS.map(({ id, title }, i) => ({ id, title, tone: publicSiteToneClass(i) })),
         { id: PUBLIC_EDOCUMENT_SECTION.id, title: PUBLIC_EDOCUMENT_SECTION.indexTitle, tone: publicSiteToneClass(PUBLIC_FEATURE_SECTIONS.length) },
+        { id: PUBLIC_AI_SECTION.id, title: PUBLIC_AI_SECTION.indexTitle, tone: publicSiteToneClass(1) },
         { id: PUBLIC_SITE_SHOWCASE.id, title: PUBLIC_SITE_SHOWCASE.indexTitle, tone: publicSiteToneClass(0) },
         ...PUBLIC_FEATURE_GROUPS.map(({ id, title }, g) => ({ id, title, tone: publicSiteToneClass(g + 1) }))
     ];

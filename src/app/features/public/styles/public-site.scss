@@ -2337,6 +2337,26 @@ $ps: '.public-page.public-site';
     color: var(--ps-ink);
 }
 
+/* Yapay zekâ kuralları: tik işaretli kısa satırlar */
+.public-site .ps-ph-rules {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.875rem;
+}
+
+.public-site .ps-ph-rules li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    line-height: 1.45;
+}
+
+.public-site .ps-ph-rules i {
+    margin-top: 0.3em;
+    font-size: 0.875rem;
+    color: var(--ps-accent);
+}
+
 /* Kime göre: renkli, sıkı kartlar */
 .public-site .ps-ph-who {
     display: grid;

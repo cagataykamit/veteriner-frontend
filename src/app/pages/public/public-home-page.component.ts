@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Component, computed, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
+import { PUBLIC_AI_FEATURES, PUBLIC_AI_RULES, PUBLIC_AI_SECTION } from '@/app/features/public/utils/public-ai-content.utils';
 import { PUBLIC_HOME_FAQS } from '@/app/features/public/utils/public-faq-content.utils';
 import { PUBLIC_HOME_AUDIENCE, PUBLIC_HOME_DAY_FLOW, PUBLIC_HOME_HERO, PUBLIC_HOME_SECTIONS, PUBLIC_HOME_TRIAL_LINE, PUBLIC_HOME_TRUST } from '@/app/features/public/utils/public-home-content.utils';
 import { PUBLIC_MIGRATION_HOME_STEPS, PUBLIC_MIGRATION_INCLUDED } from '@/app/features/public/utils/public-migration-content.utils';
@@ -30,7 +31,7 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
 
 /**
  * Ana sayfa omurgası (tasarım belgesi 5.1, ADR-035): kahraman, güven satırı, kime göre, bir günün akışı, Türkiye'ye özgü, kayıt
- * güvenliği, klinik web sitesi, geçiş, paketler, SSS, çağrı. Görünüş "Sıcak klinik" (`public-site.scss`): günün dört adımı dört
+ * güvenliği, yapay zekâ yardımcısı, klinik web sitesi, geçiş, paketler, SSS, çağrı. Görünüş "Sıcak klinik" (`public-site.scss`): günün dört adımı dört
  * tonla ayrışır; ekranlar panel menüsü kırpılmış, büyük ve yakın çekimli. Telefonda (768 px altı) kahramandan klinik web sitesine
  * kadar olan kısım "Günün saatleri" düzenidir (`PublicHomePhoneComponent`, T-03 B); geçiş, paketler, SSS ve çağrı ortaktır.
  */
@@ -228,6 +229,36 @@ const HOME_ORGANIZATION_JSON_LD_ID = 'home-organization';
                 </div>
             </section>
 
+            <!-- Yapay zekâ yardımcısı: gök panel, solda kurallar, sağda beş işlev; ayrıntısı Özellikler'de -->
+            <section class="ps-section ps-section--tight" aria-labelledby="public-home-ai-title">
+                <div class="ps-wrap">
+                    <div class="ps-panel ps-tone-sky ps-split">
+                        <div>
+                            <p class="ps-chip"><i class="pi pi-sparkles" aria-hidden="true"></i>{{ ai.eyebrow }}</p>
+                            <h2 id="public-home-ai-title" class="public-h2 mt-4">{{ ai.title }}</h2>
+                            <p class="public-lead">{{ ai.homeLead }}</p>
+                            <ul class="ps-list ps-ticklist" data-ai-rules>
+                                @for (rule of aiRules; track rule) {
+                                    <li><i class="pi pi-check" aria-hidden="true"></i><span>{{ rule }}</span></li>
+                                }
+                            </ul>
+                            <p class="ps-more">
+                                <a [routerLink]="paths.features" [fragment]="ai.id" class="public-btn public-btn-secondary">{{ ai.homeLinkLabel }}<i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+                            </p>
+                        </div>
+                        <ul class="ps-list ps-minis" data-ai-features>
+                            @for (item of aiFeatures; track item.title) {
+                                <li>
+                                    <span class="ps-round ps-round--small" aria-hidden="true"><i [class]="item.icon"></i></span>
+                                    <strong>{{ item.title }}</strong>
+                                    <p>{{ item.text }}</p>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
             <!-- Klinik web sitesi: dört tasarım fotoğraf kartı gibi; ayrıntısı Özellikler'de -->
             <section class="ps-section ps-section--tight" aria-labelledby="public-home-site-title">
                 <div class="ps-wrap">
@@ -308,6 +339,9 @@ export class PublicHomePageComponent implements OnInit {
     readonly phone = publicPhoneViewport(this.destroyRef);
     readonly hero = PUBLIC_HOME_HERO;
     readonly sections = PUBLIC_HOME_SECTIONS;
+    readonly ai = PUBLIC_AI_SECTION;
+    readonly aiFeatures = PUBLIC_AI_FEATURES;
+    readonly aiRules = PUBLIC_AI_RULES;
     readonly trialLine = PUBLIC_HOME_TRIAL_LINE;
     readonly trialParts = PUBLIC_HOME_TRIAL_LINE.split(' · ');
     readonly trust = PUBLIC_HOME_TRUST;

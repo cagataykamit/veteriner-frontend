@@ -112,6 +112,10 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
                 answer: 'Klinik başına aydınlatma metni ve açık rıza formu (yazdırılabilir), rıza kaydı ve metin sürümü, müşteri veri kopyası ve KVKK talep süreci. Metinler kliniğinizin danışmanınca onaylanır.'
             },
             {
+                question: 'Yapay zekâ verimi nasıl kullanıyor?',
+                answer: "Yalnız hekim istediğinde ve o an açık olan kayıt için çalışır. Hazırladığı her şey taslaktır; hekim onaylamadan kayda geçmez. Yapay zekâ kliniğinizde kapalı başlar, siz talep etmedikçe kapalı kalır. Ayrıntısı Gizlilik Politikası'nda."
+            },
+            {
                 question: 'Kesinleşen muayene değiştirilebilir mi?',
                 answer: 'Kesinleşen muayene kilitlenir; düzeltme yalnız gerekçeli ek notla yapılır ve izlenir. İki kullanıcı aynı kaydı aynı anda değiştiremez.'
             },
