@@ -523,184 +523,675 @@ html.public-site-root {
     font-size: 1.5rem;
 }
 
-/* —— Auth shell layout — login / forgot / reset —— */
-
-@mixin auth-dark {
-    &:where([class*='app-dark'], [class*='app-dark'] *) {
-        @content;
-    }
-}
+/*
+ * —— Giriş, kayıt, şifre, klinik seçimi ve davet sayfaları (L-01, kullanıcı kararı A "Tanıtımın devamı") ——
+ * İskelet `PublicAuthShellComponent`: kök `public-page public-site public-auth-page` sınıflarını taşır, renk ve yazı tipi
+ * `public-site.scss` değişkenlerinden (`--ps-*`) gelir. Krem zemin ve iki yumuşak renk lekesi, yuvarlak beyaz üst şerit, 28 px köşeli
+ * kart, etiket 14 px, girdi 16 px / 50 px, lacivert hap birincil düğme. Kartın üstünde süs çipi yok: tıklanır görünüp tıklanmayan öğe
+ * olmasın. PrimeNG girdi, seçim, onay kutusu ve düğme renkleri bileşen değişkenleriyle bu kapsamda giydirilir (panel etkilenmez).
+ * Ölçüler px: bu sayfalar tanıtım kabının dışında, kök yazı boyu panelinki (14 px).
+ */
 
 .public-auth-page {
-    --public-auth-form-width: 30rem;
+    /* Girdi çerçevesi zeminine karşı en az 3:1 (WCAG 1.4.11) */
+    --public-auth-in-bg: #ffffff;
+    --public-auth-in-line: #998a72;
+    --public-auth-placeholder: #6b7890;
+    --public-auth-selected: #e6f6f5;
+    --public-auth-disabled: #e9e1d3;
+    --public-auth-disabled-ink: #5f5a4d;
+
+    --p-inputtext-background: var(--public-auth-in-bg);
+    --p-inputtext-border-color: var(--public-auth-in-line);
+    --p-inputtext-hover-border-color: var(--ps-ink-2);
+    --p-inputtext-focus-border-color: var(--ps-accent);
+    --p-inputtext-color: var(--ps-ink);
+    --p-inputtext-placeholder-color: var(--public-auth-placeholder);
+    --p-inputtext-border-radius: 14px;
+    --p-inputtext-padding-x: 13px;
+    --p-inputtext-font-size: 16px;
+    --p-password-icon-color: var(--ps-ink-2);
+    --p-select-background: var(--public-auth-in-bg);
+    --p-select-border-color: var(--public-auth-in-line);
+    --p-select-hover-border-color: var(--ps-ink-2);
+    --p-select-focus-border-color: var(--ps-accent);
+    --p-select-color: var(--ps-ink);
+    --p-select-placeholder-color: var(--public-auth-placeholder);
+    --p-select-border-radius: 14px;
+    --p-select-padding-x: 13px;
+    --p-select-font-size: 16px;
+    --p-checkbox-width: 20px;
+    --p-checkbox-height: 20px;
+    --p-checkbox-border-radius: 6px;
+    --p-checkbox-background: var(--public-auth-in-bg);
+    --p-checkbox-border-color: var(--public-auth-in-line);
+    --p-checkbox-hover-border-color: var(--ps-ink-2);
+    --p-checkbox-checked-background: var(--ps-ink);
+    --p-checkbox-checked-border-color: var(--ps-ink);
+    --p-checkbox-checked-hover-background: var(--ps-ink);
+    --p-checkbox-checked-hover-border-color: var(--ps-ink);
+    --p-checkbox-icon-checked-color: var(--ps-bg);
+    --p-checkbox-icon-checked-hover-color: var(--ps-bg);
+    --p-radiobutton-width: 20px;
+    --p-radiobutton-height: 20px;
+    --p-radiobutton-background: var(--public-auth-in-bg);
+    --p-radiobutton-border-color: var(--public-auth-in-line);
+    --p-radiobutton-hover-border-color: var(--ps-ink-2);
+    --p-radiobutton-checked-background: var(--ps-ink);
+    --p-radiobutton-checked-border-color: var(--ps-ink);
+    --p-radiobutton-checked-hover-background: var(--ps-ink);
+    --p-radiobutton-checked-hover-border-color: var(--ps-ink);
+    --p-radiobutton-icon-checked-color: var(--ps-bg);
+    --p-radiobutton-icon-checked-hover-color: var(--ps-bg);
+    --p-button-border-radius: 999px;
+    --p-button-label-font-weight: 800;
+    --p-button-primary-background: var(--ps-ink);
+    --p-button-primary-border-color: var(--ps-ink);
+    --p-button-primary-color: var(--ps-bg);
+    --p-button-primary-hover-background: color-mix(in srgb, var(--ps-ink) 86%, var(--ps-accent));
+    --p-button-primary-hover-border-color: color-mix(in srgb, var(--ps-ink) 86%, var(--ps-accent));
+    --p-button-primary-hover-color: var(--ps-bg);
+    --p-button-primary-active-background: color-mix(in srgb, var(--ps-ink) 86%, var(--ps-accent));
+    --p-button-primary-active-border-color: color-mix(in srgb, var(--ps-ink) 86%, var(--ps-accent));
+    --p-button-primary-active-color: var(--ps-bg);
+    --p-button-outlined-primary-border-color: var(--ps-ink);
+    --p-button-outlined-primary-color: var(--ps-ink);
+    --p-button-outlined-primary-hover-background: var(--ps-band);
+    --p-button-outlined-primary-active-background: var(--ps-band);
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    min-height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.app-dark .public-auth-page {
+    --public-auth-in-bg: #0f1725;
+    --public-auth-in-line: #66758f;
+    --public-auth-placeholder: #93a0b5;
+    --public-auth-selected: #12403c;
+    --public-auth-disabled: #2a364c;
+    --public-auth-disabled-ink: #a3afc2;
+}
+
+.public-auth-page :focus-visible {
+    outline: 2px solid var(--ps-accent);
+    outline-offset: 2px;
+}
+
+/* Renk lekeleri: tonu `ps-tone-*`, görünüşü `ps-blob` (public-site.scss); burada yalnız yer ve boyut */
+.public-site .public-auth-blob {
+    width: 520px;
+    aspect-ratio: 1;
+}
+
+.public-site .public-auth-blob--a {
+    top: -160px;
+    right: -180px;
+}
+
+.public-site .public-auth-blob--b {
+    bottom: -120px;
+    left: -220px;
+}
+
+/* —— Üst şerit: tanıtım üst çubuğu gibi yüzen beyaz hap —— */
+
+.public-auth-topbar {
+    position: relative;
+    z-index: 1;
     display: flex;
     align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    min-width: 100vw;
-    overflow: hidden;
-    background-color: var(--p-surface-50);
+    justify-content: space-between;
+    gap: 12px;
+    box-sizing: border-box;
+    width: calc(100% - 24px);
+    max-width: 1180px;
+    height: 64px;
+    margin: 12px auto 0;
+    padding: 0 10px 0 22px;
+    border: 1px solid var(--ps-rule);
+    border-radius: 999px;
+    background: var(--ps-card);
+    box-shadow: var(--ps-shadow-soft);
+}
 
-    @include auth-dark {
-        background-color: var(--p-surface-950);
+.public-auth-topbar-logo {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+
+    img {
+        width: auto;
+        height: 36px;
     }
 }
 
-.public-auth-shell {
+.public-auth-topbar-home {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-family: var(--ps-font-display);
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ps-ink);
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+        background: var(--ps-band);
+    }
+
+    .pi {
+        font-size: 13px;
+    }
+}
+
+/* —— Ortadaki kart —— */
+
+.public-auth-main {
+    position: relative;
+    z-index: 1;
     display: flex;
+    flex: 1;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 36px 16px 12px;
+}
+
+.public-auth-card {
+    box-sizing: border-box;
     width: 100%;
-    max-width: 48rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    max-width: 468px;
+    padding: 40px 44px;
+    border: 1px solid var(--ps-rule);
+    border-radius: 28px;
+    background: var(--ps-card);
+    box-shadow: var(--ps-shadow);
+}
+
+.public-auth-card--wide {
+    max-width: 760px;
 }
 
 .public-auth-header {
-    margin-bottom: 2rem;
+    margin-bottom: 26px;
     text-align: center;
 }
 
-.public-auth-logo {
-    height: auto;
-    width: 5.5rem;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 1.5rem;
+.public-auth-page .public-auth-title {
+    margin: 0;
+    font-family: var(--ps-font-display);
+    font-size: 32px;
+    font-weight: 900;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    color: var(--ps-ink);
+    text-wrap: balance;
+}
 
-    @media (min-width: 576px) {
-        width: 6rem;
+.public-auth-page .public-auth-subtitle {
+    display: block;
+    margin: 8px 0 0;
+    color: var(--ps-ink-2);
+}
+
+/* Kayıt: başlık altındaki iki kısa güvence (düz metin, tıklanmaz) */
+.public-auth-ticks {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 16px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ps-ink-2);
+
+    li {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
 
-    @media (min-width: 768px) {
-        width: 7.5rem;
+    .pi {
+        font-size: 12px;
+        color: var(--ps-accent);
     }
 }
 
-.public-auth-title {
-    margin-bottom: 1rem;
-    font-size: 1.875rem;
-    line-height: 2.25rem;
-    font-weight: 500;
-    color: var(--p-surface-900);
-
-    @include auth-dark {
-        color: var(--p-surface-0);
-    }
+/* Bölüm başlığı (kayıt): küçük, büyük harf, üstünde ince çizgi */
+.public-auth-page .public-auth-group {
+    margin: 24px 0 14px;
+    padding: 20px 0 0;
+    border-top: 1px solid var(--ps-rule);
+    font-family: var(--ps-font-body);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ps-ink-2);
 }
 
-.public-auth-subtitle {
-    font-weight: 500;
-    color: var(--p-text-muted-color);
+.public-auth-page .public-auth-group--first {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
 }
+
+/* —— Alanlar —— */
 
 .public-auth-form {
     width: 100%;
-
-    @media (min-width: 768px) {
-        max-width: var(--public-auth-form-width, 30rem);
-        margin-left: auto;
-        margin-right: auto;
-    }
 }
 
-.public-auth-field-primary {
-    margin-bottom: 2rem;
-}
-
-.public-auth-field-secondary {
-    margin-bottom: 1rem;
+.public-auth-field-primary,
+.public-auth-field-secondary,
+.public-auth-field {
+    margin-bottom: 18px;
 }
 
 .public-auth-field-before-action {
-    margin-bottom: 2rem;
+    margin-bottom: 24px;
 }
 
-.public-auth-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-    font-weight: 500;
-    color: var(--p-surface-900);
-
-    @include auth-dark {
-        color: var(--p-surface-0);
-    }
-}
-
+.public-auth-label,
 .public-auth-label-password {
     display: block;
-    margin-bottom: 0.5rem;
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-    font-weight: 500;
-    color: var(--p-surface-900);
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--ps-ink);
+}
 
-    @include auth-dark {
-        color: var(--p-surface-0);
-    }
+.public-auth-page .public-auth-hint {
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--ps-ink-2);
 }
 
 .public-auth-control {
     width: 100%;
 }
 
+.public-auth-page :is(.p-inputtext, .p-select) {
+    min-height: 50px;
+}
+
+.public-auth-page .p-select {
+    align-items: center;
+}
+
+.public-auth-page :is(.p-password, p-password) {
+    display: block;
+    width: 100%;
+}
+
+.public-auth-page :is(.p-password-input, .p-password input) {
+    width: 100%;
+}
+
+.public-auth-page small.text-danger {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Paylaşılan alt bileşenler (ortak kodu, hukuki onay) panelde de kullanılır; etiketleri yalnız bu kapsamda giydirilir */
+.public-auth-page app-discount-code-field label {
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ps-ink);
+}
+
+.public-auth-page .legal-consent {
+    gap: 11px;
+
+    label {
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--ps-ink);
+    }
+
+    .public-brand-link {
+        font-weight: 600;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+}
+
+/* Seçenek kartı (paket, başlangıç biçimi): seçili olan teal çerçeve ve açık teal zemin */
+.public-auth-option {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--public-auth-in-line);
+    border-radius: 18px;
+    background: var(--public-auth-in-bg);
+    color: var(--ps-ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.public-auth-option--selected {
+    border-color: var(--ps-accent);
+    box-shadow: 0 0 0 1px var(--ps-accent);
+    background: var(--public-auth-selected);
+}
+
+.public-auth-option-title {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ps-ink);
+}
+
+.public-auth-option-text {
+    display: block;
+    margin-top: 3px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--ps-ink-2);
+}
+
+.public-auth-option-strong {
+    display: block;
+    margin-top: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ps-ink);
+
+    small {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ps-ink-2);
+    }
+}
+
+/* Başlangıç biçimi: solda radyo, sağda metin */
+.public-auth-option--radio {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 11px;
+    align-items: start;
+}
+
+.public-auth-recommended {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ps-accent);
+}
+
+/* Bilgi kutusu (kayıt tamamlandı özeti): seçenek kartı görünüşünde, tıklanmaz */
+.public-auth-panel {
+    margin-bottom: 24px;
+    padding: 14px 16px;
+    border: 1px solid var(--ps-rule);
+    border-radius: 18px;
+    background: var(--ps-band);
+}
+
+/* Davet bilgileri: solda kısa ad, sağda değer */
+.public-auth-facts {
+    display: grid;
+    gap: 8px;
+    font-size: 14px;
+
+    > div {
+        display: grid;
+        grid-template-columns: 8.5rem minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    dt {
+        color: var(--ps-ink-2);
+    }
+
+    dd {
+        margin: 0;
+        font-weight: 600;
+        color: var(--ps-ink);
+    }
+}
+
+.public-auth-plans {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.public-auth-row2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 14px;
+}
+
+.public-auth-fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    legend {
+        width: 100%;
+    }
+}
+
+.public-auth-modes {
+    display: grid;
+    gap: 10px;
+}
+
+.public-auth-consent {
+    margin: 18px 0 16px;
+}
+
+/* —— Satırlar ve bağlantılar —— */
+
 .public-auth-options-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 2rem;
-    margin-top: 0.5rem;
-    margin-bottom: 2rem;
+    gap: 0 12px;
+    margin: -6px 0 18px;
+    font-size: 14px;
 }
+
+.public-auth-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 44px;
+
+    label {
+        cursor: pointer;
+    }
+}
+
+.public-auth-page .public-auth-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    font-weight: 600;
+    color: var(--ps-accent);
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+}
+
+/* Metin içindeki bağlantı satır akışında kalır */
+.public-auth-page .public-auth-link--inline {
+    display: inline;
+    min-height: 0;
+}
+
+.public-auth-page .public-auth-alt {
+    margin: 10px 0 0;
+    font-size: 14px;
+    text-align: center;
+    color: var(--ps-ink-2);
+}
+
+.public-auth-page .public-auth-status {
+    margin: 16px auto 0;
+    max-width: 28rem;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--ps-accent);
+}
+
+/* Kartın altındaki hukuki bağlantılar */
+.public-auth-page .public-legal-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 18px;
+    padding: 8px 16px;
+    font-size: 13px;
+
+    a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        color: var(--ps-ink-2);
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+    }
+}
+
+/* —— Uyarı —— */
 
 .public-auth-alert {
     display: flex;
     justify-content: center;
     width: 100%;
-    margin-top: 0.75rem;
-    margin-bottom: 0;
+    margin-top: 12px;
 }
 
 .public-auth-alert-box {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.375rem;
-    max-width: max-content;
-    border-radius: 0.125rem;
-    border-left-width: 3px;
-    border-left-style: solid;
-    border-left-color: color-mix(in srgb, var(--color-red-400, #f87171) 75%, transparent);
-    background-color: color-mix(in srgb, var(--color-red-500, #ef4444) 6%, transparent);
-    padding: 0.375rem 0.625rem 0.375rem 0.625rem;
-    text-align: center;
-
-    @include auth-dark {
-        border-left-color: color-mix(in srgb, var(--color-red-500, #ef4444) 45%, transparent);
-        background-color: color-mix(in srgb, var(--color-red-500, #ef4444) 8%, transparent);
-    }
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #fdecea;
+    text-align: left;
 }
 
 .public-auth-alert-text {
-    font-size: 0.875rem;
-    line-height: 1.25;
+    font-size: 14px;
     font-weight: 500;
-    color: var(--color-red-950, #450a0a);
+    line-height: 1.35;
+    color: #b42318;
+}
 
-    @include auth-dark {
-        color: var(--color-red-100, #fee2e2);
+.app-dark .public-auth-alert-box {
+    background: #3f1518;
+}
+
+.app-dark .public-auth-alert-text {
+    color: #fca5a5;
+}
+
+/* —— Düğmeler: birincil lacivert hap (koyu temada krem), diğerleri lacivert çerçeveli; devre dışı iki temada gri (L-03) —— */
+
+.public-auth-page .p-button:not(.p-button-text, .p-button-link) {
+    min-height: 50px;
+    padding-inline: 20px;
+    border-width: 2px;
+    font-family: var(--ps-font-display);
+    font-size: 16px;
+}
+
+.public-auth-page .p-button.public-auth-submit {
+    min-height: 54px;
+    box-shadow: 0 12px 24px -12px rgb(11 29 58 / 0.6);
+}
+
+.public-auth-page .p-button:not(.public-auth-submit, .p-button-text, .p-button-link) {
+    background: transparent;
+    border-color: var(--ps-ink);
+    color: var(--ps-ink);
+}
+
+.public-auth-page .p-button:not(.public-auth-submit, .p-button-text, .p-button-link):not(:disabled):hover {
+    background: var(--ps-band);
+    border-color: var(--ps-ink);
+    color: var(--ps-ink);
+}
+
+.public-auth-page .p-button:not(.p-button-text, .p-button-link):disabled {
+    opacity: 1;
+    border-color: var(--public-auth-disabled);
+    background: var(--public-auth-disabled);
+    color: var(--public-auth-disabled-ink);
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* —— Telefon —— */
+
+@media (max-width: 640px) {
+    .public-auth-topbar {
+        padding-left: 16px;
+    }
+
+    .public-auth-topbar-logo img {
+        height: 32px;
+    }
+
+    .public-auth-main {
+        justify-content: flex-start;
+        padding-top: 22px;
+    }
+
+    .public-auth-card {
+        padding: 26px 20px;
+        border-radius: 24px;
+    }
+
+    .public-auth-page .public-auth-title {
+        font-size: 27px;
+    }
+
+    .public-auth-plans,
+    .public-auth-row2 {
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
-.public-auth-footer-link {
-    margin-top: 1rem;
-    text-align: center;
-}
+/* —— 404 sayfası kartı (giriş sayfalarından ayrı, panel renkleri) —— */
 
-/* —— Auth / davet marka alanı —— */
+@mixin auth-dark {
+    &:where([class*='app-dark'], [class*='app-dark'] *) {
+        @content;
+    }
+}
 
 .public-auth-card-frame {
     border-radius: 56px;
@@ -725,21 +1216,10 @@ html.public-site-root {
 }
 
 @media (min-width: 768px) {
-    /* auth form width + yatay padding (sm:px-20 → 5rem × 2) — kart shrink önleme */
+    /* form genişliği (30rem) + yatay boşluk (5rem × 2): kart içerikle daralmaz */
     .public-page .public-auth-card-inner {
-        min-width: calc(var(--public-auth-form-width, 30rem) + 10rem);
+        min-width: 40rem;
     }
-}
-
-.public-page .public-auth-form .p-password,
-.public-page .public-auth-form p-password {
-    display: block;
-    width: 100%;
-}
-
-.public-page .public-auth-form .p-password-input,
-.public-page .public-auth-form .p-password input {
-    width: 100%;
 }
 
 .public-brand-link {
@@ -752,22 +1232,17 @@ html.public-site-root {
     color: var(--public-accent-hover);
 }
 
-.public-brand-chip {
-    background: color-mix(in srgb, var(--vetinity-teal) 15%, transparent);
-    color: var(--vetinity-teal);
-}
-
 /*
- * Giriş ve 404 gönder düğmesi: birincil turkuaz 600 + beyaz yazı (4.8:1), hover 700 (6.9:1); iki temada aynı. Logo tonu
- * (#0fa39a) beyaz yazıyla 3.1:1 kaldığı için düğme zemini olmaz. Ton ailesi panel preset'inde (`core/theme/vetinity-preset.ts`).
+ * 404 gönder düğmesi: birincil turkuaz 600 + beyaz yazı (4.8:1), hover 700 (6.9:1); iki temada aynı. Logo tonu (#0fa39a) beyaz
+ * yazıyla 3.1:1 kaldığı için düğme zemini olmaz. Ton ailesi panel preset'inde (`core/theme/vetinity-preset.ts`).
  */
-.public-page :is(.public-auth-submit, .public-notfound-submit).p-button {
+.public-page .public-notfound-submit.p-button {
     background: var(--p-primary-600) !important;
     border-color: var(--p-primary-600) !important;
     color: #ffffff !important;
 }
 
-.public-page :is(.public-auth-submit, .public-notfound-submit).p-button:not(:disabled):hover {
+.public-page .public-notfound-submit.p-button:not(:disabled):hover {
     background: var(--p-primary-700) !important;
     border-color: var(--p-primary-700) !important;
 }
