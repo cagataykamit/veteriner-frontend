@@ -8,6 +8,7 @@ const TITLE_SUFFIX = 'Vetinity';
 const PANEL_PAGE_TITLES: ReadonlyArray<readonly [string, string]> = [
     ['today', 'Bugün'],
     ['patients', 'Hastalar'],
+    ['patients/deleted', 'Silinenler'],
     ['clients', 'Müşteriler'],
     ['pets', 'Hastalar'],
     ['appointments/calendar', 'Randevu takvimi'],

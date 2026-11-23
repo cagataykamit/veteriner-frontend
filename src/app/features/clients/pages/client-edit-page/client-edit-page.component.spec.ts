@@ -21,6 +21,8 @@ const client = (over: Partial<ClientDetailVm> = {}): ClientDetailVm => ({
     invoicing: null,
     rowVersion: 'rv1',
     notes: 'Sabah arar.\nKedi çantayla gelir.',
+    deletedAtUtc: null,
+    deletedByUserName: null,
     ...over
 });
 

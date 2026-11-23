@@ -21,7 +21,7 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
         <section class="card mb-0 h-full" aria-labelledby="client-pets-title" data-testid="client-pets">
             <div class="flex flex-wrap items-center gap-2 mb-3">
                 <h5 id="client-pets-title" class="m-0">Hastalar</h5>
-                @if (rows()?.state === 'ok') {
+                @if (rows()?.state === 'ok' && !ownerDeleted()) {
                     <span class="text-sm font-medium text-muted-color" data-testid="pets-count">({{ visibleRows().length }})</span>
                     @if (deceasedCount() > 0) {
                         <div class="flex gap-1 text-sm" role="group" aria-label="Hasta durumu süzgeci">
@@ -50,56 +50,61 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
                 }
             </div>
 
-            @switch (rows()?.state) {
-                @case ('ok') {
-                    @if (visibleRows().length > 0) {
-                        <ul class="list-none m-0 p-0">
-                            @for (row of visibleRows(); track row.pet.id) {
-                                <li class="py-2.5 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0 flex items-center gap-3" [class.opacity-70]="row.pet.status === 'Deceased'" data-testid="client-pet-row">
-                                    <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-border text-lg bg-surface-100 dark:bg-surface-800" [title]="row.pet.speciesName" aria-hidden="true" data-testid="pet-species-icon">{{ speciesIcon(row.pet.speciesName) }}</span>
-                                    <div class="min-w-0 flex-1">
-                                        <div class="flex flex-wrap items-baseline gap-x-2">
-                                            <a [routerLink]="['/panel/pets', row.pet.id]" class="text-primary font-semibold no-underline break-words touch:touch-hit">{{ row.pet.name }}</a>
-                                            @if (row.pet.status === 'Deceased') {
-                                                <span class="text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5" data-testid="pet-deceased">Vefat</span>
-                                            }
-                                            <span class="text-muted-color text-sm break-words">{{ identity(row) }}</span>
-                                        </div>
-                                        @if (hasHints(row)) {
-                                            <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm">
-                                                @if (row.outstandingAmount) {
-                                                    <span class="font-medium text-red-600 dark:text-red-400 tabular-nums" data-testid="pet-outstanding">Borç {{ money(row.outstandingAmount) }}</span>
+            <!-- Silinen müşteri (ADR-054 K6): hasta listesi silinenleri göstermez; sayı yerine geri yüklemenin sonucu söylenir. -->
+            @if (ownerDeleted()) {
+                <p class="m-0 text-muted-color" data-testid="pets-owner-deleted">Bu müşteriyle birlikte silinen hastalar, müşteri geri yüklenince geri gelir.</p>
+            } @else {
+                @switch (rows()?.state) {
+                    @case ('ok') {
+                        @if (visibleRows().length > 0) {
+                            <ul class="list-none m-0 p-0">
+                                @for (row of visibleRows(); track row.pet.id) {
+                                    <li class="py-2.5 border-b border-surface-200 dark:border-surface-700 last:border-b-0 last:pb-0 min-w-0 flex items-center gap-3" [class.opacity-70]="row.pet.status === 'Deceased'" data-testid="client-pet-row">
+                                        <span class="shrink-0 flex items-center justify-center w-10 h-10 rounded-border text-lg bg-surface-100 dark:bg-surface-800" [title]="row.pet.speciesName" aria-hidden="true" data-testid="pet-species-icon">{{ speciesIcon(row.pet.speciesName) }}</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex flex-wrap items-baseline gap-x-2">
+                                                <a [routerLink]="['/panel/pets', row.pet.id]" class="text-primary font-semibold no-underline break-words touch:touch-hit">{{ row.pet.name }}</a>
+                                                @if (row.pet.status === 'Deceased') {
+                                                    <span class="text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5" data-testid="pet-deceased">Vefat</span>
                                                 }
-                                                @if (row.pendingChargeCount) {
-                                                    <span class="font-medium text-amber-700 dark:text-amber-400" data-testid="pet-pending">{{ row.pendingChargeCount }} işlem ücret bekliyor</span>
-                                                }
-                                                @if (row.nextAppointment; as a) {
-                                                    <a [routerLink]="['/panel/appointments', a.id]" class="text-primary no-underline touch:touch-hit" data-testid="pet-next-appointment"
-                                                        ><i class="pi pi-calendar text-xs mr-1" aria-hidden="true"></i>{{ a.scheduledAtUtc | trDateTime }}</a
-                                                    >
-                                                }
+                                                <span class="text-muted-color text-sm break-words">{{ identity(row) }}</span>
                                             </div>
-                                        }
-                                    </div>
-                                    <a [routerLink]="['/panel/pets', row.pet.id]" class="shrink-0 text-muted-color hover:text-primary no-underline max-sm:hidden" [attr.aria-label]="row.pet.name + ' hasta kartı'"><i class="pi pi-angle-right" aria-hidden="true"></i></a>
-                                </li>
-                            }
-                        </ul>
-                    } @else if (deceasedCount() > 0) {
-                        <p class="m-0 text-muted-color" data-testid="pets-no-active">Aktif hasta yok; vefat eden hastalar "Tümü" altında.</p>
-                    } @else {
-                        <p class="m-0 text-muted-color" data-testid="pets-empty">Bu müşteriye kayıtlı hasta yok.</p>
+                                            @if (hasHints(row)) {
+                                                <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm">
+                                                    @if (row.outstandingAmount) {
+                                                        <span class="font-medium text-red-600 dark:text-red-400 tabular-nums" data-testid="pet-outstanding">Borç {{ money(row.outstandingAmount) }}</span>
+                                                    }
+                                                    @if (row.pendingChargeCount) {
+                                                        <span class="font-medium text-amber-700 dark:text-amber-400" data-testid="pet-pending">{{ row.pendingChargeCount }} işlem ücret bekliyor</span>
+                                                    }
+                                                    @if (row.nextAppointment; as a) {
+                                                        <a [routerLink]="['/panel/appointments', a.id]" class="text-primary no-underline touch:touch-hit" data-testid="pet-next-appointment"
+                                                            ><i class="pi pi-calendar text-xs mr-1" aria-hidden="true"></i>{{ a.scheduledAtUtc | trDateTime }}</a
+                                                        >
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                        <a [routerLink]="['/panel/pets', row.pet.id]" class="shrink-0 text-muted-color hover:text-primary no-underline max-sm:hidden" [attr.aria-label]="row.pet.name + ' hasta kartı'"><i class="pi pi-angle-right" aria-hidden="true"></i></a>
+                                    </li>
+                                }
+                            </ul>
+                        } @else if (deceasedCount() > 0) {
+                            <p class="m-0 text-muted-color" data-testid="pets-no-active">Aktif hasta yok; vefat eden hastalar "Tümü" altında.</p>
+                        } @else {
+                            <p class="m-0 text-muted-color" data-testid="pets-empty">Bu müşteriye kayıtlı hasta yok.</p>
+                        }
+                        <app-detail-see-all-link link="/panel/pets" [queryParams]="{ clientId: clientId() }" [itemCount]="okRows().length" />
                     }
-                    <app-detail-see-all-link link="/panel/pets" [queryParams]="{ clientId: clientId() }" [itemCount]="okRows().length" />
-                }
-                @case ('error') {
-                    <p class="m-0 text-warn text-sm" data-testid="pets-failed"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Hasta listesi alınamadı.</p>
-                }
-                @case ('loading') {
-                    <p class="m-0 text-muted-color text-sm">Yükleniyor…</p>
-                }
-                @default {
-                    <p class="m-0 text-muted-color text-sm"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Hastaları görme yetkiniz yok.</p>
+                    @case ('error') {
+                        <p class="m-0 text-warn text-sm" data-testid="pets-failed"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Hasta listesi alınamadı.</p>
+                    }
+                    @case ('loading') {
+                        <p class="m-0 text-muted-color text-sm">Yükleniyor…</p>
+                    }
+                    @default {
+                        <p class="m-0 text-muted-color text-sm"><i class="pi pi-lock mr-1" aria-hidden="true"></i>Hastaları görme yetkiniz yok.</p>
+                    }
                 }
             }
         </section>
@@ -109,6 +114,8 @@ export class ClientPetsPanelComponent {
     readonly rows = input.required<PetCardSection<ClientPetRow[]>>();
     readonly clientId = input.required<string>();
     readonly currency = input('TRY');
+    /** Müşteri silinmiş (ADR-054): sayı ve liste yerine kısa bilgi. */
+    readonly ownerDeleted = input(false);
 
     /** Varsayılan "Aktif" (sözleşme §5.3); vefat eden yoksa süzgeç gösterilmez. */
     readonly showAll = signal(false);

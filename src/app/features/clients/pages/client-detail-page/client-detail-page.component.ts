@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { MessageService, type MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { MenuModule } from 'primeng/menu';
 import { ToastModule } from 'primeng/toast';
 import type { AppointmentListItemVm } from '@/app/entities/appointment/models/appointment-vm.model';
 import { appointmentStatusLabel } from '@/app/entities/appointment/utils/appointment-status.utils';
@@ -35,7 +36,11 @@ import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { Subscription } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
-import { CHARGES_READ_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { CHARGES_READ_CLAIM, CLIENTS_DELETE_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_PORTAL_MANAGE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { DeletedRecordBannerComponent } from '@/app/entities/record-deletion/components/deleted-record-banner.component';
+import { RecordDeleteDialogComponent } from '@/app/entities/record-deletion/components/record-delete-dialog.component';
+import { RecentDeletionService } from '@/app/entities/record-deletion/services/recent-deletion.service';
+import { isRecordDeleted } from '@/app/entities/record-deletion/utils/record-deletion.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -58,6 +63,9 @@ import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/impor
         AppDetailRowLinkComponent, AppDetailSeeAllLinkComponent, CommonModule,
         RouterLink,
         ButtonModule,
+        MenuModule,
+        RecordDeleteDialogComponent,
+        DeletedRecordBannerComponent,
         ToastModule,
         AppPageHeaderComponent,
         PatientActionBarComponent,
@@ -90,18 +98,46 @@ import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/impor
         } @else if (client(); as c) {
             <app-page-header categoryLink="/panel/clients" categoryLinkLabel="Müşteri listesine dön" />
 
-            <app-client-card-header [client]="c" [balance]="balance()" [pendingCharges]="pendingCharges()" [lastExamination]="lastExamination()" [nextAppointment]="nextAppointment()" [portalChip]="portalChip()">
-                @if (canUpdateClient && !ro.mutationBlocked()) {
-                    <a editAction [routerLink]="['/panel/clients', c.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
-                } @else if (canUpdateClient && ro.mutationBlocked()) {
-                    <button editAction pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
-                }
-            </app-client-card-header>
-            @if (canUpdateClient && !ro.mutationBlocked()) {
-                <app-client-kvkk-consent-dialog [(visible)]="kvkkDialogOpen" [client]="c" (changed)="onKvkkChanged($event)" (stale)="refreshClient()" />
+            <!-- Silinen kart (ADR-054): bant ve geri yükleme; düzenleme ve yeni işlem eylemleri çizilmez. -->
+            @if (c.deletedAtUtc; as deletedAt) {
+                <app-deleted-record-banner kind="client" [recordId]="c.id" [deletedAtUtc]="deletedAt" [deletedByName]="c.deletedByUserName" [canRestore]="canDeleteClient && !ro.mutationBlocked()" (restored)="reload()" />
             }
 
-            <app-patient-action-bar [sticky]="true" [clientId]="c.id" [clientName]="c.fullName" [arrivalPet]="arrivalPet()" />
+            <app-client-card-header [client]="c" [balance]="balance()" [pendingCharges]="pendingCharges()" [lastExamination]="lastExamination()" [nextAppointment]="nextAppointment()" [portalChip]="portalChip()">
+                <!-- Eylemler tek kökte: denetim akışı bloğunda birden çok kök [editAction] yuvasına yansıtılmaz. -->
+                <ng-container editAction>
+                    @if (!deleted()) {
+                        @if (canUpdateClient && !ro.mutationBlocked()) {
+                            <a [routerLink]="['/panel/clients', c.id, 'edit']" pButton type="button" class="p-button-outlined p-button-secondary"><i class="pi pi-pencil"></i>Düzenle</a>
+                        } @else if (canUpdateClient && ro.mutationBlocked()) {
+                            <button pButton type="button" [disabled]="true" class="p-button-outlined p-button-secondary"><i class="pi pi-lock"></i>Düzenle (salt okunur)</button>
+                        }
+                        <!-- Seyrek ve geri dönüşlü eylem (silme) "Düzenle"nin yanında aynı görünürlükte değil, "…" menüsünde (hasta kartıyla aynı). -->
+                        @if (moreMenuItems().length > 0) {
+                            <button
+                                pButton
+                                type="button"
+                                class="p-button-outlined p-button-secondary"
+                                aria-label="Diğer eylemler"
+                                aria-haspopup="true"
+                                (click)="moreMenu.toggle($event)"
+                                data-testid="client-more-actions"
+                            ><i class="pi pi-ellipsis-h" aria-hidden="true"></i></button>
+                            <p-menu #moreMenu [model]="moreMenuItems()" [popup]="true" appendTo="body" />
+                        }
+                    }
+                </ng-container>
+            </app-client-card-header>
+            @if (canUpdateClient && !ro.mutationBlocked() && !deleted()) {
+                <app-client-kvkk-consent-dialog [(visible)]="kvkkDialogOpen" [client]="c" (changed)="onKvkkChanged($event)" (stale)="refreshClient()" />
+            }
+            @if (canDeleteClient && !ro.mutationBlocked() && !deleted()) {
+                <app-record-delete-dialog kind="client" [(visible)]="deleteDialogOpen" [recordId]="c.id" [recordName]="c.fullName" [clientId]="c.id" [petCount]="petCount()" (deleted)="onDeleted(c)" />
+            }
+
+            @if (!deleted()) {
+                <app-patient-action-bar [sticky]="true" [clientId]="c.id" [clientName]="c.fullName" [arrivalPet]="arrivalPet()" />
+            }
 
             <!--
                 Satır ızgarası: hastalar | Yapılacaklar (8/4); son muayene/randevu | ödeme özeti (8/4); portal | belgeler (6/6) — satırdaki kartlar eşit yükseklikte.
@@ -112,7 +148,7 @@ import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/impor
                 <!-- 1. satır: hastalar | Yapılacaklar (eşit yükseklik) -->
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 @4xl:col-span-8 min-w-0" [class.order-first]="emphasis === 'clinical'" data-testid="pets-column">
-                        <app-client-pets-panel [rows]="petRows()" [clientId]="c.id" [currency]="currency()" />
+                        <app-client-pets-panel [rows]="petRows()" [clientId]="c.id" [currency]="currency()" [ownerDeleted]="deleted()" />
                     </div>
                     <div class="col-span-12 @4xl:col-span-4 min-w-0" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
                         <app-pet-todo-panel [view]="todo()" />
@@ -271,7 +307,7 @@ import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/impor
                 <!-- 3. satır: portal erişimi | belgeler ve rıza (yarım genişlik, eşit yükseklik) -->
                 <div class="grid grid-cols-12 gap-4">
                     @if (canManagePortal) {
-                        <app-client-portal-access-panel class="col-span-12 @4xl:col-span-6 min-w-0" [client]="c" (chipLabelChange)="portalChip.set($event)" />
+                        <app-client-portal-access-panel class="col-span-12 @4xl:col-span-6 min-w-0" [client]="c" [entryClosed]="deleted()" (chipLabelChange)="portalChip.set($event)" />
                     }
 
                     <div class="card mb-0 min-w-0 h-full col-span-12 @4xl:col-span-6" aria-labelledby="client-documents-title" data-testid="client-documents">
@@ -280,7 +316,7 @@ import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/impor
                             <li><a [routerLink]="['/panel/clients', c.id, 'kvkk-form']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline touch:min-h-(--touch-target)" data-testid="kvkk-print-action"><i class="pi pi-print text-sm" aria-hidden="true"></i>KVKK formu yazdır</a></li>
                             <li><a [routerLink]="['/panel/clients', c.id, 'kvkk-disclosure']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline touch:min-h-(--touch-target)" data-testid="kvkk-disclosure-print-action"><i class="pi pi-print text-sm" aria-hidden="true"></i>Aydınlatma metni yazdır</a></li>
                             <li><a [routerLink]="['/panel/clients', c.id, 'data-export']" class="inline-flex items-center gap-2 py-1.5 text-primary font-medium no-underline touch:min-h-(--touch-target)" data-testid="client-data-export-action"><i class="pi pi-file-export text-sm" aria-hidden="true"></i>Veri kopyası</a></li>
-                            @if (canUpdateClient) {
+                            @if (canUpdateClient && !deleted()) {
                                 <li>
                                     <button
                                         type="button"
@@ -306,6 +342,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     private readonly auth = inject(AuthService);
     private readonly recentlyViewed = inject(RecentlyViewedService);
     private readonly messages = inject(MessageService);
+    private readonly recentDeletion = inject(RecentDeletionService);
     readonly ro = inject(TenantReadOnlyContextService);
 
     readonly copy = PANEL_COPY;
@@ -358,6 +395,17 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     /** Portal erişimi bölümü (ADR-031): izin yoksa bölüm hiç çizilmez. */
     readonly canManagePortal = this.auth.hasOperationClaim(OWNER_PORTAL_MANAGE_CLAIM);
     readonly emphasis = petCardEmphasis((claim) => this.auth.hasOperationClaim(claim));
+    /** Silme, "Silinenler" ve geri yükleme (ADR-054 K8). */
+    readonly canDeleteClient = this.auth.hasOperationClaim(CLIENTS_DELETE_CLAIM);
+    /** Silinen kart salt okunur açılır: düzenleme ve yeni işlem eylemleri çizilmez (K3). */
+    readonly deleted = computed(() => isRecordDeleted(this.client()));
+    readonly deleteDialogOpen = signal(false);
+    /** "…" menüsü: yalnız seyrek eylemler (silme). */
+    readonly moreMenuItems = computed<MenuItem[]>(() =>
+        this.canDeleteClient && !this.ro.mutationBlocked() ? [{ label: 'Sil', icon: 'pi pi-trash', id: 'client-delete-action', command: () => this.deleteDialogOpen.set(true) }] : []
+    );
+    /** Onay penceresinde "ve N hastası silinecek"; hasta okuma yetkisi yoksa ya da yüklenmediyse bilinmez. */
+    readonly petCount = computed(() => okData(this.pets())?.length ?? null);
 
     readonly lastExamination = computed(() => this.recentSection((s) => s.examinations[0] ?? null));
     readonly nextAppointment = computed(() => this.recentSection((s) => nextScheduledAppointment(s.appointments)));
@@ -368,7 +416,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
             {
                 clientId: this.client()?.id ?? '',
                 hasClaim: (claim) => this.auth.hasOperationClaim(claim),
-                mutationBlocked: this.ro.mutationBlocked(),
+                mutationBlocked: this.ro.mutationBlocked() || this.deleted(),
                 emphasis: this.emphasis
             }
         )
@@ -436,6 +484,12 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
         if (result.kvkkConsent.status === 'Declined' && result.remindersOptedOut) {
             addTracedToast(this.messages, 'ClientDetailPage', this.router.url, { severity: 'info', summary: 'Ret işaretlendi; hatırlatmalar kapatıldı.', life: 5000 });
         }
+    }
+
+    /** Silindi: listeye dönülür, liste "Silindi · Geri al" bildirimini gösterir. */
+    onDeleted(c: ClientDetailVm): void {
+        this.recentDeletion.remember({ kind: 'client', id: c.id, name: c.fullName });
+        void this.router.navigate(['/panel/clients']);
     }
 
     /** Yalnız müşteri kaydını yeniler (409 sonrası güncel rıza ve `rowVersion`); kartın diğer bölümleri yeniden yüklenmez. */

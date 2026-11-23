@@ -32,6 +32,8 @@ import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/a
 import { AiEntryButtonComponent } from '@/app/entities/ai/components/ai-entry-button.component';
 import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
 import { joinPresent } from '@/app/shared/utils/labels.utils';
+import { DeletionUndoNoticeComponent } from '@/app/entities/record-deletion/components/deletion-undo-notice.component';
+import { RecentDeletionService } from '@/app/entities/record-deletion/services/recent-deletion.service';
 
 type PetsListState = {
     search: string;
@@ -66,12 +68,17 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         FilterFieldComponent,
         SearchInputComponent,
         AppRowActionButtonComponent,
-        AiEntryButtonComponent
+        AiEntryButtonComponent,
+        DeletionUndoNoticeComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (activeClientId()) {
             <app-context-filter-chip label="Seçili müşterinin hastaları gösteriliyor" (clear)="clearClientContext()" />
+        }
+        <!-- Hasta kartından silip dönünce "Silindi · Geri al" (ADR-054). -->
+        @if (recentDeletion; as deletion) {
+            <app-deletion-undo-notice [deletion]="deletion" (restored)="reload()" />
         }
 
         <div class="card">
@@ -201,6 +208,8 @@ export class PetsListPageComponent implements OnInit {
     readonly copy = PANEL_COPY;
     readonly ro = inject(TenantReadOnlyContextService);
     private readonly auth = inject(AuthService);
+    /** Karttan silip dönüldüyse "Silindi · Geri al" (ADR-054); bir kez alınır. */
+    readonly recentDeletion = inject(RecentDeletionService).take('pet');
 
     private readonly petsService = inject(PetsService);
     private readonly route = inject(ActivatedRoute);

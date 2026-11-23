@@ -40,6 +40,9 @@ export const CLIENTS_CREATE_CLAIM = 'Clients.Create' as const;
 /** Müşteri güncelleme */
 export const CLIENTS_UPDATE_CLAIM = 'Clients.Update' as const;
 
+/** Müşteri silme (yumuşak), "Silinenler" listesi ve geri yükleme (ADR-054 K8) */
+export const CLIENTS_DELETE_CLAIM = 'Clients.Delete' as const;
+
 /** Hasta sahibi portalı: müşteri kartında davet gönder/iptal, erişimi kapat (ADR-031, `PORTAL_API_CONTRACT.md` §4) */
 export const OWNER_PORTAL_MANAGE_CLAIM = 'OwnerPortal.Manage' as const;
 
@@ -51,6 +54,9 @@ export const PETS_CREATE_CLAIM = 'Pets.Create' as const;
 
 /** Hayvan güncelleme */
 export const PETS_UPDATE_CLAIM = 'Pets.Update' as const;
+
+/** Hasta silme (yumuşak), "Silinenler" listesi ve geri yükleme (ADR-054 K8) */
+export const PETS_DELETE_CLAIM = 'Pets.Delete' as const;
 
 export const APPOINTMENTS_READ_CLAIM = 'Appointments.Read' as const;
 export const APPOINTMENTS_CREATE_CLAIM = 'Appointments.Create' as const;

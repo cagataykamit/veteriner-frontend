@@ -19,7 +19,7 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
         <section class="card mb-0" aria-labelledby="pet-imaging-title" data-testid="pet-imaging-section">
             <div class="flex items-center justify-between gap-2 mb-3">
                 <h5 id="pet-imaging-title" class="m-0">Görüntüleme</h5>
-                @if (canCreate && !ro.mutationBlocked()) {
+                @if (canCreate && !ro.mutationBlocked() && !entryClosed()) {
                     <a routerLink="/panel/imaging/new" [queryParams]="{ clientId: clientId(), petId: petId() }" class="text-primary font-medium no-underline text-sm touch:touch-hit" data-testid="pet-imaging-new">+ Ekle</a>
                 }
             </div>
@@ -49,6 +49,8 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
 export class PetImagingSectionComponent implements OnInit {
     readonly petId = input.required<string>();
     readonly clientId = input.required<string>();
+    /** Yeni kayıt kapalı (silinen hasta, ADR-054 K3): "+ Ekle" çizilmez; liste okunur. */
+    readonly entryClosed = input(false);
 
     private readonly imagingService = inject(ImagingRecordsService);
     readonly ro = inject(TenantReadOnlyContextService);

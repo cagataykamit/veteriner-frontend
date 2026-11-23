@@ -24,6 +24,8 @@ const client: ClientDetailVm = {
     kvkkConsent: { status: 'None', recordedOn: null, recordedByName: null, templateVersion: null, templateHash: null },
     invoicing: null,
     notes: null,
+    deletedAtUtc: null,
+    deletedByUserName: null,
     rowVersion: 'rv1'
 };
 
@@ -176,6 +178,16 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
         expect(status()).toContain('Hasta sahibi portal hesabını sildi');
         expect(status()).toContain('silinme: 28.10.2026');
         expect(q('client-portal-invite')?.disabled).toBe(false);
+    });
+
+    it('müşteri silindi: gerekçe yazılı, yeni davet düğmesi çizilmez (ADR-054 K9)', () => {
+        access = { ...none, links: [{ ...activeLink, status: 'Closed', closedAtUtc: '2026-11-23T10:00:00Z', closeReason: 'ClientDeleted' }] };
+        create();
+        fixture.componentRef.setInput('entryClosed', true);
+        fixture.detectChanges();
+
+        expect(status()).toContain('Müşteri silindi; portal erişimi kapandı');
+        expect(q('client-portal-invite')).toBeNull();
     });
 
     it('e-posta yoksa davet pasif ve nedeni yazılı', () => {

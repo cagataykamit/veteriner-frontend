@@ -60,5 +60,10 @@ describe('clientPortalClosedLabels', () => {
             title: 'Hasta sahibi portal hesabını sildi',
             dateLabel: 'silinme'
         });
+        // Klinik müşteriyi silince bağ `ClientDeleted` gerekçesiyle kapanır (ADR-054 K9).
+        expect(clientPortalClosedLabels({ ...link('Closed', '2026-10-01T00:00:00Z'), closeReason: 'ClientDeleted' })).toEqual({
+            title: 'Müşteri silindi; portal erişimi kapandı',
+            dateLabel: 'kapatılma'
+        });
     });
 });

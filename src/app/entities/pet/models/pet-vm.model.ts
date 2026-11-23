@@ -49,6 +49,12 @@ export interface PetDetailVm {
     deceasedOn: string | null;
     /** Durum değişikliği için eşzamanlılık belirteci; yanıtta yoksa `null` (durum değiştirilemez). */
     rowVersion: string | null;
+    /** Silinme anı (UTC, ADR-054); `null` = aktif. Silinen kart salt okunur açılır. */
+    deletedAtUtc: string | null;
+    /** Silen kullanıcının adı; bilinmiyorsa `null` (bant yalnız tarihi yazar). */
+    deletedByUserName: string | null;
+    /** Müşterisiyle birlikte silindi: geri yükleme müşteri kartından yapılır. */
+    deletedWithClient: boolean;
     /**
      * Aşağıdaki üç özet, GET `/pets/{id}` gövdesindeki alanlarla map edilir.
      * Detay sayfası şu an bu blokları göstermez; hasta geçmişi için `PetHistorySummaryVm` / `history-summary` kullanılır (bilinçli ürün kararı; ayrı kart UI eklemeden önce backend anlamlılığını doğrulayın).

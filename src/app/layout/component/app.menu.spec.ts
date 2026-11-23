@@ -472,7 +472,7 @@ describe('AppMenu', () => {
             hover(fixture, 'Müşteri ve Hasta');
             expect(panel().textContent).not.toContain('Müşteri ve Hasta');
             expect(panel().getAttribute('aria-label')).toBe('Müşteri ve Hasta alt sayfaları');
-            expect(itemLabels()).toEqual(['Ara', 'Müşteriler', 'Hastalar', 'Portal gelen kutusu']);
+            expect(itemLabels()).toEqual(['Ara', 'Müşteriler', 'Hastalar', 'Portal gelen kutusu', 'Silinenler']);
             expect(link(fixture, 'Müşteri ve Hasta').getAttribute('aria-haspopup')).toBe('menu');
         });
 
