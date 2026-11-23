@@ -626,22 +626,10 @@ html.public-site-root {
     width: 100%;
 }
 
-/* Girdi yazısı 16 px, dokunma hedefi 44 px; zemin kartla uyumlu (koyu temada kartın altındaki krem-lacivert zemin) */
+/* Girdi yazısı 16 px, dokunma hedefi 44 px */
 .public-auth-page :is(.p-inputtext, .p-password-input) {
     min-height: 44px;
     font-size: 16px;
-    background: var(--ps-card);
-    border-color: color-mix(in srgb, var(--ps-ink) 22%, var(--ps-rule));
-}
-
-.app-dark .public-auth-page :is(.p-inputtext, .p-password-input) {
-    background: var(--ps-bg);
-}
-
-/* Metin içindeki bağlantı satır akışında kalır (tanıtımdaki tek başına bağlantının 44 px kutusu satır aralığını açıyordu) */
-.public-page.public-auth-page :is(label, p) .public-brand-link {
-    display: inline;
-    min-height: 0;
 }
 
 .public-auth-options-row {

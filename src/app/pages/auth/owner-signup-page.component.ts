@@ -269,9 +269,9 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
                                     </div>
                                 }
 
-                                <div class="text-center flex flex-col items-center gap-2">
+                                <div class="text-center flex flex-col gap-2">
                                     <a routerLink="/auth/login" class="public-brand-link no-underline">Zaten hesabınız var mı? Giriş yapın</a>
-                                    <a routerLink="/paketler" class="inline-flex min-h-11 items-center text-muted-color font-medium no-underline text-sm">Paketlere dön</a>
+                                    <a routerLink="/paketler" class="text-muted-color font-medium no-underline text-sm">Paketlere dön</a>
                                 </div>
                             </div>
                         }
