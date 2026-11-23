@@ -93,6 +93,8 @@ export interface SiteVm {
     readonly pages: Readonly<Record<PageKey, boolean>>;
     readonly menu: readonly LinkVm[];
     readonly cta: CtaVm | null;
+    /** Giriş bölümündeki ikinci bağlantı: hizmetler gösteriliyorsa oraya, yoksa iletişime; ikisi de yoksa çizilmez (W-02). */
+    readonly heroLink: LinkVm | null;
     readonly homeSections: readonly HomeSectionType[];
     readonly siteName: string;
 }
@@ -243,6 +245,15 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
     const bookingHref = safeHref(clinic.bookingUrl);
     const cta: CtaVm | null = bookingHref ? { label: copy.ctaPrimary, path: null, href: bookingHref } : telHref ? { label: 'Hemen ara', path: null, href: telHref } : null;
     const homeSections = structure.homeSections.filter((section) => section.on && hasContent[section.type]).map((section) => section.type);
+    const heroLink: LinkVm | null = homeSections.includes('services')
+        ? { label: copy.ctaSecondary, path: '/#services' }
+        : pages.hizmetler
+          ? { label: copy.ctaSecondary, path: '/hizmetler' }
+          : homeSections.includes('contact')
+            ? { label: 'İletişim', path: '/#contact' }
+            : pages.iletisim
+              ? { label: 'İletişim', path: '/iletisim' }
+              : null;
     const isShown = (type: HomeSectionType, page: PageKey): boolean => homeSections.includes(type) || pages[page];
     const { sections } = config.design;
     const sectionPhoto = (slot: string): SiteImage | null => usable(STOCK_PHOTOS[slot as StockSlot] ?? null);
@@ -295,6 +306,7 @@ export function buildSiteVm(config: SiteConfig, voice: SiteCopy, now: Date, unav
         pages,
         menu,
         cta,
+        heroLink,
         homeSections,
         siteName: config.publish.siteName.trim() || name
     };

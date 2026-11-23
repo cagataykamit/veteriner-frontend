@@ -38,7 +38,9 @@ import { SiteStatusComponent } from '../../site-parts.component';
                         <figure class="mini" aria-hidden="true"><img [siteImg]="image" [alt]="''" eager /></figure>
                     }
                     <p class="tag status"><site-status /></p>
-                    <a class="tag serv" siteLink="/#services">{{ v.copy.ctaSecondary }}<i class="pi pi-arrow-down" aria-hidden="true"></i></a>
+                    @if (v.heroLink; as link) {
+                        <a class="tag serv" [siteLink]="link.path">{{ link.label }}<i class="pi pi-arrow-down" aria-hidden="true"></i></a>
+                    }
                 </div>
             </div>
         </section>

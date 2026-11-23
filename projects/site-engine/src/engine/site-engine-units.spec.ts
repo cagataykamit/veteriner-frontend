@@ -152,6 +152,20 @@ describe('buildSiteVm', () => {
         expect(forbiddenCopy('Tamamen açık bir yaklaşım; sözcük içinde kalanlar sayılmaz: yaşamama')).toEqual([]);
     });
 
+    it('giriş bölümünün ikinci bağlantısı hizmet yoksa iletişime döner, ikisi de yoksa çizilmez (W-02)', () => {
+        const config = sampleConfig();
+
+        expect(buildSiteVm(config, voice, NOW).heroLink).toEqual({ label: voice.ctaSecondary, path: '/#services' });
+
+        const noServices = { ...config, content: { ...config.content, services: [] } };
+
+        expect(buildSiteVm(noServices, voice, NOW).heroLink).toEqual({ label: 'İletişim', path: '/#contact' });
+
+        const bare = { ...noServices, structure: { ...noServices.structure, homeSections: [], pages: { ...noServices.structure.pages, iletisim: false } } };
+
+        expect(buildSiteVm(bare, voice, NOW).heroLink).toBeNull();
+    });
+
     it('telefon ve e-posta güvenli bağlantıya çevrilir', () => {
         const vm = buildSiteVm(patchClinic(sampleConfig(), { phone: '+90 (555) 000 00 00', whatsapp: '0555 000 00 00', email: 'ornek@example.com' }), voice, NOW);
 
