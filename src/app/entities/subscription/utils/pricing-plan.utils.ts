@@ -62,6 +62,8 @@ export interface PricingPlanOffer {
     readonly maxUsers: number | null;
     readonly monthlyPriceTry: number | null;
     readonly yearlyPriceTry: number | null;
+    /** Klinik başına aylık yapay zekâ kredisi (ADR-044 madde 5); katalog vermezse `null`. */
+    readonly monthlyAiCredits: number | null;
 }
 
 /** Backend paket kataloğu (`PublicSubscriptionPlanCatalogDto`). */
@@ -210,6 +212,36 @@ export const PRICING_FEATURE_ROWS: readonly PricingFeatureRowDef[] = [
     { group: 'Destek', label: 'Size özel geliştirmeler', detail: 'İş akışınıza göre ekran, rapor ve çıktı düzenlemeleri; Vetinity içinde', plans: PREMIUM_ONLY }
 ];
 
+/**
+ * Yapay zekâ kredisi satırı (ADR-044): değerler backend kataloğundan (`monthlyAiCredits`), burada sayı yok. Kredisi 0 olan paket
+ * "yok" hücresi alır; katalog yokken hücreler `null` kalır ve satır tabloya girmez (`decidedFeatureRows`).
+ */
+export const PRICING_AI_CREDITS_ROW = {
+    group: 'Yapay zekâ',
+    label: 'Yapay zekâ kredisi (aylık)',
+    detail: 'Talep üzerine açılır; öneriler taslaktır, hekim onaylar'
+} as const;
+
+const formatCount = (value: number): string => new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(value);
+
+/** Özellik tablosu + katalogdan gelen yapay zekâ kredisi satırı (Destek grubundan önce). */
+export function pricingFeatureRowsWithCatalog(state: PricingCatalogState, rows: readonly PricingFeatureRowDef[] = PRICING_FEATURE_ROWS): readonly PricingFeatureRowDef[] {
+    const cell = (def: PricingPlanDef): PricingFeatureCell => {
+        const credits = planOffer(state, def)?.monthlyAiCredits ?? null;
+
+        return credits == null ? null : credits > 0 ? formatCount(credits) : false;
+    };
+
+    const aiRow: PricingFeatureRowDef = {
+        ...PRICING_AI_CREDITS_ROW,
+        plans: Object.fromEntries(PRICING_PLAN_DEFS.map((def) => [def.slug, cell(def)])) as Record<PricingPlanSlug, PricingFeatureCell>
+    };
+    const supportAt = rows.findIndex((row) => row.group === 'Destek');
+    const at = supportAt < 0 ? rows.length : supportAt;
+
+    return [...rows.slice(0, at), aiRow, ...rows.slice(at)];
+}
+
 /** Özellik satırında "var" olan paketlerin adları ("Kurumsal"); satır yoksa boş. */
 export function planTitlesWithFeature(key: PricingFeatureKey, rows: readonly PricingFeatureRowDef[] = PRICING_FEATURE_ROWS): string {
     const row = rows.find((r) => r.key === key);
@@ -251,8 +283,7 @@ export const PRICING_NOT_AVAILABLE: readonly string[] = [
     'SMS hatırlatma (hatırlatmalar e-posta ile gider)',
     'Online ödeme',
     'Ayrı telefon uygulaması (panel tarayıcıda, telefonda da çalışır)',
-    "HBS'e otomatik gönderim (takip listesi var, giriş klinikçe yapılır)",
-    'Yapay zekâ özellikleri'
+    "HBS'e otomatik gönderim (takip listesi var, giriş klinikçe yapılır)"
 ];
 
 /** Katalog alınamadığında ya da paketin fiyatı yokken tutar yerine yazılan metin (ADR-034); bağlantı iletişime gider. */

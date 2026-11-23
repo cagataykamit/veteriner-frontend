@@ -12,7 +12,9 @@ import {
     planTitlesText,
     planTitlesWithFeature,
     priceMinorToTry,
+    pricingFeatureRowsWithCatalog,
     pricingTermsText,
+    PRICING_AI_CREDITS_ROW,
     PRICING_FEATURE_ROWS,
     PRICING_NOT_AVAILABLE,
     PRICING_ON_REQUEST_TEXT,
@@ -31,9 +33,9 @@ const SAMPLE_CATALOG: PricingCatalog = {
     vatIncluded: false,
     yearlyBilledMonths: 10,
     plans: [
-        { apiCode: 'Basic', maxUsers: 2, monthlyPriceTry: 500, yearlyPriceTry: 5000 },
-        { apiCode: 'Pro', maxUsers: 8, monthlyPriceTry: 1000, yearlyPriceTry: 10000 },
-        { apiCode: 'Premium', maxUsers: 40, monthlyPriceTry: null, yearlyPriceTry: null }
+        { apiCode: 'Basic', maxUsers: 2, monthlyPriceTry: 500, yearlyPriceTry: 5000, monthlyAiCredits: null },
+        { apiCode: 'Pro', maxUsers: 8, monthlyPriceTry: 1000, yearlyPriceTry: 10000, monthlyAiCredits: null },
+        { apiCode: 'Premium', maxUsers: 40, monthlyPriceTry: null, yearlyPriceTry: null, monthlyAiCredits: null }
     ]
 };
 
@@ -149,8 +151,25 @@ describe('Paket verisi (pricing-plan.utils)', () => {
         expect(planAvailabilityText('eDocuments')).toBe('Tüm paketlerde');
         expect(text).not.toMatch(/nilvera|paraşüt|parasut/i);
         expect(PRICING_NOT_AVAILABLE.join(' ')).toMatch(/HBS'e otomatik gönderim/);
-        expect(PRICING_NOT_AVAILABLE.join(' ')).toMatch(/Yapay zekâ/);
+        // Yapay zekâ çalışıyor (AI-001…006): "yok" listesinde değil, krediyi karşılaştırma tablosu katalogdan yazar.
+        expect(PRICING_NOT_AVAILABLE.join(' ')).not.toMatch(/Yapay zekâ/);
         expect(PRICING_NOT_AVAILABLE.join(' ')).not.toMatch(/mağaza/i);
+    });
+
+    it('yapay zekâ kredisi satırı katalogdan: kredisi 0 olan pakette yok, diğerlerinde sayı; katalog yokken satır tabloya girmez', () => {
+        const withCredits: PricingCatalogState = {
+            status: 'ready',
+            catalog: { ...SAMPLE_CATALOG, plans: SAMPLE_CATALOG.plans.map((p, i) => ({ ...p, monthlyAiCredits: [0, 700, 3000][i] })) }
+        };
+        const row = (state: PricingCatalogState) => pricingFeatureRowsWithCatalog(state).find((r) => r.label === PRICING_AI_CREDITS_ROW.label)!;
+
+        expect(row(withCredits).plans).toEqual({ basic: false, pro: '700', premium: '3.000' });
+        expect(row(withCredits).detail).toContain('Talep üzerine açılır');
+        expect(decidedFeatureRows(pricingFeatureRowsWithCatalog({ status: 'loading' })).some((r) => r.label === PRICING_AI_CREDITS_ROW.label)).toBe(false);
+        expect(decidedFeatureRows(pricingFeatureRowsWithCatalog(READY)).some((r) => r.label === PRICING_AI_CREDITS_ROW.label)).toBe(false);
+        const rows = pricingFeatureRowsWithCatalog(withCredits);
+
+        expect(rows.findIndex((r) => r.label === PRICING_AI_CREDITS_ROW.label)).toBe(rows.findIndex((r) => r.group === 'Destek') - 1);
     });
 
     it('katalogdan paket: kod büyük/küçük harf duyarsız; katalog yükleniyorsa ya da alınamadıysa yok', () => {

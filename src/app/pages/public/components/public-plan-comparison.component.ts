@@ -7,6 +7,7 @@ import {
     formatUserLimit,
     isPlanDifferenceRow,
     planOffer,
+    pricingFeatureRowsWithCatalog,
     pricingVatNote,
     PRICING_FEATURE_ROWS,
     PRICING_ON_REQUEST_TEXT,
@@ -282,7 +283,10 @@ export class PublicPlanComparisonComponent {
     /** "Sadece farkları göster" anahtarı; varsayılan kapalı (tüm satırlar). */
     readonly onlyDifferences = signal(false);
 
-    readonly hasRows = computed(() => decidedFeatureRows(this.featureRows()).length > 0);
+    /** Özellik satırları ve katalogdan gelen yapay zekâ kredisi satırı. */
+    private readonly rows = computed(() => pricingFeatureRowsWithCatalog(this.pricing(), this.featureRows()));
+
+    readonly hasRows = computed(() => decidedFeatureRows(this.rows()).length > 0);
 
     readonly vatNote = computed(() => {
         const state = this.pricing();
@@ -305,7 +309,7 @@ export class PublicPlanComparisonComponent {
         const plans = this.plans();
         const byGroup = new Map<string, ComparisonRowVm[]>();
 
-        const rows = decidedFeatureRows(this.featureRows()).filter((row) => !this.onlyDifferences() || isPlanDifferenceRow(row));
+        const rows = decidedFeatureRows(this.rows()).filter((row) => !this.onlyDifferences() || isPlanDifferenceRow(row));
 
         for (const row of rows) {
             byGroup.set(row.group, [...(byGroup.get(row.group) ?? []), { label: row.label, detail: row.detail, badge: row.badge, cells: plans.map((p) => row.plans[p.slug]) }]);
@@ -319,7 +323,7 @@ export class PublicPlanComparisonComponent {
     readonly phoneOnlyDifferences = signal(true);
 
     readonly phoneCountText = computed(() => {
-        const rows = decidedFeatureRows(this.featureRows());
+        const rows = decidedFeatureRows(this.rows());
         const differences = rows.filter(isPlanDifferenceRow).length;
 
         return this.phoneOnlyDifferences() ? `${differences} fark gösteriliyor; ${rows.length - differences} özellik her pakette aynı.` : `${rows.length} özelliğin tamamı gösteriliyor.`;
@@ -331,7 +335,7 @@ export class PublicPlanComparisonComponent {
         const selected = plans[this.phonePlan()] ?? plans[0];
         const byGroup = new Map<string, PhoneRowVm[]>();
 
-        for (const row of decidedFeatureRows(this.featureRows()).filter((r) => !this.phoneOnlyDifferences() || isPlanDifferenceRow(r))) {
+        for (const row of decidedFeatureRows(this.rows()).filter((r) => !this.phoneOnlyDifferences() || isPlanDifferenceRow(r))) {
             const cell = row.plans[selected.slug];
             const on = cell !== false && cell !== null;
             const vm: PhoneRowVm = { label: row.label, detail: row.detail, value: typeof cell === 'string' ? cell : null, on, availableIn: on ? null : availableInLabel(plans.filter((p) => hasCell(row.plans[p.slug]))) };

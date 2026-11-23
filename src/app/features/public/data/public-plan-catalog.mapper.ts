@@ -19,7 +19,13 @@ export function mapPublicPlanCatalogDto(dto: PublicSubscriptionPlanCatalogDto | 
             const apiCode = p.planCode?.trim();
 
             return apiCode
-                ? { apiCode, maxUsers: whole(p.maxUsers), monthlyPriceTry: priceMinorToTry(p.monthlyPriceMinor), yearlyPriceTry: priceMinorToTry(p.yearlyPriceMinor) }
+                ? {
+                      apiCode,
+                      maxUsers: whole(p.maxUsers),
+                      monthlyPriceTry: priceMinorToTry(p.monthlyPriceMinor),
+                      yearlyPriceTry: priceMinorToTry(p.yearlyPriceMinor),
+                      monthlyAiCredits: whole(p.monthlyAiCredits)
+                  }
                 : null;
         })
         .filter((p): p is PricingPlanOffer => p !== null);
