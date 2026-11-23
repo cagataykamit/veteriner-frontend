@@ -624,6 +624,31 @@ $ps: '.public-page.public-site';
     background: var(--ps-card);
 }
 
+/* Telefonda hap yerine en üste oturan opak şerit: kaydırılan içerik çubuğun üstünden ve yanlarından görünmez */
+@media (max-width: 767.98px) {
+    .public-site .ps-topbar {
+        padding: 0;
+        border-bottom: 1px solid var(--ps-rule);
+        background: var(--ps-card);
+    }
+
+    .public-site .ps-topbar-row,
+    .public-site .ps-mobile-menu-row {
+        height: 56px;
+        margin: 0;
+        padding-inline: 1rem 0.375rem;
+        border: 0;
+        border-radius: 0;
+        background: var(--ps-card);
+        box-shadow: none;
+        backdrop-filter: none;
+    }
+
+    .public-site .ps-mobile-menu-row {
+        border-bottom: 1px solid var(--ps-rule);
+    }
+}
+
 .public-site .ps-mobile-menu-link {
     display: flex;
     align-items: center;
@@ -1214,11 +1239,9 @@ $ps: '.public-page.public-site';
     margin: 0.375rem 0 0;
 }
 
-/* —— Aktarılır / aktarılmaz —— */
+/* —— Aktarılır —— */
 
 .public-site .ps-transfer {
-    display: grid;
-    gap: 1.25rem;
     margin-top: 2.5rem;
 }
 
@@ -1249,17 +1272,6 @@ $ps: '.public-page.public-site';
 .public-site .ps-card--quiet .ps-ticklist,
 .public-site .ps-card--quiet .ps-ticklist i {
     color: var(--ps-ink-2);
-}
-
-@media (min-width: 768px) {
-    .public-site .ps-transfer {
-        grid-template-columns: 3fr 2fr;
-    }
-
-    .public-site .ps-transfer .ps-card--plain .ps-ticklist {
-        grid-template-columns: 1fr 1fr;
-        column-gap: 2rem;
-    }
 }
 
 /* —— Madde kutuları —— */
@@ -1892,6 +1904,11 @@ $ps: '.public-page.public-site';
     .public-site .ps-aside {
         position: sticky;
         top: 104px;
+    }
+
+    /* Yan sütun dar; iki sütunlu liste yalnız sütun tam genişlikken */
+    .public-site .ps-aside .ps-ticklist--two {
+        grid-template-columns: none;
     }
 }
 
