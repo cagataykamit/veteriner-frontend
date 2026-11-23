@@ -184,10 +184,10 @@ describe('PetsListPageComponent — satırda Düzenle', () => {
 
     afterEach(() => sessionStorage.clear());
 
-    it("Pets.Update varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", () => {
+    it("Pets.Update varsa tabloda Detay'dan hemen sonra düzenleme sayfasına gider", () => {
         const edits = rowEditActions(create([PETS_UPDATE_CLAIM]));
 
-        expect(edits.length, 'tablo + mobil kart').toBe(2);
+        expect(edits.length, 'tablo; telefonda eylem satır açılınca').toBe(1);
 
         for (const edit of edits) {
             expect(edit.getAttribute('href')).toBe('/panel/pets/p1/edit');
@@ -201,7 +201,7 @@ describe('PetsListPageComponent — satırda Düzenle', () => {
         TestBed.resetTestingModule();
         const readOnly = rowEditActions(create([PETS_UPDATE_CLAIM], true));
 
-        expect(readOnly.length).toBe(2);
+        expect(readOnly.length).toBe(1);
         expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBe(true);
     });
 
@@ -210,7 +210,7 @@ describe('PetsListPageComponent — satırda Düzenle', () => {
         const el = create([]);
         const clientLinks = Array.from(el.querySelectorAll('a[href="/panel/clients/c1"]'));
 
-        expect(clientLinks.length, 'tablo + mobil kart').toBe(2);
+        expect(clientLinks.length, 'tablo; telefonda eylem satır açılınca').toBe(1);
         expect(clientLinks.every((a) => a.textContent?.trim() === 'Ayşe Yılmaz')).toBe(true);
         expect(el.textContent).not.toContain('Renk:');
     });

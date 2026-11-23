@@ -3,6 +3,7 @@ import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } 
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { PaginatorModule } from 'primeng/paginator';
 import { TableModule } from 'primeng/table';
 import type { TableLazyLoadEvent } from 'primeng/table';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -24,6 +25,8 @@ import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-hea
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
+import { AppPhoneListComponent, type PhoneListAction, type PhoneListItem } from '@/app/shared/ui/phone-list/app-phone-list.component';
+import { formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 import { MoneyPipe } from '@/app/shared/pipes/money.pipe';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -36,6 +39,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         FormsModule,
         RouterLink,
         TableModule,
+        PaginatorModule,
         ButtonModule,
         ClientSearchComponent,
         ChargeCorrectionDialogComponent,
@@ -48,6 +52,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         AppErrorStateComponent,
         AppStatusTagComponent,
         AppRowActionButtonComponent,
+        AppPhoneListComponent,
         MoneyPipe,
         TrDateTimePipe
     ],
@@ -75,7 +80,19 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             } @else if (!loading() && rows().length === 0) {
                 <app-empty-state message="Ücret kaydı yok." hint="Filtreyi temizleyin veya yeni ücret ekleyin." />
             } @else {
-                <div class="list-table table-stack-phone">
+                <!-- Telefonda ortak gün başlıklı satır listesi (G-04); tablo geniş ekranda. -->
+                <app-phone-list class="sm:hidden" [items]="phoneItems()" [dayTotals]="true" [continuesBefore]="first() > 0" [continuesAfter]="first() + rows().length < totalItems()" />
+                <p-paginator
+                    class="sm:hidden block mt-3"
+                    [rows]="pageSize()"
+                    [totalRecords]="totalItems()"
+                    [first]="first()"
+                    [showCurrentPageReport]="true"
+                    currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                    [rowsPerPageOptions]="[10, 20, 50]"
+                    (onPageChange)="onLazyLoad($event)"
+                />
+                <div class="list-table max-sm:hidden">
                     <p-table
                         size="small"
                         [value]="rows()"
@@ -220,6 +237,52 @@ export class ChargesListPageComponent implements OnInit {
     });
     readonly voidCharge = (reason: string) => this.chargesService.voidCharge(this.actionTarget()!.id, reason);
 
+    /** Telefon satırları (G-04): tablodaki sütun ve eylemlerin aynısı; boş alan yazılmaz. */
+    readonly phoneItems = computed<PhoneListItem[]>(() => this.rows().map((row) => this.phoneItem(row)));
+
+    private phoneItem(row: ChargeVm): PhoneListItem {
+        const currency = row.currency || 'TRY';
+        const quantity = row.quantity !== 1 ? `${row.quantity} × ${formatMoney(row.unitPrice, currency)}` : null;
+        const actions: PhoneListAction[] = [];
+
+        if (this.hasRowActions && !this.ro.mutationBlocked()) {
+            if (this.canCollectPayment && row.outstandingAmount !== 0) {
+                actions.push({ label: 'Ödeme al', icon: 'pi pi-wallet', link: ['/panel/payments/new'], queryParams: this.paymentQueryParams(row) });
+            }
+
+            if (this.canIssueDocument && !row.eDocumentId && !row.isImported) {
+                actions.push({ label: 'Belge kes', icon: 'pi pi-file', run: () => this.openDocument(row) });
+            }
+
+            if (this.canCorrect && !row.eDocumentId) {
+                actions.push({ label: 'Düzelt', icon: 'pi pi-pencil', run: () => this.openCorrection(row) });
+                actions.push({ label: 'İptal et', icon: 'pi pi-ban', danger: true, run: () => this.openVoid(row) });
+            }
+        }
+
+        actions.push({ label: 'Müşteri kartı', link: ['/panel/clients', row.clientId] });
+
+        return {
+            id: row.id,
+            at: row.createdAtUtc,
+            lead: formatUtcIsoAsLocalTimeDisplay(row.createdAtUtc),
+            title: row.clientName,
+            titleNote: row.petName || null,
+            sub: [row.description, quantity].filter(Boolean).join(' · '),
+            amount: row.amount,
+            status: row.outstandingAmount === 0 ? { label: 'Ödendi', severity: 'success' } : row.outstandingAmount ? { label: `Kalan ${formatMoney(row.outstandingAmount, currency)}`, severity: 'warn' } : null,
+            fields: [
+                { label: 'Hasta', value: row.petName },
+                { label: 'Açıklama', value: row.description },
+                { label: 'Miktar', value: quantity },
+                { label: 'Tutar', value: formatMoney(row.amount, currency) },
+                { label: 'Kalan', value: row.outstandingAmount ? formatMoney(row.outstandingAmount, currency) : null },
+                { label: 'e-Belge', value: row.eDocumentId ? 'Belgeli' : null },
+                { label: 'Devir', value: row.isImported ? 'Eski programdan aktarılan açık bakiye' : null }
+            ],
+            actions
+        };
+    }
     ngOnInit(): void {
         this.clientId = this.route.snapshot.queryParamMap.get('clientId')?.trim() || null;
 

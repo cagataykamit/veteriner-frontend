@@ -22,6 +22,7 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppPhoneListComponent, type PhoneListAction, type PhoneListItem } from '@/app/shared/ui/phone-list/app-phone-list.component';
 import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -56,6 +57,7 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         InputTextModule,
         SelectModule,
         AppListHeaderComponent,
+        AppPhoneListComponent,
         AppListFiltersComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
@@ -174,45 +176,8 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                             </p-table>
                         </div>
 
-                        <div class="lg:hidden space-y-3">
-                            @for (row of displayedRows(); track row.id) {
-                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
-                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
-                                        <a [routerLink]="['/panel/pets', row.id]" class="text-primary no-underline break-words">{{ row.name }}</a>
-                                        @if (row.status === 'Deceased') {
-                                            <span class="ml-2 text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5">Vefat</span>
-                                        }
-                                    </div>
-                                    <div class="space-y-2 mb-3 min-w-0 text-sm">
-                                        @if (row.clientId && row.clientName) {
-                                            <div>
-                                                <span class="text-muted-color font-medium">Müşteri: </span>
-                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{ row.clientName }}</a>
-                                            </div>
-                                        }
-                                        <div>
-                                            <span class="text-muted-color font-medium">Tür: </span>
-                                            <span class="break-words"><span class="mr-1" aria-hidden="true">{{ speciesIcon(row.speciesName) }}</span>{{ row.speciesName }}</span>
-                                        </div>
-                                        <div>
-                                            <span class="text-muted-color font-medium">Irk: </span>
-                                            <span class="break-words">{{ row.breed }}</span>
-                                        </div>
-                                    </div>
-                                    @if (phoneDetailLine(row); as line) {
-                                        <div class="text-xs text-muted-color mb-3 min-w-0 break-words">{{ line }}</div>
-                                    }
-                                    <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
-                                        <app-row-action-button action="detail" [link]="['/panel/pets', row.id]" />
-                                        @if (canUpdatePet && !ro.mutationBlocked()) {
-                                            <app-row-action-button action="edit" [link]="['/panel/pets', row.id, 'edit']" />
-                                        } @else if (canUpdatePet && ro.mutationBlocked()) {
-                                            <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        </div>
+                        <!-- Telefonda ortak satır listesi (G-04): dokununca dolu alanlar ve yazılı eylemler açılır. -->
+                        <app-phone-list class="lg:hidden" [items]="phoneItems()" />
 
                         <div class="lg:hidden mt-4">
                             <p-paginator
@@ -310,14 +275,32 @@ export class PetsListPageComponent implements OnInit {
     /** Tür sütunu/satırında tür simgesi. */
     readonly speciesIcon = speciesEmoji;
 
-    /** Telefon kartının alt satırı: bilinen renk ve kilo; boş parça yazılmaz ("—" gösterilmez). */
-    phoneDetailLine(row: PetListItemVm): string {
-        const known = (v: string) => !!v && v !== '—';
-
-        return joinPresent([known(row.colorName) ? `Renk: ${row.colorName}` : '', known(row.weight) ? `${row.weight} kg` : ''], ' · ');
-    }
-
     readonly displayedRows = computed(() => this.rawItems());
+
+    /** Telefon satırları (G-04): ad · müşteri, tür ve ırk; bilinmeyen renk ve kilo (boş, "—", 0) yazılmaz. */
+    readonly phoneItems = computed<PhoneListItem[]>(() =>
+        this.displayedRows().map((row) => {
+            const known = (v: string) => !!v && v !== '—' && v !== '0';
+            const actions: PhoneListAction[] = this.canUpdatePet && !this.ro.mutationBlocked() ? [{ label: 'Düzenle', icon: 'pi pi-pencil', link: ['/panel/pets', row.id, 'edit'] }] : [];
+
+            return {
+                id: row.id,
+                title: row.name,
+                titleNote: row.clientName || null,
+                sub: joinPresent([`${this.speciesIcon(row.speciesName)} ${row.speciesName}`.trim(), known(row.breed) ? row.breed : ''], ' · '),
+                status: row.status === 'Deceased' ? { label: 'Vefat', severity: 'secondary' } : null,
+                fields: [
+                    { label: 'Müşteri', value: row.clientName },
+                    { label: 'Tür', value: row.speciesName },
+                    { label: 'Irk', value: row.breed },
+                    { label: 'Renk', value: known(row.colorName) ? row.colorName : null },
+                    { label: 'Kilo', value: known(row.weight) ? `${row.weight} kg` : null }
+                ],
+                detailLink: ['/panel/pets', row.id],
+                actions: row.clientId ? [...actions, { label: 'Müşteri kartı', link: ['/panel/clients', row.clientId] }] : actions
+            };
+        })
+    );
 
     ngOnInit(): void {
         const restored = this.list.restore();

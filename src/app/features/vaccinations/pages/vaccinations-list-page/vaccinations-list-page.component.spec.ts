@@ -145,10 +145,10 @@ describe('VaccinationsListPageComponent — satırda Düzenle', () => {
     /** Düzenleme rotası aşı kataloğunu da okur; rota koruması VaccineDefinitions.Read ister. */
     const EDIT_CLAIMS = [VACCINATIONS_UPDATE_CLAIM, VACCINE_DEFINITIONS_READ_CLAIM];
 
-    it("Vaccinations.Update ve VaccineDefinitions.Read varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", () => {
+    it("Vaccinations.Update ve VaccineDefinitions.Read varsa tabloda Detay'dan hemen sonra düzenleme sayfasına gider", () => {
         const edits = rowEditActions(create(EDIT_CLAIMS));
 
-        expect(edits.length, 'tablo + mobil kart').toBe(2);
+        expect(edits.length, 'tablo; telefonda eylem satır açılınca').toBe(1);
 
         for (const edit of edits) {
             expect(edit.getAttribute('href')).toBe('/panel/vaccinations/v1/edit');
@@ -165,7 +165,7 @@ describe('VaccinationsListPageComponent — satırda Düzenle', () => {
         TestBed.resetTestingModule();
         const readOnly = rowEditActions(create(EDIT_CLAIMS, true));
 
-        expect(readOnly.length).toBe(2);
+        expect(readOnly.length).toBe(1);
         expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBe(true);
     });
 });

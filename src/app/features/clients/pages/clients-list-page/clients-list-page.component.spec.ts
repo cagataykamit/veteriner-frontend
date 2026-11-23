@@ -133,7 +133,7 @@ describe('ClientsListPageComponent — tek başlık', () => {
     });
 });
 
-/** Satır eylemi (ADR-026): "Detay" yazısı yerine göz simgesi; masaüstü tablo ve mobil kartta aynı ortak bileşen. */
+/** Satır eylemi (ADR-026): "Detay" yazısı yerine göz simgesi; masaüstü tabloda aynı ortak bileşen. */
 describe('ClientsListPageComponent — satır eylemleri', () => {
     let fixture: ComponentFixture<ClientsListPageComponent>;
 
@@ -161,7 +161,7 @@ describe('ClientsListPageComponent — satır eylemleri', () => {
         const details = Array.from(el.querySelectorAll<HTMLAnchorElement>('app-row-action-button a[aria-label="Detay"]'));
 
         expect(el.textContent).not.toContain('Detay');
-        expect(details.length, 'tablo + mobil kart').toBe(2);
+        expect(details.length, 'tablo; telefonda eylem satır açılınca').toBe(1);
 
         for (const link of details) {
             expect(link.getAttribute('href')).toBe('/panel/clients/c1');
@@ -200,10 +200,10 @@ describe('ClientsListPageComponent — satırda Düzenle', () => {
 
     afterEach(() => sessionStorage.clear());
 
-    it("Clients.Update varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", async () => {
+    it("Clients.Update varsa tabloda Detay'dan hemen sonra düzenleme sayfasına gider", async () => {
         const edits = rowEditActions(await create([CLIENTS_UPDATE_CLAIM]));
 
-        expect(edits.length, 'tablo + mobil kart').toBe(2);
+        expect(edits.length, 'tablo; telefonda eylem satır açılınca').toBe(1);
 
         for (const edit of edits) {
             expect(edit.getAttribute('href')).toBe('/panel/clients/c1/edit');
@@ -219,7 +219,7 @@ describe('ClientsListPageComponent — satırda Düzenle', () => {
     it('salt okunur kiracıda Düzenle pasif düğmedir, bağlantı değildir', async () => {
         const edits = rowEditActions(await create([CLIENTS_UPDATE_CLAIM], true));
 
-        expect(edits.length).toBe(2);
+        expect(edits.length).toBe(1);
 
         for (const edit of edits) {
             expect(edit.tagName).toBe('BUTTON');

@@ -79,6 +79,20 @@ describe('ChargesListPageComponent', () => {
         expect(fixture.nativeElement.textContent).toContain('Ücret kaydedildi.');
     });
 
+    it('G-04 telefon satırı: gün başlıklı listede saat, müşteri · hasta, kalan; açılınca yazılı eylemler, boş alan yok', async () => {
+        claims = new Set(['Charges.Read', 'Charges.Correct', 'Payments.Create']);
+        await setup();
+        const root = fixture.nativeElement as HTMLElement;
+        const [p] = fixture.componentInstance.phoneItems();
+
+        expect(root.querySelector('app-phone-list')?.className).toContain('sm:hidden');
+        expect([p.at, p.title, p.titleNote, p.sub, p.amount]).toEqual([row.createdAtUtc, 'Ali Veli', 'Pamuk', 'Genel muayene · 2 × ₺375,50', 751]);
+        expect(p.status).toEqual({ label: 'Kalan ₺551,00', severity: 'warn' });
+        expect(p.actions?.map((a) => a.label)).toEqual(['Ödeme al', 'Düzelt', 'İptal et', 'Müşteri kartı']);
+        expect(p.fields.find((x) => x.label === 'e-Belge')?.value).toBeNull();
+        expect(root.querySelector('[data-testid="phone-list-day"]')?.textContent).toContain('10 Ekim 2026');
+    });
+
     it('satırı TRY biçimiyle gösterir; miktar × birim fiyat açıklamanın altında (G-01)', async () => {
         await setup();
         const text = fixture.nativeElement.textContent as string;

@@ -22,6 +22,7 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppPhoneListComponent, type PhoneListAction, type PhoneListItem } from '@/app/shared/ui/phone-list/app-phone-list.component';
 import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -30,7 +31,8 @@ import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { HbsStatusBadgeComponent } from '@/app/entities/hbs/components/hbs-status-badge.component';
 import type { HbsEntryStatus } from '@/app/entities/hbs/models/hbs.model';
-import { HBS_STATUS_FILTER_OPTIONS, parseHbsStatus } from '@/app/entities/hbs/utils/hbs-status.utils';
+import { HBS_STATUS_FILTER_OPTIONS, HBS_STATUS_LABEL, parseHbsStatus } from '@/app/entities/hbs/utils/hbs-status.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /** Oturumda saklanan süzgeçler; sayfa konumunu `ListPageState` ekler. */
@@ -60,6 +62,7 @@ const RECEIVING_CARE_ONLY = 'true';
         InputTextModule,
         SelectModule,
         AppListHeaderComponent,
+        AppPhoneListComponent,
         AppListFiltersComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
@@ -229,52 +232,8 @@ const RECEIVING_CARE_ONLY = 'true';
                             </p-table>
                         </div>
 
-                        <div class="lg:hidden space-y-3">
-                            @for (row of displayedRows(); track row.id) {
-                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
-                                    <div class="text-sm text-muted-color mb-3 min-w-0 space-y-1">
-                                        <div><span class="font-medium">Uygulama: </span>{{ row.appliedAtUtc | trDateTime }}</div>
-                                        <div><span class="font-medium">Planlanan uygulama: </span>{{ row.dueAtUtc | trDateTime }}@if (isNextDue(row)) {<span class="text-xs"> (sonraki doz)</span>}</div>
-                                    </div>
-                                    <div class="space-y-2 mb-3 min-w-0">
-                                        <div class="text-sm">
-                                            <span class="text-muted-color font-medium">Müşteri: </span>
-                                            @if (row.clientId) {
-                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{ row.clientName }}</a>
-                                            } @else {
-                                                <span class="break-words">{{ row.clientName }}</span>
-                                            }
-                                        </div>
-                                        <div class="text-sm">
-                                            <span class="text-muted-color font-medium">Hasta: </span>
-                                            @if (row.petId) {
-                                                <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{ row.petName }}</a>
-                                            } @else {
-                                                <span class="break-words">{{ row.petName }}</span>
-                                            }
-                                        </div>
-                                    </div>
-                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 mb-2 min-w-0 break-words">
-                                        {{ row.vaccineName }}
-                                        @if (row.administrationId) {
-                                            <span class="text-xs text-muted-color font-normal"> · Stoktan düştü</span>
-                                        }
-                                    </div>
-                                    <div class="mb-3 flex flex-wrap gap-2">
-                                        <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
-                                        <app-hbs-status-badge [status]="row.hbsStatus" />
-                                    </div>
-                                    <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
-                                        <app-row-action-button action="detail" [link]="['/panel/vaccinations', row.id]" />
-                                        @if (canUpdateVaccination && !ro.mutationBlocked()) {
-                                            <app-row-action-button action="edit" [link]="['/panel/vaccinations', row.id, 'edit']" />
-                                        } @else if (canUpdateVaccination && ro.mutationBlocked()) {
-                                            <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        </div>
+                        <!-- Telefonda ortak gün başlıklı satır listesi (G-04): dokununca dolu alanlar ve yazılı eylemler açılır. -->
+                        <app-phone-list class="lg:hidden" [items]="phoneItems()" />
 
                         <div class="lg:hidden mt-4">
                             <p-paginator
@@ -378,6 +337,31 @@ export class VaccinationsListPageComponent implements OnInit {
 
     readonly displayedRows = computed(() => this.rawItems());
 
+    /** Telefon satırları (G-04): uygulanan aşıda uygulama, planlıda planlanan gün başlıkta; boş alan yazılmaz. */
+    readonly phoneItems = computed<PhoneListItem[]>(() =>
+        this.displayedRows().map((row) => {
+            const at = row.appliedAtUtc ?? row.dueAtUtc;
+            const actions: PhoneListAction[] = this.canUpdateVaccination && !this.ro.mutationBlocked() ? [{ label: 'Düzenle', icon: 'pi pi-pencil', link: ['/panel/vaccinations', row.id, 'edit'] }] : [];
+
+            return {
+                id: row.id,
+                at,
+                title: row.petName,
+                titleNote: row.clientName || null,
+                sub: [row.vaccineName, row.administrationId ? 'Stoktan düştü' : null].filter(Boolean).join(' · '),
+                status: { label: this.statusLabel(row.status), severity: this.statusSeverity(row.status) },
+                fields: [
+                    { label: 'Aşı', value: row.vaccineName },
+                    { label: 'Müşteri', value: row.clientName },
+                    { label: 'Uygulama', value: row.appliedAtUtc ? formatUtcIsoAsLocalDateTimeDisplay(row.appliedAtUtc) : null },
+                    { label: this.isNextDue(row) ? 'Sonraki doz' : 'Planlanan', value: row.dueAtUtc ? formatUtcIsoAsLocalDateTimeDisplay(row.dueAtUtc) : null },
+                    { label: 'HBS', value: row.hbsStatus ? HBS_STATUS_LABEL[row.hbsStatus] : null }
+                ],
+                detailLink: ['/panel/vaccinations', row.id],
+                actions
+            };
+        })
+    );
     readonly statusLabel = vaccinationStatusLabel;
 
     /** Uygulanmış aşının vadesi sonraki dozdur (gecikmiş listesinde planlı aşıyla birlikte görünür; kural backend `VaccinationDueRule`). */

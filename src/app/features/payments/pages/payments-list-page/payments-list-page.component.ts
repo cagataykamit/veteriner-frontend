@@ -22,8 +22,9 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppPhoneListComponent, type PhoneListAction, type PhoneListItem } from '@/app/shared/ui/phone-list/app-phone-list.component';
 import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
-import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.utils';
+import { formatUtcIsoAsLocalDateTimeDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
@@ -55,6 +56,7 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
         InputTextModule,
         SelectModule,
         AppListHeaderComponent,
+        AppPhoneListComponent,
         AppListFiltersComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
@@ -181,48 +183,8 @@ const PAYMENTS_LIST_STATE_KEY = 'panel:payments:listState';
                             </p-table>
                         </div>
 
-                        <div class="lg:hidden space-y-3">
-                            @for (row of displayedRows(); track row.id) {
-                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
-                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
-                                        {{ formatPaidAtUtc(row.paidAtUtc) }}
-                                    </div>
-                                    <div class="space-y-2 mb-3 min-w-0">
-                                        <div class="text-sm">
-                                            <span class="text-muted-color font-medium">Müşteri: </span>
-                                            @if (row.clientId) {
-                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{ row.clientName }}</a>
-                                            } @else {
-                                                <span class="break-words">{{ row.clientName }}</span>
-                                            }
-                                        </div>
-                                        <div class="text-sm">
-                                            <span class="text-muted-color font-medium">Hasta: </span>
-                                            @if (row.petId) {
-                                                <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{ row.petName }}</a>
-                                            } @else {
-                                                <span class="break-words">{{ row.petName }}</span>
-                                            }
-                                        </div>
-                                    </div>
-                                    <div class="text-sm font-medium mb-2 min-w-0 break-words">
-                                        {{ row.amount | money: row.currency || 'TRY' }}
-                                    </div>
-                                    <div class="text-sm text-muted-color mb-3 min-w-0"><span class="font-medium">Yöntem: </span>{{ methodLabel(row.method) }}@if (row.cashRegisterName) {<span> · <span class="font-medium">Kasa: </span>{{ row.cashRegisterName }}</span>}</div>
-                                    <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
-                                        <app-row-action-button action="detail" [link]="['/panel/payments', row.id]" />
-                                        @if (canUpdatePayment && !ro.mutationBlocked()) {
-                                            <app-row-action-button action="edit" [link]="['/panel/payments', row.id, 'edit']" />
-                                        } @else if (canUpdatePayment && ro.mutationBlocked()) {
-                                            <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
-                                        }
-                                        @if (canVoid && !ro.mutationBlocked()) {
-                                            <app-row-action-button action="void" (pressed)="openVoid(row)" />
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        </div>
+                        <!-- Telefonda ortak gün başlıklı satır listesi (G-04): dokununca dolu alanlar ve yazılı eylemler açılır. -->
+                        <app-phone-list class="lg:hidden" [items]="phoneItems()" [dayTotals]="true" [continuesBefore]="first() > 0" [continuesAfter]="first() + displayedRows().length < totalItems()" />
 
                         <div class="lg:hidden mt-4">
                             <p-paginator
@@ -343,6 +305,39 @@ export class PaymentsListPageComponent implements OnInit {
 
     readonly displayedRows = computed(() => this.rawItems());
 
+    /** Telefon satırları (G-04): gün başlığında günün tahsilat toplamı; boş alan yazılmaz. */
+    readonly phoneItems = computed<PhoneListItem[]>(() =>
+        this.displayedRows().map((row) => {
+            const currency = row.currency || 'TRY';
+            const actions: PhoneListAction[] = [];
+
+            if (this.canUpdatePayment && !this.ro.mutationBlocked()) {
+                actions.push({ label: 'Düzenle', icon: 'pi pi-pencil', link: ['/panel/payments', row.id, 'edit'] });
+            }
+
+            if (this.canVoid && !this.ro.mutationBlocked()) {
+                actions.push({ label: 'İptal et', icon: 'pi pi-ban', danger: true, run: () => this.openVoid(row) });
+            }
+
+            return {
+                id: row.id,
+                at: row.paidAtUtc,
+                lead: formatUtcIsoAsLocalTimeDisplay(row.paidAtUtc),
+                title: row.clientName,
+                titleNote: row.petName || null,
+                sub: [paymentMethodLabel(row.method), row.cashRegisterName].filter(Boolean).join(' · '),
+                amount: row.amount,
+                fields: [
+                    { label: 'Hasta', value: row.petName },
+                    { label: 'Yöntem', value: paymentMethodLabel(row.method) },
+                    { label: 'Kasa', value: row.cashRegisterName },
+                    { label: 'Tutar', value: formatMoney(row.amount, currency) }
+                ],
+                detailLink: ['/panel/payments', row.id],
+                actions
+            };
+        })
+    );
     readonly formatPaidAtUtc = (v: string | null) => formatUtcIsoAsLocalDateTimeDisplay(v);
     readonly methodLabel = paymentMethodLabel;
 
