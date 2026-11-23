@@ -68,10 +68,11 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                             <ng-template #body let-b>
                                 <tr [class.opacity-70]="b.isExpired">
                                     <td class="break-words">{{ b.lotNumber }}</td>
-                                    <td class="whitespace-nowrap">
-                                        {{ b.expiryText }}
+                                    <!-- Sabit sütun genişliğinde rozet tarihin altına iner; yan sütundaki "Kalan" üstüne binmez (S-04). -->
+                                    <td>
+                                        <span class="whitespace-nowrap">{{ b.expiryText }}</span>
                                         @if (b.expiryBadgeLabel) {
-                                            <app-status-tag [label]="b.expiryBadgeLabel" [severity]="b.expiryBadgeSeverity" />
+                                            <app-status-tag class="block mt-1" [label]="b.expiryBadgeLabel" [severity]="b.expiryBadgeSeverity" />
                                         }
                                     </td>
                                     <td class="text-right whitespace-nowrap tabular-nums">{{ b.remainingText }} {{ b.unit }}</td>
