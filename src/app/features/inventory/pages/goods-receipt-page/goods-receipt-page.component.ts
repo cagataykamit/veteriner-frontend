@@ -595,7 +595,8 @@ export class GoodsReceiptPageComponent implements OnInit, HasUnsavedChanges {
                   .filter(Boolean)
                   .join(' · ')
             : 'Dokunup ürün seçin';
-        const missing = line.hasError('lotRequired') || line.hasError('expiryRequired') ? 'Seri/lot ve SKT zorunlu' : null;
+        const missing =
+            product && line.hasError('productMissing') ? 'Listeden bir ürün seçin' : line.hasError('lotRequired') || line.hasError('expiryRequired') ? 'Seri/lot ve SKT zorunlu' : null;
 
         return { title, detail, problem: this.lineErrors()[index] ?? missing ?? this.rowNotes(line, index)?.errors[0] ?? null };
     }
