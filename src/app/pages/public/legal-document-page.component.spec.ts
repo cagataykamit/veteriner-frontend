@@ -8,13 +8,18 @@ import { Title } from '@angular/platform-browser';
 import { appRoutes } from '@/app.routes';
 import { API_BASE_URL } from '@/app/core/api/api-base-url.token';
 import { LegalDocumentPageComponent } from './legal-document-page.component';
+import { VETINITY_CONTACT_EMAIL, VETINITY_LEGAL_ENTITY_NAME } from '@/app/core/support/vetinity-support.constants';
 import {
     DATA_PROCESSING_AGREEMENT_DOCUMENT,
     LEGAL_DRAFT_NOTICE,
+    type LegalDocumentDef,
+    legalParagraphParts,
     legalVersionLine,
     PRIVACY_POLICY_DOCUMENT,
     TERMS_OF_USE_DOCUMENT
 } from '@/app/entities/legal-document/utils/legal-documents.utils';
+import { PRICING_PLAN_DEFS, PRICING_TRIAL_DAYS } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { PUBLIC_CONTACT_EMAIL } from '@/app/features/public/utils/public-contact-content.utils';
 
 const VERSIONS_URL = 'http://api.test/api/v1/public/legal-documents';
 const VERSIONS = [
@@ -93,10 +98,49 @@ describe('LegalDocumentPageComponent', () => {
         expect(text('.legal-version-line')).toBe(TERMS_OF_USE_DOCUMENT.statusLine);
     });
 
-    it('köşeli parantezli alanlar olduğu gibi kalır', async () => {
-        await harness.navigateByUrl(PRIVACY_POLICY_DOCUMENT.path);
+    /** Belgenin okunan tüm metni: giriş, başlıklar, paragraflar ve maddeler. */
+    const documentText = (doc: LegalDocumentDef): string =>
+        [
+            doc.title,
+            doc.subtitle,
+            doc.statusLine,
+            ...(doc.intro ?? []).flatMap((p) => legalParagraphParts(p).map((part) => part.text)),
+            ...doc.sections.flatMap((s) => [s.heading, ...(s.paragraphs ?? []).flatMap((p) => legalParagraphParts(p).map((part) => part.text)), ...(s.items ?? [])])
+        ].join('\n');
 
-        expect(root().textContent).toContain('[Şirket unvanı], [adres]');
+    for (const doc of [PRIVACY_POLICY_DOCUMENT, TERMS_OF_USE_DOCUMENT, DATA_PROCESSING_AGREEMENT_DOCUMENT]) {
+        it(`${doc.path}: metinlerde köşeli parantezli yer tutucu kalmadı; taslak/hukukçu ibaresi yok`, async () => {
+            const content = documentText(doc);
+
+            expect(content).not.toMatch(/\[[^\]]*\]/);
+            expect(content).not.toMatch(/taslak metin|hukukçu/i);
+            expect(doc.statusLine).toBe('Son güncelleme: 2026-11-23');
+
+            await harness.navigateByUrl(doc.path);
+            flushVersions();
+
+            expect(root().querySelector('article')?.textContent ?? '').not.toMatch(/\[[^\]]*\]/);
+        });
+    }
+
+    it('iletişim/KVKK başvuru adresi tanıtımdaki iletişim e-postasıdır; deneme süresi paketlerle aynıdır', () => {
+        expect(PUBLIC_CONTACT_EMAIL).toBe(VETINITY_CONTACT_EMAIL);
+
+        const privacy = documentText(PRIVACY_POLICY_DOCUMENT);
+
+        expect(privacy).toContain(`İletişim: ${VETINITY_CONTACT_EMAIL}.`);
+        expect(privacy).toContain(`${VETINITY_CONTACT_EMAIL} adresine başvurabilirsiniz`);
+        expect(privacy).toContain('yalnız zorunlu çerezler kullanılır');
+        expect(documentText(TERMS_OF_USE_DOCUMENT)).toContain(`Deneme süresi ${PRICING_TRIAL_DAYS} gündür`);
+        expect(PRICING_PLAN_DEFS.every((p) => p.trialDays === PRICING_TRIAL_DAYS)).toBe(true);
+    });
+
+    it('unvan girilmeden taraf yalnız "Vetinity" yazılır; MERSİS satırı yok', () => {
+        expect(VETINITY_LEGAL_ENTITY_NAME).toBeNull();
+        expect(documentText(PRIVACY_POLICY_DOCUMENT)).toContain('Vetinity, 6698 sayılı Kanun kapsamında veri sorumlusudur.');
+        expect(documentText(TERMS_OF_USE_DOCUMENT)).toContain("Bu şartlar, Vetinity ile Vetinity'yi kullanan");
+        expect(documentText(DATA_PROCESSING_AGREEMENT_DOCUMENT)).toContain('Veri işleyen: Vetinity.');
+        expect(documentText(PRIVACY_POLICY_DOCUMENT)).not.toContain('MERSİS');
     });
 
     it('kullanım şartları gizlilik politikasına ve veri işleme sözleşmesine bağlantı verir', async () => {
