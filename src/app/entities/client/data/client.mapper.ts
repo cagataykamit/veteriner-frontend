@@ -283,6 +283,7 @@ export function mapClientDetailDtoToVm(dto: ClientDetailDto): ClientDetailVm {
         invoicing: mapClientInvoicingSummaryDtoToVm(dto.invoicing),
         notes: trimmedOrNull(dto.notes),
         deletedAtUtc: dto.deletedAtUtc ?? null,
+        deletedByUserName: dto.deletedByUserName?.trim() || null,
         ...mapClientKvkkConsentDtoToVm(dto)
     };
 }

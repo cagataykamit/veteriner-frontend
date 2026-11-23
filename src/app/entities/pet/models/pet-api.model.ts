@@ -82,6 +82,8 @@ export interface PetDetailDto {
     rowVersion?: string | null;
     /** Doluysa hasta silinmiş (ADR-054); yazma 409 `Pets.Deleted`. */
     deletedAtUtc?: string | null;
+    /** Silen kullanıcının görünen adı ("Silinenler" listesiyle aynı çözüm); aktif kayıtta ya da bulunamazsa `null`. */
+    deletedByUserName?: string | null;
     /** Müşterisiyle birlikte silindi; müşteri geri yüklenince hasta da gelir. */
     deletedWithClient?: boolean | null;
 }

@@ -10,7 +10,7 @@ describe('DeletedRecordBannerComponent (ADR-054)', () => {
     let fixture: ComponentFixture<DeletedRecordBannerComponent>;
     let restore: Mock;
 
-    const create = (inputs: Partial<{ kind: 'client' | 'pet'; canRestore: boolean; deletedWithClient: boolean }>) => {
+    const create = (inputs: Partial<{ kind: 'client' | 'pet'; canRestore: boolean; deletedWithClient: boolean; deletedByName: string | null }>) => {
         TestBed.configureTestingModule({
             imports: [DeletedRecordBannerComponent],
             providers: [provideRouter([]), { provide: RecordDeletionService, useValue: { restore } }]
@@ -19,6 +19,7 @@ describe('DeletedRecordBannerComponent (ADR-054)', () => {
         fixture.componentRef.setInput('kind', inputs.kind ?? 'client');
         fixture.componentRef.setInput('recordId', 'r1');
         fixture.componentRef.setInput('deletedAtUtc', '2026-11-23T10:00:00Z');
+        fixture.componentRef.setInput('deletedByName', inputs.deletedByName ?? null);
         fixture.componentRef.setInput('canRestore', inputs.canRestore ?? true);
         fixture.componentRef.setInput('deletedWithClient', inputs.deletedWithClient ?? false);
         fixture.componentRef.setInput('clientId', 'c1');
@@ -45,6 +46,16 @@ describe('DeletedRecordBannerComponent (ADR-054)', () => {
 
         expect(restore).toHaveBeenCalledWith('client', 'r1');
         expect(restored).toHaveBeenCalledTimes(1);
+    });
+
+    it('"Bu kayıt silindi · tarih · kim"; silen bilinmiyorsa yalnız tarih', () => {
+        create({ deletedByName: 'Dr. Ali Veli' });
+        expect(q('deleted-record-when')?.textContent?.replace(/\s+/g, ' ').trim()).toMatch(/^Bu kayıt silindi · 23\.11\.2026 \d{2}:\d{2} · Dr\. Ali Veli$/);
+
+        TestBed.resetTestingModule();
+        create({});
+        expect(q('deleted-record-by')).toBeNull();
+        expect(q('deleted-record-when')?.textContent).toContain('Bu kayıt silindi · 23.11.2026');
     });
 
     it('izin yoksa "Geri yükle" yok', () => {

@@ -35,6 +35,7 @@ const client: ClientDetailVm = {
     invoicing: null,
     notes: null,
     deletedAtUtc: null,
+    deletedByUserName: null,
     rowVersion: 'rv1'
 };
 
@@ -272,7 +273,7 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
             cardClient = { ...client, deletedAtUtc: '2026-11-23T10:00:00Z' };
             create();
 
-            expect(el().querySelector('[data-testid="deleted-record-banner"]')?.textContent).toContain('tarihinde silindi');
+            expect(el().querySelector('[data-testid="deleted-record-banner"]')?.textContent).toContain('Bu kayıt silindi');
             expect(el().querySelector('[data-testid="deleted-record-restore"]')).not.toBeNull();
             expect(el().querySelector('a[href="/panel/clients/c1/edit"]')).toBeNull();
             expect(el().querySelector('[data-testid="client-more-actions"]')).toBeNull();

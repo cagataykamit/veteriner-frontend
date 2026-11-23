@@ -22,6 +22,7 @@ const client = (over: Partial<ClientDetailVm> = {}): ClientDetailVm => ({
     rowVersion: 'rv1',
     notes: 'Sabah arar.\nKedi çantayla gelir.',
     deletedAtUtc: null,
+    deletedByUserName: null,
     ...over
 });
 

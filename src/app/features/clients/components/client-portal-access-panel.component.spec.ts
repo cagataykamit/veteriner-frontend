@@ -25,6 +25,7 @@ const client: ClientDetailVm = {
     invoicing: null,
     notes: null,
     deletedAtUtc: null,
+    deletedByUserName: null,
     rowVersion: 'rv1'
 };
 

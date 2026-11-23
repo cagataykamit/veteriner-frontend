@@ -90,6 +90,7 @@ import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
                     kind="pet"
                     [recordId]="p.id"
                     [deletedAtUtc]="deletedAt"
+                    [deletedByName]="p.deletedByUserName"
                     [deletedWithClient]="p.deletedWithClient"
                     [clientId]="p.ownerId"
                     [canRestore]="canDeletePet && !ro.mutationBlocked()"

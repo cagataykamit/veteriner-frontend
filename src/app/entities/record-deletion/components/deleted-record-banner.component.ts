@@ -8,7 +8,7 @@ import { type DeleteBlockLink, restoreErrorLink } from '@/app/entities/record-de
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 
 /**
- * Silinmiş kaydın kartı kimlikle açılınca üstteki uyarı bandı (ADR-054 K2): silinme anı ve "Geri yükle" (izin varsa).
+ * Silinmiş kaydın kartı kimlikle açılınca üstteki uyarı bandı (ADR-054 K2): "Bu kayıt silindi · tarih · kim" ve "Geri yükle" (izin varsa).
  * Müşterisiyle birlikte silinen hasta tek başına geri yüklenmez; bant müşteri kartına yönlendirir (K6). Geri yükleme hatasında
  * sunucu metni ve gerekirse bağlantı (müşterisi silinmiş hasta → müşteri kartı, çakışan müşteri → o kart) gösterilir.
  */
@@ -23,7 +23,10 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
             <i class="pi pi-trash text-amber-700 dark:text-amber-300" aria-hidden="true"></i>
             <div class="min-w-0 flex-1 basis-64 text-sm">
                 <p class="m-0 font-semibold text-surface-900 dark:text-surface-0" data-testid="deleted-record-when">
-                    Bu kayıt {{ deletedAtUtc() | trDateTime }} tarihinde silindi.
+                    Bu kayıt silindi · {{ deletedAtUtc() | trDateTime }}
+                    @if (deletedByName(); as by) {
+                        · <span data-testid="deleted-record-by">{{ by }}</span>
+                    }
                 </p>
                 <p class="m-0 mt-0.5 text-muted-color">
                     {{ deletedWithClient() ? 'Müşterisiyle birlikte silindi. ' : '' }}Listelerde ve hatırlatmalarda görünmez; geçmiş kayıtları korunur. Yeni işlem yapılamaz.
@@ -53,6 +56,8 @@ export class DeletedRecordBannerComponent {
     readonly kind = input.required<DeletableRecordKind>();
     readonly recordId = input.required<string>();
     readonly deletedAtUtc = input.required<string>();
+    /** Silen kullanıcının adı; bilinmiyorsa yalnız tarih yazılır. */
+    readonly deletedByName = input<string | null>(null);
     /** `Clients.Delete` / `Pets.Delete` ve yazılabilir kiracı; çağıran belirler. */
     readonly canRestore = input(false);
     readonly deletedWithClient = input(false);

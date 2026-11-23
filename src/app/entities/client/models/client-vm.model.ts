@@ -31,6 +31,8 @@ export interface ClientDetailVm {
     notes: string | null;
     /** Silinme anı (UTC, ADR-054); `null` = aktif. Silinen kart salt okunur açılır. */
     deletedAtUtc: string | null;
+    /** Silen kullanıcının adı; bilinmiyorsa `null` (bant yalnız tarihi yazar). */
+    deletedByUserName: string | null;
 }
 
 /** Müşteri kartındaki "Fatura bilgileri" satırı; TCKN/VKN yalnız maskeli gelir. */

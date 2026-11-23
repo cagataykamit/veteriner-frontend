@@ -54,6 +54,8 @@ export interface ClientDetailDto {
     notes?: string | null;
     /** Doluysa müşteri silinmiş (ADR-054); kart "Silindi" bandıyla açılır, yazma 409 `Clients.Deleted`. */
     deletedAtUtc?: string | null;
+    /** Silen kullanıcının görünen adı ("Silinenler" listesiyle aynı çözüm); aktif kayıtta ya da bulunamazsa `null`. */
+    deletedByUserName?: string | null;
 }
 
 /** Fatura alıcısı türü; `null` = belirtilmemiş. */

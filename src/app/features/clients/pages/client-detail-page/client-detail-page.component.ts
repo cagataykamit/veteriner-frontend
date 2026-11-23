@@ -99,7 +99,7 @@ import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/impor
 
             <!-- Silinen kart (ADR-054): bant ve geri yükleme; düzenleme ve yeni işlem eylemleri çizilmez. -->
             @if (c.deletedAtUtc; as deletedAt) {
-                <app-deleted-record-banner kind="client" [recordId]="c.id" [deletedAtUtc]="deletedAt" [canRestore]="canDeleteClient && !ro.mutationBlocked()" (restored)="reload()" />
+                <app-deleted-record-banner kind="client" [recordId]="c.id" [deletedAtUtc]="deletedAt" [deletedByName]="c.deletedByUserName" [canRestore]="canDeleteClient && !ro.mutationBlocked()" (restored)="reload()" />
             }
 
             <app-client-card-header [client]="c" [balance]="balance()" [pendingCharges]="pendingCharges()" [lastExamination]="lastExamination()" [nextAppointment]="nextAppointment()" [portalChip]="portalChip()">
