@@ -298,12 +298,17 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
         return !!this.activeSearch().trim();
     }
 
+    /** Varsayılan aralıktaki tarih etkin filtre sayılmaz (G-02/G-10): yalnız kullanıcının değiştirdiği tarih. */
     isFromDateActive(): boolean {
-        return !!this.activeFromDate().trim();
+        const from = this.activeFromDate().trim();
+
+        return !!from && from !== this.defaultDates().from;
     }
 
     isToDateActive(): boolean {
-        return !!this.activeToDate().trim();
+        const to = this.activeToDate().trim();
+
+        return !!to && to !== this.defaultDates().to;
     }
 
     isExtraActive(): boolean {
@@ -377,8 +382,17 @@ export class ReportListState<Q extends ReportListQueryBase, R extends ReportList
             return;
         }
 
-        this.toDateInput = localDateYyyyMmDd();
-        this.fromDateInput = this.config.todayOnlyByDefault ? this.toDateInput : defaultReportFromYyyyMmDd();
+        const { from, to } = this.defaultDates();
+
+        this.toDateInput = to;
+        this.fromDateInput = from;
+    }
+
+    /** Raporun varsayılan aralığı (ayın başı ya da bugün – bugün); tek yerde, Temizle ve etkin filtre sayımı buna bakar. */
+    private defaultDates(): { from: string; to: string } {
+        const to = localDateYyyyMmDd();
+
+        return { from: this.config.todayOnlyByDefault ? to : defaultReportFromYyyyMmDd(), to };
     }
 
     private bootstrapReportAfterMyClinics(): void {

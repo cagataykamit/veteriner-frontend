@@ -5,7 +5,7 @@ import { speciesEmoji } from '@/app/shared/utils/species-icon.utils';
 const EM = '—';
 
 /**
- * Kimlik kartındaki "Hasta: 🐈 Pamuk · Kedi   Sahip: Ayşe Yılmaz" satırı (randevu, tedavi, reçete, aşı …).
+ * Kimlik kartındaki "Hasta: 🐱 Pamuk · Kedi   Sahip: Ayşe Yılmaz" satırı (randevu, tedavi, reçete, aşı …).
  * Kimlik varsa bağlantı, yoksa düz ad; ad boşsa "—". Tür adı verilirse simge ve tür yazılır.
  */
 @Component({

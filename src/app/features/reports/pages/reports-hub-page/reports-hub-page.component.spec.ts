@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '@/app/core/auth/auth.service';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
-import { APPOINTMENTS_READ_CLAIM, PAYMENTS_READ_CLAIM, PRESCRIPTIONS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { APPOINTMENTS_READ_CLAIM, PAYMENTS_READ_CLAIM, PRESCRIPTIONS_READ_CLAIM, VISITS_READ_CLAIM } from '@/app/core/auth/operation-claims.constants';
 import type { ReportHubSummaryDto } from '@/app/features/reports/hub/models/report-hub-summary.model';
 import { ReportHubSummaryService } from '@/app/features/reports/hub/services/report-hub-summary.service';
 import { ReportPreferencesService } from '@/app/entities/report-preference/services/report-preferences.service';
@@ -30,6 +30,7 @@ function hubSummary(attention: Partial<ReportHubSummaryDto['attention']> = {}): 
             endOfDayUnchargedVisitCount: null,
             overdueVaccinationCount: null,
             lowStockProductCount: null,
+            overdueAppointmentCount: null,
             ...attention
         }
     };
@@ -125,6 +126,15 @@ describe('ReportsHubPageComponent — tasarım B (ADR-052) ve favoriler (REPORT-
 
         expect(root.querySelector('[data-testid="attention-hbsPrescriptions"]')?.textContent).toContain("4 reçete HBS'e (e-Reçete) girilmemiş");
         expect(root.querySelector('[data-testid="attention-lowStock"]')).toBeNull();
+    });
+
+    it('B-02: gecikmiş randevu bantta görünür ve takvimi Gecikmiş durumuyla açar', () => {
+        claims.add(VISITS_READ_CLAIM);
+        summaryService.get.mockReturnValue(of(hubSummary({ overdueAppointmentCount: 29 })));
+        const row = el(render()).querySelector('[data-testid="attention-overdueAppointments"]');
+
+        expect(row?.textContent).toContain('29 randevu gecikmiş, hâlâ planlı');
+        expect(row?.querySelector('a')?.getAttribute('href')).toBe('/panel/appointments/calendar?view=month&states=Overdue');
     });
 
     it('özet yüklenemezse rapor bağlantıları yine çalışır', () => {

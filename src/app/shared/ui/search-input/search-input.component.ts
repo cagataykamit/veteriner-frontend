@@ -7,6 +7,8 @@ import { InputTextModule } from 'primeng/inputtext';
 export const SEARCH_MIN_LENGTH = 2;
 export const SEARCH_DEBOUNCE_MS = 350;
 
+let nextHintId = 0;
+
 /**
  * Tüm liste ekranlarının ortak arama kutusu (ürün kararı): yazdıkça arar (en az 2 karakter, 350 ms bekleme), Enter anında
  * arar, × temizler ve listeyi geri getirir; "Ara" düğmesi yoktur. Arama sunucu tarafındadır: sayfa `searchRequested` olayında listeyi
@@ -27,6 +29,8 @@ export const SEARCH_DEBOUNCE_MS = 350;
                 autocomplete="off"
                 [attr.id]="inputId() || null"
                 [attr.aria-label]="ariaLabel() || null"
+                [attr.aria-describedby]="hint() ? hintId : null"
+                [attr.title]="hint() || null"
                 [placeholder]="placeholder()"
                 [ngModel]="value()"
                 (ngModelChange)="onType($event)"
@@ -42,17 +46,25 @@ export const SEARCH_DEBOUNCE_MS = 350;
                     <i class="pi pi-times text-xs" aria-hidden="true"></i>
                 </button>
             }
+            @if (hint(); as text) {
+                <span [id]="hintId" class="sr-only">{{ text }}</span>
+            }
         </div>
     `
 })
 export class SearchInputComponent {
     readonly value = model('');
     readonly inputId = input('');
+    /** Kısa yer tutucu (R-06): dar alanda kesilmesin diye hep "Ara…"; neyin arandığı hint'te. */
     readonly placeholder = input('Ara…');
+    /** Hangi alanlarda arandığı ("Not; müşteri, hasta, tür veya ırk"): ipucu (title) ve ekran okuyucu açıklaması. */
+    readonly hint = input('');
     readonly ariaLabel = input('');
     readonly minLength = input(SEARCH_MIN_LENGTH);
     /** Sayfa listeyi yenilemelidir (otomatik, Enter veya temizleme). */
     readonly searchRequested = output<void>();
+
+    protected readonly hintId = `searchHint${++nextHintId}`;
 
     private readonly field = viewChild.required<ElementRef<HTMLInputElement>>('field');
     private readonly typed$ = new Subject<void>();

@@ -25,17 +25,19 @@ import { SiteLogoComponent } from '../../site-parts.component';
                 </nav>
                 <span class="rule" aria-hidden="true"></span>
                 <p class="contact">
-                    @if (v.telHref) {
-                        <a [href]="v.telHref">{{ v.phone }}</a>
-                    }
-                    @if (v.mailHref) {
-                        <a [href]="v.mailHref">{{ v.email }}</a>
+                    @if (!site.onContactPage()) {
+                        @if (v.telHref) {
+                            <a [href]="v.telHref">{{ v.phone }}</a>
+                        }
+                        @if (v.mailHref) {
+                            <a [href]="v.mailHref">{{ v.email }}</a>
+                        }
                     }
                     @for (link of v.social; track link.key) {
                         <a [href]="link.href" target="_blank" rel="noopener">{{ link.label }}</a>
                     }
                 </p>
-                @if (v.address) {
+                @if (v.address && !site.onContactPage()) {
                     <address class="muted">{{ v.address }}, {{ v.location }}</address>
                 }
                 <p class="made muted">© {{ v.siteName }} · Vetinity ile hazırlandı</p>

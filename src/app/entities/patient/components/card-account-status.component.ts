@@ -33,7 +33,7 @@ const INLINE_CLASS = 'm-0 mt-3 pt-3 border-t border-surface-200 dark:border-surf
                                 }
                             }
                             @case ('error') {
-                                <span class="text-orange-600 dark:text-orange-400 text-sm">alınamadı</span>
+                                <span class="text-warn text-sm">alınamadı</span>
                             }
                             @default {
                                 <span class="text-muted-color text-sm">…</span>
@@ -59,7 +59,7 @@ const INLINE_CLASS = 'm-0 mt-3 pt-3 border-t border-surface-200 dark:border-surf
                                 }
                             }
                             @case ('error') {
-                                <span class="text-orange-600 dark:text-orange-400 text-sm">alınamadı</span>
+                                <span class="text-warn text-sm">alınamadı</span>
                             }
                             @default {
                                 <span class="text-muted-color text-sm">…</span>

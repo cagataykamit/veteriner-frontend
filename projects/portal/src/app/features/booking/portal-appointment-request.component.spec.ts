@@ -154,24 +154,34 @@ describe('PortalAppointmentRequestComponent (oturumlu talep)', () => {
         expect(api.createLinkRequest).toHaveBeenCalledWith('link-1', expect.objectContaining({ reasonId: null, note: 'Kaşıntı var' }));
     });
 
-    it('acil durum uyarısı kliniğin biçimli telefonunu ve "Ara" bağlantısını gösterir', async () => {
+    it('acil durum şeridi tek satır: kliniğin biçimli telefonu aranabilir bağlantı (PO-03)', async () => {
         await create();
 
         const call = el.querySelector('[data-testid=booking-urgent] a')!;
 
         expect(call.getAttribute('href')).toBe('tel:02320000000');
         expect(call.getAttribute('aria-label')).toBe('Kliniği ara: +90 232 000 00 00');
-        expect(el.querySelector('[data-testid=booking-urgent] .urgent-number')?.textContent?.trim()).toBe('+90 232 000 00 00');
+        expect(call.textContent?.trim()).toBe('+90 232 000 00 00 ara');
     });
 
-    it('klinik telefonu yoksa acil uyarısında telefon satırı olmaz', async () => {
+    it('klinik neden tanımlamamışsa tek seçenek ("Diğer / emin değilim") seçili gelir (PO-03)', async () => {
+        api.linkPage.mockReturnValue(of({ ...BOOKING_PAGE, reasons: [BOOKING_PAGE.reasons[2]] }));
+        await create();
+
+        const radios = el.querySelectorAll<HTMLInputElement>('input[type=radio][name$="-reason"]');
+
+        expect(radios.length).toBe(1);
+        expect(radios[0].checked).toBe(true);
+        expect(el.textContent).toContain('Kısaca ne için geliyorsunuz?');
+    });
+
+    it('klinik telefonu yoksa acil şeridinde bağlantı olmaz', async () => {
         api.linkPage.mockReturnValue(of({ ...BOOKING_PAGE, clinicPhone: null }));
         await create();
 
-        // Telefon yoksa "telefonla arayın" denmez (H9).
-        expect(el.querySelector('[data-testid=booking-urgent]')?.textContent).not.toContain('telefonla arayın');
+        // Telefon yoksa aranacak numara gösterilmez (H9).
         expect(el.querySelector('[data-testid=booking-urgent]')?.textContent).toContain('acil servisine başvurun');
-        expect(el.querySelector('[data-testid=booking-urgent] .urgent-phone')).toBeNull();
+        expect(el.querySelector('[data-testid=booking-urgent] a')).toBeNull();
     });
 
     it('"Listede yok" seçilince hayvan adı zorunlu ve serbest metinle gönderilir', async () => {

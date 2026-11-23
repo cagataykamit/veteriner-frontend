@@ -19,6 +19,7 @@ export function createProductUpsertFormGroup(fb: FormBuilder) {
         barcode: ['', Validators.maxLength(PRODUCT_BARCODE_MAX)],
         unit: ['', [Validators.required, Validators.maxLength(64)]],
         unitPrice: [null as number | null, [Validators.required, Validators.min(0)]],
+        /** Formda gösterilmez: yalnız TRY (ADR-012); düzenlemede kayıtlı değer korunur. */
         currency: ['TRY', Validators.required],
         description: ['', Validators.maxLength(4000)],
         kind: fb.nonNullable.control<ProductKindApi>('Other'),

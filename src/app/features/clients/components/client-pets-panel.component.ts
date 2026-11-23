@@ -93,7 +93,7 @@ import { AppDetailSeeAllLinkComponent } from '@/app/shared/ui/detail-see-all-lin
                     <app-detail-see-all-link link="/panel/pets" [queryParams]="{ clientId: clientId() }" [itemCount]="okRows().length" />
                 }
                 @case ('error') {
-                    <p class="m-0 text-orange-600 dark:text-orange-400 text-sm" data-testid="pets-failed"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Hasta listesi alınamadı.</p>
+                    <p class="m-0 text-warn text-sm" data-testid="pets-failed"><i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Hasta listesi alınamadı.</p>
                 }
                 @case ('loading') {
                     <p class="m-0 text-muted-color text-sm">Yükleniyor…</p>

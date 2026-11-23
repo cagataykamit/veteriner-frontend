@@ -71,7 +71,7 @@ interface OverdueVaccinations {
                                 }
                             }
                             @case ('error') {
-                                <span class="text-orange-600 dark:text-orange-400">Alınamadı</span>
+                                <span class="text-warn">Alınamadı</span>
                             }
                             @default {
                                 <span class="text-muted-color">…</span>
@@ -105,7 +105,7 @@ interface OverdueVaccinations {
                                     }
                                 }
                                 @case ('error') {
-                                    <span class="text-orange-600 dark:text-orange-400">Alınamadı</span>
+                                    <span class="text-warn">Alınamadı</span>
                                 }
                                 @default {
                                     <span class="text-muted-color">…</span>
@@ -131,7 +131,7 @@ interface OverdueVaccinations {
                                     }
                                 }
                                 @case ('error') {
-                                    <span class="text-orange-600 dark:text-orange-400 block">Tedaviler alınamadı</span>
+                                    <span class="text-warn block">Tedaviler alınamadı</span>
                                 }
                             }
                         }
@@ -162,7 +162,7 @@ interface OverdueVaccinations {
                                     }
                                 }
                                 @case ('error') {
-                                    <span class="text-orange-600 dark:text-orange-400">Alınamadı</span>
+                                    <span class="text-warn">Alınamadı</span>
                                 }
                                 @default {
                                     <span class="text-muted-color">…</span>

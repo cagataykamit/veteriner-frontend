@@ -8,7 +8,7 @@ import { CashMovementFormsComponent } from './cash-movement-forms.component';
 const REGISTER = { id: 'r1', clinicId: 'c1', code: 'ANA', name: 'Ana kasa', isMain: true, isActive: true };
 
 describe('CashMovementFormsComponent — tek tür önden seçili (H1)', () => {
-    const create = (categories: { id: string; name: string; isActive: boolean }[]) => {
+    const create = (categories: { id: string; name: string; isActive: boolean }[], inputs: Record<string, string> = {}) => {
         const createMovement = vi.fn().mockReturnValue(of({}));
 
         TestBed.configureTestingModule({
@@ -24,9 +24,14 @@ describe('CashMovementFormsComponent — tek tür önden seçili (H1)', () => {
         fixture.componentRef.setInput('clinicId', 'c1');
         fixture.componentRef.setInput('registers', [REGISTER]);
         fixture.componentRef.setInput('categories', categories);
+
+        for (const [k, v] of Object.entries(inputs)) {
+            fixture.componentRef.setInput(k, v);
+        }
+
         fixture.detectChanges();
 
-        return { cmp: fixture.componentInstance, createMovement };
+        return { cmp: fixture.componentInstance, createMovement, fixture };
     };
 
     it('tek aktif tür varsa seçili gelir ve gönderilir', () => {
@@ -36,9 +41,22 @@ describe('CashMovementFormsComponent — tek tür önden seçili (H1)', () => {
         ]);
 
         expect(cmp.effectiveCategoryId()).toBe('k1');
+        const saved = vi.fn();
+
+        cmp.saved.subscribe(saved);
         cmp.amount.set(100);
         cmp.submit();
-        expect(createMovement).toHaveBeenCalledWith(expect.objectContaining({ categoryId: 'k1' }));
+        expect(createMovement).toHaveBeenCalledWith(expect.objectContaining({ categoryId: 'k1', direction: 'Out' }));
+        expect(saved).toHaveBeenCalledWith('Para çıkışı kaydedildi.');
+    });
+
+    it('yön açan düğmeden gelir (Para girişi); pencerede yön ve tür seçici yok (S-05)', () => {
+        const { cmp, createMovement, fixture } = create([{ id: 'k1', name: 'Kira', isActive: true }], { direction: 'In' });
+
+        expect((fixture.nativeElement as HTMLElement).querySelector('p-selectbutton')).toBeNull();
+        cmp.amount.set(50);
+        cmp.submit();
+        expect(createMovement).toHaveBeenCalledWith(expect.objectContaining({ direction: 'In', amount: 50 }));
     });
 
     it('birden çok tür varsa seçim kullanıcıya kalır', () => {

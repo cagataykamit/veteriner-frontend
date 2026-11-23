@@ -106,10 +106,10 @@ export interface VaccinationSavedEvent {
             <form appFormSubmit [formGroup]="form" (ngSubmit)="onSubmit()">
                 <app-form-error-summary />
                 <div class="grid grid-cols-12 gap-4">
-                    <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="clientId" [error]="apiFieldErrors().clientId ? apiFieldErrors().clientId : form.controls.clientId.invalid && form.controls.clientId.touched ? 'Zorunlu alan.' : null" [required]="true">
+                    <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="clientId" [error]="apiFieldErrors().clientId ? apiFieldErrors().clientId : form.controls.clientId.invalid && form.controls.clientId.touched ? 'Müşteri seçimi zorunludur.' : null" [required]="true">
                         <app-client-search inputId="clientId" formControlName="clientId" />
                     </app-form-field>
-                    <app-form-field class="col-span-12 md:col-span-6" label="Hasta" fieldId="petId" [error]="apiFieldErrors().petId ? apiFieldErrors().petId : form.controls.petId.invalid && form.controls.petId.touched ? 'Zorunlu alan.' : null" [required]="true">
+                    <app-form-field class="col-span-12 md:col-span-6" label="Hasta" fieldId="petId" [error]="apiFieldErrors().petId ? apiFieldErrors().petId : form.controls.petId.invalid && form.controls.petId.touched ? 'Hasta seçimi zorunludur.' : null" [required]="true">
                         <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                     </app-form-field>
                     <div class="col-span-12 md:col-span-6">
@@ -137,7 +137,7 @@ export interface VaccinationSavedEvent {
                             <small class="text-danger">{{ copy.vaccinationVaccineDefinitionRequired }}</small>
                         }
                     </div>
-                    <app-form-field class="col-span-12 md:col-span-6" label="Durum" fieldId="status" [error]="apiFieldErrors().status ? apiFieldErrors().status : form.controls.status.invalid && form.controls.status.touched ? 'Zorunlu alan.' : null" [required]="true">
+                    <app-form-field class="col-span-12 md:col-span-6" label="Durum" fieldId="status" [error]="apiFieldErrors().status ? apiFieldErrors().status : form.controls.status.invalid && form.controls.status.touched ? 'Durum seçimi zorunludur.' : null" [required]="true">
                         <p-select inputId="status" formControlName="status" [options]="statusOptions" optionLabel="label" optionValue="value" placeholder="Durum seçin" class="w-full" />
                     </app-form-field>
                     @if (statusNum() === 1) {

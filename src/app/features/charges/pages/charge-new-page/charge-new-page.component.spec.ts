@@ -267,6 +267,17 @@ describe('ChargeNewPageComponent', () => {
         expect(cmp.form.controls.clientId.value).toBe('cl1');
     });
 
+    it('müşteri seçilmeden geliş ve muayene alanları kapalı, "Önce müşteri seçin" der; müşteri seçilince açılır (G-12)', async () => {
+        await setup();
+        expect(cmp.form.controls.visitId.disabled).toBe(true);
+        expect(cmp.form.controls.examinationId.disabled).toBe(true);
+        expect(fixture.nativeElement.textContent).toContain('Önce müşteri seçin');
+        expect(fixture.nativeElement.textContent).not.toContain('bugün geliş yok');
+        fill();
+        expect(cmp.form.controls.visitId.enabled).toBe(true);
+        expect(cmp.form.controls.examinationId.enabled).toBe(true);
+    });
+
     it('geliş seçenekleri: yalnız seçili müşterinin, yanlış işaretlenmemiş gelişleri; hayvan seçilince daralır', async () => {
         await setup();
         fill();

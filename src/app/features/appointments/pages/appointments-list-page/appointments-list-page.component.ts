@@ -28,6 +28,8 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppPhoneListComponent, type PhoneListAction, type PhoneListItem } from '@/app/shared/ui/phone-list/app-phone-list.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { formatUtcIsoAsLocalDateDisplay, formatUtcIsoAsLocalTimeDisplay } from '@/app/shared/utils/date.utils';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
@@ -63,6 +65,8 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
         SelectModule,
         SelectButtonModule,
         AppListHeaderComponent,
+        AppPhoneListComponent,
+        AppListFiltersComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
         AppContextFilterChipComponent,
@@ -85,55 +89,54 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
         <div class="card">
             <div class="flex flex-col gap-4">
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                    <app-list-header class="mb-3" title="Randevular" [count]="totalItems()">
+                    <app-list-header title="Randevular" [count]="totalItems()">
                         <app-filter-field label="Arama" labelFor="apptSearch" [active]="isSearchActive()" width="grow">
-                            <app-search-input inputId="apptSearch" placeholder="Not; müşteri, hasta, tür veya ırk metni…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                            <app-search-input inputId="apptSearch" hint="Not; müşteri, hasta, tür veya ırk" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
-                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canCreateAppointment && !ro.mutationBlocked()) {
                             <a actions routerLink="/panel/appointments/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni randevu</a>
                         } @else if (canCreateAppointment && ro.mutationBlocked()) {
                             <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni randevu (salt okunur)</button>
                         }
+                        <app-list-filters (clear)="resetFilters()">
+                            <app-filter-field label="Dönem" labelId="lblApptPeriod" width="select">
+                                <p-selectbutton
+                                    [options]="periodOptions"
+                                    [ngModel]="period()"
+                                    (ngModelChange)="setPeriod($event)"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [allowEmpty]="false"
+                                    [disabled]="isRangeActive()"
+                                    ariaLabelledBy="lblApptPeriod"
+                                    data-testid="appt-period"
+                                />
+                                @if (isRangeActive()) {
+                                    <small class="block mt-1 text-xs text-muted-color">Tarih aralığı seçili: aralık eskiden yeniye sıralanır.</small>
+                                }
+                            </app-filter-field>
+                            <app-filter-field label="Durum" labelId="lblApptStatus" [active]="isStatusActive()" width="select">
+                                <p-select
+                                    ariaLabelledBy="lblApptStatus"
+                                    inputId="apptStatus"
+                                    [options]="statusOptions"
+                                    [(ngModel)]="statusFilter"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [placeholder]="copy.filterPlaceholderAll"
+                                    class="w-full"
+                                    [showClear]="true"
+                                    (ngModelChange)="scheduleApply()"
+                                />
+                            </app-filter-field>
+                            <app-filter-field label="Başlangıç" labelFor="apptFrom" [active]="isFromDateActive()" width="date">
+                                <app-date-input inputId="apptFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                            <app-filter-field label="Bitiş" labelFor="apptTo" [active]="isToDateActive()" width="date">
+                                <app-date-input inputId="apptTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                        </app-list-filters>
                     </app-list-header>
-                    <div class="flex flex-wrap items-end gap-3">
-                        <app-filter-field label="Dönem" labelId="lblApptPeriod" width="select">
-                            <p-selectbutton
-                                [options]="periodOptions"
-                                [ngModel]="period()"
-                                (ngModelChange)="setPeriod($event)"
-                                optionLabel="label"
-                                optionValue="value"
-                                [allowEmpty]="false"
-                                [disabled]="isRangeActive()"
-                                ariaLabelledBy="lblApptPeriod"
-                                data-testid="appt-period"
-                            />
-                            @if (isRangeActive()) {
-                                <small class="block mt-1 text-xs text-muted-color">Tarih aralığı seçili: aralık eskiden yeniye sıralanır.</small>
-                            }
-                        </app-filter-field>
-                        <app-filter-field label="Durum" labelId="lblApptStatus" [active]="isStatusActive()" width="select">
-                            <p-select
-                                ariaLabelledBy="lblApptStatus"
-                                inputId="apptStatus"
-                                [options]="statusOptions"
-                                [(ngModel)]="statusFilter"
-                                optionLabel="label"
-                                optionValue="value"
-                                [placeholder]="copy.filterPlaceholderAll"
-                                class="w-full"
-                                [showClear]="true"
-                                (ngModelChange)="scheduleApply()"
-                            />
-                        </app-filter-field>
-                        <app-filter-field label="Başlangıç" labelFor="apptFrom" [active]="isFromDateActive()" width="date">
-                            <app-date-input inputId="apptFrom" type="date" min="1900-01-01" [(ngModel)]="fromDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                        <app-filter-field label="Bitiş" labelFor="apptTo" [active]="isToDateActive()" width="date">
-                            <app-date-input inputId="apptTo" type="date" min="1900-01-01" [(ngModel)]="toDateInput" limit="planned" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                    </div>
                 </div>
                 <!-- İptal bildirimi + "Geri al"; ardından bekleme listesi (TIER-018): "uygun X kişi var", uyan kimse yoksa çizilmez. -->
                 @if (lastCancel(); as c) {
@@ -216,49 +219,8 @@ const APPOINTMENTS_LIST_STATE_KEY = 'panel:appointments:listState';
                             </p-table>
                         </div>
 
-                        <div class="lg:hidden space-y-3">
-                            @for (row of displayedRows(); track row.id) {
-                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
-                                    <div class="flex flex-wrap items-start justify-between gap-2 gap-y-1 mb-3">
-                                        <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0">
-                                            {{ formatListAppointmentSchedule(row) }}
-                                            <span class="text-muted-color font-normal"> · {{ row.durationLabel }}</span>
-                                        </div>
-                                        <app-status-tag [label]="statusLabel(row.status)" [severity]="statusSeverity(row.status)" />
-                                    </div>
-                                    <div class="space-y-2 mb-3 min-w-0">
-                                        <div class="text-sm">
-                                            <span class="text-muted-color font-medium">Müşteri: </span>
-                                            @if (row.clientId) {
-                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{ row.clientName }}</a>
-                                            } @else {
-                                                <span class="break-words">{{ row.clientName }}</span>
-                                            }
-                                        </div>
-                                        <div class="text-sm">
-                                            <span class="text-muted-color font-medium">Hasta: </span>
-                                            @if (row.petId) {
-                                                <a [routerLink]="['/panel/pets', row.petId]" class="text-primary font-medium no-underline break-words">{{ row.petName }}</a>
-                                            } @else {
-                                                <span class="break-words">{{ row.petName }}</span>
-                                            }
-                                        </div>
-                                    </div>
-                                    <div class="text-sm text-muted-color mb-3 min-w-0 break-words"><span class="font-medium">Tür: </span>{{ typeDisplay(row.appointmentType, row.appointmentTypeName) }}</div>
-                                    <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
-                                        <app-row-action-button action="detail" [link]="['/panel/appointments', row.id]" />
-                                        @if (canRescheduleAppointment && !ro.mutationBlocked()) {
-                                            <app-row-action-button action="edit" [link]="['/panel/appointments', row.id, 'edit']" />
-                                        } @else if (canRescheduleAppointment && ro.mutationBlocked()) {
-                                            <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
-                                        }
-                                        @if (canCancelAppointment && isCancellable(row.status) && !ro.mutationBlocked()) {
-                                            <app-row-action-button action="void" (pressed)="openCancel(row)" />
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        </div>
+                        <!-- Telefonda ortak gün başlıklı satır listesi (G-04): dokununca dolu alanlar ve yazılı eylemler açılır. -->
+                        <app-phone-list class="lg:hidden" [items]="phoneItems()" />
 
                         <div class="lg:hidden mt-4">
                             <p-paginator
@@ -376,6 +338,38 @@ export class AppointmentsListPageComponent implements OnInit {
 
     readonly displayedRows = computed(() => this.rawItems());
 
+    /** Telefon satırları (G-04): gün başlığı altında saat aralığı, hasta · müşteri, tür; boş alan yazılmaz. */
+    readonly phoneItems = computed<PhoneListItem[]>(() =>
+        this.displayedRows().map((row) => {
+            const writable = !this.ro.mutationBlocked();
+            const actions: PhoneListAction[] = [];
+
+            if (this.canRescheduleAppointment && writable) {
+                actions.push({ label: 'Düzenle', icon: 'pi pi-pencil', link: ['/panel/appointments', row.id, 'edit'] });
+            }
+
+            if (this.canCancelAppointment && this.isCancellable(row.status) && writable) {
+                actions.push({ label: 'İptal et', icon: 'pi pi-ban', danger: true, run: () => this.openCancel(row) });
+            }
+
+            return {
+                id: row.id,
+                at: row.scheduledAtUtc,
+                lead: this.formatListAppointmentSchedule(row).split(' · ')[1] ?? null,
+                title: row.petName,
+                titleNote: row.clientName || null,
+                sub: this.typeDisplay(row.appointmentType, row.appointmentTypeName),
+                status: { label: this.statusLabel(row.status), severity: this.statusSeverity(row.status) },
+                fields: [
+                    { label: 'Süre', value: row.durationLabel },
+                    { label: 'Müşteri', value: row.clientName },
+                    { label: 'Tür', value: this.typeDisplay(row.appointmentType, row.appointmentTypeName) }
+                ],
+                detailLink: ['/panel/appointments', row.id],
+                actions
+            };
+        })
+    );
     /** Liste satırı: `05.05.2026 · 14:00–14:45` (Europe/Istanbul). */
     readonly formatListAppointmentSchedule = (row: AppointmentListItemVm): string => {
         const date = formatUtcIsoAsLocalDateDisplay(row.scheduledAtUtc);

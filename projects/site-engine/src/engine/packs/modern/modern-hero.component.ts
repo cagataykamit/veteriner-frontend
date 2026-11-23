@@ -23,7 +23,9 @@ import { SiteStatusComponent } from '../../site-parts.component';
                         @if (v.cta; as cta) {
                             <a siteCta class="btn main">{{ cta.label }}</a>
                         }
-                        <a class="tlink" siteLink="/#services">{{ v.copy.ctaSecondary }}</a>
+                        @if (v.heroLink; as link) {
+                            <a class="tlink" [siteLink]="link.path">{{ link.label }}</a>
+                        }
                     </div>
                     <dl class="sheet">
                         <div>

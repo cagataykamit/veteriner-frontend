@@ -70,7 +70,7 @@ describe('PortalPasswordResetComponent', () => {
         typeInto(el, '#reset-password-confirm', 'Guclu.Parola1');
         await click('Parolayı güncelle');
 
-        expect(el.querySelector('[role=alert]')?.textContent).toContain('Kod doğrulanamadı');
+        expect(el.querySelector('[role=alert]')?.textContent).toContain('Kod yanlış ya da süresi dolmuş');
 
         api.confirmPasswordReset.mockReturnValue(of(undefined));
         await click('Parolayı güncelle');

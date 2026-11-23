@@ -12,7 +12,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { KvkkFormDocumentComponent } from '@/app/entities/kvkk/components/kvkk-form-document.component';
 import type { KvkkFormTemplateVm } from '@/app/entities/kvkk/models/kvkk-form-template.model';
 import { KvkkFormTemplateService } from '@/app/entities/kvkk/services/kvkk-form-template.service';
-import { KVKK_FORM_DEFAULT_TEXT_WARNING, KVKK_TEMPLATE_KINDS, kvkkFormDate, kvkkFormPlaceholderHint, parseKvkkTemplateKind, type KvkkTemplateKind } from '@/app/entities/kvkk/utils/kvkk-form.utils';
+import { KVKK_FORM_DEFAULT_TEXT_WARNING, KVKK_TEMPLATE_KINDS, kvkkFormDate, kvkkFormPlaceholderHint, kvkkFormPlaceholderLabel, parseKvkkTemplateKind, type KvkkTemplateKind } from '@/app/entities/kvkk/utils/kvkk-form.utils';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { panelHttpFailureMessage, problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { addTracedToast } from '@/app/shared/utils/toast-trace.utils';
@@ -76,7 +76,13 @@ const PREVIEW_CLIENT_NAME = 'Örnek Müşteri';
                 }
 
                 <label for="kvkkFormText" class="block text-sm font-medium text-muted-color mb-2">{{ info().label }} *</label>
-                <textarea id="kvkkFormText" pTextarea class="w-full font-mono text-sm" rows="16" [formControl]="text" data-testid="kvkk-template-text"></textarea>
+                <!-- Yer tutucuyu elle yazdırmak yerine imlecin olduğu yere ekleyen düğmeler (G-08). -->
+                <div class="mb-2 flex flex-wrap gap-2" role="group" aria-label="Metne alan ekle" data-testid="kvkk-placeholder-insert">
+                    @for (p of t.placeholders; track p) {
+                        <button pButton type="button" size="small" class="p-button-outlined p-button-secondary" [disabled]="text.disabled" [attr.data-placeholder]="p" (click)="insertPlaceholder(kvkkText, p)"><i class="p-button-icon pi pi-plus"></i>{{ placeholderLabel(p) }} ekle</button>
+                    }
+                </div>
+                <textarea #kvkkText id="kvkkFormText" pTextarea class="w-full font-mono text-sm" rows="16" [formControl]="text" data-testid="kvkk-template-text"></textarea>
                 <div class="flex flex-wrap justify-between gap-2 mt-1 text-sm">
                     <span class="text-danger">
                         @if (text.hasError('required') && text.touched) {
@@ -137,6 +143,7 @@ export class KvkkFormTemplatePageComponent implements OnInit {
 
     readonly defaultWarning = KVKK_FORM_DEFAULT_TEXT_WARNING;
     readonly placeholderHint = kvkkFormPlaceholderHint;
+    readonly placeholderLabel = kvkkFormPlaceholderLabel;
     readonly clinicName = this.auth.getClinicName()?.trim() ?? '';
     readonly previewClientName = PREVIEW_CLIENT_NAME;
     readonly previewDate = kvkkFormDate();
@@ -270,6 +277,23 @@ export class KvkkFormTemplatePageComponent implements OnInit {
                 }
             }
         });
+    }
+
+    /** Yer tutucu imlecin olduğu yere (seçim varsa onun yerine) eklenir; imleç eklenenin sonuna geçer. */
+    insertPlaceholder(textarea: HTMLTextAreaElement, placeholder: string): void {
+        if (this.text.disabled) {
+            return;
+        }
+
+        const value = this.text.value;
+        const start = textarea.selectionStart ?? value.length;
+        const end = textarea.selectionEnd ?? start;
+        const caret = start + placeholder.length;
+
+        this.text.setValue(value.slice(0, start) + placeholder + value.slice(end));
+        this.text.markAsDirty();
+        textarea.focus();
+        textarea.setSelectionRange(caret, caret);
     }
 
     private switchTo(kind: KvkkTemplateKind): void {

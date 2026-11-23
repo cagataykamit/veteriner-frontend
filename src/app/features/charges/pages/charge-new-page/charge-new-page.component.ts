@@ -72,7 +72,7 @@ const CATALOG_SEARCH_MIN_LENGTH = 2;
                                 [options]="visitOptions()"
                                 optionLabel="label"
                                 optionValue="value"
-                                [placeholder]="visitOptions().length ? 'Bağlanacak geliş (isteğe bağlı)' : 'Bu müşteri için bugün geliş yok'"
+                                [placeholder]="!hasClient() ? 'Önce müşteri seçin' : visitOptions().length ? 'Bağlanacak geliş (isteğe bağlı)' : 'Bu müşteri için bugün geliş yok'"
                                 [showClear]="true"
                                 class="w-full"
                             />
@@ -87,7 +87,7 @@ const CATALOG_SEARCH_MIN_LENGTH = 2;
                                 [options]="examinationOptions()"
                                 optionLabel="label"
                                 optionValue="value"
-                                [placeholder]="examinationOptions().length ? 'Bağlanacak muayene (isteğe bağlı)' : 'Bağlanabilir muayene yok'"
+                                [placeholder]="!hasClient() ? 'Önce müşteri seçin' : examinationOptions().length ? 'Bağlanacak muayene (isteğe bağlı)' : 'Bağlanabilir muayene yok'"
                                 [filter]="true"
                                 filterPlaceholder="Ara…"
                                 filterBy="label"
@@ -266,7 +266,22 @@ export class ChargeNewPageComponent implements OnInit, HasUnsavedChanges {
             }));
     });
 
+    /** Geliş ve muayene seçimi müşteriye bağlı: müşteri seçilene kadar "yok" denmez, alanlar kapalı (G-12). */
+    readonly hasClient = computed(() => !!trimClientIdControlValue(this.formValue().clientId));
+
     constructor() {
+        effect(() => {
+            const enabled = this.hasClient();
+
+            for (const control of [this.form.controls.visitId, this.form.controls.examinationId]) {
+                if (enabled) {
+                    control.enable({ emitEvent: false });
+                } else {
+                    control.disable({ emitEvent: false });
+                }
+            }
+        });
+
         this.form.controls.description.valueChanges
             .pipe(
                 debounceTime(250),

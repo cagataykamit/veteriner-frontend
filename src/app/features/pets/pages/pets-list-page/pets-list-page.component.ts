@@ -22,6 +22,8 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppPhoneListComponent, type PhoneListAction, type PhoneListItem } from '@/app/shared/ui/phone-list/app-phone-list.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { TenantReadOnlyContextService } from '@/app/core/tenant/tenant-read-only-context.service';
 import { AuthService } from '@/app/core/auth/auth.service';
@@ -29,6 +31,7 @@ import { PETS_CREATE_CLAIM, PETS_UPDATE_CLAIM } from '@/app/core/auth/operation-
 import { AppRowActionButtonComponent } from '@/app/shared/ui/row-action-button/app-row-action-button.component';
 import { AiEntryButtonComponent } from '@/app/entities/ai/components/ai-entry-button.component';
 import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
+import { joinPresent } from '@/app/shared/utils/labels.utils';
 
 type PetsListState = {
     search: string;
@@ -54,6 +57,8 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         InputTextModule,
         SelectModule,
         AppListHeaderComponent,
+        AppPhoneListComponent,
+        AppListFiltersComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
         AppErrorStateComponent,
@@ -72,11 +77,10 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
         <div class="card">
             <div class="flex flex-col gap-4">
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                    <app-list-header class="mb-3" title="Hastalar" [count]="totalItems()">
+                    <app-list-header title="Hastalar" [count]="totalItems()">
                         <app-filter-field label="Arama" labelFor="petSearch" [active]="isSearchActive()" width="grow">
-                            <app-search-input inputId="petSearch" placeholder="Hasta, tür, ırk, mikroçip; sahip adı veya telefonu…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                            <app-search-input inputId="petSearch" hint="Hasta, tür, ırk, mikroçip; sahip adı veya telefonu" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                         </app-filter-field>
-                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         <!-- Doğal dille arama (AI-006) kayıt yazmaz: salt okunur kiracıda da görünür; görünürlüğü AI durumu belirler. -->
                         <app-ai-entry-button actions label="Yapay zekâ ile ara" [active]="aiSearchOpen()" (pressed)="aiPanel.openSearch()" />
                         @if (canCreatePet && !ro.mutationBlocked()) {
@@ -84,27 +88,27 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                         } @else if (canCreatePet && ro.mutationBlocked()) {
                             <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni hasta (salt okunur)</button>
                         }
+                        <app-list-filters (clear)="resetFilters()">
+                            <app-filter-field label="Tür" labelId="lblPetSpecies" [active]="isSpeciesActive()" width="select">
+                                <p-select
+                                    ariaLabelledBy="lblPetSpecies"
+                                    inputId="petSpecies"
+                                    [options]="speciesOptions()"
+                                    [(ngModel)]="speciesIdInput"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    [placeholder]="copy.filterPlaceholderAll"
+                                    class="w-full"
+                                    [showClear]="true"
+                                    [loading]="loadingSpecies()"
+                                    (ngModelChange)="scheduleApply()"
+                                />
+                            </app-filter-field>
+                            <app-filter-field label="Durum" labelId="lblPetStatus" [active]="isStatusActive()" width="select">
+                                <p-select ariaLabelledBy="lblPetStatus" inputId="petStatus" [options]="statusOptions" [(ngModel)]="statusInput" optionLabel="label" optionValue="value" class="w-full" (ngModelChange)="scheduleApply()" />
+                            </app-filter-field>
+                        </app-list-filters>
                     </app-list-header>
-                    <div class="flex flex-wrap items-end gap-3">
-                        <app-filter-field label="Tür" labelId="lblPetSpecies" [active]="isSpeciesActive()" width="select">
-                            <p-select
-                                ariaLabelledBy="lblPetSpecies"
-                                inputId="petSpecies"
-                                [options]="speciesOptions()"
-                                [(ngModel)]="speciesIdInput"
-                                optionLabel="label"
-                                optionValue="value"
-                                [placeholder]="copy.filterPlaceholderAll"
-                                class="w-full"
-                                [showClear]="true"
-                                [loading]="loadingSpecies()"
-                                (ngModelChange)="scheduleApply()"
-                            />
-                        </app-filter-field>
-                        <app-filter-field label="Durum" labelId="lblPetStatus" [active]="isStatusActive()" width="select">
-                            <p-select ariaLabelledBy="lblPetStatus" inputId="petStatus" [options]="statusOptions" [(ngModel)]="statusInput" optionLabel="label" optionValue="value" class="w-full" (ngModelChange)="scheduleApply()" />
-                        </app-filter-field>
-                    </div>
                 </div>
                 @if (loading()) {
                     <app-loading-state message="Hasta listesi yükleniyor…" />
@@ -172,45 +176,8 @@ const PETS_LIST_STATE_KEY = 'panel:pets:listState';
                             </p-table>
                         </div>
 
-                        <div class="lg:hidden space-y-3">
-                            @for (row of displayedRows(); track row.id) {
-                                <div class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-4 shadow-sm">
-                                    <div class="text-sm font-medium text-surface-900 dark:text-surface-0 min-w-0 mb-3">
-                                        <a [routerLink]="['/panel/pets', row.id]" class="text-primary no-underline break-words">{{ row.name }}</a>
-                                        @if (row.status === 'Deceased') {
-                                            <span class="ml-2 text-xs font-medium text-muted-color border border-surface-300 dark:border-surface-600 rounded-border px-1.5 py-0.5">Vefat</span>
-                                        }
-                                    </div>
-                                    <div class="space-y-2 mb-3 min-w-0 text-sm">
-                                        @if (row.clientId && row.clientName) {
-                                            <div>
-                                                <span class="text-muted-color font-medium">Müşteri: </span>
-                                                <a [routerLink]="['/panel/clients', row.clientId]" class="text-primary font-medium no-underline break-words">{{ row.clientName }}</a>
-                                            </div>
-                                        }
-                                        <div>
-                                            <span class="text-muted-color font-medium">Tür: </span>
-                                            <span class="break-words"><span class="mr-1" aria-hidden="true">{{ speciesIcon(row.speciesName) }}</span>{{ row.speciesName }}</span>
-                                        </div>
-                                        <div>
-                                            <span class="text-muted-color font-medium">Irk: </span>
-                                            <span class="break-words">{{ row.breed }}</span>
-                                        </div>
-                                    </div>
-                                    @if (phoneDetailLine(row); as line) {
-                                        <div class="text-xs text-muted-color mb-3 min-w-0 break-words">{{ line }}</div>
-                                    }
-                                    <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
-                                        <app-row-action-button action="detail" [link]="['/panel/pets', row.id]" />
-                                        @if (canUpdatePet && !ro.mutationBlocked()) {
-                                            <app-row-action-button action="edit" [link]="['/panel/pets', row.id, 'edit']" />
-                                        } @else if (canUpdatePet && ro.mutationBlocked()) {
-                                            <app-row-action-button action="edit" label="Düzenle (salt okunur)" [disabled]="true" />
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        </div>
+                        <!-- Telefonda ortak satır listesi (G-04): dokununca dolu alanlar ve yazılı eylemler açılır. -->
+                        <app-phone-list class="lg:hidden" [items]="phoneItems()" />
 
                         <div class="lg:hidden mt-4">
                             <p-paginator
@@ -308,14 +275,32 @@ export class PetsListPageComponent implements OnInit {
     /** Tür sütunu/satırında tür simgesi. */
     readonly speciesIcon = speciesEmoji;
 
-    /** Telefon kartının alt satırı: bilinen renk ve kilo; boş parça yazılmaz ("—" gösterilmez). */
-    phoneDetailLine(row: PetListItemVm): string {
-        const known = (v: string) => !!v && v !== '—';
-
-        return [known(row.colorName) ? `Renk: ${row.colorName}` : '', known(row.weight) ? `${row.weight} kg` : ''].filter(Boolean).join(' · ');
-    }
-
     readonly displayedRows = computed(() => this.rawItems());
+
+    /** Telefon satırları (G-04): ad · müşteri, tür ve ırk; bilinmeyen renk ve kilo (boş, "—", 0) yazılmaz. */
+    readonly phoneItems = computed<PhoneListItem[]>(() =>
+        this.displayedRows().map((row) => {
+            const known = (v: string) => !!v && v !== '—' && v !== '0';
+            const actions: PhoneListAction[] = this.canUpdatePet && !this.ro.mutationBlocked() ? [{ label: 'Düzenle', icon: 'pi pi-pencil', link: ['/panel/pets', row.id, 'edit'] }] : [];
+
+            return {
+                id: row.id,
+                title: row.name,
+                titleNote: row.clientName || null,
+                sub: joinPresent([`${this.speciesIcon(row.speciesName)} ${row.speciesName}`.trim(), known(row.breed) ? row.breed : ''], ' · '),
+                status: row.status === 'Deceased' ? { label: 'Vefat', severity: 'secondary' } : null,
+                fields: [
+                    { label: 'Müşteri', value: row.clientName },
+                    { label: 'Tür', value: row.speciesName },
+                    { label: 'Irk', value: row.breed },
+                    { label: 'Renk', value: known(row.colorName) ? row.colorName : null },
+                    { label: 'Kilo', value: known(row.weight) ? `${row.weight} kg` : null }
+                ],
+                detailLink: ['/panel/pets', row.id],
+                actions: row.clientId ? [...actions, { label: 'Müşteri kartı', link: ['/panel/clients', row.clientId] }] : actions
+            };
+        })
+    );
 
     ngOnInit(): void {
         const restored = this.list.restore();

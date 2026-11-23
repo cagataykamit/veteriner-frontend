@@ -83,6 +83,21 @@
 }
 
 /*
+ * Sayfa formunun son satırı Kaydet'i taşıyorsa (form[appFormSubmit]) ekranın altına yapışır: uzun formda (muayene, reçete, ürün)
+ * kullanıcı aşağı inmeden kaydeder; eksik alan varsa Kaydet ilk eksiğe kaydırır. Telefonda ve masaüstünde aynı kural (G-11).
+ * Yapışma yalnız formun doğrudan çocuğunda işler; Kaydet satırı iç kartta kalırsa kart bitince kaybolur. Diyalog formu kendi
+ * alt çubuğunu kullanır.
+ */
+.layout-main form[appformsubmit] > :last-child:has(> button[type='submit']) {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding-block: 0.75rem;
+    background: var(--surface-card);
+    border-top: 1px solid var(--surface-border);
+}
+
+/*
  * Yerel <select> PrimeNG giriş kutusu sınıfını (`p-inputtext`) taşıyınca tarayıcının açılır oku kayboluyor, alan düz metin
  * kutusu gibi görünüyordu (A-05, davet formu). Ok burada, tek yerde geri verilir; renk iki temada da ikincil metin tonu.
  */

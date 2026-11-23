@@ -22,6 +22,7 @@ import { AppListEmptyStateComponent } from '@/app/shared/ui/empty-state/app-list
 import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-state.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { ConfirmationService } from 'primeng/api';
@@ -53,6 +54,7 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
         InputTextModule,
         SelectModule,
         AppListHeaderComponent,
+        AppListFiltersComponent,
         AppLoadingStateComponent,
         AppListEmptyStateComponent,
         AppErrorStateComponent,
@@ -71,36 +73,35 @@ const PRODUCTS_LIST_STATE_KEY = 'panel:inventory:products:listState';
                     <p class="text-danger text-sm m-0" role="alert">{{ listActionError() }}</p>
                 }
                 <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-3">
-                    <app-list-header class="mb-3" title="Ürünler" [count]="totalItems()">
+                    <app-list-header title="Ürünler" [count]="totalItems()">
                         <app-filter-field label="Arama" labelFor="productSearch" [active]="isSearchActive()" width="grow">
                             <div class="flex gap-2">
-                                <app-search-input class="flex-1 min-w-0" inputId="productSearch" placeholder="Ad, SKU veya barkod…" [(value)]="searchInput" (searchRequested)="applyFilters()" />
+                                <app-search-input class="flex-1 min-w-0" inputId="productSearch" hint="Ad, SKU veya barkod" [(value)]="searchInput" (searchRequested)="applyFilters()" />
                                 <app-barcode-scan-button (scanned)="onScanned($event)" />
                             </div>
                         </app-filter-field>
-                        <button pButton type="button" actions severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
                         @if (canCreateProduct && !ro.mutationBlocked()) {
                             <a actions routerLink="/panel/products/new" pButton type="button" class="p-button-primary"><i class="pi pi-plus"></i>Yeni ürün</a>
                         } @else if (canCreateProduct && ro.mutationBlocked()) {
                             <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Yeni ürün (salt okunur)</button>
                         }
+                        <app-list-filters (clear)="resetFilters()">
+                            <app-filter-field label="Durum filtresi" labelId="lblProductActive" [active]="isActiveFilterApplied()" width="select">
+                                <p-select
+                                    ariaLabelledBy="lblProductActive"
+                                    inputId="productActiveFilter"
+                                    [options]="activeFilterOptions"
+                                    [(ngModel)]="isActiveFilter"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    placeholder="Tüm durumlar"
+                                    class="w-full"
+                                    [showClear]="true"
+                                    (ngModelChange)="scheduleApply()"
+                                />
+                            </app-filter-field>
+                        </app-list-filters>
                     </app-list-header>
-                    <div class="flex flex-wrap items-end gap-3">
-                        <app-filter-field label="Durum filtresi" labelId="lblProductActive" [active]="isActiveFilterApplied()" width="select">
-                            <p-select
-                                ariaLabelledBy="lblProductActive"
-                                inputId="productActiveFilter"
-                                [options]="activeFilterOptions"
-                                [(ngModel)]="isActiveFilter"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Tüm durumlar"
-                                class="w-full"
-                                [showClear]="true"
-                                (ngModelChange)="scheduleApply()"
-                            />
-                        </app-filter-field>
-                    </div>
                 </div>
                 @if (loading()) {
                     <app-loading-state message="Ürün listesi yükleniyor…" />

@@ -89,7 +89,8 @@ import { FormSubmitDirective } from '@/app/shared/forms/form-field/form-submit.d
                     </div>
 
                     <div class="mt-4">
-                        <button pButton type="submit" [disabled]="saving() || formDisabled() || !form.dirty"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
+                        <!-- Sayfada iki ayrı kayıt var (bu form ve otomatik hatırlatıcılar); düğme neyi kaydettiğini söyler (A-07). -->
+                        <button pButton type="submit" [disabled]="saving() || formDisabled() || !form.dirty"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Ayarları kaydet</button>
                     </div>
                 </form>
             </div>
@@ -177,8 +178,11 @@ export class ReminderSettingsPageComponent implements OnInit {
         });
     }
 
+    /** Hiç kaydedilmemiş ayarda satır yazılmaz ("Son güncelleme: —" yok, A-07). */
     updatedAtLabel(): string | null {
-        return formatUtcIsoAsLocalDateTimeDisplay(this.updatedAtUtc());
+        const at = this.updatedAtUtc();
+
+        return at ? formatUtcIsoAsLocalDateTimeDisplay(at) : null;
     }
 
     showNoManagePermissionBanner(): boolean {

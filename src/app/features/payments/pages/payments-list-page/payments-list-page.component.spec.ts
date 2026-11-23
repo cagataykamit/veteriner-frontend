@@ -64,10 +64,10 @@ describe('PaymentsListPageComponent — iptal', () => {
         expect(voidButtons().length).toBe(0);
     });
 
-    it('Payments.Correct varsa İptal et görünür (tablo + mobil kart); salt okunur kiracıda gizlenir', async () => {
+    it('Payments.Correct varsa İptal et görünür (tablo); salt okunur kiracıda gizlenir', async () => {
         claims.add('Payments.Correct');
         await setup();
-        expect(voidButtons().length).toBe(2);
+        expect(voidButtons().length).toBe(1);
         mutationBlocked = true;
         fixture.destroy();
         TestBed.resetTestingModule();
@@ -79,7 +79,7 @@ describe('PaymentsListPageComponent — iptal', () => {
         await setup();
         const details = fixture.nativeElement.querySelectorAll('app-row-action-button a[aria-label="Detay"]') as NodeListOf<HTMLAnchorElement>;
 
-        expect(details.length).toBe(2);
+        expect(details.length).toBe(1);
         expect(details[0].querySelector('i')!.classList).toContain('fa-eye');
         expect(fixture.nativeElement.textContent).not.toContain('Detay');
     });
@@ -100,7 +100,7 @@ describe('PaymentsListPageComponent — iptal', () => {
         expect(fixture.componentInstance.voidSummary()).toContain('Ali Veli');
     });
 
-    it('Kasa sütunu nakitte kasa adını, nakit dışında tire gösterir; mobil kartta da yazar', async () => {
+    it('Kasa sütunu nakitte kasa adını, nakit dışında tire gösterir; telefon satırında da yazar', async () => {
         payments.getPayments.mockReturnValue(
             of({ items: [{ ...row, cashRegisterName: 'Arka kasa' }, { ...row, id: 'p2', method: 'card' }], page: 1, pageSize: 10, totalItems: 2, totalPages: 1 })
         );
@@ -108,7 +108,13 @@ describe('PaymentsListPageComponent — iptal', () => {
         const cells = [...fixture.nativeElement.querySelectorAll('[data-testid="payment-row-cash-register"]')] as HTMLElement[];
 
         expect(cells.map((c) => c.textContent!.trim())).toEqual(['Arka kasa', '—']);
-        expect(fixture.nativeElement.querySelector('.lg\\:hidden').textContent).toContain('Kasa: Arka kasa');
+        // G-04: telefon satırında yöntem · kasa; açılınca Kasa alanı (boş kasa yazılmaz).
+        const [cash, card] = fixture.componentInstance.phoneItems();
+
+        expect(cash.fields.find((x) => x.label === 'Kasa')?.value).toBe('Arka kasa');
+        expect(card.fields.find((x) => x.label === 'Kasa')?.value ?? null).toBeNull();
+        expect(cash.at).toBe(row.paidAtUtc);
+        expect(cash.amount).toBe(row.amount);
     });
 
     it('uzun müşteri adı tabloda tek satırda kesilir; tam ad ipucunda kalır', async () => {
@@ -142,7 +148,7 @@ describe('PaymentsListPageComponent — iptal', () => {
         await setup();
         const edits = rowEditActions(fixture.nativeElement);
 
-        expect(edits.length, 'tablo + mobil kart').toBe(2);
+        expect(edits.length, 'tablo; telefonda eylem satır açılınca').toBe(1);
 
         for (const edit of edits) {
             expect(edit.getAttribute('href')).toBe('/panel/payments/p1/edit');
@@ -161,7 +167,7 @@ describe('PaymentsListPageComponent — iptal', () => {
         await setup();
         const edits = rowEditActions(fixture.nativeElement);
 
-        expect(edits.length).toBe(2);
+        expect(edits.length).toBe(1);
         expect(edits.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBe(true);
     });
 

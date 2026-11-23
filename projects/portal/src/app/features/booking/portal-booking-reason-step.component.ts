@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, output, untracked } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { TextareaModule } from 'primeng/textarea';
 import { formatPortalPhone, telHref } from '@portal/app/shared/format/portal-labels';
@@ -7,8 +7,8 @@ import { NOTE_REQUIRED_MESSAGE, PORTAL_BOOKING_LIMITS, reasonKey } from './porta
 import { PortalBookingStep } from './portal-booking-ui.component';
 
 /**
- * Talep akışının 1. adımı (oturumlu talep ve kliniğe özel bağlantı ortak, ADR-042 eki): başta acil durum uyarısı ve aranabilir
- * klinik telefonu, kart olarak neden listesi (sonda her zaman "Diğer / emin değilim"), hemen altında not. Not "Diğer"de
+ * Talep akışının 1. adımı (oturumlu talep ve kliniğe özel bağlantı ortak, ADR-042 eki): başta tek satır acil durum şeridi ve aranabilir
+ * klinik telefonu, kart olarak neden listesi (sonda her zaman "Diğer / emin değilim"; tek seçenekse seçili gelir), hemen altında not. Not "Diğer"de
  * zorunludur; kural sunucudan (`requiresNote`) gelir, doğrulayıcıyı üst bileşen nedene göre kurar.
  */
 @Component({
@@ -17,60 +17,23 @@ import { PortalBookingStep } from './portal-booking-ui.component';
     imports: [ReactiveFormsModule, TextareaModule, PortalBookingStep],
     changeDetection: ChangeDetectionStrategy.OnPush,
     styles: `
+        /* Acil uyarısı formun önüne geçmesin (PO-03): tek satır ince şerit, telefon satır içi bağlantı. */
         .urgent {
             display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border: 1px solid var(--portal-danger-soft-border, #f5b8a8);
-            border-radius: 0.75rem;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin: 0;
+            padding: 0.5rem 0.75rem;
+            border-left: 3px solid var(--portal-danger-soft-border, #f5b8a8);
+            border-radius: 0.5rem;
             background: var(--portal-danger-soft-bg, #fff5f2);
             color: var(--portal-danger-soft-text, #7a2410);
-            font-size: 0.9375rem;
+            font-size: 0.875rem;
         }
-        .urgent-text {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.625rem;
-            margin: 0;
-            padding: 0.75rem 0.875rem;
-        }
-        .urgent-text > i {
-            margin-top: 0.25rem;
-        }
-        .urgent-phone {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem;
-            padding: 0.625rem 0.875rem;
-            border-top: 1px solid var(--portal-danger-soft-border, #f5b8a8);
-            background: var(--portal-surface);
-            line-height: 1.25;
-        }
-        .urgent-phone small {
-            display: block;
-            color: var(--portal-text-muted);
-            font-size: 0.75rem;
+        .urgent a {
+            color: inherit;
             font-weight: 600;
-        }
-        .urgent-number {
-            color: var(--portal-text);
-            font-size: 1.125rem;
-            font-weight: 700;
-            font-variant-numeric: tabular-nums;
             white-space: nowrap;
-        }
-        .urgent-call {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            min-height: var(--portal-touch);
-            padding: 0 1rem;
-            border-radius: 0.625rem;
-            background: #b42318;
-            color: #fff;
-            font-weight: 600;
-            text-decoration: none;
         }
         .portal-choice {
             gap: 0.5rem;
@@ -101,21 +64,14 @@ import { PortalBookingStep } from './portal-booking-ui.component';
     `,
     template: `
         <portal-booking-step [step]="1" title="Ne için geliyorsunuz?" [headingId]="idPrefix() + '-reason-title'" [done]="done()" [summary]="summary()">
-            <div class="urgent" data-testid="booking-urgent">
-                <p class="urgent-text">
-                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-                    <span><strong>Acil durum mu?</strong> Online talep kliniğin onayını bekler; acil durumda beklemeyin, {{ phoneHref() ? 'kliniği telefonla arayın.' : 'kliniğe ya da en yakın veteriner acil servisine başvurun.' }}</span>
-                </p>
+            <p class="urgent" data-testid="booking-urgent">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
                 @if (phoneHref(); as href) {
-                    <div class="urgent-phone">
-                        <span>
-                            <small>Klinik telefonu</small>
-                            <span class="urgent-number">{{ phoneText() }}</span>
-                        </span>
-                        <a class="urgent-call" [href]="href" [attr.aria-label]="'Kliniği ara: ' + phoneText()"><i class="fa-solid fa-phone" aria-hidden="true"></i>Ara</a>
-                    </div>
+                    <span>Acil durumda beklemeyin: <a [href]="href" [attr.aria-label]="'Kliniği ara: ' + phoneText()">{{ phoneText() }} ara</a></span>
+                } @else {
+                    <span>Acil durumda beklemeyin; kliniğe ya da en yakın veteriner acil servisine başvurun.</span>
                 }
-            </div>
+            </p>
 
             <fieldset class="portal-choice">
                 <legend class="sr-only">Randevu nedeni</legend>
@@ -181,6 +137,17 @@ export class PortalBookingReasonStep {
     });
     readonly phoneHref = computed(() => telHref(this.clinicPhone()));
     readonly phoneText = computed(() => formatPortalPhone(this.clinicPhone()));
+
+    constructor() {
+        // Klinik neden tanımlamamışsa tek seçenek ("Diğer / emin değilim") kalır; seçmek için ayrıca dokunmak gerekmesin (PO-03).
+        effect(() => {
+            const reasons = this.reasons();
+
+            if (reasons.length === 1 && !untracked(this.selectedKey)) {
+                this.selectedChange.emit(reasonKey(reasons[0]));
+            }
+        });
+    }
 
     /** Neden seçili ve not kurala uyuyor. Not alanı sinyal değildir; değer her değişiklik olayında yeniden okunur. */
     done(): boolean {

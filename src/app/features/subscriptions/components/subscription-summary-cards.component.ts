@@ -70,10 +70,13 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
                             <span class="font-medium text-right">{{ nextRenewalWaitingText(s) }}</span>
                         </div>
                     }
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="text-muted-color">{{ remainingDaysRowLabel(s) }}</span>
-                        <span class="font-medium text-right">{{ daysRemainingText(s.daysRemaining, s) }}</span>
-                    </div>
+                    <!-- Kalan gün bilinmiyorsa satır yazılmaz ("Kalan gün —" yok, A-07). -->
+                    @if (s.daysRemaining !== null) {
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-muted-color">{{ remainingDaysRowLabel(s) }}</span>
+                            <span class="font-medium text-right">{{ daysRemainingText(s.daysRemaining, s) }}</span>
+                        </div>
+                    }
                 </div>
             </div>
         </div>

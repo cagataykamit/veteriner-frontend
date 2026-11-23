@@ -17,7 +17,19 @@ export const CLIENT_UPSERT_FIELD_MAX = {
 
 export const CLIENT_UPSERT_FULL_NAME_MIN = 2;
 
-export const CLIENT_UPSERT_MSG_REQUIRED = 'Bu alan zorunludur.';
+/** Zorunlu alan mesajı alanın adını söyler (G-16: "<Alan> zorunludur." tek biçim). */
+const CLIENT_UPSERT_FIELD_LABELS: Readonly<Record<ClientCreateFormFieldKey, string>> = {
+    fullName: 'Ad soyad',
+    phone: 'Telefon',
+    email: 'E-posta',
+    address: 'Adres',
+    notes: 'Notlar'
+};
+
+export function clientUpsertRequiredMessage(field: ClientCreateFormFieldKey): string {
+    return `${CLIENT_UPSERT_FIELD_LABELS[field]} zorunludur.`;
+}
+
 export const CLIENT_UPSERT_MSG_MIN_LENGTH = 'En az 2 karakter olmalıdır.';
 export const CLIENT_UPSERT_MSG_PHONE_INVALID = CLIENT_CREATE_PHONE_MSG_INVALID;
 export const CLIENT_UPSERT_MSG_EMAIL_INVALID = 'Geçerli bir e-posta adresi girin.';
@@ -107,7 +119,7 @@ export function clientUpsertFieldErrorMessage(
     }
 
     if (errors['required']) {
-        return CLIENT_UPSERT_MSG_REQUIRED;
+        return clientUpsertRequiredMessage(field);
     }
 
     if (errors['trimmedMinLength']) {

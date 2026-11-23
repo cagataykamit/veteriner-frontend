@@ -203,10 +203,10 @@ describe('AppointmentsListPageComponent — satırda Düzenle', () => {
     beforeEach(() => sessionStorage.removeItem(STATE_KEY));
     afterEach(() => sessionStorage.removeItem(STATE_KEY));
 
-    it("Appointments.Reschedule varsa tablo ve mobil kartta Detay'dan hemen sonra düzenleme sayfasına gider", () => {
+    it("Appointments.Reschedule varsa tabloda Detay'dan hemen sonra düzenleme sayfasına gider", () => {
         const edits = rowEditActions(create([APPOINTMENTS_RESCHEDULE_CLAIM]));
 
-        expect(edits.length, 'tablo + mobil kart').toBe(2);
+        expect(edits.length, 'tablo; telefonda eylem satır açılınca').toBe(1);
 
         for (const edit of edits) {
             expect(edit.getAttribute('href')).toBe('/panel/appointments/a1/edit');
@@ -220,7 +220,7 @@ describe('AppointmentsListPageComponent — satırda Düzenle', () => {
         TestBed.resetTestingModule();
         const readOnly = rowEditActions(create([APPOINTMENTS_RESCHEDULE_CLAIM], true));
 
-        expect(readOnly.length).toBe(2);
+        expect(readOnly.length).toBe(1);
         expect(readOnly.every((e) => e.tagName === 'BUTTON' && e.getAttribute('aria-disabled') === 'true')).toBe(true);
     });
 });
@@ -290,10 +290,10 @@ describe('AppointmentsListPageComponent — satırda İptal', () => {
     beforeEach(() => sessionStorage.removeItem(STATE_KEY));
     afterEach(() => sessionStorage.removeItem(STATE_KEY));
 
-    it("Appointments.Cancel ile Planlandı randevuda tablo ve mobil kartta Detay, Düzenle'den sonra son eylemdir", () => {
+    it("Appointments.Cancel ile Planlandı randevuda tabloda Detay, Düzenle'den sonra son eylemdir", () => {
         const voids = rowDangerActions(create([APPOINTMENTS_RESCHEDULE_CLAIM, APPOINTMENTS_CANCEL_CLAIM]).el);
 
-        expect(voids.length, 'tablo + mobil kart').toBe(2);
+        expect(voids.length, 'tablo; telefonda eylem satır açılınca').toBe(1);
 
         for (const v of voids) {
             expect(v.getAttribute('aria-label')).toBe('İptal et');
@@ -364,10 +364,12 @@ describe('AppointmentsListPageComponent — satırda İptal', () => {
         expect(el.querySelector('[data-testid="appointment-cancel-undo"]')?.textContent).toContain('İptal geri alındı.');
     });
 
-    it('mobil karttan açılıp vazgeçilirse servis çağrılmaz ve liste yenilenmez', () => {
+    it('telefon satırı açılıp İptal et seçilir, vazgeçilirse servis çağrılmaz ve liste yenilenmez (G-04)', () => {
         const { fixture, el } = create([APPOINTMENTS_CANCEL_CLAIM]);
 
-        rowDangerActions(el)[1].click();
+        el.querySelector<HTMLButtonElement>('[data-testid="phone-list-row"]')!.click();
+        fixture.detectChanges();
+        Array.from(el.querySelectorAll<HTMLButtonElement>('[data-testid="phone-list-detail"] button')).find((b) => b.textContent?.trim() === 'İptal et')!.click();
         fixture.detectChanges();
         const dialog = dialogOf(fixture);
 

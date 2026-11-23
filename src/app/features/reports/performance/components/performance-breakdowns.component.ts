@@ -21,6 +21,8 @@ export interface BreakdownRow {
 }
 
 const LINE_KIND_LABELS: Readonly<Record<string, string>> = { Service: 'Hizmet', Product: 'Ürün' };
+/** Sorumlu hekimi olmayan satışlar (sunucu adı "Atanmamış"): neyin atanmadığı belli olsun (Y-02). */
+const UNASSIGNED_VET_LABEL = 'Hekimi belli değil';
 
 /** Önceki dönemde aynı anahtarlı satırla ciro farkı; karşılaştırma kapalıysa `null`. */
 export function breakdownRows<T>(
@@ -50,11 +52,11 @@ export function breakdownRows<T>(
     imports: [AppPlanUpgradeNoticeComponent],
     template: `
         <section class="card mt-4 mb-0" aria-labelledby="perfBreakdownsTitle" data-testid="perf-breakdowns">
-            <h5 id="perfBreakdownsTitle" class="mt-0">Kırılımlar</h5>
+            <h5 id="perfBreakdownsTitle" class="mt-0">Hekim, kalem ve tür dağılımı</h5>
             @if (planLocked()) {
-                <app-plan-upgrade-notice feature="AdvancedReports" detail="Hekim, hizmet ve ürün, tür kırılımları ve geliş sayısı; her biri önceki dönemle karşılaştırmalı." />
+                <app-plan-upgrade-notice feature="AdvancedReports" detail="Hekim, hizmet ve ürün, tür dağılımı ve geliş sayısı; her biri önceki dönemle karşılaştırmalı." />
             } @else if (loading()) {
-                <p class="m-0 text-sm text-muted-color">Kırılımlar yükleniyor…</p>
+                <p class="m-0 text-sm text-muted-color">Dağılım yükleniyor…</p>
             } @else if (error(); as err) {
                 <p class="m-0 text-sm text-danger" role="alert">{{ err }}</p>
             } @else if (data(); as d) {
@@ -101,7 +103,7 @@ export function breakdownRows<T>(
                     }
                 </div>
                 <small class="block mt-3 text-muted-color">
-                    Net ciro gün sonu raporuyla aynı hesaptır. Hekim: gelişin sorumlu hekimi, gelişsiz muayenede kesinleştiren; eşleşmeyen satış "Atanmamış". Kalem ücret açıklamasına göredir.
+                    Net ciro gün sonu raporuyla aynı hesaptır. Hekim: gelişin sorumlu hekimi, gelişsiz muayenede kesinleştiren; hekimi olmayan satış "Hekimi belli değil" satırında. Kalem ücret açıklamasına göredir.
                 </small>
             }
         </section>
@@ -141,7 +143,7 @@ export class PerformanceBreakdownsComponent {
                 title: 'Hekim',
                 nameLabel: 'Hekim',
                 countLabel: 'Muayene',
-                rows: breakdownRows(c.byVeterinarian, p?.byVeterinarian, (r) => ({ key: r.veterinarianUserId ?? '-', name: r.name, count: r.examinationCount, amount: r.netChargeAmount }), cmp)
+                rows: breakdownRows(c.byVeterinarian, p?.byVeterinarian, (r) => ({ key: r.veterinarianUserId ?? '-', name: r.veterinarianUserId ? r.name : UNASSIGNED_VET_LABEL, count: r.examinationCount, amount: r.netChargeAmount }), cmp)
             },
             c.byLineKind && {
                 key: 'line-kinds',
@@ -207,7 +209,7 @@ export class PerformanceBreakdownsComponent {
                 },
                 error: (err: unknown) => {
                     this.loading.set(false);
-                    this.error.set(err instanceof HttpErrorResponse ? userErrorFromHttp(err, 'Kırılımlar yüklenemedi.').message : 'Kırılımlar yüklenemedi.');
+                    this.error.set(err instanceof HttpErrorResponse ? userErrorFromHttp(err, 'Dağılım yüklenemedi.').message : 'Dağılım yüklenemedi.');
                 }
             });
     }

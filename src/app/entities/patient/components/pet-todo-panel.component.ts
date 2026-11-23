@@ -50,7 +50,7 @@ const TONE_CLASS: Record<PetTodoItem['tone'], string> = {
 
             @if (view().failed.length > 0) {
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-2 mt-2">
-                    <p class="m-0 grow basis-56 text-orange-600 dark:text-orange-400 text-sm" data-testid="todo-failed">
+                    <p class="m-0 grow basis-56 text-warn text-sm" data-testid="todo-failed">
                         <i class="pi pi-exclamation-triangle mr-1" aria-hidden="true"></i>Alınamadı: {{ view().failed.join(', ') }}. Liste eksik olabilir.
                     </p>
                     @if (retryable()) {

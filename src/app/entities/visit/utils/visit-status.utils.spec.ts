@@ -1,5 +1,6 @@
 import type { TodayItemVm } from '@/app/entities/visit/models/visit-vm.model';
 import {
+    carriedOverDays,
     correctionActionOptions,
     formatElapsedSince,
     formatTodayArrival,
@@ -155,6 +156,34 @@ describe('formatTodayArrival (H15)', () => {
     it('bugünkü gelişte yalnız saat, önceki günden açık kalanda tarih ve saat', () => {
         expect(formatTodayArrival('2026-11-16T06:30:00Z', now)).toBe('09:30');
         expect(formatTodayArrival('2026-11-10T18:40:00Z', now)).toBe('10.11.2026 21:40');
+    });
+
+    it('saat hücresi için kısa biçim yılsızdır (B-03)', () => {
+        expect(formatTodayArrival('2026-11-10T18:40:00Z', now, true)).toBe('10.11 21:40');
+        expect(formatTodayArrival('2026-11-16T06:30:00Z', now, true)).toBe('09:30');
+    });
+});
+
+describe('carriedOverDays (B-03)', () => {
+    const now = new Date('2026-11-22T11:55:00Z');
+
+    it('önceki günden açık gelişin İstanbul takvim günü farkı; dün gelen 1', () => {
+        expect(carriedOverDays(item({ isCarriedOver: true, arrivedAtUtc: '2026-11-19T02:37:00Z' }), now)).toBe(3);
+        expect(carriedOverDays(item({ isCarriedOver: true, arrivedAtUtc: '2026-11-21T20:30:00Z' }), now)).toBe(1);
+    });
+
+    it('önceki günden kalmayan, gelişsiz ya da yatıştaki hastada null', () => {
+        expect(carriedOverDays(item({ isCarriedOver: false, arrivedAtUtc: '2026-11-19T02:37:00Z' }), now)).toBeNull();
+        expect(carriedOverDays(item({ isCarriedOver: true, arrivedAtUtc: null }), now)).toBeNull();
+        expect(carriedOverDays(item({ isCarriedOver: true, arrivedAtUtc: '2026-11-19T02:37:00Z', hasActiveHospitalization: true }), now)).toBeNull();
+    });
+
+    it('rozet aynı bilgiyi söylediği için durumda süre ve "unutulmuş" ipucu yazılmaz; yatıştakinde süre kalır', () => {
+        const old = item({ careStatus: 'Waiting', isCarriedOver: true, arrivedAtUtc: '2026-11-19T02:37:00Z' });
+
+        expect(todayStatusOf(old, now).detail).toBeNull();
+        expect(isPossiblyForgottenVisit(old, now)).toBe(false);
+        expect(todayStatusOf({ ...old, hasActiveHospitalization: true }, now).detail).toBe('3 gün');
     });
 });
 

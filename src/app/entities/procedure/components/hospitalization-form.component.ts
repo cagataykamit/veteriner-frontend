@@ -3,7 +3,7 @@ import { ClientSearchComponent } from '@/app/entities/client/components/client-s
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, forwardRef, computed, DestroyRef, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, forwardRef, computed, DestroyRef, effect, inject, OnInit, signal, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { convertToParamMap, type ParamMap } from '@angular/router';
@@ -80,7 +80,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
                         <app-client-search inputId="clientId" formControlName="clientId" />
                         @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-danger">Zorunlu alan.</small>
+                            <small class="text-danger">Müşteri seçimi zorunludur.</small>
                         } @else if (apiFieldErrors().clientId) {
                             <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
                         }
@@ -89,7 +89,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                         <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                         @if (form.controls.petId.invalid && form.controls.petId.touched) {
-                            <small class="text-danger">Zorunlu alan.</small>
+                            <small class="text-danger">Hasta seçimi zorunludur.</small>
                         } @else if (apiFieldErrors().petId) {
                             <small class="text-danger">{{ apiFieldErrors().petId }}</small>
                         }
@@ -104,7 +104,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         } @else if (apiFieldErrors().admittedAtLocal) {
                             <small class="text-danger block">{{ apiFieldErrors().admittedAtLocal }}</small>
                         } @else if (form.controls.admittedAtLocal.hasError('required') && form.controls.admittedAtLocal.touched) {
-                            <small class="text-danger block">Zorunlu alan.</small>
+                            <small class="text-danger block">Yatış tarihi / saati zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -126,7 +126,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                             [options]="examinationOptions()"
                             optionLabel="label"
                             optionValue="value"
-                            placeholder="Muayene seçin"
+                            [placeholder]="petChosen() ? 'Muayene seçin' : 'Önce hasta seçin'"
                             [filter]="true"
                             filterPlaceholder="Ara…"
                             filterBy="label"
@@ -150,7 +150,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                                 [options]="visitOptions()"
                                 optionLabel="label"
                                 optionValue="value"
-                                [placeholder]="visitOptions().length ? 'Bağlanacak geliş (isteğe bağlı)' : 'Bu hasta için bugün geliş yok'"
+                                [placeholder]="!petChosen() ? 'Önce hasta seçin' : visitOptions().length ? 'Bağlanacak geliş (isteğe bağlı)' : 'Bu hasta için bugün geliş yok'"
                                 [showClear]="true"
                                 class="w-full"
                             />
@@ -190,7 +190,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         <label for="reason" class="block text-sm font-medium text-muted-color mb-2">Yatış nedeni *</label>
                         <textarea id="reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
                         @if (form.controls.reason.invalid && form.controls.reason.touched) {
-                            <small class="text-danger">Zorunlu alan.</small>
+                            <small class="text-danger">Yatış nedeni zorunludur.</small>
                         } @else if (apiFieldErrors().reason) {
                             <small class="text-danger">{{ apiFieldErrors().reason }}</small>
                         }
@@ -259,6 +259,21 @@ export class HospitalizationFormComponent implements OnInit, HasUnsavedChanges {
     private readonly selectedPetId = signal('');
     private readonly contextVisitId = signal('');
     readonly visitOptions = computed(() => hospitalizationVisitOptions(this.todayItems(), this.selectedPetId(), this.contextVisitId()));
+    /** Geliş ve muayene listesi hastaya bağlı: hasta seçilene kadar "yok" denmez, alan kapalı ve "Önce hasta seçin" (G-12). */
+    readonly petChosen = computed(() => !!this.selectedPetId() || this.contextLocked());
+    private readonly visitSelectState = effect(() => {
+        const visit = this.form.controls.visitId;
+
+        if (this.contextFromVisit()) {
+            return;
+        }
+
+        if (this.petChosen()) {
+            visit.enable({ emitEvent: false });
+        } else {
+            visit.disable({ emitEvent: false });
+        }
+    });
     private relationLoadSeq = 0;
     readonly apiFieldErrors = signal<HospitalizationUpsertFieldErrors>({});
 

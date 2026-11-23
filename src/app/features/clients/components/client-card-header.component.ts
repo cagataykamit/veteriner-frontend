@@ -68,22 +68,19 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
                             <span class="text-muted-color" data-testid="client-address-missing"><i class="pi pi-map-marker text-sm mr-1.5" aria-hidden="true"></i>Adres yok</span>
                         }
                         <span class="text-muted-color" data-testid="client-preferred-channel"
-                            >Tercih: <span class="font-medium text-color">{{ channelLabel() }}</span></span
+                            >İletişim tercihi: <span class="font-medium text-color">{{ channelLabel() }}</span></span
                         >
                     </p>
 
                     <!-- Durum rozetleri: KVKK rıza (+ ayrıntı), portal, hatırlatma; işaretleme eylemi "Belgeler ve rıza" kartındadır. -->
                     <div class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm">
                         <p class="m-0 inline-flex flex-wrap items-center gap-x-2 gap-y-1.5" aria-label="KVKK açık rıza" data-testid="client-kvkk">
-                            <!-- Rozet tek satır (kırılmaz); ayrıntı yanına düz yazı, dar ekranda alt satıra iner. -->
+                            <!-- Rozet tek satır (kırılmaz); "Yok" durumu rozetin içinde söylenir (M-04: rozet + düz yazı + rozet karışıktı), ayrıntı yanına düz yazı. -->
                             <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-medium whitespace-nowrap" [class]="kvkkChipClass()">
                                 <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0" aria-hidden="true"></span>
                                 <span class="font-normal">KVKK rıza:</span>
-                                <span data-testid="client-kvkk-status">{{ kvkkLabel() }}</span>
+                                <span data-testid="client-kvkk-status">{{ client().kvkkConsent.status === 'None' ? 'Yok, imzalı form alınmadı' : kvkkLabel() }}</span>
                             </span>
-                            @if (client().kvkkConsent.status === 'None') {
-                                <span class="text-muted-color">imzalı form alınmadı</span>
-                            }
                             @if (client().kvkkConsent.recordedOn; as on) {
                                 <span class="text-muted-color" data-testid="client-kvkk-date">{{ on | trDate }}</span>
                             }
@@ -156,7 +153,7 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
                                     }
                                 }
                                 @case ('error') {
-                                    <span class="text-orange-600 dark:text-orange-400 text-sm">alınamadı</span>
+                                    <span class="text-warn text-sm">alınamadı</span>
                                 }
                                 @default {
                                     <span class="text-muted-color text-sm">…</span>
@@ -181,7 +178,7 @@ const KVKK_CHIP_CLASS: Record<'Accepted' | 'Declined' | 'None', string> = {
                                     }
                                 }
                                 @case ('error') {
-                                    <span class="text-orange-600 dark:text-orange-400 text-sm">alınamadı</span>
+                                    <span class="text-warn text-sm">alınamadı</span>
                                 }
                                 @default {
                                     <span class="text-muted-color text-sm">…</span>

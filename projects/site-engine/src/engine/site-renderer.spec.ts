@@ -118,6 +118,15 @@ describe('SiteRendererComponent', () => {
             });
         }
 
+        for (const concept of SITE_CONCEPTS) {
+            it(`${concept.key}: iletişim sayfasında alt bilgi telefonu tekrar yazmaz (W-04)`, async () => {
+                const footer = `site-${concept.sectionKey}-footer`;
+
+                expect((await render(sampleConfig(concept.key))).querySelector(`${footer} a[href^="tel:"]`)).not.toBeNull();
+                expect((await render(sampleConfig(concept.key), { path: '/iletisim' })).querySelector(`${footer} a[href^="tel:"]`)).toBeNull();
+            });
+        }
+
         it('kayıtta olmayan alternatif anahtarı sayfayı bozmaz: türün ilk alternatifi çizilir', async () => {
             expect(findAlternative('hero', 'kaldirilmis-paket').key).toBe(PACK_KEYS[0]);
 

@@ -107,25 +107,30 @@ describe('CashRegistersPageComponent', () => {
         expect(byId(f, 'cash-report-summary')?.textContent).toContain('420,00');
         expect(byId(f, 'cash-report-closing')?.textContent).toContain('650,00');
         expect((f.nativeElement as HTMLElement).querySelectorAll('[data-testid="cash-movement-void"]').length).toBe(1);
-        expect(byId(f, 'cash-movement-forms')).not.toBeNull();
-        expect(byId(f, 'cash-register-settings')).not.toBeNull();
     });
 
-    it('resepsiyon: hareket girer, iptal ve tanım yok', () => {
+    it('yalnız rapor (S-05): işlem formu ve tanımlar yok; işlemin yeri Para › Kasa bağlantısıyla söylenir', () => {
+        const f = create();
+
+        expect((f.nativeElement as HTMLElement).textContent).toContain('Kasa hareketleri');
+        expect(byId(f, 'cash-movement-forms')).toBeNull();
+        expect(byId(f, 'cash-register-settings')).toBeNull();
+        expect(byId(f, 'cash-report-where')?.querySelector('a')?.getAttribute('href')).toBe('/panel/cash-registers');
+    });
+
+    it('iptal izni yoksa iptal düğmesi yok', () => {
         claims = new Set(['CashRegisters.Read', 'CashMovements.Create']);
         const f = create();
 
-        expect(byId(f, 'cash-movement-forms')).not.toBeNull();
         expect(byId(f, 'cash-movement-void')).toBeNull();
-        expect(byId(f, 'cash-register-settings')).toBeNull();
     });
 
-    it('Temel pakette üst paket kutusu; giriş/çıkış ve tanım yok', () => {
+    it('Temel pakette üst paket kutusu; tek kasada rapor yok', () => {
         locked.set({ feature: 'CashManagement', isEnabled: false, requiredPlanCode: 'Pro' });
+        api.get.mockImplementation(((path: string) => (path === '/api/v1/cash-registers' ? of([main]) : of(report))) as never);
         const f = create();
 
         expect(byId(f, 'plan-upgrade-notice')).not.toBeNull();
-        expect(byId(f, 'cash-movement-forms')).toBeNull();
-        expect(byId(f, 'cash-register-settings')).toBeNull();
+        expect(byId(f, 'cash-report')).toBeNull();
     });
 });

@@ -17,7 +17,6 @@ export type PaymentUpsertFormFieldKey =
     | 'clientId'
     | 'petId'
     | 'amount'
-    | 'currency'
     | 'method'
     | 'paidAtLocal'
     | 'note';
@@ -29,7 +28,7 @@ export interface ParsedPaymentUpsertHttpError {
     summaryMessage: string | null;
 }
 
-/** ValidationProblemDetails property adları (normalize edilir); `notes` sunucuda null olabilir. */
+/** ValidationProblemDetails property adları (normalize edilir); `notes` sunucuda null olabilir. Para birimi formda alan değil (ADR-012): hatası genel mesaja düşer. */
 const FIELD_MAP: Record<string, PaymentUpsertFormFieldKey> = {
     clientid: 'clientId',
     ownerid: 'clientId',
@@ -38,8 +37,6 @@ const FIELD_MAP: Record<string, PaymentUpsertFormFieldKey> = {
     amount: 'amount',
     totalamount: 'amount',
     paymentamount: 'amount',
-    currency: 'currency',
-    currencycode: 'currency',
     method: 'method',
     paymentmethod: 'method',
     methodtype: 'method',

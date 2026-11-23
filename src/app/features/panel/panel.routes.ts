@@ -20,6 +20,8 @@ export default [
     { path: 'sales', loadChildren: () => import('../sales/routes/sales.routes') },
     { path: 'charges', loadChildren: () => import('../charges/routes/charges.routes') },
     { path: 'e-documents', loadChildren: () => import('../e-documents/routes/e-documents.routes') },
+    // Para › Kasa sekmesi (S-05); dönem raporu Raporlar › Kasa hareketleri'nde (eski adres aynı).
+    { path: 'cash-registers', loadChildren: () => import('../cash-registers/routes/cash-registers.routes').then((m) => m.CASH_REGISTER_ROUTES) },
     { path: 'administrations', loadChildren: () => import('../administrations/routes/administrations.routes') },
     { path: 'products', loadChildren: () => import('../inventory/routes/inventory.routes') },
     { path: 'stocks', loadChildren: () => import('../inventory/routes/product-stocks.routes') },

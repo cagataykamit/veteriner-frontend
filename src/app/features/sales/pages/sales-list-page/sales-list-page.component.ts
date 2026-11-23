@@ -17,6 +17,7 @@ import { AppErrorStateComponent } from '@/app/shared/ui/error-state/app-error-st
 import { FilterFieldComponent } from '@/app/shared/ui/filter-field/filter-field.component';
 import { AppLoadingStateComponent } from '@/app/shared/ui/loading-state/app-loading-state.component';
 import { AppListHeaderComponent } from '@/app/shared/ui/list-header/app-list-header.component';
+import { AppListFiltersComponent } from '@/app/shared/ui/list-filters/app-list-filters.component';
 import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag.component';
 import { PANEL_COPY } from '@/app/shared/copy/panel-tr';
 import { formatUtcIsoAsLocalDateTimeDisplay, istanbulDateRangeToUtcIso } from '@/app/shared/utils/date.utils';
@@ -37,6 +38,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
         DateInputComponent,
         FilterFieldComponent,
         AppListHeaderComponent,
+        AppListFiltersComponent,
         AppLoadingStateComponent,
         AppErrorStateComponent,
         AppEmptyStateComponent,
@@ -52,20 +54,21 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 } @else if (canCreate) {
                     <button actions pButton type="button" [disabled]="true" class="p-button-secondary"><i class="pi pi-lock"></i>Hızlı satış (salt okunur)</button>
                 }
+                <app-list-filters (clear)="resetFilters()">
+                    <app-filter-field label="Başlangıç" labelFor="saleFrom" [active]="!!fromDate" width="date">
+                        <app-date-input inputId="saleFrom" type="date" min="1900-01-01" [(ngModel)]="fromDate" (ngModelChange)="applyFilters()" />
+                    </app-filter-field>
+                    <app-filter-field label="Bitiş" labelFor="saleTo" [active]="!!toDate" width="date">
+                        <app-date-input inputId="saleTo" type="date" min="1900-01-01" [(ngModel)]="toDate" (ngModelChange)="applyFilters()" />
+                    </app-filter-field>
+                    <app-filter-field label="İptal edilenler" labelFor="saleVoided" [active]="includeVoided" width="select">
+                        <label class="flex items-center gap-2 min-h-[2.5rem] cursor-pointer">
+                            <p-checkbox inputId="saleVoided" [binary]="true" [(ngModel)]="includeVoided" (ngModelChange)="applyFilters()" />
+                            <span class="text-sm">İptal edilenleri göster</span>
+                        </label>
+                    </app-filter-field>
+                </app-list-filters>
             </app-list-header>
-            <div class="flex flex-wrap items-end gap-3 mb-4">
-                <app-filter-field label="Başlangıç" labelFor="saleFrom" [active]="!!fromDate" width="date">
-                    <app-date-input inputId="saleFrom" type="date" min="1900-01-01" [(ngModel)]="fromDate" (ngModelChange)="applyFilters()" />
-                </app-filter-field>
-                <app-filter-field label="Bitiş" labelFor="saleTo" [active]="!!toDate" width="date">
-                    <app-date-input inputId="saleTo" type="date" min="1900-01-01" [(ngModel)]="toDate" (ngModelChange)="applyFilters()" />
-                </app-filter-field>
-                <label class="flex items-center gap-2 pb-2 cursor-pointer">
-                    <p-checkbox inputId="saleVoided" [binary]="true" [(ngModel)]="includeVoided" (ngModelChange)="applyFilters()" />
-                    İptal edilenleri göster
-                </label>
-                <button pButton type="button" severity="secondary" (click)="resetFilters()" [disabled]="loading()"><i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}</button>
-            </div>
 
             @if (loading() && rows().length === 0) {
                 <app-loading-state message="Satış listesi yükleniyor…" />

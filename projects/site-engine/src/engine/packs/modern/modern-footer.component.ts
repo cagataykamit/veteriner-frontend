@@ -20,22 +20,24 @@ import { SECTION_BASE } from '../../section-base';
                             }
                         </ul>
                     </nav>
-                    <div>
-                        @if (v.telHref) {
-                            <a class="big" [href]="v.telHref">{{ v.phone }}</a>
-                        }
-                        @if (v.mailHref) {
-                            <a [href]="v.mailHref">{{ v.email }}</a>
-                        }
-                        @if (v.address) {
-                            <address class="muted">{{ v.address }}, {{ v.location }}</address>
-                        }
-                    </div>
-                    <div>
-                        @for (group of v.groups; track group.label) {
-                            <p class="hour"><span>{{ group.label }}</span><span class="muted">{{ group.value }}</span></p>
-                        }
-                    </div>
+                    @if (!site.onContactPage()) {
+                        <div>
+                            @if (v.telHref) {
+                                <a class="big" [href]="v.telHref">{{ v.phone }}</a>
+                            }
+                            @if (v.mailHref) {
+                                <a [href]="v.mailHref">{{ v.email }}</a>
+                            }
+                            @if (v.address) {
+                                <address class="muted">{{ v.address }}, {{ v.location }}</address>
+                            }
+                        </div>
+                        <div>
+                            @for (group of v.groups; track group.label) {
+                                <p class="hour"><span>{{ group.label }}</span><span class="muted">{{ group.value }}</span></p>
+                            }
+                        </div>
+                    }
                     @if (v.social.length) {
                         <ul class="social">
                             @for (link of v.social; track link.key) {

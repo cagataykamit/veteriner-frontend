@@ -32,5 +32,17 @@ export const PortalPreset = definePreset(Aura, {
                 primary: { color: '{primary.400}', contrastColor: '#042f2e', hoverColor: '{primary.300}', activeColor: '{primary.200}' }
             }
         }
+    },
+    // Açıkta çerçeveli ve metin "tehlike" düğmeleri ("Tüm cihazlardan çıkış yap", "Onay kodu gönder") red.500 ile beyazda 3,8:1
+    // kalıyordu (PO-06); red.700 ile 6,5:1. Koyu tema Aura'nın açık kırmızısıyla okunuyor, değişmez.
+    components: {
+        button: {
+            colorScheme: {
+                light: {
+                    outlined: { danger: { color: '{red.700}' } },
+                    text: { danger: { color: '{red.700}' } }
+                }
+            }
+        }
     }
 });

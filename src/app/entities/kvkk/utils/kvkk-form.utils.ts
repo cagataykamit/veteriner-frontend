@@ -55,6 +55,17 @@ export function kvkkFormPlaceholderHint(placeholder: string): string {
     return PLACEHOLDER_HINTS[placeholder] ?? '';
 }
 
+/** Düzenleyicideki "… ekle" düğmelerinin adı (G-08); bilinmeyen yer tutucu kendi yazımıyla. */
+const PLACEHOLDER_LABELS: Readonly<Record<string, string>> = {
+    '{{clinicName}}': 'Klinik adı',
+    '{{clientName}}': 'Müşteri adı',
+    '{{date}}': 'Tarih'
+};
+
+export function kvkkFormPlaceholderLabel(placeholder: string): string {
+    return PLACEHOLDER_LABELS[placeholder] ?? placeholder;
+}
+
 /** Şablon hâlâ sunucunun varsayılan metniyken (`isDefault`) yazdırmadan önce ve Ayarlar'da gösterilir (sözleşme §4 madde 5). */
 export const KVKK_FORM_DEFAULT_TEXT_WARNING = 'Varsayılan metin: köşeli parantezli alanları kendi bilgilerinizle doldurun.';
 

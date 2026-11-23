@@ -2,7 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { composeSiteConfig, defaultStoredConfig } from '@site-engine';
 import { loadPublicSite, readSiteServerConfig, redirectLocation, withNextSlots } from '../server/site-loader';
 import { SiteHead } from './site-head';
-import { sitePathFromUrl } from './site-page-host.component';
+import { provideRouter } from '@angular/router';
+import { SitePageHostComponent, sitePathFromUrl } from './site-page-host.component';
+import { VET_FINDER_ROOT } from './vet-finder/vet-finder-state';
 import { publishedSiteConfig, withSiteBookingSource, type PublicSiteResponse, type PublishedSite } from './site-state';
 
 const CONFIG = readSiteServerConfig({ SITE_API_BASE_URL: 'https://api.example.com/', SITE_PUBLIC_ORIGIN: 'https://vetinity.com' });
@@ -183,5 +185,19 @@ describe('sitePathFromUrl', () => {
         ['/cagri/hakkimizda?x=1', '/hakkimizda']
     ])('%s → %s', (url, path) => {
         expect(sitePathFromUrl(url)).toBe(path);
+    });
+});
+
+describe('SitePageHostComponent uyarı sayfası', () => {
+    it('çıkış yolu olarak Veteriner bul bağlantısı ve Vetinity işareti gösterir (W-03)', async () => {
+        TestBed.configureTestingModule({ imports: [SitePageHostComponent], providers: [provideRouter([])] });
+        const fixture = TestBed.createComponent(SitePageHostComponent);
+
+        fixture.detectChanges();
+        await fixture.whenStable();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(el.querySelector('[data-testid=notice-vet-finder]')?.getAttribute('href')).toBe(VET_FINDER_ROOT);
+        expect(el.querySelector('img[alt=Vetinity]')).not.toBeNull();
     });
 });

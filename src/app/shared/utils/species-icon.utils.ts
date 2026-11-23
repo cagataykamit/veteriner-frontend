@@ -4,8 +4,9 @@
  * özel türler ve bilinmeyen adlar için pati. Ad büyük/küçük harf duyarsız, baştaki/sondaki boşluk yok sayılır.
  */
 const SPECIES_EMOJI: ReadonlyArray<readonly [names: readonly string[], emoji: string]> = [
-    [['kedi', 'cat'], '🐈'],
-    [['köpek', 'dog'], '🐕'],
+    // Kedi ve köpekte tam gövde (🐈 / 🐕) küçük boyda aynı turuncu leke gibi görünüyordu (M-05); yüz simgeleri ayırt edilir.
+    [['kedi', 'cat'], '🐱'],
+    [['köpek', 'dog'], '🐶'],
     [['kuş', 'papağan', 'muhabbet kuşu', 'kanarya', 'bird'], '🐦'],
     [['tavşan', 'rabbit'], '🐇'],
     [['gine domuzu', 'kobay (gine domuzu)', 'hamster', 'çinçilla', 'kobay', 'fare', 'sıçan'], '🐹'],

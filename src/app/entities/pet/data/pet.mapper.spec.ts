@@ -20,6 +20,7 @@ describe('pet.mapper hayvan durumu (ADR-020 S5)', () => {
         expect(mapPetListItemDtoToVm({ id: 'p1', name: 'Pamuk', weight: 4.2 }).weight).toBe('4,2');
         expect(mapPetDetailDtoToVm({ id: 'p1', weight: 12.45 }).weight).toBe('12,45');
         expect(mapPetDetailDtoToVm({ id: 'p1' }).weight).toBe('—');
+        expect(mapPetListItemDtoToVm({ id: 'p1', name: 'Pamuk', weight: 0 }).weight).toBe('—');
     });
 
     it('detay vefat tarihini yalnız vefat edende ve rowVersion ile okur', () => {

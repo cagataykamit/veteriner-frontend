@@ -6,16 +6,17 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
 import {
     mapCreatePaymentToApiBody,
+    mapPaymentAllocationDtoToVm,
     mapUpdatePaymentToApiBody,
     mapPaymentDetailDtoToEditVm,
     mapPaymentDetailDtoToVm,
     mapPagedPaymentsToVm,
     paymentsQueryToHttpParams
 } from '@/app/entities/payment/data/payment.mapper';
-import type { PaymentDetailDto, PaymentListItemDtoPagedResult } from '@/app/entities/payment/models/payment-api.model';
+import type { PaymentAllocationItemDto, PaymentDetailDto, PaymentListItemDtoPagedResult } from '@/app/entities/payment/models/payment-api.model';
 import type { CreatePaymentRequest, UpdatePaymentRequest } from '@/app/entities/payment/models/payment-create.model';
 import type { PaymentsListQuery } from '@/app/entities/payment/models/payment-query.model';
-import type { PaymentDetailVm, PaymentEditVm, PaymentListItemVm } from '@/app/entities/payment/models/payment-vm.model';
+import type { PaymentAllocationVm, PaymentDetailVm, PaymentEditVm, PaymentListItemVm } from '@/app/entities/payment/models/payment-vm.model';
 import { messageFromHttpError, toUserError } from '@/app/shared/utils/api-error.utils';
 
 export interface PaymentsPagedVm {
@@ -53,6 +54,14 @@ export class PaymentsService {
             catchError((err: HttpErrorResponse) =>
                 throwError(() => new Error(messageFromHttpError(err, 'Ödeme bulunamadı veya yüklenemedi.')))
             )
+        );
+    }
+
+    /** Ödemenin kapattığı ücretler (hangi ücrete ne kadar sayıldı). */
+    getPaymentAllocations(id: string): Observable<PaymentAllocationVm[]> {
+        return this.api.get<PaymentAllocationItemDto[]>(ApiEndpoints.payments.allocations(id)).pipe(
+            map((rows) => (rows ?? []).map(mapPaymentAllocationDtoToVm)),
+            catchError((err: HttpErrorResponse) => throwError(() => new Error(messageFromHttpError(err, 'Kapatılan ücretler yüklenemedi.'))))
         );
     }
 

@@ -84,6 +84,27 @@ describe('KvkkFormTemplatePageComponent', () => {
         expect(el().querySelector('[data-testid="kvkk-form-signature"]')).not.toBeNull();
     });
 
+    it('"Klinik adı / Müşteri adı / Tarih ekle" düğmeleri yer tutucuyu imlecin olduğu yere ekler (G-08)', () => {
+        const c = create();
+        const textarea = el().querySelector('[data-testid="kvkk-template-text"]') as HTMLTextAreaElement;
+        const insert = (p: string) => el().querySelector(`[data-testid="kvkk-placeholder-insert"] [data-placeholder="${p}"]`) as HTMLButtonElement;
+
+        expect(insert('{{clinicName}}').textContent?.trim()).toBe('Klinik adı ekle');
+        expect(insert('{{clientName}}').textContent?.trim()).toBe('Müşteri adı ekle');
+        expect(insert('{{date}}').textContent?.trim()).toBe('Tarih ekle');
+
+        c.text.setValue('Sayın , tarih:');
+        textarea.setSelectionRange(6, 6);
+        insert('{{clientName}}').click();
+        expect(c.text.value).toBe('Sayın {{clientName}}, tarih:');
+        expect(textarea.selectionStart).toBe(6 + '{{clientName}}'.length);
+
+        textarea.setSelectionRange(c.text.value.length, c.text.value.length);
+        insert('{{date}}').click();
+        expect(c.text.value).toBe('Sayın {{clientName}}, tarih:{{date}}');
+        expect(c.text.dirty).toBe(true);
+    });
+
     it('kaydeder: tür ve mevcut sürüm durumuyla gönderilir, yanıt uygulanır ve uyarı kalkar', () => {
         const c = create();
 

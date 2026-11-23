@@ -181,7 +181,8 @@ import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/impor
                     <div class="card mb-0 min-w-0 h-full">
                         <div class="flex flex-wrap gap-x-3 gap-y-1 items-center mb-3">
                             <h5 class="mt-0 mb-0 min-w-0">Ödeme özeti</h5>
-                            <span class="ml-auto flex flex-wrap gap-x-3">
+                            <!-- Bağlantılar başlığın yanında; dar sütunda altına sola yaslı iner (sağa yaslı yüzmez, M-04). -->
+                            <span class="flex flex-wrap gap-x-3">
                                 @if (canReadCharges) {
                                     <a routerLink="/panel/charges" [queryParams]="{ clientId: c.id }" class="text-primary font-medium no-underline text-sm whitespace-nowrap touch:touch-hit">Ücretler →</a>
                                 }
@@ -205,7 +206,7 @@ import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/impor
                                     </p>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-muted-color text-xs m-0 mb-0.5">Toplam ödeme</p>
+                                    <p class="text-muted-color text-xs m-0 mb-0.5">Toplam</p>
                                     @if (paymentSummary()!.currencyTotals.length > 0) {
                                         <ul class="list-none m-0 p-0 space-y-0.5">
                                             @for (ct of paymentSummary()!.currencyTotals; track ct.currency) {

@@ -6,6 +6,7 @@ import { filter, map } from 'rxjs';
 import { SiteRendererComponent } from '@site-engine';
 import { SiteHead } from './site-head';
 import { publishedSiteConfig, type SiteRequestState } from './site-state';
+import { VET_FINDER_ROOT, VETINITY_LOGO } from './vet-finder/vet-finder-state';
 
 const SITE_STATE = makeStateKey<SiteRequestState>('site-state');
 
@@ -42,9 +43,12 @@ export function sitePathFromUrl(url: string): string {
         @if (config(); as site) {
             <site-renderer [config]="site" [path]="path()" [baseHref]="baseHref()" (pathChange)="navigate($event)" />
         } @else if (notice(); as message) {
+            <!-- Çıkış yolu ve marka (W-03): Veteriner bul'da başka klinik aranabilir. -->
             <main class="notice">
                 <h1>{{ message.title }}</h1>
                 <p>{{ message.text }}</p>
+                <a class="notice-link" [href]="vetFinder" data-testid="notice-vet-finder">Veteriner bul'da klinik arayın</a>
+                <img class="notice-logo" [src]="logo" alt="Vetinity" width="96" height="24" />
             </main>
         }
     `,
@@ -75,6 +79,26 @@ export function sitePathFromUrl(url: string): string {
             font-size: 16px;
             line-height: 1.5;
         }
+
+        .notice-link {
+            justify-self: center;
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px;
+            padding: 0 20px;
+            border-radius: 999px;
+            background: #0b1d3a;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .notice-logo {
+            justify-self: center;
+            margin-top: 24px;
+            opacity: 0.8;
+        }
     `
 })
 export class SitePageHostComponent {
@@ -92,6 +116,8 @@ export class SitePageHostComponent {
         { initialValue: this.router.url }
     );
 
+    protected readonly vetFinder = VET_FINDER_ROOT;
+    protected readonly logo = VETINITY_LOGO;
     protected readonly path = computed(() => sitePathFromUrl(this.url()));
     protected readonly config = computed(() => (this.state.kind === 'published' ? publishedSiteConfig(this.state) : null));
     protected readonly baseHref = computed(() => (this.state.kind === 'published' ? `/k/${encodeURIComponent(this.state.slug)}` : ''));

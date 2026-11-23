@@ -77,6 +77,18 @@
 }
 
 /*
+ * Uyarı ve olumlu vurgu metni (G-14): "alınamadı", artış oranı gibi kısa metinler. -600 tonları beyazda 3,2:1 kalıyordu;
+ * açık: orange-700 ≈ 5,2:1, green-700 ≈ 5,0:1; koyu: -400 tonları.
+ */
+@utility text-warn {
+    @apply text-orange-700 dark:text-orange-400;
+}
+
+@utility text-success {
+    @apply text-green-700 dark:text-green-400;
+}
+
+/*
  * Açık temada birincil renkli bağlantılar (müşteri/hasta adı, "Ücretler" …) yarı kalın: koyu turkuaz ince yazıda griye kaçar,
  * kalın harfte renk seçilir. Katmansız kural `font-medium` yardımcısını geçer; koyu temada açık turkuaz zaten belirgin.
  */
