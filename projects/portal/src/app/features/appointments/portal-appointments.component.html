@@ -46,6 +46,9 @@
                                     @if (a.googleCalendarUrl; as googleUrl) {
                                         <portal-add-to-calendar [googleUrl]="googleUrl" [ics]="calendarFile(a)" />
                                     }
+                                    @if (a.status === 'Scheduled' && activeScope() === 'upcoming' && callHref(); as href) {
+                                        <a class="portal-link-button" [href]="href" data-testid="appointment-call-clinic">Gelemeyeceğim: kliniği ara</a>
+                                    }
                                 </li>
                             }
                         </ul>

@@ -128,6 +128,11 @@ describe('PortalAppointmentsComponent (randevularım)', () => {
         await settle();
 
         const rows = el.querySelectorAll('[data-testid=appointment-list] li');
+
+        // Kartta tek küçük "Takvime ekle" düğmesi; seçenekler açılınca görünür (PO-02).
+        expect(rows[0].querySelector('[data-testid=calendar-google]')).toBeNull();
+        rows[0].querySelector<HTMLButtonElement>('[data-testid=calendar-toggle]')!.click();
+        await settle();
         const link = rows[0].querySelector<HTMLAnchorElement>('[data-testid=calendar-google]');
 
         expect(link?.getAttribute('href')).toBe(google);
@@ -155,6 +160,17 @@ describe('PortalAppointmentsComponent (randevularım)', () => {
 
         expect(rows[0].querySelector('[role=alert]')?.textContent).toContain('Takvim dosyası alınamadı');
         vi.restoreAllMocks();
+    });
+
+    it('yaklaşan planlı randevuda "Gelemeyeceğim: kliniği ara" telefona gider; iptal edilende ve geçmişte yok (PO-02)', async () => {
+        await create();
+        expectList('upcoming', 1).flush(page([appointment(), appointment({ appointmentId: 'ap-2', status: 'Cancelled' })]));
+        await settle();
+
+        const rows = el.querySelectorAll('[data-testid=appointment-list] li');
+
+        expect(rows[0].querySelector('[data-testid=appointment-call-clinic]')?.getAttribute('href')).toBe('tel:03125550000');
+        expect(rows[1].querySelector('[data-testid=appointment-call-clinic]')).toBeNull();
     });
 
     it('hata durumunda mesaj ve "Tekrar dene"', async () => {

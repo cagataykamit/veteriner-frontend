@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { PortalSessionService } from '@portal/app/core/auth/portal-session.service';
+import { PortalClinicContact, PortalClinicContactService } from '@portal/app/features/clinic/portal-clinic-contact.service';
 import { portalPagedLoad } from '@portal/app/shared/data/portal-load';
 import { formatPortalDay, formatPortalTime, formatPortalWeekday } from '@portal/app/shared/format/portal-date';
-import { appointmentStatus, appointmentTypeLabel } from '@portal/app/shared/format/portal-labels';
+import { appointmentStatus, appointmentTypeLabel, telHref } from '@portal/app/shared/format/portal-labels';
 import { PortalAddToCalendar } from '@portal/app/shared/ui/portal-add-to-calendar.component';
 import { PortalEmptyState, PortalErrorState, PortalSkeleton } from '@portal/app/shared/ui/portal-states.component';
 import { PortalAppointment, PortalAppointmentScope, PortalAppointmentsApi } from './portal-appointments.api';
@@ -30,6 +31,7 @@ const TABS: readonly { readonly scope: PortalAppointmentScope; readonly label: s
 export class PortalAppointmentsComponent {
     protected readonly session = inject(PortalSessionService);
     private readonly api = inject(PortalAppointmentsApi);
+    private readonly contacts = inject(PortalClinicContactService);
     private readonly router = inject(Router);
 
     readonly tabs = TABS;
@@ -42,6 +44,10 @@ export class PortalAppointmentsComponent {
 
     private readonly calendarRequests = new Map<string, () => Observable<Blob>>();
 
+    /** Gelemeyecek sahibin yolu (PO-02): planlı randevuda "kliniği ara"; telefon yoksa satır yazılmaz (H9). */
+    private readonly contact = signal<PortalClinicContact | null>(null);
+    readonly callHref = computed(() => telHref(this.contact()?.phone));
+
     /** Randevular bağın kliniğinden farklı bir klinikteyse (aynı işletmenin şubesi) klinik adı her satırda yazılır. */
     readonly showClinic = computed(() => {
         const clinicId = this.session.activeLink()?.clinicId;
@@ -50,6 +56,19 @@ export class PortalAppointmentsComponent {
     });
 
     constructor() {
+        effect((onCleanup) => {
+            const linkId = this.session.activeLink()?.linkId;
+
+            untracked(() => {
+                this.contact.set(null);
+
+                if (linkId) {
+                    const sub = this.contacts.contact(linkId).subscribe((c) => this.contact.set(c));
+
+                    onCleanup(() => sub.unsubscribe());
+                }
+            });
+        });
         effect(() => {
             const link = this.session.activeLink();
             const scope = this.activeScope();
