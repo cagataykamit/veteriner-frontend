@@ -106,6 +106,13 @@ describe('PortalLegalPageComponent (sürüm gösterimi)', () => {
         expect(privacy).toContain(`Portal hesabı verileri için: ${PORTAL_VETINITY_CONTACT_EMAIL}.`);
     });
 
+    it('e-posta sağlayıcısı Google (ABD) hizmet sağlayıcılarda ve yurt dışı aktarımda yazılır', () => {
+        const privacy = documentText(PORTAL_PRIVACY_DOCUMENT);
+
+        expect(privacy).toContain('e-posta gönderimi (Google LLC, ABD)');
+        expect(privacy).toContain('Yurt dışına aktarım: giriş kodu, parola sıfırlama ve hatırlatma e-postaları için Google LLC (ABD)');
+    });
+
     it('sürüm alınamazsa metin yine görünür, sürüm uydurulmaz', async () => {
         legal.documents.mockReturnValue(throwError(() => new Error('ağ')));
         await open('PortalTerms');

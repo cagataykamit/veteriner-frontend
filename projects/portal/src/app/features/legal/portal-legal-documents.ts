@@ -203,7 +203,7 @@ export const PORTAL_PRIVACY_DOCUMENT: PortalLegalDocument = {
                 ],
                 [
                     { text: 'Hizmet sağlayıcılar:', strong: true },
-                    " barındırma ve altyapı, güvenlik doğrulaması (Cloudflare Turnstile; Cloudflare, Inc., ABD), e-posta gönderim sağlayıcısı ve mobil uygulamada bildirim (push) açıldığında uygulama mağazası platformlarının bildirim altyapısı. Yurt dışına aktarım Kanun m.9'a uygun olmadıkça yapılmaz."
+                    " barındırma ve altyapı, güvenlik doğrulaması (Cloudflare Turnstile; Cloudflare, Inc., ABD), e-posta gönderimi (Google LLC, ABD) ve mobil uygulamada bildirim (push) açıldığında uygulama mağazası platformlarının bildirim altyapısı. Yurt dışına aktarım: giriş kodu, parola sıfırlama ve hatırlatma e-postaları için Google LLC (ABD); güvenlik doğrulaması için Cloudflare, Inc. (ABD). Yurt dışına aktarım Kanun m.9'a uygun olmadıkça yapılmaz."
                 ],
                 [{ text: 'Yetkili kurumlar:', strong: true }, ' mevzuatın zorunlu kıldığı hallerde.']
             ],
