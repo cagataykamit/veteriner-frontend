@@ -252,7 +252,7 @@ export const DATA_PROCESSING_AGREEMENT_DOCUMENT: LegalDocumentDef = {
         {
             heading: '5. Yurt dışı aktarım',
             paragraphs: [
-                "Veriler Vetinity'nin kiraladığı sunucularda barındırılır. Yurt dışına aktarım Kanun m.9'a uygun olmadıkça yapılmaz. Hizmetin gönderdiği e-postalar (hatırlatma, bildirim, giriş kodu) Google LLC'nin (Amerika Birleşik Devletleri) e-posta altyapısıyla iletilir; alıcı adresi ve e-posta içeriği bu aktarıma girer. Klinik için yapay zekâ özellikleri açıldığında madde 3(h)'deki veriler, işlemin yapılması için Anthropic PBC'ye (Amerika Birleşik Devletleri) aktarılır; özellik kapalı klinikte bu aktarım olmaz."
+                "Veriler Vetinity'nin Türkiye'de kiraladığı sunucularda barındırılır. Yurt dışına aktarım Kanun m.9'a uygun olmadıkça yapılmaz. Hizmetin gönderdiği e-postalar (hatırlatma, bildirim, giriş kodu) Google LLC'nin (Amerika Birleşik Devletleri) e-posta altyapısıyla iletilir; alıcı adresi ve e-posta içeriği bu aktarıma girer. Klinik için yapay zekâ özellikleri açıldığında madde 3(h)'deki veriler, işlemin yapılması için Anthropic PBC'ye (Amerika Birleşik Devletleri) aktarılır; özellik kapalı klinikte bu aktarım olmaz."
             ]
         },
         {
