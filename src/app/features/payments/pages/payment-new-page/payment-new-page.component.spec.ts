@@ -492,7 +492,7 @@ describe('PaymentNewPageComponent', () => {
     describe('ödeme zamanı hata mesajı', () => {
         const dateInput = () => fixture.debugElement.query(By.css('app-date-input[inputId="paidAtLocal"]')).injector.get(DateInputComponent);
 
-        it('ileri saat girilince yalnız aralık mesajı görünür; "Zorunlu alan" eklenmez', async () => {
+        it('ileri saat girilince yalnız aralık mesajı görünür; zorunlu uyarısı eklenmez', async () => {
             await setup();
             // Seçici değeri İstanbul duvar saatidir (üst sınır gibi); tarayıcının saat diliminden bağımsız olsun diye öyle kurulur.
             const inTwoHours = toIstanbulDateTimeLocalInputValue(new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString());
@@ -503,17 +503,17 @@ describe('PaymentNewPageComponent', () => {
 
             expect(cmp.form.controls.paidAtLocal.hasError('dateOutOfRange')).toBe(true);
             expect(fixture.nativeElement.textContent).toContain('arasında olmalıdır');
-            expect(fixture.nativeElement.textContent).not.toContain('Zorunlu alan');
+            expect(fixture.nativeElement.textContent).not.toContain('Ödeme tarihi / saati zorunludur.');
         });
 
-        it('boş bırakılınca "Zorunlu alan" görünür', async () => {
+        it('boş bırakılınca "Ödeme tarihi / saati zorunludur." görünür', async () => {
             await setup();
             // Tarih şimdi gelir (H2); kullanıcı silerse zorunlu uyarısı görünür.
             cmp.form.controls.paidAtLocal.setValue('');
             cmp.form.controls.paidAtLocal.markAsTouched();
             fixture.detectChanges();
 
-            expect(fixture.nativeElement.textContent).toContain('Zorunlu alan');
+            expect(fixture.nativeElement.textContent).toContain('Ödeme tarihi / saati zorunludur.');
         });
     });
 

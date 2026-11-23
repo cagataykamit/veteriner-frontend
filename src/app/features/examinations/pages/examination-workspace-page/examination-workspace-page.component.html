@@ -83,10 +83,10 @@
                 }
                 <form [formGroup]="selectionForm">
                     <div class="grid grid-cols-12 gap-4">
-                        <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="clientId" [error]="selectionForm.controls.clientId.invalid && selectionForm.controls.clientId.touched ? 'Zorunlu alan.' : apiFieldErrors().clientId ? apiFieldErrors().clientId : null" [required]="true">
+                        <app-form-field class="col-span-12 md:col-span-6" label="Müşteri" fieldId="clientId" [error]="selectionForm.controls.clientId.invalid && selectionForm.controls.clientId.touched ? 'Müşteri seçimi zorunludur.' : apiFieldErrors().clientId ? apiFieldErrors().clientId : null" [required]="true">
                             <app-client-search inputId="clientId" formControlName="clientId" />
                         </app-form-field>
-                        <app-form-field class="col-span-12 md:col-span-6" label="Hasta" fieldId="petId" [error]="selectionForm.controls.petId.invalid && selectionForm.controls.petId.touched ? 'Zorunlu alan.' : apiFieldErrors().petId ? apiFieldErrors().petId : null" [required]="true">
+                        <app-form-field class="col-span-12 md:col-span-6" label="Hasta" fieldId="petId" [error]="selectionForm.controls.petId.invalid && selectionForm.controls.petId.touched ? 'Hasta seçimi zorunludur.' : apiFieldErrors().petId ? apiFieldErrors().petId : null" [required]="true">
                             <app-pet-search inputId="petId" formControlName="petId" [clientId]="selectionForm.controls.clientId.value" [activeOnly]="true" />
                         </app-form-field>
                     </div>

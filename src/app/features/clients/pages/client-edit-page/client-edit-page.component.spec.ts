@@ -93,7 +93,7 @@ describe('ClientEditPageComponent iç not', () => {
 
         submit();
 
-        expect(phoneError()?.textContent).toContain('Bu alan zorunludur.');
+        expect(phoneError()?.textContent).toContain('Telefon zorunludur.');
         expect(clients.updateClient).not.toHaveBeenCalled();
     });
 });

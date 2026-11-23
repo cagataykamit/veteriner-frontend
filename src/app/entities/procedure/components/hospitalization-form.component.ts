@@ -80,7 +80,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
                         <app-client-search inputId="clientId" formControlName="clientId" />
                         @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-danger">Zorunlu alan.</small>
+                            <small class="text-danger">Müşteri seçimi zorunludur.</small>
                         } @else if (apiFieldErrors().clientId) {
                             <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
                         }
@@ -89,7 +89,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                         <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                         @if (form.controls.petId.invalid && form.controls.petId.touched) {
-                            <small class="text-danger">Zorunlu alan.</small>
+                            <small class="text-danger">Hasta seçimi zorunludur.</small>
                         } @else if (apiFieldErrors().petId) {
                             <small class="text-danger">{{ apiFieldErrors().petId }}</small>
                         }
@@ -104,7 +104,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         } @else if (apiFieldErrors().admittedAtLocal) {
                             <small class="text-danger block">{{ apiFieldErrors().admittedAtLocal }}</small>
                         } @else if (form.controls.admittedAtLocal.hasError('required') && form.controls.admittedAtLocal.touched) {
-                            <small class="text-danger block">Zorunlu alan.</small>
+                            <small class="text-danger block">Yatış tarihi / saati zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
@@ -190,7 +190,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         <label for="reason" class="block text-sm font-medium text-muted-color mb-2">Yatış nedeni *</label>
                         <textarea id="reason" rows="3" class="w-full p-inputtext p-component" formControlName="reason"></textarea>
                         @if (form.controls.reason.invalid && form.controls.reason.touched) {
-                            <small class="text-danger">Zorunlu alan.</small>
+                            <small class="text-danger">Yatış nedeni zorunludur.</small>
                         } @else if (apiFieldErrors().reason) {
                             <small class="text-danger">{{ apiFieldErrors().reason }}</small>
                         }

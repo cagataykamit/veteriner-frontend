@@ -75,7 +75,7 @@ const DUPLICATE_CLIENT_MESSAGE = 'Bu ad ve telefonla kayıtlı müşteri var. Ar
                     <label for="vr-petName" class="block text-sm font-medium text-muted-color mb-2">Hasta adı *</label>
                     <input id="vr-petName" pInputText class="w-full" autocomplete="off" [formControl]="petForm.controls.name" />
                     @if (petForm.controls.name.invalid && petForm.controls.name.touched) {
-                        <small class="text-danger">Bu alan zorunludur.</small>
+                        <small class="text-danger">Hasta adı zorunludur.</small>
                     }
                 </div>
                 <div class="col-span-12 md:col-span-6">

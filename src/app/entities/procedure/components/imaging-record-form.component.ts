@@ -56,21 +56,21 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         <label for="imgClientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
                         <app-client-search inputId="imgClientId" formControlName="clientId" />
                         @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-danger">Zorunlu alan.</small>
+                            <small class="text-danger">Müşteri seçimi zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="imgPetId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                         <app-pet-search inputId="imgPetId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                         @if (form.controls.petId.invalid && form.controls.petId.touched) {
-                            <small class="text-danger">Zorunlu alan.</small>
+                            <small class="text-danger">Hasta seçimi zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">
                         <label for="imgModality" class="block text-sm font-medium text-muted-color mb-2">Tür *</label>
                         <p-select inputId="imgModality" formControlName="modality" [options]="modalityOptions" optionLabel="label" optionValue="value" placeholder="Görüntüleme türü" class="w-full" />
                         @if (form.controls.modality.invalid && form.controls.modality.touched) {
-                            <small class="text-danger">Zorunlu alan.</small>
+                            <small class="text-danger">Tür seçimi zorunludur.</small>
                         }
                     </div>
                     <div class="col-span-12 md:col-span-6">

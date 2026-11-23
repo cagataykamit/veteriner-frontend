@@ -62,7 +62,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         <label for="clientId" class="block text-sm font-medium text-muted-color mb-2">Müşteri *</label>
                         <app-client-search inputId="clientId" formControlName="clientId" />
                         @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
-                            <small class="text-danger">Zorunlu alan.</small>
+                            <small class="text-danger">Müşteri seçimi zorunludur.</small>
                         } @else if (apiFieldErrors().clientId) {
                             <small class="text-danger">{{ apiFieldErrors().clientId }}</small>
                         }
@@ -71,7 +71,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         <label for="petId" class="block text-sm font-medium text-muted-color mb-2">Hasta *</label>
                         <app-pet-search inputId="petId" formControlName="petId" [clientId]="form.controls.clientId.value" />
                         @if (form.controls.petId.invalid && form.controls.petId.touched) {
-                            <small class="text-danger">Zorunlu alan.</small>
+                            <small class="text-danger">Hasta seçimi zorunludur.</small>
                         } @else if (apiFieldErrors().petId) {
                             <small class="text-danger">{{ apiFieldErrors().petId }}</small>
                         }
@@ -111,7 +111,7 @@ import { ReadOnlyReasonDirective } from '@/app/shared/ui/read-only-reason/read-o
                         <label for="testName" class="block text-sm font-medium text-muted-color mb-2">Test adı *</label>
                         <input id="testName" type="text" class="w-full p-inputtext p-component" formControlName="testName" />
                         @if (form.controls.testName.invalid && form.controls.testName.touched) {
-                            <small class="text-danger">Zorunlu alan.</small>
+                            <small class="text-danger">Test adı zorunludur.</small>
                         } @else if (apiFieldErrors().testName) {
                             <small class="text-danger">{{ apiFieldErrors().testName }}</small>
                         }
