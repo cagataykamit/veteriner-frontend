@@ -14,7 +14,8 @@ import { LayoutService } from '@/app/layout/service/layout.service';
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
- * Herkese açık üst çubuk: krem zemin üstünde yüzen hap (`public-site.scss`). Masaüstünde (≥1200 px, `xl`) bağlantılar ve
+ * Herkese açık üst çubuk: krem zemin üstünde yüzen hap (`public-site.scss`); telefonda (<768 px) en üste oturan 56 px opak
+ * şerit, logo 30 px. Masaüstünde (≥1200 px, `xl`) bağlantılar ve
  * düğmeler, altında logo + hamburger.
  * 992–1199 px arasında beş öğe, Veteriner bul ve iki düğme tek satıra sığmadığı için eşik `lg` değil `xl`.
  * Menü öğeleri düz bağlantıdır; açılır alt menü yok (kullanıcı kararı 2026-11-12). Mobil menü tam ekran açılır; odak
@@ -34,8 +35,8 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
         <header class="ps-topbar w-full">
             <div class="ps-topbar-row">
                 <a routerLink="/" class="ps-topbar-logo no-underline" aria-label="Vetinity ana sayfa">
-                    <img [src]="brand.compactLockup" alt="Vetinity" class="block h-[38px] w-auto object-contain dark:hidden md:h-[40px]" width="168" height="42" />
-                    <img [src]="brand.compactLockupDark" alt="Vetinity" class="hidden h-[38px] w-auto object-contain dark:block md:h-[40px]" width="168" height="42" />
+                    <img [src]="brand.compactLockup" alt="Vetinity" class="block h-[30px] w-auto object-contain dark:hidden md:h-[40px]" width="168" height="42" />
+                    <img [src]="brand.compactLockupDark" alt="Vetinity" class="hidden h-[30px] w-auto object-contain dark:block md:h-[40px]" width="168" height="42" />
                 </a>
 
                 <nav class="ps-topbar-nav hidden xl:flex" aria-label="Ana navigasyon">
@@ -88,8 +89,8 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tab
             >
                 <div class="ps-mobile-menu-row">
                     <a routerLink="/" class="ps-topbar-logo no-underline" aria-label="Vetinity ana sayfa" (click)="closeMenu()">
-                        <img [src]="brand.compactLockup" alt="" class="block h-[38px] w-auto dark:hidden" width="168" height="42" />
-                        <img [src]="brand.compactLockupDark" alt="" class="hidden h-[38px] w-auto dark:block" width="168" height="42" />
+                        <img [src]="brand.compactLockup" alt="" class="block h-[30px] w-auto dark:hidden md:h-[38px]" width="168" height="42" />
+                        <img [src]="brand.compactLockupDark" alt="" class="hidden h-[30px] w-auto dark:block md:h-[38px]" width="168" height="42" />
                     </a>
                     <button #closeButton type="button" class="ps-topbar-icon" aria-label="Menüyü kapat" (click)="closeMenu()">
                         <i class="pi pi-times" aria-hidden="true"></i>
