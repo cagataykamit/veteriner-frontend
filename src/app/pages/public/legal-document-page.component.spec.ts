@@ -135,6 +135,26 @@ describe('LegalDocumentPageComponent', () => {
         expect(PRICING_PLAN_DEFS.every((p) => p.trialDays === PRICING_TRIAL_DAYS)).toBe(true);
     });
 
+    it('e-posta sağlayıcısı Google (ABD) yurt dışı aktarımda ve alt işleyenlerde yazılır', () => {
+        expect(documentText(PRIVACY_POLICY_DOCUMENT)).toContain('Yurt dışına aktarım: e-posta gönderimi için Google LLC (ABD)');
+        expect(documentText(DATA_PROCESSING_AGREEMENT_DOCUMENT)).toContain('e-posta gönderimi için Google LLC, ABD');
+        expect(documentText(DATA_PROCESSING_AGREEMENT_DOCUMENT)).toContain("Google LLC'nin (Amerika Birleşik Devletleri) e-posta altyapısıyla iletilir");
+    });
+
+    it('süreler kodda olmayan otomatik silme vaat etmez: salt okunurda veri silinmez, silme yazılı kapatma talebiyle başlar', () => {
+        const terms = documentText(TERMS_OF_USE_DOCUMENT);
+        const dpa = documentText(DATA_PROCESSING_AGREEMENT_DOCUMENT);
+
+        expect(terms).toContain('hesap salt okunur olur; veriler silinmez ve Klinik bu süre boyunca verisini dışa aktarabilir');
+        expect(terms).toContain('kapatılmasını yazılı olarak (e-postayla) talep ederse talepten itibaren 30 gün içinde');
+        expect(dpa).toContain('veriler silinmez ve Klinik verisini dışa aktarabilir');
+        expect(dpa).toContain('kapatılmasını yazılı olarak (e-postayla) talep ederse talepten itibaren 30 gün içinde');
+
+        for (const content of [terms, dpa, documentText(PRIVACY_POLICY_DOCUMENT)]) {
+            expect(content).not.toMatch(/90 gün boyunca saklanır|sona ermesinden 90 gün sonra/);
+        }
+    });
+
     it('unvan girilmeden taraf yalnız "Vetinity" yazılır; MERSİS satırı yok', () => {
         expect(VETINITY_LEGAL_ENTITY_NAME).toBeNull();
         expect(documentText(PRIVACY_POLICY_DOCUMENT)).toContain('Vetinity, 6698 sayılı Kanun kapsamında veri sorumlusudur.');

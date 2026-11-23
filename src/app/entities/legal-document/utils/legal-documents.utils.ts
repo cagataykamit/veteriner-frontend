@@ -93,7 +93,7 @@ export const PRIVACY_POLICY_DOCUMENT: LegalDocumentDef = {
         {
             heading: '4. Aktarım',
             paragraphs: [
-                'Barındırma ve altyapı, ödeme (iyzico), e-posta/SMS gönderimi, güvenlik doğrulaması (Cloudflare Turnstile; Cloudflare, Inc., ABD), destek ve muhasebe/hukuk danışmanlığı sağlayıcılarına; mevzuatın zorunlu kıldığı hallerde yetkili kurumlara. Yurt dışına aktarım: güvenlik doğrulaması için Cloudflare, Inc. (ABD); klinikte açıldığında yapay zekâ özellikleri için Anthropic PBC (ABD). Yapay zekâ isteklerine hesap bilgileriniz (ad, e-posta) eklenmez; klinik kayıtlarına elle yazılmış metinde adınız geçiyorsa gönderilen metinde yer alabilir. Yurt dışına aktarım Kanun m.9\'a uygun olmadıkça yapılmaz. Verileriniz satılmaz.'
+                'Barındırma ve altyapı, ödeme (iyzico), e-posta gönderimi (Google LLC, ABD), güvenlik doğrulaması (Cloudflare Turnstile; Cloudflare, Inc., ABD), destek ve muhasebe/hukuk danışmanlığı sağlayıcılarına; mevzuatın zorunlu kıldığı hallerde yetkili kurumlara. Yurt dışına aktarım: e-posta gönderimi için Google LLC (ABD); güvenlik doğrulaması için Cloudflare, Inc. (ABD); klinikte açıldığında yapay zekâ özellikleri için Anthropic PBC (ABD). Yapay zekâ isteklerine hesap bilgileriniz (ad, e-posta) eklenmez; klinik kayıtlarına elle yazılmış metinde adınız geçiyorsa gönderilen metinde yer alabilir. Yurt dışına aktarım Kanun m.9\'a uygun olmadıkça yapılmaz. Verileriniz satılmaz.'
             ]
         },
         {
@@ -155,7 +155,7 @@ export const TERMS_OF_USE_DOCUMENT: LegalDocumentDef = {
         {
             heading: '4. Deneme, abonelik ve ödeme',
             paragraphs: [
-                `Deneme süresi ${PRICING_TRIAL_DAYS} gündür; süre sonunda ücretli pakete geçilmezse hesap salt okunur olur ve veriler 90 gün boyunca saklanır. Ücretler, paket ve fatura dönemi uygulama içinde belirtilir; ödeme iyzico aracılığıyla alınır. İptal ve iade: abonelik ödenen dönem için peşin alınır; iptal edilen abonelik ödenmiş dönemin sonuna kadar kullanılır, kısmi iade yapılmaz. Fiyat değişikliği, yürürlüğe girmeden en az 30 gün önce bildirilir.`
+                `Deneme süresi ${PRICING_TRIAL_DAYS} gündür; süre sonunda ücretli pakete geçilmezse ya da ücretli dönem yenilenmezse hesap salt okunur olur; veriler silinmez ve Klinik bu süre boyunca verisini dışa aktarabilir. Ücretler, paket ve fatura dönemi uygulama içinde belirtilir; ödeme iyzico aracılığıyla alınır. İptal ve iade: abonelik ödenen dönem için peşin alınır; iptal edilen abonelik ödenmiş dönemin sonuna kadar kullanılır, kısmi iade yapılmaz. Fiyat değişikliği, yürürlüğe girmeden en az 30 gün önce bildirilir.`
             ]
         },
         {
@@ -197,7 +197,7 @@ export const TERMS_OF_USE_DOCUMENT: LegalDocumentDef = {
         {
             heading: '10. Fesih',
             paragraphs: [
-                "Taraflar 30 gün önceden yazılı bildirimle sona erdirebilir; şartların ağır ihlalinde Vetinity erişimi derhal askıya alabilir. Fesihte Klinik'e verisini dışa aktarması için 30 gün süre tanınır."
+                "Taraflar 30 gün önceden yazılı bildirimle sona erdirebilir; şartların ağır ihlalinde Vetinity erişimi derhal askıya alabilir. Klinik hesabın kapatılmasını yazılı olarak (e-postayla) talep ederse talepten itibaren 30 gün içinde verisini dışa aktarabilir; bu süre sonunda veriler 90 gün içinde silinir ya da anonimleştirilir. Yasal saklama yükümlülüğü bulunanlar o süre kadar ayrı tutulur."
             ]
         },
         {
@@ -236,7 +236,7 @@ export const DATA_PROCESSING_AGREEMENT_DOCUMENT: LegalDocumentDef = {
                 "a) Verileri yalnız Klinik'in yazılı (Hizmet kullanımıyla verilen) talimatları doğrultusunda işler.",
                 'b) Verilere erişen personelin gizlilik yükümlülüğü altında olmasını sağlar.',
                 'c) Kanun m.12 uyarınca uygun teknik ve idari tedbirleri alır (rol/izin kontrolü, iletişimde şifreleme, denetim kaydı, yedekleme, erişim kısıtı).',
-                'd) Alt işleyenlere (barındırma, ödeme, bildirim sağlayıcıları; yapay zekâ özellikleri için Anthropic PBC, ABD) aynı seviyede yükümlülük getirir. Güncel alt işleyen listesi bu sayfada yayımlanır; değişiklik, yürürlüğe girmeden en az 30 gün önce Kliniğe e-postayla bildirilir.',
+                'd) Alt işleyenlere (barındırma, ödeme, bildirim sağlayıcıları; e-posta gönderimi için Google LLC, ABD; yapay zekâ özellikleri için Anthropic PBC, ABD) aynı seviyede yükümlülük getirir. Güncel alt işleyen listesi bu sayfada yayımlanır; değişiklik, yürürlüğe girmeden en az 30 gün önce Kliniğe e-postayla bildirilir.',
                 'e) Veri ihlalini öğrendiğinde gecikmeksizin, en geç 48 saat içinde Kliniğe bildirir.',
                 'f) İlgili kişi taleplerinde Kliniğe makul yardımda bulunur; doğrudan gelen talepleri Kliniğe yönlendirir.',
                 "g) Kanun'a uyumun kanıtlanması için gerekli bilgiyi sağlar ve makul denetime katlanır.",
@@ -252,13 +252,13 @@ export const DATA_PROCESSING_AGREEMENT_DOCUMENT: LegalDocumentDef = {
         {
             heading: '5. Yurt dışı aktarım',
             paragraphs: [
-                "Veriler Vetinity'nin kiraladığı sunucularda barındırılır. Yurt dışına aktarım Kanun m.9'a uygun olmadıkça yapılmaz. Klinik için yapay zekâ özellikleri açıldığında madde 3(h)'deki veriler, işlemin yapılması için Anthropic PBC'ye (Amerika Birleşik Devletleri) aktarılır; özellik kapalı klinikte bu aktarım olmaz."
+                "Veriler Vetinity'nin kiraladığı sunucularda barındırılır. Yurt dışına aktarım Kanun m.9'a uygun olmadıkça yapılmaz. Hizmetin gönderdiği e-postalar (hatırlatma, bildirim, giriş kodu) Google LLC'nin (Amerika Birleşik Devletleri) e-posta altyapısıyla iletilir; alıcı adresi ve e-posta içeriği bu aktarıma girer. Klinik için yapay zekâ özellikleri açıldığında madde 3(h)'deki veriler, işlemin yapılması için Anthropic PBC'ye (Amerika Birleşik Devletleri) aktarılır; özellik kapalı klinikte bu aktarım olmaz."
             ]
         },
         {
             heading: '6. Süre sonu',
             paragraphs: [
-                'Sonlandırmada Klinik verisini 30 gün içinde dışa aktarabilir; sözleşmenin sona ermesinden 90 gün sonra Vetinity verileri siler/anonimleştirir ve talep halinde yazılı teyit verir. Yasal saklama zorunluluğu bulunanlar o süre kadar ayrı tutulur.'
+                'Abonelik ya da deneme bittiğinde hesap salt okunur olur; veriler silinmez ve Klinik verisini dışa aktarabilir. Klinik hesabın kapatılmasını yazılı olarak (e-postayla) talep ederse talepten itibaren 30 gün içinde verisini dışa aktarabilir; bu süre sonunda Vetinity verileri 90 gün içinde siler ya da anonimleştirir ve talep halinde yazılı teyit verir. Yasal saklama yükümlülüğü bulunanlar o süre kadar ayrı tutulur.'
             ]
         },
         {
