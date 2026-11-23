@@ -77,17 +77,7 @@ type View = 'documents' | 'undocumented';
         <p-toast position="top-right" />
         <div class="card">
             <app-list-header class="mb-4" title="e-Belgeler" [count]="total()">
-                <app-filter-field label="Müşteri" labelFor="edocClientFilter" [active]="!!clientId">
-                    <app-client-search inputId="edocClientFilter" placeholder="Müşteri ara…" [ngModel]="clientId" (ngModelChange)="onClientChange($event)" />
-                </app-filter-field>
-                @if (view() === 'documents') {
-                    <app-filter-field label="Durum" labelFor="edocStatus" [active]="!!status">
-                        <p-select inputId="edocStatus" [options]="statusOptions" optionLabel="label" optionValue="value" [(ngModel)]="status" [showClear]="true" placeholder="Tümü" (onChange)="load(1)" />
-                    </app-filter-field>
-                    <app-filter-field label="Tür" labelFor="edocType" [active]="!!documentType">
-                        <p-select inputId="edocType" [options]="typeOptions" optionLabel="label" optionValue="value" [(ngModel)]="documentType" [showClear]="true" placeholder="Tümü" (onChange)="load(1)" />
-                    </app-filter-field>
-                } @else if (canIssue && !ro.mutationBlocked()) {
+                @if (view() === 'undocumented' && canIssue && !ro.mutationBlocked()) {
                     <button actions pButton type="button" [disabled]="!selectionValid()" (click)="openIssueForSelection()" data-testid="edoc-issue-selected">
                         <i class="p-button-icon pi pi-send"></i>Seçilenlere belge kes ({{ selected().length }})
                     </button>
@@ -97,6 +87,21 @@ type View = 'documents' | 'undocumented';
             <div class="mb-4">
                 <p-selectbutton [options]="viewOptions" optionLabel="label" optionValue="value" [ngModel]="view()" (ngModelChange)="setView($event)" [allowEmpty]="false" ariaLabelledBy="edocViewLabel" />
                 <span id="edocViewLabel" class="sr-only">Görünüm</span>
+            </div>
+
+            <!-- Filtreler diğer listelerdeki gibi başlığın altında tek çerçevede; açılır kutular ortak genişlikte (S-01). -->
+            <div class="flex flex-wrap items-end gap-3 mb-4 rounded-lg border border-surface-200 dark:border-surface-700 p-3">
+                <app-filter-field label="Müşteri" labelFor="edocClientFilter" [active]="!!clientId">
+                    <app-client-search inputId="edocClientFilter" placeholder="Müşteri ara…" [ngModel]="clientId" (ngModelChange)="onClientChange($event)" />
+                </app-filter-field>
+                @if (view() === 'documents') {
+                    <app-filter-field label="Durum" labelFor="edocStatus" [active]="!!status" width="select">
+                        <p-select inputId="edocStatus" class="w-full" [options]="statusOptions" optionLabel="label" optionValue="value" [(ngModel)]="status" [showClear]="true" placeholder="Tümü" (onChange)="load(1)" />
+                    </app-filter-field>
+                    <app-filter-field label="Tür" labelFor="edocType" [active]="!!documentType" width="select">
+                        <p-select inputId="edocType" class="w-full" [options]="typeOptions" optionLabel="label" optionValue="value" [(ngModel)]="documentType" [showClear]="true" placeholder="Tümü" (onChange)="load(1)" />
+                    </app-filter-field>
+                }
             </div>
 
             @if (view() === 'undocumented' && selected().length > 0 && !selectionValid()) {
