@@ -279,6 +279,9 @@ describe('ClientDetailPageComponent (müşteri kartı)', () => {
             expect(el().querySelector('[data-testid="client-more-actions"]')).toBeNull();
             expect(el().querySelector('[data-testid="patient-action-bar"]')).toBeNull();
             expect(el().querySelector('[data-testid="kvkk-mark-action"]')).toBeNull();
+            // Hastalar bölümünde "(0)" yerine geri yüklemenin sonucu.
+            expect(el().querySelector('[data-testid="pets-count"]')).toBeNull();
+            expect(el().querySelector('[data-testid="pets-owner-deleted"]')?.textContent).toContain('müşteri geri yüklenince geri gelir');
         });
 
         it('silme izni yoksa silinen kartta bant var, "Geri yükle" yok', () => {

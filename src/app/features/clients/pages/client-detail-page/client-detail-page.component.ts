@@ -148,7 +148,7 @@ import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/impor
                 <!-- 1. satır: hastalar | Yapılacaklar (eşit yükseklik) -->
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 @4xl:col-span-8 min-w-0" [class.order-first]="emphasis === 'clinical'" data-testid="pets-column">
-                        <app-client-pets-panel [rows]="petRows()" [clientId]="c.id" [currency]="currency()" />
+                        <app-client-pets-panel [rows]="petRows()" [clientId]="c.id" [currency]="currency()" [ownerDeleted]="deleted()" />
                     </div>
                     <div class="col-span-12 @4xl:col-span-4 min-w-0" [class.order-first]="emphasis === 'frontDesk'" data-testid="todo-column">
                         <app-pet-todo-panel [view]="todo()" />
