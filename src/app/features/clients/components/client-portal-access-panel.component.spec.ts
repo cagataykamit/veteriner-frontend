@@ -180,6 +180,16 @@ describe('ClientPortalAccessPanelComponent (müşteri kartı portal erişimi)', 
         expect(q('client-portal-invite')?.disabled).toBe(false);
     });
 
+    it('müşteri silindi: gerekçe yazılı, yeni davet düğmesi çizilmez (ADR-054 K9)', () => {
+        access = { ...none, links: [{ ...activeLink, status: 'Closed', closedAtUtc: '2026-11-23T10:00:00Z', closeReason: 'ClientDeleted' }] };
+        create();
+        fixture.componentRef.setInput('entryClosed', true);
+        fixture.detectChanges();
+
+        expect(status()).toContain('Müşteri silindi; portal erişimi kapandı');
+        expect(q('client-portal-invite')).toBeNull();
+    });
+
     it('e-posta yoksa davet pasif ve nedeni yazılı', () => {
         access = { ...none, canInvite: false, inviteBlockedCode: 'OwnerPortal.ClientEmailMissing' };
         create();

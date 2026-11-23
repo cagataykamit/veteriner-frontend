@@ -81,7 +81,7 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
                 }
 
                 <div class="flex flex-wrap items-center gap-2 mt-2">
-                    @if (state()?.kind !== 'linked' && !planLocked()) {
+                    @if (state()?.kind !== 'linked' && !planLocked() && !entryClosed()) {
                         <button
                             pButton
                             type="button"
@@ -136,6 +136,8 @@ import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 })
 export class ClientPortalAccessPanelComponent {
     readonly client = input.required<ClientDetailVm>();
+    /** Yeni davet kapalı (silinen müşteri, ADR-054 K3/K9): davet düğmesi çizilmez; durum ve kapatma eylemleri kalır. */
+    readonly entryClosed = input(false);
     /** Kimlik kartı rozeti için kısa durum etiketi; durum okunamadıysa `null`. */
     readonly chipLabelChange = output<string | null>();
 

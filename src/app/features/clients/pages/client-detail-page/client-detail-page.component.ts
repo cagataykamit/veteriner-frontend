@@ -40,6 +40,7 @@ import { CHARGES_READ_CLAIM, CLIENTS_DELETE_CLAIM, CLIENTS_UPDATE_CLAIM, OWNER_P
 import { DeletedRecordBannerComponent } from '@/app/entities/record-deletion/components/deleted-record-banner.component';
 import { RecordDeleteDialogComponent } from '@/app/entities/record-deletion/components/record-delete-dialog.component';
 import { RecentDeletionService } from '@/app/entities/record-deletion/services/recent-deletion.service';
+import { isRecordDeleted } from '@/app/entities/record-deletion/utils/record-deletion.utils';
 import { TrDateTimePipe } from '@/app/shared/pipes/tr-date.pipe';
 import { RouteEntityLoader } from '@/app/shared/panel/route-entity-loader';
 import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
@@ -306,7 +307,7 @@ import { ClientImportedAccountEntriesPanelComponent } from '@/app/entities/impor
                 <!-- 3. satır: portal erişimi | belgeler ve rıza (yarım genişlik, eşit yükseklik) -->
                 <div class="grid grid-cols-12 gap-4">
                     @if (canManagePortal) {
-                        <app-client-portal-access-panel class="col-span-12 @4xl:col-span-6 min-w-0" [client]="c" (chipLabelChange)="portalChip.set($event)" />
+                        <app-client-portal-access-panel class="col-span-12 @4xl:col-span-6 min-w-0" [client]="c" [entryClosed]="deleted()" (chipLabelChange)="portalChip.set($event)" />
                     }
 
                     <div class="card mb-0 min-w-0 h-full col-span-12 @4xl:col-span-6" aria-labelledby="client-documents-title" data-testid="client-documents">
@@ -397,7 +398,7 @@ export class ClientDetailPageComponent implements OnInit, OnDestroy {
     /** Silme, "Silinenler" ve geri yükleme (ADR-054 K8). */
     readonly canDeleteClient = this.auth.hasOperationClaim(CLIENTS_DELETE_CLAIM);
     /** Silinen kart salt okunur açılır: düzenleme ve yeni işlem eylemleri çizilmez (K3). */
-    readonly deleted = computed(() => !!this.client()?.deletedAtUtc);
+    readonly deleted = computed(() => isRecordDeleted(this.client()));
     readonly deleteDialogOpen = signal(false);
     /** "…" menüsü: yalnız seyrek eylemler (silme). */
     readonly moreMenuItems = computed<MenuItem[]>(() =>

@@ -10,6 +10,7 @@ import { EXAMINATIONS_READ_CLAIM, IMAGING_READ_CLAIM, PETS_DELETE_CLAIM, PETS_UP
 import { DeletedRecordBannerComponent } from '@/app/entities/record-deletion/components/deleted-record-banner.component';
 import { RecordDeleteDialogComponent } from '@/app/entities/record-deletion/components/record-delete-dialog.component';
 import { RecentDeletionService } from '@/app/entities/record-deletion/services/recent-deletion.service';
+import { isRecordDeleted } from '@/app/entities/record-deletion/utils/record-deletion.utils';
 import type { ExaminationDetailVm } from '@/app/entities/examination/models/examination-vm.model';
 import { PetImagingSectionComponent } from '@/app/entities/imaging/components/pet-imaging-section.component';
 import { VitalMeasurementsSectionComponent } from '@/app/entities/vital-measurement/components/vital-measurements-section.component';
@@ -202,7 +203,7 @@ import { AiPanelService } from '@/app/entities/ai/services/ai-panel.service';
                 </div>
 
                 @if (canReadImaging && p.ownerId) {
-                    <app-pet-imaging-section [petId]="p.id" [clientId]="p.ownerId" />
+                    <app-pet-imaging-section [petId]="p.id" [clientId]="p.ownerId" [entryClosed]="deleted()" />
                 }
 
                 <!-- Eski programdan aktarılan klinik kayıtlar (ADR-048); kaydı olmayan hastada görünmez. -->
@@ -262,13 +263,13 @@ export class PetDetailPageComponent implements OnInit, OnDestroy {
     /** Silme, "Silinenler" ve geri yükleme (ADR-054 K8). */
     readonly canDeletePet = this.auth.hasOperationClaim(PETS_DELETE_CLAIM);
     /** Silinen kart salt okunur açılır: düzenleme ve yeni işlem eylemleri çizilmez (K3). */
-    readonly deleted = computed(() => !!this.pet()?.deletedAtUtc);
+    readonly deleted = computed(() => isRecordDeleted(this.pet()));
     readonly deleteDialogOpen = signal(false);
     /** Aşı planı önerisi (TIER-005): planlayabilen kullanıcıya, bakımı süren hayvanda; paket kilidi hedef sayfadadır (üst paket kutusu). */
     readonly vaccinationPlanLink = computed(() => {
         const p = this.pet();
 
-        return p && p.status !== 'Deceased' && !p.deletedAtUtc && this.auth.hasOperationClaim(VACCINATIONS_CREATE_CLAIM) && !this.ro.mutationBlocked()
+        return p && p.status !== 'Deceased' && !this.deleted() && this.auth.hasOperationClaim(VACCINATIONS_CREATE_CLAIM) && !this.ro.mutationBlocked()
             ? ['/panel/pets', p.id, 'vaccination-plan']
             : null;
     });
