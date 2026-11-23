@@ -16,8 +16,7 @@ import { AUTH_NO_ACCESSIBLE_CLINICS_MESSAGE, authFailureMessage, loginFailureMes
 import { DEFAULT_PANEL_AFTER_AUTH, panelReturnUrlOrDefault } from '@/app/core/auth/auth-return-url.utils';
 import type { ClinicSummary } from '@/app/core/auth/auth.models';
 import { AUTH_LOGIN_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
-import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
-import { PublicLegalLinksComponent } from '@/app/pages/public/components/public-legal-links.component';
+import { PublicAuthShellComponent } from '@/app/pages/public/components/public-auth-shell.component';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import { problemCodeFromHttpError } from '@/app/shared/utils/api-error.utils';
 import { parseValidationFieldErrors, type FieldErrors } from '@/app/shared/utils/validation-error-parse.utils';
@@ -37,99 +36,76 @@ const LOGIN_VALIDATION_FIELD_MAP: Record<string, LoginFieldKey> = {
 @Component({
     selector: 'app-login',
     standalone: true,
-    imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, FormsModule, RippleModule, RouterLink, PublicLegalLinksComponent],
+    imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, FormsModule, RippleModule, RouterLink, PublicAuthShellComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="public-page public-auth-page">
-            <div class="public-auth-shell">
-                <div class="public-auth-card-frame">
-                    <div class="public-auth-card-inner">
-                        <div class="public-auth-header">
-                            <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex">
-                                <img [src]="brand.logoFull" alt="Vetinity" class="public-auth-logo block dark:hidden" width="120" height="30" />
-                                <img [src]="brand.logoFullDark" alt="Vetinity" class="public-auth-logo hidden dark:block" width="120" height="30" />
-                            </a>
-                            <div class="public-auth-title">Vetinity paneline giriş</div>
-                            <span class="public-auth-subtitle">Hesabınızla giriş yapın</span>
-                            @if (sessionRenewHint()) {
-                                <p class="mt-4 mb-0 mx-auto max-w-md text-center text-sm font-medium public-brand-link" role="status">
-                                    {{ sessionRenewHint() }}
-                                </p>
-                            }
-                            @if (registeredHint()) {
-                                <p class="mt-4 mb-0 mx-auto max-w-md text-center text-sm font-medium public-brand-link" role="status">
-                                    {{ registeredHint() }}
-                                </p>
-                            }
-                            @if (inviteAcceptedHint()) {
-                                <p class="mt-4 mb-0 mx-auto max-w-md text-center text-sm font-medium public-brand-link" role="status">
-                                    {{ inviteAcceptedHint() }}
-                                </p>
-                            }
-                            @if (inviteLoginHint()) {
-                                <p class="mt-4 mb-0 mx-auto max-w-md text-center text-sm font-medium public-brand-link" role="status">
-                                    {{ inviteLoginHint() }}
-                                </p>
-                            }
-                        </div>
-
-                        <form (ngSubmit)="onSubmit(loginForm)" autocomplete="on" #loginForm="ngForm" class="public-auth-form">
-                            <div class="public-auth-field-primary">
-                                <label for="email1" class="public-auth-label">E-posta</label>
-                                <input pInputText id="email1" type="email" name="email" #emailCtrl="ngModel" placeholder="E-posta adresiniz" class="public-auth-control" [(ngModel)]="email" required email />
-                                @if (apiFieldErrors().email) {
-                                    <small class="text-danger block mt-2">{{ apiFieldErrors().email }}</small>
-                                } @else if (emailCtrl.invalid && (emailCtrl.touched || formSubmitAttempted())) {
-                                    @if (emailCtrl.errors?.['required']) {
-                                        <small class="text-danger block mt-2">E-posta zorunlu</small>
-                                    } @else if (emailCtrl.errors?.['email']) {
-                                        <small class="text-danger block mt-2">Geçerli bir e-posta girin</small>
-                                    }
-                                }
-                            </div>
-
-                            <div class="public-auth-field-secondary">
-                                <label for="password1" class="public-auth-label-password">Şifre</label>
-                                <p-password inputId="password1" name="password" #passwordCtrl="ngModel" [(ngModel)]="password" placeholder="Şifreniz" [toggleMask]="true" [fluid]="true" [feedback]="false" [required]="true"></p-password>
-                                @if (apiFieldErrors().password) {
-                                    <small class="text-danger block mt-2">{{ apiFieldErrors().password }}</small>
-                                } @else if (passwordCtrl.invalid && (passwordCtrl.touched || formSubmitAttempted())) {
-                                    @if (passwordCtrl.errors?.['required']) {
-                                        <small class="text-danger block mt-2">Şifre zorunlu</small>
-                                    }
-                                }
-                            </div>
-
-                            <div class="public-auth-options-row">
-                                <div class="flex items-center">
-                                    <p-checkbox [(ngModel)]="rememberMe" name="rememberMe" inputId="rememberme1" binary class="mr-2"></p-checkbox>
-                                    <label for="rememberme1">Beni hatırla</label>
-                                </div>
-                                <a routerLink="/auth/forgot-password" class="font-medium no-underline ml-2 text-right cursor-pointer public-brand-link">Şifremi unuttum</a>
-                            </div>
-                            <button pButton type="submit" class="w-full public-auth-submit" [disabled]="signInLoading()">@if (signInLoading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Giriş yap</button>
-                            @if (loginError()) {
-                                <div class="public-auth-alert" role="alert" aria-live="assertive">
-                                    <div class="public-auth-alert-box">
-                                        <i class="pi pi-info-circle shrink-0 text-[0.6875rem] text-red-600/75 dark:text-red-400/70" aria-hidden="true"></i>
-                                        <span class="public-auth-alert-text">{{ loginError() }}</span>
-                                    </div>
-                                </div>
-                            }
-                            <div class="public-auth-footer-link">
-                                <a routerLink="/auth/signup" class="public-brand-link no-underline text-sm">Hesap oluştur</a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <app-public-legal-links />
+        <app-public-auth-shell>
+            <div class="public-auth-header">
+                <h1 class="public-auth-title">Vetinity paneline giriş</h1>
+                <p class="public-auth-subtitle">Hesabınızla giriş yapın</p>
+                @if (sessionRenewHint()) {
+                    <p class="public-auth-status" role="status">{{ sessionRenewHint() }}</p>
+                }
+                @if (registeredHint()) {
+                    <p class="public-auth-status" role="status">{{ registeredHint() }}</p>
+                }
+                @if (inviteAcceptedHint()) {
+                    <p class="public-auth-status" role="status">{{ inviteAcceptedHint() }}</p>
+                }
+                @if (inviteLoginHint()) {
+                    <p class="public-auth-status" role="status">{{ inviteLoginHint() }}</p>
+                }
             </div>
-        </div>
+
+            <form (ngSubmit)="onSubmit(loginForm)" autocomplete="on" #loginForm="ngForm" class="public-auth-form">
+                <div class="public-auth-field-primary">
+                    <label for="email1" class="public-auth-label">E-posta</label>
+                    <input pInputText id="email1" type="email" name="email" #emailCtrl="ngModel" placeholder="E-posta adresiniz" class="public-auth-control" [(ngModel)]="email" required email />
+                    @if (apiFieldErrors().email) {
+                        <small class="text-danger block mt-2">{{ apiFieldErrors().email }}</small>
+                    } @else if (emailCtrl.invalid && (emailCtrl.touched || formSubmitAttempted())) {
+                        @if (emailCtrl.errors?.['required']) {
+                            <small class="text-danger block mt-2">E-posta zorunlu</small>
+                        } @else if (emailCtrl.errors?.['email']) {
+                            <small class="text-danger block mt-2">Geçerli bir e-posta girin</small>
+                        }
+                    }
+                </div>
+
+                <div class="public-auth-field-secondary">
+                    <label for="password1" class="public-auth-label-password">Şifre</label>
+                    <p-password inputId="password1" name="password" #passwordCtrl="ngModel" [(ngModel)]="password" placeholder="Şifreniz" [toggleMask]="true" [fluid]="true" [feedback]="false" [required]="true"></p-password>
+                    @if (apiFieldErrors().password) {
+                        <small class="text-danger block mt-2">{{ apiFieldErrors().password }}</small>
+                    } @else if (passwordCtrl.invalid && (passwordCtrl.touched || formSubmitAttempted())) {
+                        @if (passwordCtrl.errors?.['required']) {
+                            <small class="text-danger block mt-2">Şifre zorunlu</small>
+                        }
+                    }
+                </div>
+
+                <div class="public-auth-options-row">
+                    <div class="public-auth-check">
+                        <p-checkbox [(ngModel)]="rememberMe" name="rememberMe" inputId="rememberme1" binary></p-checkbox>
+                        <label for="rememberme1">Beni hatırla</label>
+                    </div>
+                    <a routerLink="/auth/forgot-password" class="public-auth-link">Şifremi unuttum</a>
+                </div>
+                <button pButton type="submit" class="w-full public-auth-submit" [disabled]="signInLoading()">@if (signInLoading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Giriş yap</button>
+                @if (loginError()) {
+                    <div class="public-auth-alert" role="alert" aria-live="assertive">
+                        <div class="public-auth-alert-box">
+                            <i class="pi pi-info-circle shrink-0 public-auth-alert-text" aria-hidden="true"></i>
+                            <span class="public-auth-alert-text">{{ loginError() }}</span>
+                        </div>
+                    </div>
+                }
+                <p class="public-auth-alt">Hesabınız yok mu? <a routerLink="/auth/signup" class="public-auth-link">Hesap oluştur</a></p>
+            </form>
+        </app-public-auth-shell>
     `
 })
 export class Login implements OnInit {
-    readonly brand = VETINITY_BRAND_LOGOS;
-
     private readonly auth = inject(AuthService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
