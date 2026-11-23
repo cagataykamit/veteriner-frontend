@@ -418,7 +418,7 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                                     </section>
                                 }
                                 @if (showFinder()) {
-                                    <app-appointment-free-slot-finder [clinicId]="clinicId!" [vets]="vets()" [canCreate]="canPick()" [refreshKey]="loadCount()" (pick)="onFreeSlotPick($event)" />
+                                    <app-appointment-free-slot-finder [clinicId]="clinicId!" [vets]="vets()" [canCreate]="canPick()" [refreshKey]="loadCount()" [date]="selectedDate()" (pick)="onFreeSlotPick($event)" />
                                 }
                             </aside>
                         }
