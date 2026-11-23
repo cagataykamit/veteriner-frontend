@@ -90,13 +90,14 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         expect(host().querySelectorAll('.legal-consent input[type="checkbox"]').length).toBe(1);
     });
 
-    it('tanıtımın sıcak dili (L-01): kök tanıtım değişkenlerini taşır, teal geçişli çerçeve yok; başlık ve etiketler ortak sınıfla; devre dışı düğme ortak birincil sınıfta (L-03 rengi tema dosyasında)', () => {
-        const root = host().querySelector('.public-auth-page');
+    it('L-01 A düzeni: geniş kart, sade başlık, bölüm başlıkları; süs çipi yok, birincil düğme ortak sınıfta', () => {
+        const groups = Array.from(host().querySelectorAll('.public-auth-group')).map((g) => g.textContent?.trim());
 
-        expect(root?.classList).toContain('public-site');
-        expect(host().querySelector('.public-auth-title')?.textContent).toContain('Hesap oluştur');
+        expect(host().querySelector('.public-auth-card')?.classList).toContain('public-auth-card--wide');
+        expect(host().querySelector('h1.public-auth-title')?.textContent?.trim()).toBe('Kliniğinizi ücretsiz deneyin');
+        expect(groups).toEqual(['Paket seçin', 'Klinik', 'Hesabınız', 'Nasıl başlayalım?']);
+        expect(host().querySelector('.public-auth-header [class*="chip"], .public-auth-header em')).toBeNull();
         expect(host().querySelector('label[for="tenantName"]')?.classList).toContain('public-auth-label');
-        expect(submitButton()?.disabled).toBe(true);
         expect(submitButton()?.classList).toContain('public-auth-submit');
     });
 

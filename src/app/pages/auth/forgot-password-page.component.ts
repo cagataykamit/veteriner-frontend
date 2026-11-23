@@ -8,8 +8,7 @@ import { finalize } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { RippleModule } from 'primeng/ripple';
-import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
-import { PublicLegalLinksComponent } from '@/app/pages/public/components/public-legal-links.component';
+import { PublicAuthShellComponent } from '@/app/pages/public/components/public-auth-shell.component';
 import { setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
@@ -29,75 +28,59 @@ const FORGOT_PASSWORD_FIELD_MAP: Record<string, ForgotPasswordFieldKey> = {
 @Component({
     selector: 'app-forgot-password-page',
     standalone: true,
-    imports: [FormsModule, ButtonModule, InputTextModule, RippleModule, RouterLink, PublicLegalLinksComponent],
+    imports: [FormsModule, ButtonModule, InputTextModule, RippleModule, RouterLink, PublicAuthShellComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="public-page public-site public-auth-page">
-            <div class="public-auth-shell">
-                <div class="public-auth-card-frame">
-                    <div class="public-auth-card-inner">
-                        @if (submitted()) {
-                            <div class="public-auth-header">
-                                <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex">
-                                    <img [src]="brand.logoFull" alt="Vetinity" class="public-auth-logo block dark:hidden" width="120" height="30" />
-                                    <img [src]="brand.logoFullDark" alt="Vetinity" class="public-auth-logo hidden dark:block" width="120" height="30" />
-                                </a>
-                                <div class="public-auth-title">E-posta gönderildi</div>
-                                <span class="public-auth-subtitle">{{ successMessage }}</span>
-                            </div>
-                            <div class="public-auth-form">
-                                <button pButton type="button" class="w-full public-auth-submit" (click)="goToLogin()">Giriş sayfasına dön</button>
-                            </div>
-                        } @else {
-                            <div class="public-auth-header">
-                                <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex">
-                                    <img [src]="brand.logoFull" alt="Vetinity" class="public-auth-logo block dark:hidden" width="120" height="30" />
-                                    <img [src]="brand.logoFullDark" alt="Vetinity" class="public-auth-logo hidden dark:block" width="120" height="30" />
-                                </a>
-                                <div class="public-auth-title">Şifremi unuttum</div>
-                                <span class="public-auth-subtitle">E-posta adresini gir, şifre sıfırlama bağlantısı gönderelim.</span>
-                            </div>
+        <app-public-auth-shell>
+            @if (submitted()) {
+                <div class="public-auth-header">
+                    <h1 class="public-auth-title">E-posta gönderildi</h1>
+                    <p class="public-auth-subtitle">{{ successMessage }}</p>
+                </div>
+                <div class="public-auth-form">
+                    <button pButton type="button" class="w-full public-auth-submit" (click)="goToLogin()">Giriş sayfasına dön</button>
+                </div>
+            } @else {
+                <div class="public-auth-header">
+                    <h1 class="public-auth-title">Şifremi unuttum</h1>
+                    <p class="public-auth-subtitle">E-posta adresinizi girin, şifre sıfırlama bağlantısı gönderelim.</p>
+                </div>
 
-                            <form class="public-auth-form" (ngSubmit)="onSubmit(forgotForm)" autocomplete="on" #forgotForm="ngForm">
-                                <div class="public-auth-field-primary">
-                                    <label for="forgotEmail" class="public-auth-label">E-posta</label>
-                                    <input pInputText id="forgotEmail" type="email" name="email" #emailCtrl="ngModel" placeholder="E-posta adresiniz" class="public-auth-control" [(ngModel)]="email" required email />
-                                    @if (apiFieldErrors().email) {
-                                        <small class="text-danger block mt-2">{{ apiFieldErrors().email }}</small>
-                                    } @else if (emailCtrl.invalid && (emailCtrl.touched || formSubmitAttempted())) {
-                                        @if (emailCtrl.errors?.['required']) {
-                                            <small class="text-danger block mt-2">E-posta zorunlu</small>
-                                        } @else if (emailCtrl.errors?.['email']) {
-                                            <small class="text-danger block mt-2">Geçerli bir e-posta girin</small>
-                                        }
-                                    }
-                                </div>
-
-                                <button pButton type="submit" class="w-full public-auth-submit" [disabled]="loading()">@if (loading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Sıfırlama bağlantısı gönder</button>
-
-                                @if (formError()) {
-                                    <div class="public-auth-alert" role="alert" aria-live="assertive">
-                                        <div class="public-auth-alert-box">
-                                            <i class="pi pi-info-circle shrink-0 text-[0.6875rem] text-red-600/75 dark:text-red-400/70" aria-hidden="true"></i>
-                                            <span class="public-auth-alert-text">{{ formError() }}</span>
-                                        </div>
-                                    </div>
-                                }
-
-                                <div class="public-auth-footer-link">
-                                    <a routerLink="/auth/login" class="public-brand-link no-underline text-sm">Giriş sayfasına dön</a>
-                                </div>
-                            </form>
+                <form class="public-auth-form" (ngSubmit)="onSubmit(forgotForm)" autocomplete="on" #forgotForm="ngForm">
+                    <div class="public-auth-field-before-action">
+                        <label for="forgotEmail" class="public-auth-label">E-posta</label>
+                        <input pInputText id="forgotEmail" type="email" name="email" #emailCtrl="ngModel" placeholder="E-posta adresiniz" class="public-auth-control" [(ngModel)]="email" required email />
+                        @if (apiFieldErrors().email) {
+                            <small class="text-danger block mt-2">{{ apiFieldErrors().email }}</small>
+                        } @else if (emailCtrl.invalid && (emailCtrl.touched || formSubmitAttempted())) {
+                            @if (emailCtrl.errors?.['required']) {
+                                <small class="text-danger block mt-2">E-posta zorunlu</small>
+                            } @else if (emailCtrl.errors?.['email']) {
+                                <small class="text-danger block mt-2">Geçerli bir e-posta girin</small>
+                            }
                         }
                     </div>
-                </div>
-                <app-public-legal-links />
-            </div>
-        </div>
+
+                    <button pButton type="submit" class="w-full public-auth-submit" [disabled]="loading()">@if (loading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Sıfırlama bağlantısı gönder</button>
+
+                    @if (formError()) {
+                        <div class="public-auth-alert" role="alert" aria-live="assertive">
+                            <div class="public-auth-alert-box">
+                                <i class="pi pi-info-circle shrink-0 public-auth-alert-text" aria-hidden="true"></i>
+                                <span class="public-auth-alert-text">{{ formError() }}</span>
+                            </div>
+                        </div>
+                    }
+
+                    <p class="public-auth-alt">
+                        <a routerLink="/auth/login" class="public-auth-link"><i class="pi pi-arrow-left text-xs" aria-hidden="true"></i>Giriş sayfasına dön</a>
+                    </p>
+                </form>
+            }
+        </app-public-auth-shell>
     `
 })
 export class ForgotPasswordPageComponent implements OnInit {
-    readonly brand = VETINITY_BRAND_LOGOS;
     readonly successMessage = REQUEST_RESET_SUCCESS_MESSAGE;
 
     private readonly passwordReset = inject(PasswordResetService);

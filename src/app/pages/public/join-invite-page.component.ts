@@ -11,8 +11,7 @@ import { AuthService } from '@/app/core/auth/auth.service';
 import type { PublicInviteVm } from '@/app/features/public/models/public-invite-vm.model';
 import { PublicInviteService } from '@/app/features/public/services/public-invite.service';
 import { publicInviteFailureMessage } from '@/app/features/public/utils/public-invite-error.utils';
-import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
-import { PublicLegalLinksComponent } from '@/app/pages/public/components/public-legal-links.component';
+import { PublicAuthShellComponent } from '@/app/pages/public/components/public-auth-shell.component';
 import { formatDateTimeDisplay } from '@/app/shared/utils/date.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import {
@@ -33,171 +32,141 @@ import { isLegalVersionOutdatedError, LEGAL_ACCEPTANCE_CODE_MESSAGES } from '@/a
         ButtonModule,
         InputTextModule,
         PasswordModule,
-        AppFloatingConfigurator,
-        PublicLegalLinksComponent,
+        PublicAuthShellComponent,
         LegalConsentCheckboxComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-floating-configurator />
-        <div class="public-page public-site public-auth-page">
-            <div class="public-auth-shell">
-                <div class="public-auth-card-inner">
-                    @if (loading()) {
-                        <p class="m-0 text-muted-color">Davet yükleniyor…</p>
-                    } @else if (loadError(); as le) {
-                        <h2 class="public-auth-title mt-0">Davet açılamadı</h2>
-                        <p class="text-danger m-0 mb-4" role="alert">{{ le }}</p>
-                        <a routerLink="/auth/login" class="public-brand-link no-underline">Giriş sayfasına git</a>
-                    } @else if (successMode(); as sm) {
-                        <h2 class="public-auth-title mt-0">
-                            {{ sm === 'accept' ? 'Davet kabul edildi' : 'Hesap oluşturuldu' }}
-                        </h2>
-                        <p class="text-muted-color m-0 mb-4">
-                            {{
-                                sm === 'accept'
-                                    ? 'İşletmeye katılımınız tamamlandı. Panele geçebilirsiniz.'
-                                    : 'Şimdi giriş yaparak devam edebilirsiniz.'
-                            }}
-                        </p>
-                        @if (vm(); as inv) {
-                            <ul class="text-sm m-0 mb-4 pl-4 text-muted-color">
-                                <li>İşletme: {{ inv.tenantName }}</li>
-                                <li>Klinik: {{ inv.clinicName }}</li>
-                            </ul>
-                        }
-                        @if (sm === 'accept') {
-                            <button pButton type="button" class="w-full public-auth-submit" (click)="goToPanel()">Panele git</button>
-                        } @else {
-                            <button pButton type="button" class="w-full public-auth-submit" (click)="goToLoginAfterSignup()">Giriş yap</button>
-                        }
-                    } @else if (vm(); as inv) {
-                        <h2 class="public-auth-title mt-0">Davet</h2>
-                        <p class="text-muted-color text-sm m-0 mb-4">Sizi bir işletmeye davet ettiler. Bilgileri kontrol edin.</p>
-
-                        <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 mb-4 text-sm">
-                            <div class="mb-2"><span class="text-muted-color">İşletme:</span> {{ inv.tenantName }}</div>
-                            <div class="mb-2"><span class="text-muted-color">Klinik:</span> {{ inv.clinicName }}</div>
-                            <div class="mb-2"><span class="text-muted-color">E-posta:</span> {{ inv.email }}</div>
-                            <div class="mb-0">
-                                <span class="text-muted-color">Son geçerlilik:</span> {{ formatExpiry(inv.expiresAtUtc) }}
-                            </div>
-                        </div>
-
-                        <div class="flex flex-wrap gap-2 mb-4">
-                            @if (inv.isExpired) {
-                                <span class="text-xs font-medium px-2 py-1 rounded bg-red-500/15 text-red-800 dark:text-red-200">Süresi dolmuş</span>
-                            }
-                            @if (!inv.canJoin) {
-                                <span class="text-xs font-medium px-2 py-1 rounded bg-surface-200 dark:bg-surface-700">Katılım kapalı</span>
-                            }
-                            @if (inv.requiresLogin) {
-                                <span class="text-xs font-medium px-2 py-1 rounded public-brand-chip">Giriş gerekli</span>
-                            }
-                            @if (inv.requiresSignup) {
-                                <span class="text-xs font-medium px-2 py-1 rounded public-brand-chip">Kayıt gerekli</span>
-                            }
-                        </div>
-
-                        @if (inv.isExpired || !inv.canJoin) {
-                            <p class="text-sm text-amber-800 dark:text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded p-3 m-0 mb-4" role="status">
-                                Bu davetle şu anda katılım yapılamıyor. Süre dolmuş veya davet geçersiz olabilir. Sorun devam ederse daveti gönderen
-                                yöneticiyle iletişime geçin.
-                            </p>
-                        }
-
-                        @if (auth.isAuthenticated() && inv.requiresSignup) {
-                            <p class="text-sm text-muted-color m-0 mb-4">
-                                Bu bağlantı yeni hesap oluşturmayı gerektiriyor. Daveti kabul etmek için
-                                <button type="button" class="public-brand-link bg-transparent border-0 p-0 cursor-pointer underline" (click)="logoutForSignup(inv)">
-                                    oturumu kapatıp
-                                </button>
-                                tekrar deneyin veya daveti gizli pencerede açın.
-                            </p>
-                        }
-
-                        @if (!auth.isAuthenticated() && inv.requiresLogin) {
-                            <p class="m-0 mb-3 text-sm">Bu daveti kabul etmek için önce giriş yapmalısınız.</p>
-                            <button pButton type="button" class="w-full mb-3 public-auth-submit" (click)="goToLogin(inv)">Giriş yap</button>
-                        }
-
-                        @if (!auth.isAuthenticated() && !inv.requiresLogin && !inv.requiresSignup && inv.canJoin && !inv.isExpired) {
-                            <p class="m-0 mb-3 text-sm">Devam etmek için giriş yapın.</p>
-                            <button pButton type="button" class="w-full mb-3 public-auth-submit" (click)="goToLogin(inv)">Giriş yap</button>
-                        }
-
-                        @if (!auth.isAuthenticated() && inv.requiresSignup && !inv.isExpired && inv.canJoin) {
-                            <label for="invFullName" class="public-auth-label">Adınız soyadınız</label>
-                            <input
-                                pInputText
-                                id="invFullName"
-                                type="text"
-                                class="w-full mb-1"
-                                maxlength="120"
-                                autocomplete="name"
-                                [(ngModel)]="inviteFullName"
-                                [attr.aria-invalid]="fullNameFieldError() ? true : null"
-                                data-testid="join-full-name"
-                            />
-                            <p class="text-xs text-muted-color m-0 mb-3">Hekim listelerinde ve kayıtlarda bu ad görünür.</p>
-                            @if (fullNameFieldError()) {
-                                <p class="text-danger text-sm m-0 mb-3" role="alert">{{ fullNameFieldError() }}</p>
-                            }
-                            <label for="invPw" class="public-auth-label">Şifre belirleyin</label>
-                            <p class="text-xs text-muted-color m-0 mb-2">{{ passwordPolicyHint }}</p>
-                            <p-password
-                                id="invPw"
-                                [(ngModel)]="invitePassword"
-                                [fluid]="true"
-                                [toggleMask]="true"
-                                [feedback]="false"
-                                class="w-full mb-3"
-                                placeholder="Şifre"
-                            />
-                            @if (passwordFieldError()) {
-                                <p class="text-danger text-sm m-0 mb-3" role="alert">{{ passwordFieldError() }}</p>
-                            }
-                            @if (inv.requiredLegalDocuments.length) {
-                                <div class="mb-3">
-                                    <app-legal-consent-checkbox
-                                        inputId="joinLegalConsent"
-                                        [documents]="legalDocumentTypes(inv)"
-                                        [disabled]="actionLoading()"
-                                        [(checked)]="legalConsent"
-                                    />
-                                </div>
-                            }
-                            <button
-                                pButton
-                                type="button"
-                                class="w-full public-auth-submit"
-                                [disabled]="actionLoading() || (inv.requiredLegalDocuments.length > 0 && !legalConsent())"
-                                (click)="onSignupAndAccept(inv)"
-                            >@if (actionLoading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Hesap oluştur ve katıl</button>
-                        }
-
-                        @if (showAccept(inv)) {
-                            <button
-                                pButton
-                                type="button"
-                                class="w-full public-auth-submit"
-                                [disabled]="actionLoading()"
-                                (click)="onAccept(inv)"
-                            >@if (actionLoading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Daveti kabul et</button>
-                        }
-
-                        @if (actionError(); as ae) {
-                            <p class="text-danger text-sm m-0 mt-4" role="alert">{{ ae }}</p>
-                        }
-
-                        <p class="text-center m-0 mt-6 mb-0">
-                            <a routerLink="/auth/login" class="public-brand-link no-underline text-sm min-h-11">Giriş sayfası</a>
-                        </p>
-                    }
+        <app-public-auth-shell>
+            @if (loading()) {
+                <p class="m-0 text-center text-muted-color">Davet yükleniyor…</p>
+            } @else if (loadError(); as le) {
+                <div class="public-auth-header">
+                    <h1 class="public-auth-title">Davet açılamadı</h1>
+                    <p class="public-auth-subtitle text-danger" role="alert">{{ le }}</p>
                 </div>
-                <app-public-legal-links />
-            </div>
-        </div>
+                <p class="public-auth-alt">
+                    <a routerLink="/auth/login" class="public-auth-link">Giriş sayfasına git</a>
+                </p>
+            } @else if (successMode(); as sm) {
+                <div class="public-auth-header">
+                    <h1 class="public-auth-title">{{ sm === 'accept' ? 'Davet kabul edildi' : 'Hesap oluşturuldu' }}</h1>
+                    <p class="public-auth-subtitle">
+                        {{ sm === 'accept' ? 'İşletmeye katılımınız tamamlandı. Panele geçebilirsiniz.' : 'Şimdi giriş yaparak devam edebilirsiniz.' }}
+                    </p>
+                </div>
+                @if (vm(); as inv) {
+                    <dl class="public-auth-panel public-auth-facts">
+                        <div><dt>İşletme</dt><dd>{{ inv.tenantName }}</dd></div>
+                        <div><dt>Klinik</dt><dd>{{ inv.clinicName }}</dd></div>
+                    </dl>
+                }
+                @if (sm === 'accept') {
+                    <button pButton type="button" class="w-full public-auth-submit" (click)="goToPanel()">Panele git</button>
+                } @else {
+                    <button pButton type="button" class="w-full public-auth-submit" (click)="goToLoginAfterSignup()">Giriş yap</button>
+                }
+            } @else if (vm(); as inv) {
+                <div class="public-auth-header">
+                    <h1 class="public-auth-title">Davet</h1>
+                    <p class="public-auth-subtitle">Sizi bir işletmeye davet ettiler. Bilgileri kontrol edin.</p>
+                </div>
+
+                <dl class="public-auth-panel public-auth-facts">
+                    <div><dt>İşletme</dt><dd>{{ inv.tenantName }}</dd></div>
+                    <div><dt>Klinik</dt><dd>{{ inv.clinicName }}</dd></div>
+                    <div><dt>E-posta</dt><dd class="break-all">{{ inv.email }}</dd></div>
+                    <div><dt>Son geçerlilik</dt><dd>{{ formatExpiry(inv.expiresAtUtc) }}</dd></div>
+                    @let labels = statusLabels(inv);
+                    @if (labels.length) {
+                        <div data-testid="join-status"><dt>Durum</dt><dd>{{ labels.join(' · ') }}</dd></div>
+                    }
+                </dl>
+
+                @if (inv.isExpired || !inv.canJoin) {
+                    <p class="text-sm text-amber-800 dark:text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 m-0 mb-4" role="status">
+                        Bu davetle şu anda katılım yapılamıyor. Süre dolmuş veya davet geçersiz olabilir. Sorun devam ederse daveti gönderen
+                        yöneticiyle iletişime geçin.
+                    </p>
+                }
+
+                @if (auth.isAuthenticated() && inv.requiresSignup) {
+                    <p class="public-auth-hint mb-4">
+                        Bu bağlantı yeni hesap oluşturmayı gerektiriyor. Daveti kabul etmek için
+                        <button type="button" class="public-auth-link public-auth-link--inline bg-transparent border-0 p-0 cursor-pointer underline" (click)="logoutForSignup(inv)">oturumu kapatıp</button>
+                        tekrar deneyin veya daveti gizli pencerede açın.
+                    </p>
+                }
+
+                @if (!auth.isAuthenticated() && inv.requiresLogin) {
+                    <p class="public-auth-hint mb-3">Bu daveti kabul etmek için önce giriş yapmalısınız.</p>
+                    <button pButton type="button" class="w-full public-auth-submit" (click)="goToLogin(inv)">Giriş yap</button>
+                }
+
+                @if (!auth.isAuthenticated() && !inv.requiresLogin && !inv.requiresSignup && inv.canJoin && !inv.isExpired) {
+                    <p class="public-auth-hint mb-3">Devam etmek için giriş yapın.</p>
+                    <button pButton type="button" class="w-full public-auth-submit" (click)="goToLogin(inv)">Giriş yap</button>
+                }
+
+                @if (!auth.isAuthenticated() && inv.requiresSignup && !inv.isExpired && inv.canJoin) {
+                    <div class="public-auth-field">
+                        <label for="invFullName" class="public-auth-label">Adınız soyadınız</label>
+                        <input
+                            pInputText
+                            id="invFullName"
+                            type="text"
+                            class="w-full"
+                            maxlength="120"
+                            autocomplete="name"
+                            [(ngModel)]="inviteFullName"
+                            [attr.aria-invalid]="fullNameFieldError() ? true : null"
+                            data-testid="join-full-name"
+                        />
+                        <p class="public-auth-hint">Hekim listelerinde ve kayıtlarda bu ad görünür.</p>
+                        @if (fullNameFieldError()) {
+                            <small class="text-danger block mt-1" role="alert">{{ fullNameFieldError() }}</small>
+                        }
+                    </div>
+                    <div class="public-auth-field">
+                        <label for="invPw" class="public-auth-label">Şifre belirleyin</label>
+                        <p-password id="invPw" [(ngModel)]="invitePassword" [fluid]="true" [toggleMask]="true" [feedback]="false" class="w-full" placeholder="Şifre" />
+                        <p class="public-auth-hint">{{ passwordPolicyHint }}</p>
+                        @if (passwordFieldError()) {
+                            <small class="text-danger block mt-1" role="alert">{{ passwordFieldError() }}</small>
+                        }
+                    </div>
+                    @if (inv.requiredLegalDocuments.length) {
+                        <div class="public-auth-consent">
+                            <app-legal-consent-checkbox inputId="joinLegalConsent" [documents]="legalDocumentTypes(inv)" [disabled]="actionLoading()" [(checked)]="legalConsent" />
+                        </div>
+                    }
+                    <button
+                        pButton
+                        type="button"
+                        class="w-full public-auth-submit"
+                        [disabled]="actionLoading() || (inv.requiredLegalDocuments.length > 0 && !legalConsent())"
+                        (click)="onSignupAndAccept(inv)"
+                    >@if (actionLoading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Hesap oluştur ve katıl</button>
+                }
+
+                @if (showAccept(inv)) {
+                    <button pButton type="button" class="w-full public-auth-submit" [disabled]="actionLoading()" (click)="onAccept(inv)">@if (actionLoading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Daveti kabul et</button>
+                }
+
+                @if (actionError(); as ae) {
+                    <div class="public-auth-alert" role="alert">
+                        <div class="public-auth-alert-box">
+                            <i class="pi pi-info-circle shrink-0 public-auth-alert-text" aria-hidden="true"></i>
+                            <span class="public-auth-alert-text">{{ ae }}</span>
+                        </div>
+                    </div>
+                }
+
+                <p class="public-auth-alt">
+                    <a routerLink="/auth/login" class="public-auth-link">Giriş sayfası</a>
+                </p>
+            }
+        </app-public-auth-shell>
     `
 })
 export class JoinInvitePageComponent implements OnInit {
@@ -242,6 +211,16 @@ export class JoinInvitePageComponent implements OnInit {
 
             this.reloadInvite(token);
         });
+    }
+
+    /** Davetin durumu düz metin olarak (tıklanır görünen etiket yok, L-01). */
+    statusLabels(inv: PublicInviteVm): string[] {
+        return [
+            ...(inv.isExpired ? ['Süresi dolmuş'] : []),
+            ...(!inv.canJoin ? ['Katılım kapalı'] : []),
+            ...(inv.requiresLogin ? ['Giriş gerekli'] : []),
+            ...(inv.requiresSignup ? ['Kayıt gerekli'] : [])
+        ];
     }
 
     showAccept(inv: PublicInviteVm): boolean {

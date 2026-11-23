@@ -67,23 +67,21 @@ describe('JoinInvitePageComponent hukuki onay (ADR-029)', () => {
         }).compileComponents();
     });
 
+    it('giriş sayfalarıyla aynı iskelette (L-01 A); durum düz metin, tıklanır görünen etiket yok', () => {
+        create(invite({ isExpired: true, requiresSignup: true }));
+
+        expect(host().querySelector('app-public-auth-shell .public-auth-card h1.public-auth-title')?.textContent?.trim()).toBe('Davet');
+        expect(host().querySelector('[data-testid="join-status"] dd')?.textContent?.trim()).toBe('Süresi dolmuş · Kayıt gerekli');
+        expect(host().querySelector('[class*="chip"]')).toBeNull();
+        expect(submitButton()).toBeUndefined();
+    });
+
     it('davetteki role gereken belgelere bağlantılı onay kutusu gösterir', () => {
         create(invite());
 
         const hrefs = Array.from(host().querySelectorAll('.legal-consent a')).map((a) => a.getAttribute('href'));
 
         expect(hrefs).toEqual(['/kullanim-sartlari', '/gizlilik']);
-    });
-
-    it('giriş sayfalarıyla aynı sıcak kabuk (L-01): tanıtım değişkenleri, ortak kart, başlık ve etiket; birincil düğme ortak sınıfta', () => {
-        create(invite());
-
-        expect(host().querySelector('.public-auth-page')?.classList).toContain('public-site');
-        expect(host().querySelector('.public-auth-card-inner')).not.toBeNull();
-        expect(host().querySelector('.card')).toBeNull();
-        expect(host().querySelector('h2')?.classList).toContain('public-auth-title');
-        expect(host().querySelector('label[for="invPw"]')?.classList).toContain('public-auth-label');
-        expect(submitButton()?.classList).toContain('public-auth-submit');
     });
 
     it('kutu işaretlenmeden gönderim pasif; işaretlenince belgeler gövdeye eklenir', () => {

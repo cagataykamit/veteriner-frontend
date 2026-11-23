@@ -23,8 +23,7 @@ import { isTaxIdentityFormat, TAX_IDENTITY_INVALID_MESSAGE, TRIAL_SIGNUP_CODE_ME
 import { defByApiCode, formatUserLimit, parsePlanQueryParam, planOffer, planPriceView, PRICING_PLAN_DEFS, type PricingPlanDef } from '@/app/entities/subscription/utils/pricing-plan.utils';
 import { PublicPlanCatalogService } from '@/app/features/public/services/public-plan-catalog.service';
 import { AUTH_SIGNUP_PAGE_META, setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
-import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
-import { PublicLegalLinksComponent } from '@/app/pages/public/components/public-legal-links.component';
+import { PublicAuthShellComponent } from '@/app/pages/public/components/public-auth-shell.component';
 import { LegalConsentCheckboxComponent } from '@/app/features/legal-acceptance/components/legal-consent-checkbox.component';
 import type { LegalDocumentVersionDto } from '@/app/entities/legal-document/models/legal-acceptance.model';
 import { LegalAcceptanceService } from '@/app/features/legal-acceptance/services/legal-acceptance.service';
@@ -57,234 +56,223 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
 @Component({
     selector: 'app-owner-signup-page',
     standalone: true,
-    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RadioButtonModule, RippleModule, RouterLink, PublicLegalLinksComponent, LegalConsentCheckboxComponent, DiscountCodeFieldComponent, ExampleClinicSummaryComponent, SignupEmailVerificationComponent, TrDatePipe],
+    imports: [FormsModule, ButtonModule, InputTextModule, PasswordModule, RadioButtonModule, RippleModule, RouterLink, PublicAuthShellComponent, LegalConsentCheckboxComponent, DiscountCodeFieldComponent, ExampleClinicSummaryComponent, SignupEmailVerificationComponent, TrDatePipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="public-page public-site public-auth-page">
-            <div class="public-auth-shell public-auth-shell--wide">
-                <div class="public-auth-card-frame">
-                    <div class="public-auth-card-inner">
-                        @if (successResult(); as res) {
-                            <div class="public-auth-header">
-                                <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex">
-                                    <img [src]="brand.logoFull" alt="Vetinity" class="public-auth-logo block dark:hidden" width="120" height="30" />
-                                    <img [src]="brand.logoFullDark" alt="Vetinity" class="public-auth-logo hidden dark:block" width="120" height="30" />
-                                </a>
-                                <div class="public-auth-title">Kayıt tamamlandı</div>
-                                <span class="public-auth-subtitle">Deneme süreniz başladı. Aşağıdaki tarihlerle giriş yapabilirsiniz.</span>
-                            </div>
-                            @if (res.exampleClinic; as example) {
-                                <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 mb-6 text-left" data-testid="signup-example-clinic-card">
-                                    <div class="font-semibold text-surface-900 dark:text-surface-0 mb-1">Yüklenen örnek içerik</div>
-                                    <p class="text-sm text-muted-color m-0 mb-3">Örnek Veteriner Kliniği hazır: giriş yapınca Bugün, randevu ve hasta ekranlarını dolu görürsünüz.</p>
-                                    <app-example-clinic-summary [summary]="example" />
-                                </div>
-                            } @else {
-                                <p class="text-sm text-muted-color text-left m-0 mb-6" data-testid="signup-empty-clinic-note">Boş klinikle başlıyorsunuz. İsterseniz örnek içeriği daha sonra Ayarlar &gt; Abonelik sayfasından yükleyebilirsiniz.</p>
+        <app-public-auth-shell [wide]="true">
+            @if (successResult(); as res) {
+                <div class="public-auth-header">
+                    <h1 class="public-auth-title">Kayıt tamamlandı</h1>
+                    <p class="public-auth-subtitle">Deneme süreniz başladı. Aşağıdaki tarihlerle giriş yapabilirsiniz.</p>
+                </div>
+                @if (res.exampleClinic; as example) {
+                    <div class="public-auth-panel" data-testid="signup-example-clinic-card">
+                        <span class="public-auth-option-title">Yüklenen örnek içerik</span>
+                        <p class="public-auth-option-text mb-3">Örnek Veteriner Kliniği hazır: giriş yapınca Bugün, randevu ve hasta ekranlarını dolu görürsünüz.</p>
+                        <app-example-clinic-summary [summary]="example" />
+                    </div>
+                } @else {
+                    <p class="public-auth-hint mb-6" data-testid="signup-empty-clinic-note">Boş klinikle başlıyorsunuz. İsterseniz örnek içeriği daha sonra Ayarlar &gt; Abonelik sayfasından yükleyebilirsiniz.</p>
+                }
+                <div class="public-auth-panel">
+                    <span class="public-auth-option-text">Seçilen plan</span>
+                    <span class="public-auth-option-title mb-4">{{ successPlanTitle(res) }}</span>
+                    @if (res.discount; as discount) {
+                        <div class="text-sm mb-4" data-testid="signup-discount-note">
+                            Ortak kodu <span class="font-semibold">{{ discount.code }}</span
+                            >:
+                            {{ discountNote(discount.discountPercent, discount.discountMonths) }}
+                        </div>
+                    }
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <span class="public-auth-option-text">Deneme başlangıcı</span>
+                            <span class="public-auth-option-strong">{{ res.trialStartsAtUtc | trDate }}</span>
+                        </div>
+                        <div>
+                            <span class="public-auth-option-text">Deneme bitişi</span>
+                            <span class="public-auth-option-strong">{{ res.trialEndsAtUtc | trDate }}</span>
+                        </div>
+                    </div>
+                </div>
+                <button pButton type="button" class="w-full public-auth-submit" (click)="goToLogin()">Giriş yap</button>
+                <p class="public-auth-alt">
+                    <a routerLink="/paketler" class="public-auth-link">Paketlere dön</a>
+                </p>
+            } @else {
+                <div class="public-auth-header">
+                    <h1 class="public-auth-title">Kliniğinizi ücretsiz deneyin</h1>
+                    <p class="public-auth-subtitle">Deneme hesabınızı tek adımda açın.</p>
+                    <ul class="public-auth-ticks">
+                        <li><i class="pi pi-check" aria-hidden="true"></i>kart gerekmez</li>
+                        <li><i class="pi pi-check" aria-hidden="true"></i>satış görüşmesi yok</li>
+                    </ul>
+                </div>
+
+                <h2 id="signup-plan-label" class="public-auth-group public-auth-group--first">Paket seçin</h2>
+                <div role="radiogroup" aria-labelledby="signup-plan-label" class="public-auth-plans">
+                    @for (option of planOptions(); track option.def.slug) {
+                        <button
+                            type="button"
+                            role="radio"
+                            class="public-auth-option"
+                            [class.public-auth-option--selected]="option.selected"
+                            [attr.aria-checked]="option.selected"
+                            [attr.data-plan]="option.def.slug"
+                            (click)="selectPlan(option.def)"
+                        >
+                            <span class="public-auth-option-title">{{ option.def.title }}</span>
+                            <span class="public-auth-option-text">{{ option.def.description }}</span>
+                            @if (option.price; as price) {
+                                <span class="public-auth-option-strong">{{ price.amount }} <small>{{ price.unit }}</small></span>
                             }
-                            <div class="rounded-lg border border-surface-200 dark:border-surface-700 p-4 mb-6 text-left">
-                                <div class="text-sm text-muted-color mb-1">Seçilen plan</div>
-                                <div class="font-semibold text-surface-900 dark:text-surface-0 mb-4">{{ successPlanTitle(res) }}</div>
-                                @if (res.discount; as discount) {
-                                    <div class="text-sm mb-4" data-testid="signup-discount-note">
-                                        Ortak kodu <span class="font-semibold">{{ discount.code }}</span
-                                        >:
-                                        {{ discountNote(discount.discountPercent, discount.discountMonths) }}
-                                    </div>
-                                }
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                                    <div>
-                                        <div class="text-muted-color mb-1">Deneme başlangıcı</div>
-                                        <div class="font-medium">{{ res.trialStartsAtUtc | trDate }}</div>
-                                    </div>
-                                    <div>
-                                        <div class="text-muted-color mb-1">Deneme bitişi</div>
-                                        <div class="font-medium">{{ res.trialEndsAtUtc | trDate }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <button pButton type="button" class="w-full mb-4 public-auth-submit" (click)="goToLogin()">Giriş yap</button>
-                            <div class="text-center">
-                                <a routerLink="/paketler" class="public-brand-link no-underline text-sm">Paketlere dön</a>
-                            </div>
-                        } @else {
-                            <div class="public-auth-header">
-                                <a routerLink="/" aria-label="Vetinity ana sayfasına dön" class="inline-flex">
-                                    <img [src]="brand.logoFull" alt="Vetinity" class="public-auth-logo block dark:hidden" width="120" height="30" />
-                                    <img [src]="brand.logoFullDark" alt="Vetinity" class="public-auth-logo hidden dark:block" width="120" height="30" />
-                                </a>
-                                <div class="public-auth-title">Hesap oluştur</div>
-                                <span class="public-auth-subtitle">Deneme paketiyle işletmenizi tek adımda başlatın</span>
-                            </div>
+                            @if (option.userLimit; as userLimit) {
+                                <span class="public-auth-option-text">{{ userLimit }}</span>
+                            }
+                        </button>
+                    }
+                </div>
+                @if (fieldError('plan'); as error) {
+                    <small class="text-danger block mt-2" role="alert" data-testid="signup-plan-error">{{ error }}</small>
+                }
+                <p class="public-auth-hint">Her paket 14 gün ücretsiz denenir, kart bilgisi istenmez. <a routerLink="/paketler" class="public-auth-link public-auth-link--inline">Paketleri karşılaştırın</a></p>
 
-                            <div class="flex flex-col gap-6">
-                                <div>
-                                    <div id="signup-plan-label" class="public-auth-label">Paket seçin *</div>
-                                    <div role="radiogroup" aria-labelledby="signup-plan-label" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                        @for (option of planOptions(); track option.def.slug) {
-                                            <button
-                                                type="button"
-                                                role="radio"
-                                                class="text-left rounded-lg border p-3 cursor-pointer bg-transparent"
-                                                [class.border-primary]="option.selected"
-                                                [class.border-surface-200]="!option.selected"
-                                                [class.dark:border-surface-700]="!option.selected"
-                                                [attr.aria-checked]="option.selected"
-                                                [attr.data-plan]="option.def.slug"
-                                                (click)="selectPlan(option.def)"
-                                            >
-                                                <span class="block font-semibold text-surface-900 dark:text-surface-0">{{ option.def.title }}</span>
-                                                <span class="block text-sm text-muted-color mt-1">{{ option.def.description }}</span>
-                                                @if (option.userLimit; as userLimit) {
-                                                    <span class="block text-sm text-surface-900 dark:text-surface-0 mt-2">{{ userLimit }}</span>
-                                                }
-                                                @if (option.price; as price) {
-                                                    <span class="block text-sm text-muted-color">{{ price.amount }} {{ price.unit }}</span>
-                                                }
-                                            </button>
-                                        }
-                                    </div>
-                                    @if (fieldError('plan'); as error) {
-                                        <small class="text-danger block mt-2" role="alert" data-testid="signup-plan-error">{{ error }}</small>
-                                    }
-                                    <p class="text-sm text-muted-color m-0 mt-2">Her paket 14 gün ücretsiz denenir, kart bilgisi istenmez.</p>
-                                    <a routerLink="/paketler" class="public-brand-link no-underline text-sm">Paketleri karşılaştırın</a>
-                                </div>
+                <h2 class="public-auth-group">Klinik</h2>
+                <div class="public-auth-field">
+                    <label for="tenantName" class="public-auth-label">Klinik / işletme adı *</label>
+                    <input pInputText id="tenantName" type="text" class="w-full" [(ngModel)]="tenantName" (ngModelChange)="clearFieldError('tenantName')" [attr.aria-invalid]="fieldError('tenantName') ? true : null" autocomplete="organization" />
+                    @if (fieldError('tenantName'); as error) {
+                        <small class="text-danger block mt-1" role="alert">{{ error }}</small>
+                    }
+                </div>
 
-                                <div>
-                                    <label for="tenantName" class="public-auth-label">Klinik / işletme adı *</label>
-                                    <input pInputText id="tenantName" type="text" class="w-full" [(ngModel)]="tenantName" (ngModelChange)="clearFieldError('tenantName')" [attr.aria-invalid]="fieldError('tenantName') ? true : null" autocomplete="organization" />
-                                    @if (fieldError('tenantName'); as error) {
-                                        <small class="text-danger block mt-1" role="alert">{{ error }}</small>
-                                    }
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label for="clinicName" class="public-auth-label">İlk klinik adı *</label>
-                                        <input pInputText id="clinicName" type="text" class="w-full" [(ngModel)]="clinicName" (ngModelChange)="clearFieldError('clinicName')" [attr.aria-invalid]="fieldError('clinicName') ? true : null" autocomplete="organization" />
-                                        @if (fieldError('clinicName'); as error) {
-                                            <small class="text-danger block mt-1" role="alert">{{ error }}</small>
-                                        }
-                                    </div>
-                                    <div>
-                                        <label for="clinicCity" class="public-auth-label">Şehir *</label>
-                                        <input pInputText id="clinicCity" type="text" class="w-full" [(ngModel)]="clinicCity" (ngModelChange)="clearFieldError('clinicCity')" [attr.aria-invalid]="fieldError('clinicCity') ? true : null" autocomplete="address-level2" />
-                                        @if (fieldError('clinicCity'); as error) {
-                                            <small class="text-danger block mt-1" role="alert">{{ error }}</small>
-                                        }
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label for="fullName" class="public-auth-label">Adınız soyadınız *</label>
-                                    <input
-                                        pInputText
-                                        id="fullName"
-                                        type="text"
-                                        class="w-full"
-                                        maxlength="120"
-                                        [(ngModel)]="fullName"
-                                        (ngModelChange)="clearFieldError('fullName')"
-                                        [attr.aria-invalid]="fieldError('fullName') ? true : null"
-                                        aria-describedby="fullNameHint"
-                                        autocomplete="name"
-                                        data-testid="signup-full-name"
-                                    />
-                                    <small id="fullNameHint" class="block text-muted-color mt-1">Hekim listelerinde ve kesinleştirilen muayenelerde bu ad görünür.</small>
-                                    @if (fieldError('fullName'); as error) {
-                                        <small class="text-danger block mt-1" role="alert">{{ error }}</small>
-                                    }
-                                </div>
-
-                                <div>
-                                    <label for="taxIdentityNumber" class="public-auth-label">Vergi numarası ya da TC kimlik no{{ taxIdentityRequired() ? ' *' : '' }}</label>
-                                    <input
-                                        pInputText
-                                        id="taxIdentityNumber"
-                                        type="text"
-                                        inputmode="numeric"
-                                        maxlength="11"
-                                        class="w-full"
-                                        [ngModel]="taxIdentityNumber"
-                                        (ngModelChange)="onTaxIdentityChange($event)"
-                                        [attr.aria-invalid]="taxIdentityError() ? true : null"
-                                        aria-describedby="taxIdentityHint"
-                                        data-testid="signup-tax-identity"
-                                    />
-                                    <small id="taxIdentityHint" class="block text-muted-color mt-1">Her işletme bir kez ücretsiz deneyebilir; ücretli plana geçerseniz faturanız bu bilgiyle kesilir. Şahıs işletmeleri TC kimlik numarası girebilir.</small>
-                                    @if (taxIdentityError(); as error) {
-                                        <small class="text-danger block mt-1" role="alert">{{ error }}</small>
-                                    }
-                                </div>
-
-                                <app-signup-email-verification [disabled]="submitting()" [turnstileSiteKey]="turnstileSiteKey()" (verifiedChange)="onEmailVerified($event)" />
-
-                                <div>
-                                    <label for="password" class="public-auth-label">Şifre *</label>
-                                    <p class="text-sm text-muted-color m-0 mb-2">{{ passwordPolicyHint }}</p>
-                                    <p-password id="password" [(ngModel)]="password" placeholder="Şifre" [toggleMask]="true" class="w-full" [fluid]="true" [feedback]="false" />
-                                    @if (passwordFieldError()) {
-                                        <small class="text-danger block mt-2">{{ passwordFieldError() }}</small>
-                                    }
-                                </div>
-
-                                <app-discount-code-field inputId="signupDiscountCode" [disabled]="submitting()" [(code)]="discountCode" (validated)="discountValidation.set($event)" />
-
-                                <fieldset class="border-0 p-0 m-0 min-w-0" data-testid="signup-start-mode">
-                                    <legend class="public-auth-label p-0">Nasıl başlayalım?</legend>
-                                    <div class="flex flex-col gap-3">
-                                        <label for="startModeExample" class="flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors" [class]="startModeCardClass('example')">
-                                            <p-radiobutton inputId="startModeExample" name="startMode" value="example" [disabled]="submitting()" [ngModel]="startMode()" (ngModelChange)="startMode.set($event)" />
-                                            <span class="min-w-0">
-                                                <span class="block font-medium text-surface-900 dark:text-surface-0">Örnek Veteriner Kliniğini yükle <span class="text-primary text-sm font-semibold">(önerilen)</span></span>
-                                                <span class="block text-sm text-muted-color mt-1"
-                                                    >Müşteri, hasta, randevu, muayene, aşı, ödeme ve stok örnekleriyle dolu bir klinikte ilk dakikadan deneyin. Veriler tamamen sentetiktir, gerçek müşteri verisi içermez ve "ÖRNEK" olarak
-                                                    işaretlidir.</span
-                                                >
-                                            </span>
-                                        </label>
-                                        <label for="startModeEmpty" class="flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors" [class]="startModeCardClass('empty')">
-                                            <p-radiobutton inputId="startModeEmpty" name="startMode" value="empty" [disabled]="submitting()" [ngModel]="startMode()" (ngModelChange)="startMode.set($event)" />
-                                            <span class="min-w-0">
-                                                <span class="block font-medium text-surface-900 dark:text-surface-0">Boş klinikle başla</span>
-                                                <span class="block text-sm text-muted-color mt-1">Kendi kayıtlarınızı sıfırdan girin. Örnek içeriği daha sonra Ayarlar &gt; Abonelik sayfasından da yükleyebilirsiniz.</span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                </fieldset>
-
-                                <p class="text-sm text-muted-color m-0">Bu adımda ödeme alınmaz; deneme süresi kurum aboneliğinde başlatılır.</p>
-
-                                <app-legal-consent-checkbox inputId="signupLegalConsent" [documents]="legalDocumentTypes()" [disabled]="submitting()" [(checked)]="legalConsent" />
-
-                                <button pButton type="button" class="w-full public-auth-submit" [disabled]="submitting() || !legalConsent()" (click)="submit()">@if (submitting()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Hesabı oluştur</button>
-                                @if (!legalConsent()) {
-                                    <small class="block text-muted-color -mt-4" data-testid="signup-consent-hint">Hesabı oluşturmak için yukarıdaki metinleri onaylayın.</small>
-                                }
-
-                                @if (formError()) {
-                                    <div class="rounded-sm border-l-[3px] border-l-red-400/75 bg-red-500/[0.06] py-2 px-3 dark:border-l-red-500/45 dark:bg-red-500/[0.08]" role="alert" aria-live="assertive">
-                                        <span class="text-sm font-medium text-red-950 dark:text-red-100">{{ formError() }}</span>
-                                    </div>
-                                }
-
-                                <div class="text-center flex flex-col items-center gap-2">
-                                    <a routerLink="/auth/login" class="public-brand-link no-underline">Zaten hesabınız var mı? Giriş yapın</a>
-                                    <a routerLink="/paketler" class="inline-flex min-h-11 items-center text-muted-color font-medium no-underline text-sm">Paketlere dön</a>
-                                </div>
-                            </div>
+                <div class="public-auth-row2">
+                    <div class="public-auth-field">
+                        <label for="clinicName" class="public-auth-label">İlk klinik adı *</label>
+                        <input pInputText id="clinicName" type="text" class="w-full" [(ngModel)]="clinicName" (ngModelChange)="clearFieldError('clinicName')" [attr.aria-invalid]="fieldError('clinicName') ? true : null" autocomplete="organization" />
+                        @if (fieldError('clinicName'); as error) {
+                            <small class="text-danger block mt-1" role="alert">{{ error }}</small>
+                        }
+                    </div>
+                    <div class="public-auth-field">
+                        <label for="clinicCity" class="public-auth-label">Şehir *</label>
+                        <input pInputText id="clinicCity" type="text" class="w-full" [(ngModel)]="clinicCity" (ngModelChange)="clearFieldError('clinicCity')" [attr.aria-invalid]="fieldError('clinicCity') ? true : null" autocomplete="address-level2" />
+                        @if (fieldError('clinicCity'); as error) {
+                            <small class="text-danger block mt-1" role="alert">{{ error }}</small>
                         }
                     </div>
                 </div>
-                <app-public-legal-links />
-            </div>
-        </div>
+
+                <div class="public-auth-field">
+                    <label for="taxIdentityNumber" class="public-auth-label">Vergi numarası ya da TC kimlik no{{ taxIdentityRequired() ? ' *' : '' }}</label>
+                    <input
+                        pInputText
+                        id="taxIdentityNumber"
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="11"
+                        class="w-full"
+                        [ngModel]="taxIdentityNumber"
+                        (ngModelChange)="onTaxIdentityChange($event)"
+                        [attr.aria-invalid]="taxIdentityError() ? true : null"
+                        aria-describedby="taxIdentityHint"
+                        data-testid="signup-tax-identity"
+                    />
+                    <p id="taxIdentityHint" class="public-auth-hint">Her işletme bir kez ücretsiz deneyebilir; ücretli plana geçerseniz faturanız bu bilgiyle kesilir. Şahıs işletmeleri TC kimlik numarası girebilir.</p>
+                    @if (taxIdentityError(); as error) {
+                        <small class="text-danger block mt-1" role="alert">{{ error }}</small>
+                    }
+                </div>
+
+                <h2 class="public-auth-group">Hesabınız</h2>
+                <div class="public-auth-field">
+                    <label for="fullName" class="public-auth-label">Adınız soyadınız *</label>
+                    <input
+                        pInputText
+                        id="fullName"
+                        type="text"
+                        class="w-full"
+                        maxlength="120"
+                        [(ngModel)]="fullName"
+                        (ngModelChange)="clearFieldError('fullName')"
+                        [attr.aria-invalid]="fieldError('fullName') ? true : null"
+                        aria-describedby="fullNameHint"
+                        autocomplete="name"
+                        data-testid="signup-full-name"
+                    />
+                    <p id="fullNameHint" class="public-auth-hint">Hekim listelerinde ve kesinleştirilen muayenelerde bu ad görünür.</p>
+                    @if (fieldError('fullName'); as error) {
+                        <small class="text-danger block mt-1" role="alert">{{ error }}</small>
+                    }
+                </div>
+
+                <div class="public-auth-field">
+                    <app-signup-email-verification [disabled]="submitting()" [turnstileSiteKey]="turnstileSiteKey()" (verifiedChange)="onEmailVerified($event)" />
+                </div>
+
+                <div class="public-auth-field">
+                    <label for="password" class="public-auth-label">Şifre *</label>
+                    <p-password id="password" [(ngModel)]="password" placeholder="Şifre" [toggleMask]="true" class="w-full" [fluid]="true" [feedback]="false" />
+                    <p class="public-auth-hint">{{ passwordPolicyHint }}</p>
+                    @if (passwordFieldError()) {
+                        <small class="text-danger block mt-2">{{ passwordFieldError() }}</small>
+                    }
+                </div>
+
+                <div class="public-auth-field">
+                    <app-discount-code-field inputId="signupDiscountCode" [disabled]="submitting()" [(code)]="discountCode" (validated)="discountValidation.set($event)" />
+                </div>
+
+                <fieldset class="public-auth-fieldset" data-testid="signup-start-mode">
+                    <legend class="public-auth-group">Nasıl başlayalım?</legend>
+                    <div class="public-auth-modes">
+                        <label for="startModeExample" class="public-auth-option public-auth-option--radio" [class.public-auth-option--selected]="startMode() === 'example'">
+                            <p-radiobutton inputId="startModeExample" name="startMode" value="example" [disabled]="submitting()" [ngModel]="startMode()" (ngModelChange)="startMode.set($event)" />
+                            <span class="min-w-0">
+                                <span class="public-auth-option-title">Örnek Veteriner Kliniğini yükle <span class="public-auth-recommended">(önerilen)</span></span>
+                                <span class="public-auth-option-text"
+                                    >Müşteri, hasta, randevu, muayene, aşı, ödeme ve stok örnekleriyle dolu bir klinikte ilk dakikadan deneyin. Veriler tamamen sentetiktir, gerçek müşteri verisi içermez ve "ÖRNEK" olarak
+                                    işaretlidir.</span
+                                >
+                            </span>
+                        </label>
+                        <label for="startModeEmpty" class="public-auth-option public-auth-option--radio" [class.public-auth-option--selected]="startMode() === 'empty'">
+                            <p-radiobutton inputId="startModeEmpty" name="startMode" value="empty" [disabled]="submitting()" [ngModel]="startMode()" (ngModelChange)="startMode.set($event)" />
+                            <span class="min-w-0">
+                                <span class="public-auth-option-title">Boş klinikle başla</span>
+                                <span class="public-auth-option-text">Kendi kayıtlarınızı sıfırdan girin. Örnek içeriği daha sonra Ayarlar &gt; Abonelik sayfasından da yükleyebilirsiniz.</span>
+                            </span>
+                        </label>
+                    </div>
+                </fieldset>
+
+                <div class="public-auth-consent">
+                    <app-legal-consent-checkbox inputId="signupLegalConsent" [documents]="legalDocumentTypes()" [disabled]="submitting()" [(checked)]="legalConsent" />
+                </div>
+
+                <button pButton type="button" class="w-full public-auth-submit" [disabled]="submitting() || !legalConsent()" (click)="submit()">@if (submitting()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Hesabı oluştur</button>
+                <p class="public-auth-hint text-center">
+                    @if (!legalConsent()) {
+                        <span data-testid="signup-consent-hint">Hesabı oluşturmak için yukarıdaki metinleri onaylayın.</span>
+                    }
+                    Bu adımda ödeme alınmaz; deneme süresi kurum aboneliğinde başlatılır.
+                </p>
+
+                @if (formError()) {
+                    <div class="public-auth-alert" role="alert" aria-live="assertive">
+                        <div class="public-auth-alert-box">
+                            <i class="pi pi-info-circle shrink-0 public-auth-alert-text" aria-hidden="true"></i>
+                            <span class="public-auth-alert-text">{{ formError() }}</span>
+                        </div>
+                    </div>
+                }
+
+                <p class="public-auth-alt">Zaten hesabınız var mı? <a routerLink="/auth/login" class="public-auth-link">Giriş yap</a></p>
+            }
+        </app-public-auth-shell>
     `
 })
 export class OwnerSignupPageComponent implements OnInit {
-    readonly brand = VETINITY_BRAND_LOGOS;
-
     private readonly signup = inject(PublicOwnerSignupService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
@@ -361,10 +349,6 @@ export class OwnerSignupPageComponent implements OnInit {
 
     /** "Nasıl başlayalım?" — örnek klinik önerilen ve varsayılan (ADR-002). */
     readonly startMode = signal<OnboardingStartMode>(DEFAULT_ONBOARDING_START_MODE);
-
-    startModeCardClass(mode: OnboardingStartMode): string {
-        return this.startMode() === mode ? 'border-primary' : 'border-surface-200 dark:border-surface-700';
-    }
 
     readonly submitting = signal(false);
     readonly formError = signal<string | null>(null);

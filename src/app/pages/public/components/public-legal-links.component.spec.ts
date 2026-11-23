@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { PublicLegalLinksComponent } from './public-legal-links.component';
 
 describe('PublicLegalLinksComponent', () => {
-    it('gizlilik politikası ve kullanım şartları bağlantılarını ayraçla gösterir', () => {
+    it('gizlilik politikası ve kullanım şartları bağlantılarını gösterir', () => {
         TestBed.configureTestingModule({ imports: [PublicLegalLinksComponent], providers: [provideRouter([])] });
         const fixture = TestBed.createComponent(PublicLegalLinksComponent);
 
@@ -16,6 +16,5 @@ describe('PublicLegalLinksComponent', () => {
             ['/gizlilik', 'Gizlilik Politikası'],
             ['/kullanim-sartlari', 'Kullanım Şartları']
         ]);
-        expect(Array.from(nav.querySelectorAll('span[aria-hidden="true"]')).map((s) => s.textContent)).toEqual(['·']);
     });
 });

@@ -32,7 +32,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                         <span class="font-medium text-surface-900 dark:text-surface-0 break-all">{{ email }}</span>
                         <span class="text-sm text-green-700 dark:text-green-400">doğrulandı</span>
                     </span>
-                    <button type="button" class="public-brand-link text-sm bg-transparent border-0 p-0 cursor-pointer" [disabled]="disabled()" (click)="reset()">Adresi değiştir</button>
+                    <button type="button" class="public-brand-link text-sm bg-transparent border-0 p-0 min-h-[44px] cursor-pointer" [disabled]="disabled()" (click)="reset()">Adresi değiştir</button>
                 </div>
             } @else {
                 <p class="text-sm text-muted-color m-0">Adresinize tek kullanımlık bir kod göndereceğiz. Her e-posta adresiyle bir deneme hesabı açılabilir.</p>

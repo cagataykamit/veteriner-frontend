@@ -8,8 +8,7 @@ import { finalize } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
-import { VETINITY_BRAND_LOGOS } from '@/app/core/brand/vetinity-brand.constants';
-import { PublicLegalLinksComponent } from '@/app/pages/public/components/public-legal-links.component';
+import { PublicAuthShellComponent } from '@/app/pages/public/components/public-auth-shell.component';
 import { setPublicPageMeta } from '@/app/features/public/utils/public-seo.utils';
 import { removeOrphanedPrimeMenuPopupsFromBody } from '@/app/shared/utils/prime-menu-overlay.utils';
 import { messageFromHttpError } from '@/app/shared/utils/api-error.utils';
@@ -32,108 +31,98 @@ const RESET_PASSWORD_FIELD_MAP: Record<string, ResetPasswordFieldKey> = {
 @Component({
     selector: 'app-reset-password-page',
     standalone: true,
-    imports: [FormsModule, ButtonModule, PasswordModule, RippleModule, RouterLink, PublicLegalLinksComponent],
+    imports: [FormsModule, ButtonModule, PasswordModule, RippleModule, RouterLink, PublicAuthShellComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="public-page public-site public-auth-page">
-            <div class="public-auth-shell">
-                <div class="public-auth-card-frame">
-                    <div class="public-auth-card-inner">
-                        <div class="public-auth-header">
-                            <img [src]="brand.logoFull" alt="Vetinity" class="public-auth-logo block dark:hidden" width="120" height="30" />
-                            <img [src]="brand.logoFullDark" alt="Vetinity" class="public-auth-logo hidden dark:block" width="120" height="30" />
-                            @if (submitted()) {
-                                <div class="public-auth-title">Şifre güncellendi</div>
-                                <span class="public-auth-subtitle">{{ resetSuccessMessage }}</span>
-                            } @else if (!token()) {
-                                <div class="public-auth-title">Geçersiz bağlantı</div>
-                                <span class="public-auth-subtitle">{{ invalidLinkMessage }}</span>
-                            } @else {
-                                <div class="public-auth-title">Yeni şifre belirle</div>
-                                <span class="public-auth-subtitle">Hesabınız için yeni bir şifre oluşturun.</span>
+        <app-public-auth-shell>
+            <div class="public-auth-header">
+                @if (submitted()) {
+                    <h1 class="public-auth-title">Şifre güncellendi</h1>
+                    <p class="public-auth-subtitle">{{ resetSuccessMessage }}</p>
+                } @else if (!token()) {
+                    <h1 class="public-auth-title">Geçersiz bağlantı</h1>
+                    <p class="public-auth-subtitle">{{ invalidLinkMessage }}</p>
+                } @else {
+                    <h1 class="public-auth-title">Yeni şifre belirleyin</h1>
+                    <p class="public-auth-subtitle">Hesabınız için yeni bir şifre oluşturun.</p>
+                }
+            </div>
+
+            @if (submitted()) {
+                <div class="public-auth-form">
+                    <button pButton type="button" class="w-full public-auth-submit" (click)="goToLogin()">Giriş yap</button>
+                </div>
+            } @else if (!token()) {
+                <div class="public-auth-form">
+                    <button pButton type="button" class="w-full public-auth-submit" (click)="goToLogin()">Giriş sayfasına dön</button>
+                </div>
+            } @else {
+                <form class="public-auth-form" (ngSubmit)="onSubmit(resetForm)" autocomplete="on" #resetForm="ngForm">
+                    <div class="public-auth-field-primary">
+                        <label for="newPassword" class="public-auth-label-password">Yeni şifre</label>
+                        <p-password
+                            inputId="newPassword"
+                            name="newPassword"
+                            #newPasswordCtrl="ngModel"
+                            [(ngModel)]="newPassword"
+                            placeholder="En az 8 karakter"
+                            [toggleMask]="true"
+                            [fluid]="true"
+                            [feedback]="false"
+                            [required]="true"
+                        ></p-password>
+                        <p class="public-auth-hint">{{ passwordPolicyHint }}</p>
+                        @if (apiFieldErrors().newPassword) {
+                            <small class="text-danger block mt-2">{{ apiFieldErrors().newPassword }}</small>
+                        } @else if (newPasswordCtrl.invalid && (newPasswordCtrl.touched || formSubmitAttempted())) {
+                            @if (passwordPolicyErrorMessage(newPasswordCtrl.errors); as msg) {
+                                <small class="text-danger block mt-2">{{ msg }}</small>
                             }
-                        </div>
-
-                        @if (submitted()) {
-                            <div class="public-auth-form">
-                                <button pButton type="button" class="w-full public-auth-submit" (click)="goToLogin()">Giriş yap</button>
-                            </div>
-                        } @else if (!token()) {
-                            <div class="public-auth-form">
-                                <button pButton type="button" class="w-full public-auth-submit" (click)="goToLogin()">Giriş sayfasına dön</button>
-                            </div>
-                        } @else {
-                            <form class="public-auth-form" (ngSubmit)="onSubmit(resetForm)" autocomplete="on" #resetForm="ngForm">
-                                <div class="public-auth-field-primary">
-                                    <label for="newPassword" class="public-auth-label-password">Yeni şifre</label>
-                                    <p class="text-muted-color text-xs m-0 mb-2">{{ passwordPolicyHint }}</p>
-                                    <p-password
-                                        inputId="newPassword"
-                                        name="newPassword"
-                                        #newPasswordCtrl="ngModel"
-                                        [(ngModel)]="newPassword"
-                                        placeholder="En az 8 karakter"
-                                        [toggleMask]="true"
-                                        [fluid]="true"
-                                        [feedback]="false"
-                                        [required]="true"
-                                    ></p-password>
-                                    @if (apiFieldErrors().newPassword) {
-                                        <small class="text-danger block mt-2">{{ apiFieldErrors().newPassword }}</small>
-                                    } @else if (newPasswordCtrl.invalid && (newPasswordCtrl.touched || formSubmitAttempted())) {
-                                        @if (passwordPolicyErrorMessage(newPasswordCtrl.errors); as msg) {
-                                            <small class="text-danger block mt-2">{{ msg }}</small>
-                                        }
-                                    }
-                                </div>
-
-                                <div class="public-auth-field-before-action">
-                                    <label for="confirmPassword" class="public-auth-label-password">Yeni şifre (tekrar)</label>
-                                    <p-password
-                                        inputId="confirmPassword"
-                                        name="confirmPassword"
-                                        #confirmPasswordCtrl="ngModel"
-                                        [(ngModel)]="confirmPassword"
-                                        placeholder="Şifrenizi tekrar girin"
-                                        [toggleMask]="true"
-                                        [fluid]="true"
-                                        [feedback]="false"
-                                        [required]="true"
-                                    ></p-password>
-                                    @if (confirmPasswordCtrl.invalid && (confirmPasswordCtrl.touched || formSubmitAttempted())) {
-                                        @if (confirmPasswordCtrl.errors?.['required']) {
-                                            <small class="text-danger block mt-2">Şifre tekrarı zorunlu</small>
-                                        }
-                                    } @else if (passwordMismatch() && (confirmPasswordCtrl.touched || formSubmitAttempted())) {
-                                        <small class="text-danger block mt-2">{{ passwordMismatchMessage }}</small>
-                                    }
-                                </div>
-
-                                <button pButton type="submit" class="w-full public-auth-submit" [disabled]="loading()">@if (loading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Şifreyi güncelle</button>
-
-                                @if (formError()) {
-                                    <div class="public-auth-alert" role="alert" aria-live="assertive">
-                                        <div class="public-auth-alert-box">
-                                            <i class="pi pi-info-circle shrink-0 text-[0.6875rem] text-red-600/75 dark:text-red-400/70" aria-hidden="true"></i>
-                                            <span class="public-auth-alert-text">{{ formError() }}</span>
-                                        </div>
-                                    </div>
-                                }
-
-                                <div class="public-auth-footer-link">
-                                    <a routerLink="/auth/login" class="public-brand-link no-underline text-sm">Giriş sayfasına dön</a>
-                                </div>
-                            </form>
                         }
                     </div>
-                </div>
-                <app-public-legal-links />
-            </div>
-        </div>
+
+                    <div class="public-auth-field-before-action">
+                        <label for="confirmPassword" class="public-auth-label-password">Yeni şifre (tekrar)</label>
+                        <p-password
+                            inputId="confirmPassword"
+                            name="confirmPassword"
+                            #confirmPasswordCtrl="ngModel"
+                            [(ngModel)]="confirmPassword"
+                            placeholder="Şifrenizi tekrar girin"
+                            [toggleMask]="true"
+                            [fluid]="true"
+                            [feedback]="false"
+                            [required]="true"
+                        ></p-password>
+                        @if (confirmPasswordCtrl.invalid && (confirmPasswordCtrl.touched || formSubmitAttempted())) {
+                            @if (confirmPasswordCtrl.errors?.['required']) {
+                                <small class="text-danger block mt-2">Şifre tekrarı zorunlu</small>
+                            }
+                        } @else if (passwordMismatch() && (confirmPasswordCtrl.touched || formSubmitAttempted())) {
+                            <small class="text-danger block mt-2">{{ passwordMismatchMessage }}</small>
+                        }
+                    </div>
+
+                    <button pButton type="submit" class="w-full public-auth-submit" [disabled]="loading()">@if (loading()) {<i class="p-button-icon pi pi-spin pi-spinner"></i>}Şifreyi güncelle</button>
+
+                    @if (formError()) {
+                        <div class="public-auth-alert" role="alert" aria-live="assertive">
+                            <div class="public-auth-alert-box">
+                                <i class="pi pi-info-circle shrink-0 public-auth-alert-text" aria-hidden="true"></i>
+                                <span class="public-auth-alert-text">{{ formError() }}</span>
+                            </div>
+                        </div>
+                    }
+
+                    <p class="public-auth-alt">
+                        <a routerLink="/auth/login" class="public-auth-link"><i class="pi pi-arrow-left text-xs" aria-hidden="true"></i>Giriş sayfasına dön</a>
+                    </p>
+                </form>
+            }
+        </app-public-auth-shell>
     `
 })
 export class ResetPasswordPageComponent implements OnInit {
-    readonly brand = VETINITY_BRAND_LOGOS;
     readonly invalidLinkMessage = INVALID_LINK_MESSAGE;
     readonly resetSuccessMessage = RESET_SUCCESS_MESSAGE;
     readonly passwordPolicyHint = PASSWORD_POLICY_HINT;
