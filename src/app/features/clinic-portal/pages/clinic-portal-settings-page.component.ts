@@ -73,8 +73,11 @@ import { AppStatusTagComponent } from '@/app/shared/ui/status-tag/app-status-tag
         .portal-rules th.rule-channel {
             width: 11.5rem;
         }
-        .portal-rules :is(th, td).rule-name {
-            padding-left: 1.125rem;
+        /* Satırlar kategori başlığından girintili; telefonda satır karta döner, girinti yok. */
+        @media (min-width: 576px) {
+            .portal-rules :is(th, td).rule-name {
+                padding-left: 1.125rem;
+            }
         }
         .portal-rules tr.rule-group > th {
             padding: 1.875rem 0 0.5625rem;
