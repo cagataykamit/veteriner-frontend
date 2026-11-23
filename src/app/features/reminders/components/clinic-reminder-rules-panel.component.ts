@@ -87,7 +87,7 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
                 }
                 @if (canWrite()) {
                     <div class="mt-4">
-                        <button pButton type="button" [disabled]="saving() || !dirty()" data-testid="reminder-rules-save" (click)="save()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Kaydet</button>
+                        <button pButton type="button" [disabled]="saving() || !dirty()" data-testid="reminder-rules-save" (click)="save()"><i class="p-button-icon" [class]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-save'"></i>Hatırlatıcıları kaydet</button>
                     </div>
                 }
 
