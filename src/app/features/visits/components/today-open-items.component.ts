@@ -2,6 +2,7 @@ import { Component, computed, input, output, signal, ChangeDetectionStrategy } f
 import { RouterLink } from '@angular/router';
 import type { OpenItemVisitKind, OpenItemVisitVm, TodayOpenItemsVm } from '@/app/entities/visit/models/visit-vm.model';
 import { TodayOpenVisitsChipComponent } from '@/app/features/visits/components/today-open-visits-chip.component';
+import { REPORTS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { formatMoney } from '@/app/shared/utils/money.utils';
 
 /** Her çip bir yere götürür: mevcut liste sayfasına (`link`) ya da çipten açılan ziyaret listesine (`visits`, `OPEN_ITEMS_API_CONTRACT.md` §10). */
@@ -22,8 +23,9 @@ const CHIP_CALM = `${CHIP_BASE} bg-surface-0 border-surface-300 text-color dark:
 
 /**
  * Bugün üstü "Açık işler" şeridi: klinik geneli, tarih ve hekim filtresinden bağımsız, yalnız bugünün işini etkileyen sayılar.
- * Birikmiş işler (HBS'e girilmeyen reçete/aşı, gecikmiş randevu) Rapor Merkezi'nin "Bakmanız gerekenler" bandındadır (B-02); yanıttaki
- * alanları burada gösterilmez. Yalnızca sıfırdan büyük sayılar görünür (sıcak olanlar öne); `null` alan (yetki yok) hiç gösterilmez.
+ * Birikmiş işler (HBS'e girilmeyen reçete/aşı, gecikmiş randevu) Rapor Merkezi'nin "Bakmanız gerekenler" bandındadır (B-02); burada
+ * yalnız toplamları sessiz bir bağlantıdır.
+ * Yalnızca sıfırdan büyük sayılar görünür (sıcak olanlar öne); `null` alan (yetki yok) hiç gösterilmez.
  * Ücretsiz ziyaret ve tamamlanmamış geliş için liste sayfası yoktur: çip, ziyaretleri küçük bir panelde açar.
  * Satır başına dışarıdan bir çip yansıtılabilir (bekleyen online talepler); özet henüz yoksa (`null`) satır yalnız o çiple çizilir.
  * Telefonda şerit tek satır özete iner ("Açık işler 3" + en acil iş); dokununca çipler altında alt alta açılır (B-01).
@@ -85,6 +87,15 @@ const CHIP_CALM = `${CHIP_BASE} bg-surface-0 border-surface-300 text-color dark:
                     @if (!hasLeadingItem()) {
                         <span class="inline-flex items-center gap-1 text-sm text-muted-color"><i class="pi pi-check" aria-hidden="true"></i>Açık iş yok</span>
                     }
+                }
+                @if (backlogCount() > 0) {
+                    <a
+                        [routerLink]="reportsRoute"
+                        class="inline-flex items-center gap-1 text-sm text-muted-color no-underline hover:underline touch:min-h-(--touch-target) sm:ml-1"
+                        title="HBS'e girilmeyen reçete ve aşılar ile gecikmiş randevular: Rapor Merkezi, Bakmanız gerekenler"
+                        data-testid="open-items-backlog-link"
+                        >Birikmiş {{ backlogCount() }} iş Raporlar'da →</a
+                    >
                 }
             </div>
         </section>
@@ -182,6 +193,17 @@ export class TodayOpenItemsComponent {
         return out;
     });
 
+    readonly reportsRoute = REPORTS_ROUTE;
+    /**
+     * Birikmiş işler (B-02 A): HBS'e girilmeyen reçete ve aşı ile gecikmiş randevu Bugün'de çip olmaz; toplamı Rapor Merkezi'ne sessiz bir
+     * bağlantıdır. Sayı Bugün yanıtındaki alanlardan (bant aynı tanım ve izinle sayar); izin yoksa alan 
+ull, toplam 0 ise bağlantı yok.
+     */
+    readonly backlogCount = computed(() => {
+        const s = this.summary();
+
+        return s ? (s.hbsNotEnteredPrescriptionCount ?? 0) + (s.hbsNotEnteredVaccinationCount ?? 0) + (s.overdueAppointmentCount ?? 0) : 0;
+    });
     /** Özet satırındaki sayı: çipler ve yansıtılan talep çipi. */
     readonly total = computed(() => this.entries().length + (this.hasLeadingItem() ? 1 : 0));
     /** Özet satırında yazılı kalan iş: ilk sıcak iş, yoksa ilk iş (yalnız talep çipi varsa yazı yok). */

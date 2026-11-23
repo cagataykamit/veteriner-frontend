@@ -510,6 +510,22 @@ describe('TodayPageComponent', () => {
             expect(strip.textContent).not.toMatch(/Gecikmiş randevu|HBS/);
             expect(strip.textContent).toContain('Açık iş yok');
             expect(strip.querySelector('[data-testid="open-items-toggle"]')).toBeNull();
+            // B-02 A: toplamları Rapor Merkezi'ne sessiz bağlantı (2 + 3 + 4).
+            const backlog = strip.querySelector('[data-testid="open-items-backlog-link"]');
+
+            expect(backlog?.textContent?.trim()).toBe("Birikmiş 9 iş Raporlar'da →");
+            expect(backlog?.getAttribute('href')).toBe('/panel/reports');
+        });
+
+        it('B-02 A: birikmiş iş yoksa ya da alanlar izinsiz (null) ise Raporlar bağlantısı çizilmez', async () => {
+            const f = await create(['Visits.Read'], {
+                date: 'd',
+                activeHospitalizations: [],
+                items: [],
+                openItems: { unchargedVisitCount: 1, outstandingVisitCount: 0, outstandingAmount: 0, awaitingLabCount: 0, incompleteVisitCount: 0, overdueAppointmentCount: null, hbsNotEnteredPrescriptionCount: 0 }
+            });
+
+            expect((f.nativeElement as HTMLElement).querySelector('[data-testid="open-items-backlog-link"]')).toBeNull();
         });
 
         it('B-02 ton kuralı: kırmızı yalnız Ücret yok ve Lab bekliyor, onlar öne; diğerleri sakin çerçeve', async () => {
