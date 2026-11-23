@@ -1,7 +1,8 @@
 /**
- * Bölümlerin ortak sınıfları; her bileşen `styles`'ına ekler. Yalnız token kullanır. Bileşen stil bütçesi `styles` dizisinin öğesi başına
- * ölçülür (`anyComponentStyle`), bu yüzden temel ve kit ayrı öğelerdir. `.s-head` bölümün kendi başlığıdır; alt sayfada sayfa başlığı
- * zaten olduğu için gizlenir. `.tinted` üst çubuk ve giriş bölümünün yumuşak zeminidir: soluk ve ana renk metni o zemine göre okunur.
+ * Bölüm alternatiflerinin ortak sınıfları; her bileşen `styles`'ına ekler. Yalnız token kullanır. Bileşen stil bütçesi `styles` dizisinin
+ * öğesi başına ölçülür (`anyComponentStyle`), bu yüzden temel, düğme ve menü ayrı öğelerdir. `.band` içinde token'lar yeniden tanımlanır:
+ * koyu bantta çizilen bölüm aynı değişkenleri okur, ayrı renk düşünmez. `.s-head` bölümün kendi başlığıdır; alt sayfada sayfa başlığı
+ * zaten olduğu için gizlenir.
  */
 export const SECTION_BASE = `
     :host {
@@ -64,11 +65,27 @@ export const SECTION_BASE = `
         color: var(--s-muted);
     }
 
-    .tinted {
-        --s-muted: var(--s-tint-muted);
-        --s-primary-text: var(--s-tint-primary);
-        background: var(--s-tint);
-        color: var(--s-on-tint);
+    .band {
+        --s-bg: var(--s-band);
+        --s-surface: color-mix(in srgb, var(--s-band) 90%, var(--s-on-band));
+        --s-ink: var(--s-on-band);
+        --s-muted: var(--s-band-muted);
+        --s-line: var(--s-band-line);
+        --s-line-strong: var(--s-band-line-strong);
+        --s-primary: var(--s-band-btn);
+        --s-on-primary: var(--s-on-band-btn);
+        --s-primary-text: var(--s-band-accent);
+        --s-accent-text: var(--s-band-accent);
+        --s-secondary-text: var(--s-band-accent);
+        --s-tint: var(--s-band-tint);
+        --s-on-tint: var(--s-band-on-tint);
+        --s-tint-muted: var(--s-band-tint-muted);
+        --s-tint-primary: var(--s-band-tint-accent);
+        --s-ok: var(--s-band-ok);
+        --s-warn: var(--s-band-warn);
+        --s-focus: var(--s-on-band);
+        background: var(--s-band);
+        color: var(--s-on-band);
     }
 
     a:focus-visible,
@@ -93,8 +110,8 @@ export const SECTION_BASE = `
 `;
 
 /**
- * Düğme, bölüm başlığı, kart ve ikon kabarcığı. Düğmenin biçimi ve tonu konsept token'ından gelir (`--s-radius-btn`, `--s-btn-*`):
- * dolgun `.main` ana eylem, çerçeveli `.line` ikinci eylem. Altı çizili metin bağlantı düğme yerine kullanılmaz.
+ * Düğmeler. Biçim ve ton konseptin düğme dilinden gelir (`--s-radius-btn`, `--s-btn-*`; `site-tokens`): dolgun `.main` ana eylem,
+ * çerçeveli `.line` ikinci eylem, `.acc` vurgu rengi. Altı çizili metin bağlantı düğme yerine kullanılmaz (K-01).
  */
 export const SECTION_KIT = `
     .btn {
@@ -104,7 +121,7 @@ export const SECTION_KIT = `
         gap: 8px;
         max-width: 100%;
         min-height: 48px;
-        padding: 0 22px;
+        padding: 0 var(--s-btn-pad);
         border: 1.5px solid transparent;
         border-radius: var(--s-radius-btn);
         font: var(--s-btn-weight) var(--s-btn-size) / 1.2 var(--s-body);
@@ -126,7 +143,13 @@ export const SECTION_KIT = `
         color: var(--s-on-primary);
     }
 
-    .btn.main:hover {
+    .btn.acc {
+        background: var(--s-accent);
+        color: var(--s-on-accent);
+    }
+
+    .btn.main:hover,
+    .btn.acc:hover {
         filter: brightness(1.08);
     }
 
@@ -139,42 +162,57 @@ export const SECTION_KIT = `
     .btn.line:hover {
         background: var(--s-surface);
     }
+`;
 
-    .head {
-        margin-bottom: clamp(24px, 2.8cqi, 36px);
+/**
+ * Üst menünün ortak kuralı (K-01): geniş ekranda (900 px) çubukta yalnız ana bağlantılar (`navPrimary`, en çok beş) açık durur, kalanı
+ * "Diğer" düğmesinin listesindedir (`.has-more`). Dar ekranda ya da ana bağlantılar sığmayınca (`siteNavFit` → `.is-tight`) hepsi
+ * "Menü"dedir. Paketler kendi görünümünü yazar; sınıf adları ortaktır: `.nav`, `.links`, `.burger` (`.say-all` / `.say-more`), açılan
+ * liste `.panel`, listede ana bağlantı `.prim`.
+ */
+export const NAV_BASE = `
+    .burger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0 10px;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: 600 15px/1 var(--s-body);
+        white-space: nowrap;
+        cursor: pointer;
     }
 
-    .head .title {
-        font-size: calc(var(--s-head-scale) * clamp(27px, 3cqi, 38px));
+    .burger site-icon {
+        --icon: 20px;
     }
 
-    .head .intro {
-        max-width: 56ch;
-        margin-top: 8px;
-        color: var(--s-muted);
-        font-size: 17px;
+    .say-more {
+        display: none;
     }
 
-    .more {
-        margin-top: 28px;
-    }
+    @container site (min-width: 900px) {
+        .nav:not(.has-more):not(.is-tight) .burger,
+        .nav:not(.has-more):not(.is-tight) .panel {
+            display: none;
+        }
 
-    .card {
-        border: 1px solid var(--s-line);
-        border-radius: var(--s-radius);
-        background: var(--s-bg);
-        color: var(--s-ink);
-    }
+        .is-tight .links {
+            position: absolute;
+            visibility: hidden;
+        }
 
-    .bub {
-        display: grid;
-        place-items: center;
-        flex: none;
-        width: 44px;
-        height: 44px;
-        border-radius: calc(var(--s-radius) * 0.7);
-        background: var(--s-tint);
-        color: var(--s-tint-primary);
-        --icon: 22px;
+        .has-more:not(.is-tight) .say-all,
+        .has-more:not(.is-tight) .panel .prim {
+            display: none;
+        }
+
+        .has-more:not(.is-tight) .say-more {
+            display: inline;
+        }
     }
 `;

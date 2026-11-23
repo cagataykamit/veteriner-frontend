@@ -36,12 +36,14 @@ export class SiteIconComponent {
 
 /**
  * Kliniğin adı yazı işareti olarak: ad büyük, tür eki altında küçük. Logo yüklenmişse adın solunda durur; harfli kare çizilmez (K-01).
- * Boyutu `--wm-size` ve `--logo-h` ile bulunduğu yerden gelir.
+ * Yazı konseptin başlık yazısıdır; boyutu `--wm-size` ve `--logo-h` ile bulunduğu yerden gelir. `stack` logoyu üste alır, ortalar
+ * (Zarif alt bilgisi gibi).
  */
 @Component({
     selector: 'site-logo',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
+    host: { '[class.is-stack]': 'stack()' },
     template: `
         @if (vm().logo; as logo) {
             <img class="logo" [src]="logo" alt="" />
@@ -59,6 +61,17 @@ export class SiteIconComponent {
             align-items: center;
             gap: 10px;
             min-width: 0;
+        }
+
+        :host(.is-stack) {
+            flex-direction: column;
+            gap: 14px;
+            text-align: center;
+        }
+
+        :host(.is-stack) .wm {
+            align-items: center;
+            max-width: 100%;
         }
 
         .logo {
@@ -79,8 +92,12 @@ export class SiteIconComponent {
             line-height: 1.1;
         }
 
+        /* Taşma gizli olduğu için satır yüksekliği büyük harf işaretlerine ("Ö", "İ") yer bırakır. */
         .name {
             overflow: hidden;
+            padding-block: 0.1em;
+            margin-block: -0.1em;
+            line-height: 1.25;
             font-family: var(--s-head);
             font-size: var(--wm-size, calc(var(--s-head-scale) * 20px));
             font-weight: var(--s-head-weight);
@@ -122,7 +139,9 @@ export class SiteIconComponent {
         }
     `
 })
-export class SiteLogoComponent extends SiteSection {}
+export class SiteLogoComponent extends SiteSection {
+    readonly stack = input(false);
+}
 
 /** "Haritada aç" kartı: gerçek harita gömülmez (üçüncü taraf ve çerez yok), kliniğin harita bağlantısı yeni sekmede açılır. */
 @Component({
