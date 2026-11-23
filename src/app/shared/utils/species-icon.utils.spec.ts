@@ -2,8 +2,8 @@ import { DEFAULT_SPECIES_EMOJI, speciesEmoji } from './species-icon.utils';
 
 describe('speciesEmoji', () => {
     it('katalog adlarını simgeye çevirir; büyük/küçük harf ve boşluk duyarsız', () => {
-        expect(speciesEmoji('Köpek')).toBe('🐕');
-        expect(speciesEmoji('KEDİ')).toBe('🐈');
+        expect(speciesEmoji('Köpek')).toBe('🐶');
+        expect(speciesEmoji('KEDİ')).toBe('🐱');
         expect(speciesEmoji('  Kuş ')).toBe('🐦');
         expect(speciesEmoji('Gine Domuzu')).toBe('🐹');
         expect(speciesEmoji('Kobay (Gine Domuzu)')).toBe('🐹');
