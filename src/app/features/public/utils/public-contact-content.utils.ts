@@ -1,12 +1,13 @@
 /**
  * İletişim, hakkımızda ve tüzel kişi bilgileri (AK-6, ADR-034). Değeri `null` olan alan sayfada hiç gösterilmez;
- * değer girilince yalnız bu dosya değişir. WhatsApp destek hattı panelle ortak sabitten gelir (`vetinity-support.constants.ts`).
+ * değer girilince yalnız bu dosya değişir. WhatsApp destek hattı, iletişim e-postası ve unvan panel ve hukuki metinlerle ortak
+ * sabitten gelir (`vetinity-support.constants.ts`).
  */
 
-import { VETINITY_SUPPORT_PHONE_DISPLAY, VETINITY_SUPPORT_WHATSAPP_URL } from '@/app/core/support/vetinity-support.constants';
+import { VETINITY_CONTACT_EMAIL, VETINITY_LEGAL_ENTITY_NAME, VETINITY_SUPPORT_PHONE_DISPLAY, VETINITY_SUPPORT_WHATSAPP_URL } from '@/app/core/support/vetinity-support.constants';
 
-/** Teklif ve destek e-postası (iletişim kartında); `null` ise gösterilmez. Demo talebi formla gelir (TRIAL-005). */
-export const PUBLIC_CONTACT_EMAIL: string | null = 'vetinity.app@gmail.com';
+/** Teklif ve destek e-postası (iletişim kartında; hukuki metinlerle ortak sabit); `null` ise gösterilmez. Demo talebi formla gelir (TRIAL-005). */
+export const PUBLIC_CONTACT_EMAIL: string | null = VETINITY_CONTACT_EMAIL;
 
 /** Telefon (görünen biçim); `null` ise gösterilmez. */
 export const PUBLIC_CONTACT_PHONE: string | null = null;
@@ -15,8 +16,8 @@ export const PUBLIC_CONTACT_PHONE: string | null = null;
 export const PUBLIC_SUPPORT_HOURS: string | null = null;
 export const PUBLIC_SUPPORT_RESPONSE_TIME: string | null = null;
 
-/** Alt bilgi ve hakkımızdaki tüzel kişi adı; `null` ise yalnız "Vetinity" yazar. */
-export const PUBLIC_LEGAL_ENTITY_NAME: string | null = null;
+/** Alt bilgi ve hakkımızdaki tüzel kişi adı (hukuki metinlerle ortak sabit); `null` ise yalnız "Vetinity" yazar. */
+export const PUBLIC_LEGAL_ENTITY_NAME: string | null = VETINITY_LEGAL_ENTITY_NAME;
 
 export interface PublicContactCardRowDef {
     readonly label: string;
