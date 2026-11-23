@@ -82,7 +82,7 @@ type FormOpen = { kind: CashFormKind; direction: CashMovementDirection } | null;
                                 <div class="rounded-lg border border-surface px-4 py-3 flex flex-col gap-1 min-w-0" [attr.data-testid]="'cash-balance-' + b.register.id">
                                     <span class="flex items-center gap-2 text-sm text-muted-color min-w-0">
                                         <span class="truncate">{{ b.register.name }}</span>
-                                        @if (b.register.isMain) {
+                                        @if (b.register.isMain && b.register.name !== 'Ana kasa') {
                                             <span class="shrink-0 rounded px-1.5 text-xs font-semibold bg-surface-100 dark:bg-surface-800 text-color">Ana kasa</span>
                                         }
                                     </span>
@@ -123,10 +123,10 @@ type FormOpen = { kind: CashFormKind; direction: CashMovementDirection } | null;
                         <app-cash-report-rows [rows]="t.rows" [timeOnly]="true" [canVoid]="canVoid()" label="Bugünkü kasa hareketleri" (voided)="load()" />
                     }
                 }
-                <div class="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm">
-                    <a [routerLink]="reportRoute" class="text-primary font-medium hover:underline">Tarih aralığı ve dışa aktarma: Kasa hareketleri raporu</a>
+                <div class="flex flex-wrap gap-x-6 mt-2 text-sm">
+                    <a [routerLink]="reportRoute" class="inline-flex items-center min-h-11 text-primary font-medium hover:underline">Tarih aralığı ve dışa aktarma: Kasa hareketleri raporu</a>
                     @if (canManage()) {
-                        <a [routerLink]="definitionsRoute" class="text-primary font-medium hover:underline">Kasaları ve türleri düzenle</a>
+                        <a [routerLink]="definitionsRoute" class="inline-flex items-center min-h-11 text-primary font-medium hover:underline">Kasaları ve türleri düzenle</a>
                     }
                 </div>
             </section>

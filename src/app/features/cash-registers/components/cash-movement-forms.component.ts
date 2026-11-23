@@ -86,8 +86,7 @@ export type CashFormKind = 'movement' | 'transfer';
                     [maxFractionDigits]="2"
                     [min]="0"
                     [max]="maxAmount"
-                    styleClass="w-full"
-                    inputStyleClass="w-full"
+                    [fluid]="true"
                 />
             </div>
             <div class="col-span-12">
