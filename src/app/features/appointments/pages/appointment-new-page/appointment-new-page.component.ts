@@ -680,6 +680,14 @@ export class AppointmentNewPageComponent implements OnInit, HasUnsavedChanges {
     }
 
     private rebuildTimeOptions(): void {
+        // Çalışma saatleri ve randevu ayarı gelmeden saat listesi kurulmaz; seçili saat (takvim hücresinden gelen) silinmez. Yanıtlar
+        // her sırayla gelebilir; ayar önce gelirse boş çalışma saatiyle kurulan liste saati siliyordu.
+        if ((!this.workingHoursLoaded && !this.workingHoursLoadError()) || !this.appointmentSettingsLoaded) {
+            this.timeOptions.set([]);
+
+            return;
+        }
+
         this.prefillFirstAvailableSlot();
         const date = this.form.controls.scheduledDate.value.trim();
         const duration = Math.trunc(Number(this.form.controls.durationMinutes.value));
