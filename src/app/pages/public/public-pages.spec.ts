@@ -216,6 +216,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         expect(cards.length).toBe(PUBLIC_FEATURE_GROUPS.flatMap((g) => g.cards).length);
         expect(plans('Klinik web sitesi')).toBe('Tüm paketlerde');
         expect(plans('Çoklu kasa ve kasa yönetimi')).toBe('Profesyonel ve Kurumsal paketlerinde');
+        expect(plans('Kamerayla barkod okutma')).toBe('Tüm paketlerde');
         expect(plans('Şubeler özeti')).toBe('Kurumsal paketinde');
         expect(root().textContent).toContain('İYS');
         expect(root().textContent).not.toMatch(/en iyi|bir numara|yalnızca bizde/i);
