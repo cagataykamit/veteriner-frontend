@@ -40,12 +40,28 @@ const DAYS = 7;
     template: `
         <section class="rounded-border border border-surface p-3 flex flex-col gap-3" aria-labelledby="free-slot-title" data-testid="free-slot-finder">
             <h3 id="free-slot-title" class="m-0 text-base font-semibold">
-                <button type="button" class="w-full flex items-center gap-2 text-left cursor-pointer" [attr.aria-expanded]="open()" (click)="toggleOpen()" data-testid="free-slot-toggle">
-                    <i class="pi pi-search text-primary" aria-hidden="true"></i>Boş saat bul
-                    <i class="pi ml-auto !text-xs text-muted-color" [class]="open() ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i>
-                </button>
+                @if (closable()) {
+                    <!-- Takvimin üstüne açılan panelde başlık kapatır; içerik hep açık. -->
+                    <span class="flex items-center gap-2">
+                        <i class="pi pi-search text-primary" aria-hidden="true"></i>Boş saat bul
+                        <button
+                            type="button"
+                            class="ml-auto grid place-items-center w-8 h-8 rounded-md text-muted-color hover:text-color hover:bg-surface-100 dark:hover:bg-surface-800 cursor-pointer"
+                            aria-label="Boş saat bul panelini kapat"
+                            (click)="closed.emit()"
+                            data-testid="free-slot-close"
+                        >
+                            <i class="pi pi-times !text-xs" aria-hidden="true"></i>
+                        </button>
+                    </span>
+                } @else {
+                    <button type="button" class="w-full flex items-center gap-2 text-left cursor-pointer" [attr.aria-expanded]="open()" (click)="toggleOpen()" data-testid="free-slot-toggle">
+                        <i class="pi pi-search text-primary" aria-hidden="true"></i>Boş saat bul
+                        <i class="pi ml-auto !text-xs text-muted-color" [class]="open() ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i>
+                    </button>
+                }
             </h3>
-            @if (open()) {
+            @if (expanded()) {
             @if (reasons().length > 0) {
                 <div>
                     <label for="freeSlotReason" class="block text-xs text-muted-color mb-1">Randevu nedeni (süre)</label>
@@ -53,30 +69,10 @@ const DAYS = 7;
                 </div>
             }
             @if (vets().length > 1) {
+                <!-- Hekim adı takvimde sütun başlığında yazar; burada çip sırası yerine açılır liste (R-02). -->
                 <div>
-                    <span class="block text-xs text-muted-color mb-1">Hekim</span>
-                    <div class="flex flex-wrap gap-1" role="group" aria-label="Hekim">
-                        <button
-                            type="button"
-                            class="rounded-full border px-2 py-0.5 text-sm cursor-pointer"
-                            [class]="vetFilter() === null ? 'border-primary text-primary font-semibold' : 'border-surface'"
-                            [attr.aria-pressed]="vetFilter() === null"
-                            (click)="vetFilter.set(null)"
-                        >
-                            Fark etmez
-                        </button>
-                        @for (v of vets(); track v.userId) {
-                            <button
-                                type="button"
-                                class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-sm cursor-pointer"
-                                [class]="vetFilter() === v.userId ? 'border-primary text-primary font-semibold' : 'border-surface'"
-                                [attr.aria-pressed]="vetFilter() === v.userId"
-                                (click)="vetFilter.set(v.userId)"
-                            >
-                                <span class="w-2 h-2 rounded-full bg-primary" aria-hidden="true"></span>{{ v.name }}
-                            </button>
-                        }
-                    </div>
+                    <label for="freeSlotVet" class="block text-xs text-muted-color mb-1">Hekim</label>
+                    <p-select inputId="freeSlotVet" [options]="vetOptions()" optionLabel="label" optionValue="value" [ngModel]="vetFilter()" (ngModelChange)="vetFilter.set($event)" class="w-full" data-testid="free-slot-vet" />
                 </div>
             }
             <div>
@@ -123,7 +119,11 @@ export class AppointmentFreeSlotFinderComponent {
     readonly date = input<string | null>(null);
     /** Takvimin sağ panelinde açık başlar; kullanıcı katlarsa seçim saklanır. */
     readonly open = signal(readSectionOpen('freeSlot'));
+    /** Takvimin üstüne açılan panelde (1440 px altı): başlıkta kapat düğmesi, içerik katlanmaz. */
+    readonly closable = input(false);
     readonly pick = output<FreeSlotPick>();
+    readonly closed = output<void>();
+    protected readonly expanded = computed(() => this.closable() || this.open());
 
     private readonly reasonsApi = inject(AppointmentReasonsService);
     private readonly bookingApi = inject(OnlineBookingService);
@@ -135,6 +135,7 @@ export class AppointmentFreeSlotFinderComponent {
     protected readonly loading = signal(false);
     protected readonly error = signal<string | null>(null);
 
+    protected readonly vetOptions = computed(() => [{ value: null as string | null, label: 'Fark etmez' }, ...this.vets().map((v) => ({ value: v.userId as string | null, label: v.name }))]);
     protected readonly reasonOptions = computed(() => [{ value: null, label: 'Diğer (30 dk)' }, ...this.reasons().map((r) => ({ value: r.id as string | null, label: `${r.name} (${r.defaultDurationMinutes} dk)` }))]);
 
     /** Son arama bugünden mi başladı (boş liste metni için). */
