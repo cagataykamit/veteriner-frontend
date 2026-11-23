@@ -107,3 +107,20 @@ export const PUBLIC_FEATURE_VISUALS: Readonly<Record<string, PublicFeatureVisual
     raporlar: DAY_CLOSE_VISUAL,
     'gun-sonu': DAY_CLOSE_VISUAL
 };
+
+export interface PublicTimelineVisual {
+    readonly crop: PublicScreenshotCropKey;
+    /** Telefon ekranından alınmış parça telefon çerçevesinde gösterilir; değilse kart çerçevesinde. */
+    readonly device: boolean;
+}
+
+/**
+ * Ana sayfanın telefondaki zaman çizgisi (T-03 B): gün akışı adımı başına tek görsel; anahtar adım kimliğidir. Telefon ekranı
+ * görüntüsü olan adım telefon çerçevesinde, diğerleri masaüstü ekranının dar parçasıyla kart çerçevesinde.
+ */
+export const PUBLIC_HOME_TIMELINE_VISUALS: Readonly<Record<string, PublicTimelineVisual>> = {
+    gelis: { crop: 'telefonKart', device: true },
+    muayene: { crop: 'kesinlestirmeKontrol', device: false },
+    tahsilat: { crop: 'musteriYapilacak', device: false },
+    'gun-sonu': { crop: 'gunSonuDar', device: false }
+};

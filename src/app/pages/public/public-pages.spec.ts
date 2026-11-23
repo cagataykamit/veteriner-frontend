@@ -12,7 +12,18 @@ import { PUBLIC_CONTACT_CARD_ROWS, PUBLIC_CONTACT_EMAIL } from '@/app/features/p
 import { PUBLIC_EDOCUMENT_SECTION, PUBLIC_EDOCUMENT_STEPS } from '@/app/features/public/utils/public-edocument-content.utils';
 import { PUBLIC_FAQ_CATEGORIES, PUBLIC_HOME_FAQS, PUBLIC_PACKAGES_FAQ_CATEGORY_ID, publicFaqsOf } from '@/app/features/public/utils/public-faq-content.utils';
 import { PUBLIC_FEATURE_GROUPS, PUBLIC_FEATURE_SECTIONS } from '@/app/features/public/utils/public-features-content.utils';
-import { PUBLIC_HOME_AUDIENCE, PUBLIC_HOME_DAY_FLOW } from '@/app/features/public/utils/public-home-content.utils';
+import {
+    PUBLIC_HOME_AUDIENCE,
+    PUBLIC_HOME_DAY_FLOW,
+    PUBLIC_HOME_HERO,
+    PUBLIC_HOME_PHONE_HERO_CHIP,
+    PUBLIC_HOME_SECTIONS,
+    PUBLIC_HOME_TIMELINE_MARKS,
+    PUBLIC_HOME_TRUST
+} from '@/app/features/public/utils/public-home-content.utils';
+import { PUBLIC_MIGRATION_INCLUDED } from '@/app/features/public/utils/public-migration-content.utils';
+import { PUBLIC_HOME_TIMELINE_VISUALS, PUBLIC_SCREENSHOT_CROPS } from '@/app/features/public/utils/public-screenshot-crops.utils';
+import { PUBLIC_PHONE_MEDIA_QUERY } from '@/app/features/public/utils/public-viewport.utils';
 import { PUBLIC_NAV_ITEMS, PUBLIC_PATHS } from '@/app/features/public/utils/public-navigation.utils';
 import { PUBLIC_REGISTERS } from '@/app/features/public/utils/public-registers-content.utils';
 import { PUBLIC_SCREENSHOTS, type PublicScreenshotKey } from '@/app/features/public/utils/public-screenshots.utils';
@@ -428,6 +439,11 @@ describe('Ana sayfa (PublicHomePage)', () => {
         ]);
     });
 
+    it('masaüstünde telefon düzeni çizilmez', () => {
+        expect(root().querySelector('app-public-home-phone')).toBeNull();
+        expect(root().querySelector('[data-home-timeline]')).toBeNull();
+    });
+
     it('klinik web sitesi kısa hali: dört tasarım görseli ve Özellikler bölümüne bağlantı; adım ve sihirbaz ekranı yok', () => {
         const section = root().querySelector<HTMLElement>('section[aria-labelledby="public-home-site-title"]')!;
 
@@ -508,6 +524,110 @@ describe('Ana sayfa (PublicHomePage)', () => {
         expect(section.querySelector('[data-plan="pro"]')?.textContent).toContain('₺1.790');
         expect(section.querySelector('[data-plan="premium"]')?.textContent).toContain('15 kullanıcı');
         expect(section.querySelector('[aria-label="Ödeme dönemi"]')).toBeNull();
+    });
+});
+
+/** Ana sayfanın telefon düzeni (T-03 B "Günün saatleri"): 768 px altında masaüstü bölümlerinin yerine zaman çizgisi. */
+describe('Ana sayfa telefon düzeni (T-03 B)', () => {
+    let harness: RouterTestingHarness;
+
+    beforeEach(async () => {
+        vi.spyOn(window, 'matchMedia').mockImplementation(
+            (query: string) => ({ matches: query === PUBLIC_PHONE_MEDIA_QUERY, addEventListener: () => undefined, removeEventListener: () => undefined }) as unknown as MediaQueryList
+        );
+        TestBed.configureTestingModule({
+            providers: [provideRouter(appRoutes), provideHttpClient(withXhr()), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api.test' }]
+        });
+        harness = await RouterTestingHarness.create();
+        await harness.navigateByUrl(PUBLIC_PATHS.home);
+        harness.detectChanges();
+    });
+
+    afterEach(() => vi.restoreAllMocks());
+
+    const root = (): HTMLElement => harness.fixture.nativeElement as HTMLElement;
+    const texts = (selector: string): string[] => Array.from(root().querySelectorAll(selector)).map((el) => (el.textContent ?? '').trim());
+
+    it('bölümler sırayla: akış (defterler, güvenlik, web sitesi çizgide), kime göre, geçiş, paketler, SSS, çağrı; masaüstü sekmeleri yok', () => {
+        expect(texts('h1')).toEqual([`${PUBLIC_HOME_HERO.title} ${PUBLIC_HOME_HERO.marker}`]);
+        expect(texts('main section h2')).toEqual([
+            PUBLIC_HOME_SECTIONS.flow.title,
+            PUBLIC_HOME_SECTIONS.turkey.title,
+            PUBLIC_HOME_SECTIONS.safety.title,
+            PUBLIC_SITE_SHOWCASE.homeTitle,
+            PUBLIC_HOME_SECTIONS.audience.title,
+            'Eski programdan kayıtlarınızla geçin',
+            'Paketler',
+            'Sık sorulan sorular',
+            '14 gün ücretsiz deneyin'
+        ]);
+        expect(root().querySelector('[role="tab"]')).toBeNull();
+        expect(root().querySelector('[data-site-designs]')).toBeNull();
+    });
+
+    it('kahraman: durum çipi, iki düğme, üç deneme tiki ve tek kartta güven listesi; ürün görseli yok', () => {
+        const hero = root().querySelector('section[aria-labelledby="public-home-hero-title"]')!;
+
+        expect(hero.querySelector('.ps-ph-clock')?.textContent?.trim()).toBe(PUBLIC_HOME_PHONE_HERO_CHIP);
+        expect(hero.querySelector('a[href="/auth/signup"]')?.textContent?.trim()).toBe('Ücretsiz dene');
+        expect(hero.querySelector(`a[href="${PUBLIC_PATHS.contact}"]`)?.textContent?.trim()).toBe('Demo iste');
+        expect(Array.from(hero.querySelectorAll('.ps-ph-ticks li')).map((li) => li.textContent?.trim())).toEqual(['14 gün ücretsiz', 'kart gerekmez', 'satış görüşmesi yok']);
+        expect(Array.from(hero.querySelectorAll('.ps-ph-trust li')).map((li) => li.textContent?.trim())).toEqual(PUBLIC_HOME_TRUST.map((t) => t.text));
+        expect(hero.querySelector('img')).toBeNull();
+    });
+
+    it('zaman çizgisi: dört adım saatiyle, aralarında saatsiz duraklar; her adımın görseli gün akışı tablosundan', () => {
+        expect(texts('[data-home-timeline] > li > .ps-ph-time')).toEqual([
+            ...PUBLIC_HOME_DAY_FLOW.slice(0, 3).map((s) => s.time),
+            PUBLIC_HOME_TIMELINE_MARKS.turkey,
+            PUBLIC_HOME_TIMELINE_MARKS.safety,
+            PUBLIC_HOME_DAY_FLOW[3].time,
+            PUBLIC_HOME_TIMELINE_MARKS.site
+        ]);
+
+        for (const step of PUBLIC_HOME_DAY_FLOW) {
+            const item = root().querySelector(`[data-home-timeline] > li[data-step="${step.id}"]`)!;
+            const visual = PUBLIC_HOME_TIMELINE_VISUALS[step.id];
+
+            expect(item.querySelector('h3')?.textContent?.trim()).toBe(step.title);
+            expect(item.querySelector<HTMLImageElement>('img.public-shot-img--light')?.alt).toBe(PUBLIC_SCREENSHOTS[PUBLIC_SCREENSHOT_CROPS[visual.crop].shot].alt);
+            expect(item.querySelector(visual.device ? '.ps-ph-device' : '.ps-ph-shot')).not.toBeNull();
+        }
+    });
+
+    it('defterler ve KVKK: satırlar tek sütun (ad üstte, ne zaman dolduğu altta), danışman notu ve sayfa bağlantısı', () => {
+        const stop = root().querySelector('[data-home-timeline] > li[data-step="defterler"]')!;
+
+        expect(Array.from(stop.querySelectorAll('.ps-ph-rows strong')).map((el) => el.textContent?.trim())).toEqual(
+            expect.arrayContaining(PUBLIC_REGISTERS.map((r) => r.name))
+        );
+        expect(Array.from(stop.querySelectorAll('.ps-ph-rows span')).map((el) => el.textContent?.trim())).toEqual(expect.arrayContaining(PUBLIC_REGISTERS.map((r) => r.fills)));
+        expect(stop.querySelector(`a[href="${PUBLIC_PATHS.registersAndKvkk}"]`)?.textContent?.trim()).toBe(PUBLIC_HOME_SECTIONS.turkey.link);
+    });
+
+    it('klinik web sitesi: tek büyük önizleme ve dört tasarım seçici; seçilen tasarımın görseli ve notu görünür', () => {
+        const stop = root().querySelector('[data-home-timeline] > li[data-step="web-sitesi"]')!;
+        const buttons = Array.from(stop.querySelectorAll<HTMLButtonElement>('[role="group"] button'));
+        const preview = (): HTMLImageElement => stop.querySelector<HTMLImageElement>('[data-site-preview] img')!;
+
+        expect(buttons.map((b) => b.textContent?.trim())).toEqual(PUBLIC_SITE_DESIGNS.map((d) => d.name));
+        expect(buttons.map((b) => b.getAttribute('aria-pressed'))).toEqual(['true', 'false', 'false', 'false']);
+        expect(preview().getAttribute('src')).toBe(publicSiteDesignSrc(PUBLIC_SITE_DESIGNS[0]));
+
+        buttons[2].click();
+        harness.detectChanges();
+
+        expect(buttons[2].getAttribute('aria-pressed')).toBe('true');
+        expect(preview().getAttribute('src')).toBe(publicSiteDesignSrc(PUBLIC_SITE_DESIGNS[2]));
+        expect(preview().alt).toBe(PUBLIC_SITE_DESIGNS[2].alt);
+        expect(stop.querySelector('[aria-live]')?.textContent).toContain(PUBLIC_SITE_DESIGNS[2].note);
+        expect(stop.querySelector('a')?.getAttribute('href')).toBe(`${PUBLIC_PATHS.features}#${PUBLIC_SITE_SHOWCASE.id}`);
+    });
+
+    it('kime göre çizgiden sonra; geçiş yalnız aktarılanları sayar, paket kartları ortak bileşenden', () => {
+        expect(texts('section[aria-labelledby="public-home-audience-title"] h3')).toEqual(PUBLIC_HOME_AUDIENCE.map((a) => a.title));
+        expect(texts('[data-migration-included] li')).toEqual(PUBLIC_MIGRATION_INCLUDED);
+        expect(texts('section[aria-labelledby="public-home-packages-title"] [data-plan] h3')).toEqual(PRICING_PLAN_DEFS.map((p) => p.title));
     });
 });
 

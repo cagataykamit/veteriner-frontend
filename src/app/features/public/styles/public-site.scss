@@ -1975,3 +1975,456 @@ $ps: '.public-page.public-site';
         gap: 3rem;
     }
 }
+
+/*
+ * —— Ana sayfa, telefon düzeni (T-03 B "Günün saatleri") ——
+ * `PublicHomePhoneComponent` yalnız 768 px altında çizilir (`PUBLIC_PHONE_MEDIA_QUERY`); bu kurallar masaüstüne dokunmaz. Ana sayfanın
+ * ortak kuyruğu (geçiş, paketler, SSS, çağrı) aynı kırılımda telefon ölçüsüne iner. Gövde 16 px, en küçük yazı 14 px, dokunma
+ * hedefleri en az 44 px; ton renkleri `$public-site-tones` haritasından.
+ */
+
+#{$ps} app-public-home-phone .public-h1 {
+    margin-top: 1rem;
+    font-size: 2.125rem;
+    line-height: 1.12;
+}
+
+#{$ps} app-public-home-phone .ps-h3 {
+    font-size: 1.1875rem;
+}
+
+.public-site .ps-ph-hero {
+    padding-block: 1.75rem;
+    background: linear-gradient(180deg, var(--tone) 0, var(--ps-bg) 62%);
+}
+
+#{$ps} .ps-ph-clock {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 32px;
+    margin: 0;
+    padding: 0 0.875rem 0 0.625rem;
+    border: 1px solid var(--ps-rule);
+    border-radius: 999px;
+    background: var(--ps-card);
+    font-family: var(--ps-font-display);
+    font-size: 0.875rem;
+    font-weight: 800;
+}
+
+.public-site .ps-ph-clock i {
+    font-size: 1rem;
+    color: var(--tone-ink);
+}
+
+#{$ps} .ps-ph-lead {
+    margin: 0.875rem 0 0;
+    font-size: 1.0625rem;
+    line-height: 1.5;
+    color: var(--ps-ink-2);
+}
+
+#{$ps} .ps-ph-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.625rem;
+    margin-top: 1.375rem;
+}
+
+#{$ps} .ps-ph-actions .public-btn {
+    padding-inline: 0.625rem;
+}
+
+.public-site .ps-ph-ticks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem 1rem;
+    margin-top: 1rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--ps-ink-2);
+}
+
+.public-site .ps-ph-ticks li {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    white-space: nowrap;
+}
+
+.public-site .ps-ph-ticks i,
+.public-site .ps-ph-trust i {
+    color: var(--ps-accent);
+}
+
+.public-site .ps-ph-trust {
+    margin-top: 1.625rem;
+    padding: 0.375rem 1rem;
+    border: 1px solid var(--ps-rule);
+    border-radius: 20px;
+    background: var(--ps-card);
+}
+
+.public-site .ps-ph-trust li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 46px;
+    padding-block: 0.375rem;
+    line-height: 1.35;
+    border-bottom: 1px solid var(--ps-rule);
+}
+
+.public-site .ps-ph-trust li:last-child {
+    border-bottom: 0;
+}
+
+.public-site .ps-ph-trust i {
+    flex-shrink: 0;
+    width: 1.25rem;
+    text-align: center;
+}
+
+.public-site .ps-ph-section {
+    padding-block: 2.25rem;
+}
+
+.public-site .ps-ph-head {
+    margin-bottom: 1.375rem;
+}
+
+/* Zaman çizgisi: soldaki kesik çizgi, her durakta adım tonunda nokta */
+.public-site .ps-ph-line {
+    margin-left: 7px;
+    padding-left: 24px;
+    border-left: 2px dashed color-mix(in srgb, var(--ps-ink-2) 45%, transparent);
+}
+
+.public-site .ps-ph-line > li {
+    position: relative;
+    padding-bottom: 2.125rem;
+}
+
+.public-site .ps-ph-line > li:last-child {
+    padding-bottom: 0.25rem;
+}
+
+.public-site .ps-ph-line > li::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: -34px;
+    width: 18px;
+    height: 18px;
+    border: 4px solid var(--ps-bg);
+    border-radius: 50%;
+    background: var(--tone-ink);
+}
+
+.public-site .ps-ph-time {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 0.75rem;
+    border-radius: 999px;
+    background: var(--ps-ink);
+    color: var(--ps-bg);
+    font-family: var(--ps-font-display);
+    font-size: 0.875rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.public-site .ps-ph-time--soft {
+    background: var(--tone);
+    color: var(--tone-ink);
+}
+
+#{$ps} .ps-ph-line .ps-h3,
+#{$ps} .ps-ph-line .public-h2 {
+    margin-top: 0.625rem;
+    font-size: 1.5rem;
+    line-height: 1.2;
+}
+
+#{$ps} .ps-ph-text {
+    margin: 0.5rem 0 0;
+}
+
+#{$ps} .ps-ph-muted {
+    color: var(--ps-ink-2);
+}
+
+/* Görsel: telefon ekranı telefon çerçevesinde, masaüstü parçası kart çerçevesinde */
+.public-site .ps-ph-shot,
+.public-site .ps-ph-device,
+.public-site .ps-ph-site {
+    margin-top: 1rem;
+}
+
+#{$ps} .ps-ph-shot .public-shot {
+    border-width: 1px;
+    border-color: var(--ps-rule);
+    border-radius: 16px;
+    box-shadow: var(--ps-shadow-soft);
+}
+
+#{$ps} .ps-ph-shot .public-shot-box {
+    border-radius: 15px;
+}
+
+.public-site .ps-ph-device {
+    width: 212px;
+    margin-inline: auto;
+}
+
+#{$ps} .ps-ph-device .public-shot {
+    border: 7px solid #0b1d3a;
+    border-radius: 30px;
+    background: #0b1d3a;
+    box-shadow: var(--ps-shadow);
+}
+
+.app-dark #{$ps} .ps-ph-device .public-shot {
+    border-color: #05080e;
+    background: #05080e;
+    outline: 1px solid #37435a;
+}
+
+#{$ps} .ps-ph-device .public-shot-box {
+    border-radius: 23px;
+}
+
+.public-site .ps-ph-card {
+    margin-top: 0.875rem;
+    padding: 1rem;
+    border: 1px solid var(--ps-rule);
+    border-radius: 18px;
+    background: var(--ps-card);
+}
+
+#{$ps} .ps-ph-card .ps-h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-top: 0;
+    font-size: 1.1875rem;
+}
+
+#{$ps} .ps-ph-card .ps-h3 i {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--tone-ink);
+}
+
+/* Satırlar tek sütun: ad üstte, açıklama altta */
+.public-site .ps-ph-rows li {
+    padding-block: 0.625rem;
+    border-bottom: 1px solid var(--ps-rule);
+}
+
+.public-site .ps-ph-rows li:last-child {
+    padding-bottom: 0.125rem;
+    border-bottom: 0;
+}
+
+.public-site .ps-ph-rows strong {
+    display: block;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.public-site .ps-ph-rows span {
+    display: block;
+    margin-top: 0.125rem;
+    color: var(--ps-ink-2);
+}
+
+.public-site .ps-ph-cardshot {
+    margin-top: 0.75rem;
+}
+
+#{$ps} .ps-ph-cardshot .public-shot {
+    border-width: 1px;
+    border-color: var(--ps-rule);
+    border-radius: 14px;
+    box-shadow: none;
+}
+
+#{$ps} .ps-ph-small {
+    margin: 0.5rem 0 0;
+    font-size: 0.875rem;
+    color: var(--ps-ink-2);
+}
+
+#{$ps} .ps-ph-note {
+    margin: 0.75rem 0 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--ps-ink-2);
+}
+
+#{$ps} .ps-ph-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    margin-top: 0.25rem;
+    font-family: var(--ps-font-display);
+    font-weight: 800;
+    color: var(--ps-accent);
+    text-decoration: none;
+}
+
+.public-site .ps-ph-link i {
+    font-size: 0.875rem;
+}
+
+/* Klinik web sitesi: tek büyük önizleme, altında dört tasarım seçici */
+.public-site .ps-ph-site {
+    margin-inline: 0;
+    padding: 6px;
+    border-radius: 18px;
+    background: var(--ps-card);
+    box-shadow: var(--ps-shadow);
+}
+
+.public-site .ps-ph-site img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 13px;
+}
+
+.public-site .ps-ph-seg {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    margin-top: 1rem;
+    padding: 4px;
+    border: 1px solid var(--ps-rule);
+    border-radius: 16px;
+    background: var(--ps-band);
+}
+
+.public-site .ps-ph-seg button {
+    min-height: 44px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--ps-ink-2);
+    font-family: var(--ps-font-display);
+    font-size: 0.9375rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.public-site .ps-ph-seg button[aria-pressed='true'] {
+    background: var(--ps-ink);
+    color: var(--ps-bg);
+}
+
+#{$ps} .ps-ph-sitenote {
+    min-height: 3rem;
+    margin: 0.75rem 0 0;
+    text-align: center;
+    color: var(--ps-ink-2);
+}
+
+.public-site .ps-ph-sitenote strong {
+    font-weight: 600;
+    color: var(--ps-ink);
+}
+
+/* Kime göre: renkli, sıkı kartlar */
+.public-site .ps-ph-who {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.public-site .ps-ph-who > li {
+    padding: 1.125rem;
+    border-radius: 20px;
+    background: var(--tone);
+}
+
+#{$ps} .ps-ph-who .ps-h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+#{$ps} .ps-ph-who .ps-h3 i {
+    margin: 0;
+    font-size: 1.375rem;
+    color: var(--tone-ink);
+}
+
+#{$ps} .ps-ph-who p {
+    margin: 0.375rem 0 0;
+}
+
+/* Ana sayfanın ortak kuyruğu telefonda: sıkı bölüm boşluğu, telefon ölçüsünde başlık, geçişte numara solda */
+@media (max-width: 767.98px) {
+    .public-site app-public-home-page .ps-section {
+        padding-block: 2.25rem;
+    }
+
+    #{$ps} app-public-home-page .public-h2,
+    #{$ps} app-public-home-page .ps-cta .public-h2 {
+        font-size: 1.6875rem;
+        line-height: 1.18;
+    }
+
+    .public-site app-public-home-page .ps-head {
+        margin-bottom: 1.375rem;
+        text-align: left;
+    }
+
+    #{$ps} app-public-home-page .ps-head .public-lead {
+        margin-inline: 0;
+        font-size: 1.0625rem;
+    }
+
+    #{$ps} app-public-home-page .ps-more {
+        margin-top: 1.25rem;
+    }
+
+    #{$ps} app-public-home-page .ps-more .public-btn {
+        width: 100%;
+    }
+
+    .public-site app-public-home-page .ps-trail {
+        gap: 0.875rem;
+    }
+
+    .public-site app-public-home-page .ps-trail > li {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        column-gap: 0.875rem;
+    }
+
+    #{$ps} app-public-home-page .ps-trail .ps-bubble {
+        grid-row: span 2;
+        width: 2.25rem;
+        height: 2.25rem;
+        font-size: 1.0625rem;
+    }
+
+    #{$ps} app-public-home-page .ps-trail .ps-h3 {
+        margin-top: 0.25rem;
+        font-size: 1.1875rem;
+    }
+
+    #{$ps} app-public-home-page .ps-transfer {
+        margin-top: 1.375rem;
+        padding: 1.125rem;
+        border-radius: 20px;
+    }
+
+    .public-site app-public-home-page .ps-cta {
+        padding: 2rem 1.375rem;
+        border-radius: 28px;
+    }
+}
