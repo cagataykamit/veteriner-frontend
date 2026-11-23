@@ -320,16 +320,16 @@ const MONTH_TITLE = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'num
                                 }
                             }
                         </p>
-                        @if (resourceColumnsAvailable()) {
-                            <!-- Sütun seçimi (ADR-053 K8): hekim ya da oda ve cihaz; klinikte aktif kaynak yoksa görünmez. Seçim adreste (columns=resources). -->
-                            <div class="inline-flex rounded-lg border border-surface bg-surface-50 dark:bg-surface-800 p-0.5 text-[12.5px]" role="group" aria-label="Sütunlar" data-testid="calendar-column-mode">
-                                <button type="button" class="px-2.5 py-1 rounded-md cursor-pointer" [class]="columnSegClass('vets')" [attr.aria-pressed]="!resourceMode()" (click)="changeColumnMode('vets')">Hekim</button>
-                                <button type="button" class="px-2.5 py-1 rounded-md cursor-pointer" [class]="columnSegClass('resources')" [attr.aria-pressed]="resourceMode()" (click)="changeColumnMode('resources')" data-testid="calendar-column-resources">Oda ve cihaz</button>
-                            </div>
-                        }
                         <!-- Sağdaki düğmeler (R-02 A): 1440 px altında "Klinikte n" ve "Boş saat bul" paneli ızgaranın üstüne açar;
                              hekim adı sütun başlığında bir kez yazar, sütun gizleme "Hekimler n/n" menüsünde. -->
-                        <div class="flex flex-wrap items-center justify-end gap-1.5 text-[13px]">
+                        <div class="ml-auto flex flex-wrap items-center justify-end gap-1.5 text-[13px]">
+                            @if (resourceColumnsAvailable()) {
+                                <!-- Sütun seçimi (ADR-053 K8): hekim ya da oda ve cihaz; klinikte aktif kaynak yoksa görünmez. Seçim adreste (columns=resources). -->
+                                <div class="inline-flex rounded-lg border border-surface bg-surface-50 dark:bg-surface-800 p-0.5 text-[12.5px]" role="group" aria-label="Sütunlar" data-testid="calendar-column-mode">
+                                    <button type="button" class="px-2.5 py-1 rounded-md cursor-pointer" [class]="columnSegClass('vets')" [attr.aria-pressed]="!resourceMode()" (click)="changeColumnMode('vets')">Hekim</button>
+                                    <button type="button" class="px-2.5 py-1 rounded-md cursor-pointer" [class]="columnSegClass('resources')" [attr.aria-pressed]="resourceMode()" (click)="changeColumnMode('resources')" data-testid="calendar-column-resources">Oda ve cihaz</button>
+                                </div>
+                            }
                             @if (!wideScreen()) {
                                 @if (inClinic(); as list) {
                                     <button type="button" [class]="panelButtonClass('clinic')" [attr.aria-pressed]="overlayPanel() === 'clinic'" (click)="toggleOverlayPanel('clinic')" data-testid="calendar-panel-clinic">
@@ -720,7 +720,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         return this.chipVetIds().map((id) => {
             const name = names.get(id) || this.selectedDayItems().find((i) => i.veterinarianUserId === id)?.veterinarianName || 'Hekim';
 
-            return { id, name: name.replace(/^Dr\.\s*/i, ''), initials: initials(name), on: shown.has(id) };
+            return { id, name: shortVetName(name), initials: initials(name), on: shown.has(id) };
         });
     });
     /** Sütunu açık hekimler: "Yalnız benim" ya da çipte gizlenmemiş olanlar. */
@@ -774,7 +774,7 @@ export class AppointmentsCalendarPageComponent implements OnInit {
         const columns = this.shownVetIds().map((id) => {
             const own = items.filter((i) => i.veterinarianUserId === id);
 
-            return column(id, id, names.get(id) || own[0]?.veterinarianName || 'Hekim', own);
+            return column(id, id, shortVetName(names.get(id) || own[0]?.veterinarianName || 'Hekim'), own);
         });
         const mineOnly = this.vetPrefs().onlyMine && this.canOnlyMine();
 
@@ -1597,6 +1597,11 @@ export class AppointmentsCalendarPageComponent implements OnInit {
                 return 'Randevu takvimine dön';
         }
     }
+}
+
+/** Sütun başlığı ve hekim menüsünde "Dr." öneki yazılmaz: 1280'de dar sütunda ad sığar (R-02). */
+function shortVetName(name: string): string {
+    return name.replace(/^Dr\.\s*/i, '');
 }
 
 /** Ayın ilk günü (yyyy-MM-01), `step` ay ileri ya da geri. */

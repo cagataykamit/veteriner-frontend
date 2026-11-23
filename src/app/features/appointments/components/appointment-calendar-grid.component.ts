@@ -56,15 +56,16 @@ type BoardColumn = { kind: 'vet'; col: DayBoardColumn } | { kind: 'vaccines' };
 /** Saat başı 84 px (taslak 3, seçenek 1): 30 dakikalık kartta iki satır rahat sığar. */
 const PX_PER_MIN = 84 / 60;
 const VACCINE_ROW_PX = 32;
-const COLUMN_MIN_PX = 220;
-const NARROW_VACCINE_PX = 210;
+/** 1280 px'te beş hekim ve dar Aşılar sütunu yana kaymadan sığar (R-02); daha çok sütunda takvim yana kayar. */
+const COLUMN_MIN_PX = 140;
+const NARROW_VACCINE_PX = 150;
 /** Bu kadar ve daha çok hekim sütununda "Aşılar" soldan ilk ve dar (sağ uçta kalsa kaydırmadan görünmez). */
 const MANY_COLUMNS = 4;
 
 /**
  * Gün görünümü, klinik panosu (ux/takvim-yeniden-tasarim.md, kullanıcı seçimi 2026-11-18): solda saat, hekim başına sütun ve ayrı bir
  * "Aşılar" sütunu. Aşı randevu slotu doldurmaz: sütununda saatiyle tek satır durur; saatsiz, mesai dışı ve uygulanan aşılar sütun
- * başlığında sayıdır, tıklanınca açılır. Takvim günün tamamı boyunca uzar, dikeyde sayfa kayar (iç kaydırma yok); başlık üst çubuğun altında sabit kalır. Çok hekimde sütun en az 220 px, takvim yana kayar; saat sütunu sabit kalır.
+ * başlığında sayıdır, tıklanınca açılır. Takvim günün tamamı boyunca uzar, dikeyde sayfa kayar (iç kaydırma yok); başlık üst çubuğun altında sabit kalır. Çok hekimde sütun en az 140 px, takvim yana kayar; saat sütunu sabit kalır.
  * Kart: saat küçük üstte, hasta adı büyük; durum sol şeritte (renk dili `calendar-tone.utils`).
  */
 @Component({

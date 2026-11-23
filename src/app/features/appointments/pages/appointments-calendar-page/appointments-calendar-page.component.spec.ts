@@ -154,7 +154,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
         const { el, cmp } = create([appt('a', '09:00', 'v1'), appt('b', '10:00', 'v2'), appt('c', '11:00', null)]);
 
         expect(el.querySelector('[data-testid="calendar-range-title"]')?.textContent).toContain('Bugün · Pazartesi');
-        expect(cmp.dayColumns().map((c) => c.title)).toEqual(['Dr. Ayşe', 'Dr. Mert', 'Hekim seçilmedi']);
+        expect(cmp.dayColumns().map((c) => c.title)).toEqual(['Ayşe', 'Mert', 'Hekim seçilmedi']);
         expect(el.querySelector('[data-testid="calendar-block-a"]')?.textContent).toContain('Hasta-a');
         expect(getCalendarAppointments).toHaveBeenCalledWith(
             expect.objectContaining({ dateFromUtc: '2026-11-15T21:00:00.000Z', dateToUtc: '2026-11-22T21:00:00.000Z', status: undefined, appointmentTypes: [], states: [], withoutVeterinarian: false })
@@ -212,12 +212,12 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
 
     it('boş hücreye tıklayınca tarih, saat ve sütunun hekimi dolu Yeni randevu açılır', () => {
         const { el } = create([]);
-        const cell = el.querySelector<HTMLButtonElement>('[aria-label="Yeni randevu Dr. Mert 14:00"]');
+        const cell = el.querySelector<HTMLButtonElement>('[aria-label="Yeni randevu Mert 14:00"]');
 
         cell!.click();
 
         expect(navigate).toHaveBeenCalledWith(['/panel/appointments/new'], { queryParams: { date: '2026-11-16', time: '14:00', vet: 'v2' } });
-        expect(el.querySelector('[aria-label="Yeni randevu Dr. Mert 13:00"]')).toBeNull();
+        expect(el.querySelector('[aria-label="Yeni randevu Mert 13:00"]')).toBeNull();
     });
 
     it('hafta görünümü: yedi gün sütunu, kartlar saat sırasıyla, gün başında aşı sayısı; kapalı gün; başlık o güne geçer', () => {
@@ -294,7 +294,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
         expect(el.querySelector('[data-testid="calendar-vaccine-z:NextDue"]')).toBeNull();
         expect(cmp.dayVaccines()!.untimed.map((v) => v.vaccinationId)).toEqual(['y']);
         // Bugün randevusu olmayan hekim gizli; aşı sütunu hekim sütunu değildir.
-        expect(cmp.dayColumns().map((c) => c.title)).toEqual(['Dr. Ayşe']);
+        expect(cmp.dayColumns().map((c) => c.title)).toEqual(['Ayşe']);
         expect(cmp.hiddenIdleCount()).toBe(1);
         expect(cmp.conflicts().size).toBe(0);
         expect(cmp.summary().find((k) => k.key === 'vax')).toEqual(expect.objectContaining({ value: '2', label: 'aşı bekliyor', title: '0 uygulandı · 1 saatsiz' }));
@@ -305,17 +305,17 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
         const { cmp } = create([appt('a', '09:00', 'v1'), appt('b', '10:00', 'v2'), appt('c', '11:00', null)]);
 
         cmp.toggleOnlyMine();
-        expect(cmp.dayColumns().map((c) => c.title)).toEqual(['Dr. Ayşe']);
+        expect(cmp.dayColumns().map((c) => c.title)).toEqual(['Ayşe']);
         expect(JSON.parse(localStorage.getItem('vetinity.calendar.dayVets')!)).toEqual({ onlyMine: true, hidden: [] });
 
         cmp.toggleOnlyMine();
         cmp.toggleVet('v1');
-        expect(cmp.dayColumns().map((c) => c.title)).toEqual(['Dr. Mert', 'Hekim seçilmedi']);
+        expect(cmp.dayColumns().map((c) => c.title)).toEqual(['Mert', 'Hekim seçilmedi']);
 
         TestBed.resetTestingModule();
         const again = create([appt('b', '10:00', 'v2')]).cmp;
 
-        expect(again.dayColumns().map((c) => c.title)).toEqual(['Dr. Mert']);
+        expect(again.dayColumns().map((c) => c.title)).toEqual(['Mert']);
         expect(again.hiddenIdleCount()).toBe(1);
         // Çip sırası yok; "Hekimler 1/2" menüsü (R-02).
         expect(document.querySelector('[data-testid="calendar-vet-bar"]')).toBeNull();
@@ -395,7 +395,7 @@ describe('AppointmentsCalendarPageComponent — klinik panosu, hafta, doluluk ha
 
         expect(getCalendarAppointments).toHaveBeenCalledWith(expect.objectContaining({ veterinarianUserId: 'v1', withoutVeterinarian: false }));
         expect(getCalendarVaccinations).not.toHaveBeenCalled();
-        expect(cmp.dayColumns().map((c) => c.title)).toEqual(['Dr. Ayşe']);
+        expect(cmp.dayColumns().map((c) => c.title)).toEqual(['Ayşe']);
     });
 
     it('filtre değişimi adres çubuğuna yazılır ve hatırlanır; adres boşsa son seçim geri yüklenir', () => {
