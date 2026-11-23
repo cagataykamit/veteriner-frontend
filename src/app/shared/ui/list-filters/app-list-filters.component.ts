@@ -29,7 +29,7 @@ let nextPanelId = 0;
         <div [id]="panelId" class="mt-3 flex flex-wrap items-end gap-3" [class.max-sm:hidden]="!open()" data-testid="list-filters-panel">
             <ng-content />
             @if (showClear()) {
-                <button pButton type="button" [text]="true" severity="secondary" class="max-sm:hidden" (click)="clear.emit()" data-testid="list-filters-clear">
+                <button pButton type="button" [text]="true" severity="secondary" class="max-sm:hidden!" (click)="clear.emit()" data-testid="list-filters-clear">
                     <i class="p-button-icon pi pi-times"></i>{{ copy.buttonClear }}
                 </button>
                 <div class="sm:hidden w-full flex items-center justify-between gap-2 pt-1">
