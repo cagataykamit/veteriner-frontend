@@ -102,6 +102,10 @@ export interface VetFinderRequestState {
 
 export const VET_FINDER_ROOT = '/veteriner';
 
+/** Tanıtım sitesinin logosu (`angular.json` → `_brand`); adres uygulamanın tabanına (`/k/`) göre çözülür. Veteriner bul ve site uyarı sayfası kullanır. */
+export const VETINITY_LOGO = '_brand/vetinity-compact.svg';
+export const VETINITY_LOGO_DARK = '_brand/vetinity-compact-dark.svg';
+
 /** Randevu talep formu kaynak değeri (TIER-016; backend `AppointmentRequestChannels.VetFinderToken`). */
 export const VET_FINDER_BOOKING_SOURCE = 'veteriner-bul';
 

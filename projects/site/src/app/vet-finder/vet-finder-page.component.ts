@@ -6,6 +6,8 @@ import {
     VET_FINDER_LIST_PATH,
     VET_FINDER_ROOT,
     VET_FINDER_SLOTS_PATH,
+    VETINITY_LOGO,
+    VETINITY_LOGO_DARK,
     type VetFinderCard,
     type VetFinderList,
     type VetFinderNextSlots,
@@ -21,10 +23,6 @@ interface PlaceLink {
     /** Seçicide o an seçili olan yer. */
     readonly current?: boolean;
 }
-
-/** Tanıtım sitesinin logosu (`angular.json` → `_brand`); adres uygulamanın tabanına (`/k/`) göre çözülür. */
-const LOGO = '_brand/vetinity-compact.svg';
-const LOGO_DARK = '_brand/vetinity-compact-dark.svg';
 
 /** Tanıtım sitesi ve panel aynı alan adındadır; bu sayfalar o uygulamada yaşar, burada yalnız bağlantı verilir. */
 const MARKETING_LINKS = {
@@ -288,8 +286,8 @@ export class VetFinderPageComponent {
 
     protected readonly root = VET_FINDER_ROOT;
     protected readonly links = MARKETING_LINKS;
-    protected readonly logo = LOGO;
-    protected readonly logoDark = LOGO_DARK;
+    protected readonly logo = VETINITY_LOGO;
+    protected readonly logoDark = VETINITY_LOGO_DARK;
     protected readonly now = new Date();
     /** Konumla yeniden sıralanınca değişir; ilk değer sunucudan. */
     protected readonly list = linkedSignal<VetFinderList | null>(() => this.state().list);
