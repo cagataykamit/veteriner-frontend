@@ -6,8 +6,8 @@
  * - Dokunma hedefi en az `--touch-target` (44 px): düğme, giriş alanı, seçenek, sayfalama, onay kutusu. Telefonda ve tablette
  *   (dokunmatik işaretçi) geçerlidir.
  * - Giriş alanları 16 px yazı: iOS Safari (iPad dahil) daha küçük yazıda odaklanınca sayfayı yakınlaştırıyor.
- * - Telefonda: diyalog ve çekmeceler tam ekran (onay penceresi kısa metin olduğundan ortada kalır); uzun formun Kaydet satırı
- *   ekranın altına yapışır.
+ * - Telefonda: diyalog ve çekmeceler tam ekran (onay penceresi kısa metin olduğundan ortada kalır). Uzun formun yapışkan Kaydet
+ *   satırı her genişlikte geçerli olduğundan `_utils.scss` içindedir.
  * PrimeNG biçemleri çalışma anında sonradan eklendiği için çakışan özelliklerde seçici bir sınıf daha özgüldür ya da satır içi
  * stili (diyalog genişliği) ezmek için `!important` kullanılır.
  */
@@ -72,19 +72,6 @@
 }
 
 @include phone {
-    /*
-     * Sayfa formunun son satırı Kaydet'i taşıyorsa (form[appFormSubmit]) ekranın altına yapışır: uzun formda kullanıcı aşağı inmeden
-     * kaydeder; eksik alan varsa Kaydet ilk eksiğe kaydırır. Diyalog formu kendi alt çubuğunu kullanır.
-     */
-    .layout-main form[appformsubmit] > :last-child:has(> button[type='submit']) {
-        position: sticky;
-        bottom: 0;
-        z-index: 2;
-        padding-block: 0.75rem;
-        background: var(--surface-card);
-        border-top: 1px solid var(--surface-border);
-    }
-
     .p-dialog-mask .p-dialog:not(.p-confirmdialog) {
         width: 100vw !important;
         max-width: 100vw;
