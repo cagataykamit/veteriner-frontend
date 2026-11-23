@@ -55,7 +55,7 @@ import {
                 </div>
 
                 <div class="ps-footer-base">
-                    <p>© {{ year }} {{ legalEntityName ?? 'Vetinity' }}.</p>
+                    <p>© {{ year }} {{ legalEntityName ?? 'Vetinity' }}</p>
                     @if (contactEmail) {
                         <p><a [href]="'mailto:' + contactEmail">{{ contactEmail }}</a></p>
                     }
