@@ -82,16 +82,18 @@ import { panelHttpFailureMessage } from '@/app/shared/utils/api-error.utils';
             } @else {
                 <!-- Telefonda ortak gün başlıklı satır listesi (G-04); tablo geniş ekranda. -->
                 <app-phone-list class="sm:hidden" [items]="phoneItems()" [dayTotals]="true" [continuesBefore]="first() > 0" [continuesAfter]="first() + rows().length < totalItems()" />
-                <p-paginator
-                    class="sm:hidden block mt-3"
-                    [rows]="pageSize()"
-                    [totalRecords]="totalItems()"
-                    [first]="first()"
-                    [showCurrentPageReport]="true"
-                    currentPageReportTemplate="{first} - {last} / {totalRecords}"
-                    [rowsPerPageOptions]="[10, 20, 50]"
-                    (onPageChange)="onLazyLoad($event)"
-                />
+                <!-- Kap div: PrimeNG sayfalayıcının kendi görünürlük stili sm:hidden'ı eziyor. -->
+                <div class="sm:hidden mt-3">
+                    <p-paginator
+                        [rows]="pageSize()"
+                        [totalRecords]="totalItems()"
+                        [first]="first()"
+                        [showCurrentPageReport]="true"
+                        currentPageReportTemplate="{first} - {last} / {totalRecords}"
+                        [rowsPerPageOptions]="[10, 20, 50]"
+                        (onPageChange)="onLazyLoad($event)"
+                    />
+                </div>
                 <div class="list-table max-sm:hidden">
                     <p-table
                         size="small"
