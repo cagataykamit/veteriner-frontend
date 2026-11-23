@@ -144,7 +144,9 @@
             }
         }
 
-        :is(.p-datatable-tbody, .p-datatable-tfoot) > tr > td.table-stack-phone-hide {
+        // Boş alan satır tutmaz (G-04); gün başlıklı ortak telefon listesi `app-phone-list`'tir, bu kural ona geçmemiş tablolar içindir.
+        :is(.p-datatable-tbody, .p-datatable-tfoot) > tr > td.table-stack-phone-hide,
+        :is(.p-datatable-tbody, .p-datatable-tfoot) > tr > td[data-label]:empty {
             display: none;
         }
     }
