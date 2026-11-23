@@ -98,7 +98,8 @@ describe('panel-navigation', () => {
             ['Ara', '/panel/patients'],
             ['Müşteriler', '/panel/clients'],
             ['Hastalar', '/panel/pets'],
-            ['Portal gelen kutusu', '/panel/portal-inbox']
+            ['Portal gelen kutusu', '/panel/portal-inbox'],
+            ['Silinenler', '/panel/patients/deleted']
         ]);
         expect(tabs('Randevular')).toEqual([
             ['Liste', '/panel/appointments'],
@@ -299,6 +300,7 @@ describe('panel-navigation', () => {
     it('listLabelForUrl adresin tam karşılığı olan liste adını verir; genel sekme adları yerine liste adı', () => {
         expect(listLabelForUrl('/panel/pets?clientId=c1')).toBe('Hastalar');
         expect(listLabelForUrl('/panel/patients')).toBe('Müşteri ve Hasta');
+        expect(listLabelForUrl('/panel/patients/deleted')).toBe('Silinen müşteri ve hastalar');
         expect(listLabelForUrl('/panel/appointments')).toBe('Randevular');
         expect(listLabelForUrl('/panel/examinations')).toBe('Muayeneler');
         expect(listLabelForUrl('/panel/today')).toBe('Bugün');
@@ -312,7 +314,7 @@ describe('panel-navigation', () => {
         const tabs = (url: string, hasClaim: (c: string) => boolean = () => true) => tabsForUrl(MENU_GROUPS, url, hasClaim);
 
         it('liste adresinde yetkili sekmeleri ve etkin sekmeyi verir; sorgu süzgeci etkin sekmeyi değiştirmez', () => {
-            expect(tabs('/panel/pets?clientId=c1')?.tabs.map((t) => t.label)).toEqual(['Ara', 'Müşteriler', 'Hastalar', 'Portal gelen kutusu']);
+            expect(tabs('/panel/pets?clientId=c1')?.tabs.map((t) => t.label)).toEqual(['Ara', 'Müşteriler', 'Hastalar', 'Portal gelen kutusu', 'Silinenler']);
             expect(tabs('/panel/pets?clientId=c1')?.active.label).toBe('Hastalar');
             expect(tabs('/panel/appointments/calendar')?.active.label).toBe('Takvim');
             expect(tabs('/panel/administrations')?.tabs).toHaveLength(8);
@@ -332,6 +334,9 @@ describe('panel-navigation', () => {
             expect(tabs('/panel/stocks', only('Products.Read', 'StockMovements.Create'))?.tabs.map((t) => t.label)).toEqual(['Ürünler', 'Stok durumu', 'Mal kabul']);
             expect(tabs('/panel/clients', only('Clients.Read'))?.tabs.map((t) => t.label)).toEqual(['Ara', 'Müşteriler']);
             expect(tabs('/panel/patients', only('Pets.Read'))?.tabs.map((t) => t.label)).toEqual(['Ara', 'Hastalar']);
+            // Silinenler (ADR-054 K8) yalnız silme izniyle; sekme silinen kaydın türüne göre değil, izinlerden herhangi biriyle görünür.
+            expect(tabs('/panel/clients', only('Clients.Read', 'Clients.Delete'))?.tabs.map((t) => t.label)).toEqual(['Ara', 'Müşteriler', 'Silinenler']);
+            expect(tabs('/panel/patients/deleted', only('Pets.Read', 'Pets.Delete'))?.active.label).toBe('Silinenler');
             expect(tabs('/panel/pets', only('Clients.Read'))).toBeUndefined();
         });
 

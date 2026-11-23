@@ -16,6 +16,7 @@ import {
     CLINICAL_TERMS_CREATE_CLAIM,
     CLINICAL_TERMS_DEACTIVATE_CLAIM,
     CLINICAL_TERMS_UPDATE_CLAIM,
+    CLIENTS_DELETE_CLAIM,
     CLIENTS_READ_CLAIM,
     CLINICS_READ_CLAIM,
     CLINICS_UPDATE_CLAIM,
@@ -31,6 +32,7 @@ import {
     LAB_RESULTS_READ_CLAIM,
     OWNER_PORTAL_MANAGE_CLAIM,
     PAYMENTS_READ_CLAIM,
+    PETS_DELETE_CLAIM,
     PETS_READ_CLAIM,
     PLATFORM_ADMIN_CLAIM,
     PRESCRIPTIONS_READ_CLAIM,
@@ -148,6 +150,8 @@ export const APPOINTMENT_REQUESTS_ROUTE = '/panel/appointments/requests';
 export const WAITLIST_ROUTE = '/panel/appointments/waitlist';
 export const NOTIFICATIONS_ROUTE = '/panel/notifications';
 export const PORTAL_INBOX_ROUTE = '/panel/portal-inbox';
+/** Silinen müşteri ve hastalar (ADR-054 K6): Müşteri ve Hasta'nın sekmesi, geri yükleme buradan. */
+export const DELETED_RECORDS_ROUTE = '/panel/patients/deleted';
 export const CLINIC_PORTAL_SETTINGS_ROUTE = '/panel/settings/owner-portal';
 export const CLINIC_SITE_ROUTE = '/panel/settings/web-page';
 export const VET_FINDER_SETTINGS_ROUTE = '/panel/settings/vet-finder';
@@ -378,7 +382,9 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
                     { label: 'Müşteriler', route: '/panel/clients', claims: [CLIENTS_READ_CLAIM] },
                     { label: 'Hastalar', route: '/panel/pets', claims: [PETS_READ_CLAIM] },
                     // Hasta sahiplerinin portaldan gönderdiği KVKK veri talepleri (PORTAL-009): müşteri işinin sekmesi (ADR-004).
-                    { label: 'Portal gelen kutusu', route: PORTAL_INBOX_ROUTE, claims: [OWNER_PORTAL_MANAGE_CLAIM], badge: 'openPortalDataRequests' }
+                    { label: 'Portal gelen kutusu', route: PORTAL_INBOX_ROUTE, claims: [OWNER_PORTAL_MANAGE_CLAIM], badge: 'openPortalDataRequests' },
+                    // Silinen kayıtlar ve geri yükleme (ADR-054 K6): müşteri/hasta listesinin parçası, Ayarlar'da değil (ADR-004); yalnız silme izniyle.
+                    { label: 'Silinenler', listLabel: 'Silinen müşteri ve hastalar', route: DELETED_RECORDS_ROUTE, claims: [CLIENTS_DELETE_CLAIM, PETS_DELETE_CLAIM] }
                 ],
                 { badge: 'openPortalDataRequests', badgeText: 'açık portal veri talebi' }
             )
