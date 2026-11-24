@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { SECTION_DIRECTIVES, SiteSection } from '../../site-context';
 import { SECTION_BASE, SECTION_KIT } from '../../section-base';
-import { SiteIconComponent, SiteStatusComponent } from '../../site-parts.component';
+import { SiteCallComponent, SiteIconComponent, SiteStatusComponent } from '../../site-parts.component';
 
 /**
  * Premium: ekranı dolduran koyu fotoğraf, altta uzun satırlı zarif başlık; bir galeri afişi gibi. Metin fotoğraf üstünde olduğu
@@ -11,7 +11,7 @@ import { SiteIconComponent, SiteStatusComponent } from '../../site-parts.compone
 @Component({
     selector: 'site-premium-hero',
     standalone: true,
-    imports: [SECTION_DIRECTIVES, SiteIconComponent, SiteStatusComponent],
+    imports: [SECTION_DIRECTIVES, SiteCallComponent, SiteIconComponent, SiteStatusComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @let v = vm();
@@ -29,7 +29,13 @@ import { SiteIconComponent, SiteStatusComponent } from '../../site-parts.compone
                     @if (v.cta || v.heroLink) {
                         <div class="acts" siteHeroActs>
                             @if (v.cta; as cta) {
-                                <a siteCta class="btn acc">{{ cta.label }}</a>
+                                <a siteCta class="btn acc">
+                                    @if (v.bookingHref) {
+                                        {{ cta.label }}
+                                    } @else {
+                                        <site-call />
+                                    }
+                                </a>
                             }
                             @if (v.heroLink; as link) {
                                 <a class="btn line" [siteLink]="link.path">{{ link.label }}<site-icon name="arrowRight" /></a>

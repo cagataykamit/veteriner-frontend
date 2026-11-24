@@ -5,7 +5,7 @@ import { findAlternative } from './section-registry';
 import { SECTION_BASE, SECTION_KIT } from './section-base';
 import { SECTION_DIRECTIVES, SiteSection } from './site-context';
 import { PAGE_HEAD_STYLES, PAGE_INFO_STYLES, PAGE_READING_STYLES } from './site-page.styles';
-import { SiteHoursComponent, SiteIconComponent, SiteMapComponent } from './site-parts.component';
+import { SiteCallComponent, SiteHoursComponent, SiteIconComponent, SiteMapComponent } from './site-parts.component';
 import { pageHeading, type SitePage } from './site-page-route';
 
 /**
@@ -18,7 +18,7 @@ import { pageHeading, type SitePage } from './site-page-route';
 @Component({
     selector: 'site-page',
     standalone: true,
-    imports: [NgComponentOutlet, SECTION_DIRECTIVES, SiteHoursComponent, SiteIconComponent, SiteMapComponent],
+    imports: [NgComponentOutlet, SECTION_DIRECTIVES, SiteCallComponent, SiteHoursComponent, SiteIconComponent, SiteMapComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @let v = vm();
@@ -120,7 +120,7 @@ import { pageHeading, type SitePage } from './site-page-route';
                 <section class="inner callout">
                     <p class="note">{{ v.emergencyText }}</p>
                     @if (v.telHref) {
-                        <a class="btn main call" [href]="v.telHref"><site-icon name="phone" />Ara · {{ v.phone }}</a>
+                        <a class="btn main call" [href]="v.telHref"><site-icon name="phone" /><site-call /></a>
                     }
                     @if (v.hasHours) {
                         <site-hours />
@@ -162,7 +162,7 @@ import { pageHeading, type SitePage } from './site-page-route';
                             <a siteCta class="btn main"><site-icon name="calendar" />Randevu talebi gönder</a>
                         }
                         @if (v.telHref) {
-                            <a class="btn call" [class.main]="!v.bookingHref" [class.line]="!!v.bookingHref" [href]="v.telHref"><site-icon name="phone" />Ara · {{ v.phone }}</a>
+                            <a class="btn call" [class.main]="!v.bookingHref" [class.line]="!!v.bookingHref" [href]="v.telHref"><site-icon name="phone" /><site-call /></a>
                         }
                     </div>
                     @if (v.hasHours) {

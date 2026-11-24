@@ -230,6 +230,39 @@ describe('SiteRendererComponent', () => {
                 expect(acts[1].classList).toContain('line');
             });
 
+            it(`${key}: randevu kapalıysa giriş düğmesi "Ara · numara" yazar ve taşmaz, çok dar ekranda yalnız numara; açıkken randevu metni; numara yoksa telefon düğmesi yok`, async () => {
+                const hero = `site-${key}-hero .acts a[siteCta]`;
+                const text = (element: Element | null): string => (element as HTMLElement | null)?.innerText.replace(/\s+/g, ' ').trim() ?? '';
+                const phone = patchClinic(sampleConfig(key), { phone: '0216 555 01 42' });
+
+                for (const width of [1280, 375]) {
+                    const host = await render(phone, { width });
+                    const call = host.querySelector<HTMLAnchorElement>(hero)!;
+
+                    expect(call.getAttribute('href')).toBe('tel:02165550142');
+                    expect(text(call).toLowerCase()).toBe('ara · +90 216 555 01 42');
+                    expect(call.getBoundingClientRect().height, `${width}`).toBeLessThan(64);
+                    expect(call.getBoundingClientRect().right, `${width}`).toBeLessThanOrEqual(host.getBoundingClientRect().right);
+                }
+
+                const tiny = await render(phone, { width: 320 });
+                const narrowCall = tiny.querySelector<HTMLAnchorElement>(hero)!;
+
+                expect(text(narrowCall)).toBe('+90 216 555 01 42');
+                expect(narrowCall.getBoundingClientRect().right).toBeLessThanOrEqual(tiny.getBoundingClientRect().right);
+
+                const booking = (await render(patchClinic(phone, { bookingUrl: BOOKING }))).querySelector(hero)!;
+
+                expect(booking.getAttribute('href')).toBe(BOOKING);
+                expect(text(booking)).not.toContain('Ara ·');
+                expect(booking.querySelector('site-call')).toBeNull();
+
+                const noPhone = await render(patchClinic(sampleConfig(key), { phone: '' }));
+
+                expect(noPhone.querySelector(hero)).toBeNull();
+                expect(noPhone.querySelector(`site-${key}-hero site-call`)).toBeNull();
+            });
+
             it(`${key}: telefonda giriş düğmeleri ekrandayken alt şerit gizli, alt sayfada görünür; randevu kapalıysa yalnız "Ara · numara"; geniş ekranda yok`, async () => {
                 const home = await render(patchClinic(sampleConfig(key), { bookingUrl: BOOKING }), { width: 375 });
 
