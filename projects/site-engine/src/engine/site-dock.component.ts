@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { SiteSection } from './site-context';
 import { SECTION_BASE, SECTION_KIT } from './section-base';
-import { SiteIconComponent } from './site-parts.component';
+import { SiteCallComponent, SiteIconComponent } from './site-parts.component';
 
 /**
  * Telefonda alttaki sabit eylem şeridi (W-01 A): giriş bölümünün düğmeleri ekrandan çıkınca görünür, alt sayfada hep görünür. Online
@@ -12,7 +12,7 @@ import { SiteIconComponent } from './site-parts.component';
 @Component({
     selector: 'site-dock',
     standalone: true,
-    imports: [SiteIconComponent],
+    imports: [SiteCallComponent, SiteIconComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: { '[class.has-acts]': '!!(vm().bookingHref || vm().telHref)' },
     template: `
@@ -21,9 +21,11 @@ import { SiteIconComponent } from './site-parts.component';
             <div class="dock" [class.is-on]="shown()" [attr.aria-hidden]="shown() ? null : 'true'" [attr.inert]="shown() ? null : ''">
                 @if (v.telHref) {
                     <a class="btn call" [class.main]="!v.bookingHref" [class.line]="!!v.bookingHref" [href]="v.telHref"
-                        ><site-icon name="phone" />Ara
-                        @if (!v.bookingHref) {
-                            · {{ v.phone }}
+                        ><site-icon name="phone" />
+                        @if (v.bookingHref) {
+                            Ara
+                        } @else {
+                            <site-call />
                         }
                     </a>
                 }

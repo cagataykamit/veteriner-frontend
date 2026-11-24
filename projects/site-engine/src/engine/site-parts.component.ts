@@ -274,6 +274,25 @@ export class SiteStatusComponent extends SiteSection {
     readonly strong = input(false);
 }
 
+/**
+ * "Ara · 0216 555 01 42": telefona giden düğmenin metni; giriş bölümü, alt şerit ve alt sayfalar aynı biçimi yazar. Çok dar ekranda
+ * düğme taşmasın diye yalnız numara kalır. Büyük harfli düğme dilinde rakamlar etkilenmez.
+ */
+@Component({
+    selector: 'site-call',
+    standalone: true,
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    template: `<span class="verb">Ara · </span>{{ vm().phone }}`,
+    styles: `
+        @container site (max-width: 359px) {
+            .verb {
+                display: none;
+            }
+        }
+    `
+})
+export class SiteCallComponent extends SiteSection {}
+
 /** Saat tablosu: iletişim bölümü, acil ve randevu sayfası aynı veriyi çizer. Bugünün satırı işaretli, kapalı gün soluktur. */
 @Component({
     selector: 'site-hours',
