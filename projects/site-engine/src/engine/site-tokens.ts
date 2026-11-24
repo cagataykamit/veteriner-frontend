@@ -4,18 +4,21 @@ import { type ButtonStyle, conceptByKey } from './site-concepts';
 import { fontByKey } from './site-fonts';
 
 /**
- * Ortak token sözleşmesi. Bölümler renk, yazı, köşe, düğme ve boşluğu yalnız bu `--s-*` değişkenlerinden alır; sabit renk yazmaz.
- * Dört konsept tek düzeni paylaşır ve yalnız burada ayrılır (K-01). Üstünde metin okunan her çift burada 4.5:1 geçecek biçimde
- * üretilir; seçilen renk zayıfsa metin rengi kaydırılır, klinik uyarıyı sihirbazda görür.
+ * Ortak token sözleşmesi. Bölüm alternatifleri renk, yazı, köşe, düğme ve boşluğu yalnız bu `--s-*` değişkenlerinden alır; sabit renk
+ * yazmaz (tek istisna: fotoğraf üstünde karartılmış zeminde beyaz metin). Bu sayede farklı konseptlerin bölümleri aynı sayfada bir arada
+ * durur. Üstünde metin okunan her çift burada 4.5:1 geçecek biçimde üretilir; seçilen renk zayıfsa metin rengi kaydırılır, klinik uyarıyı
+ * sihirbazda görür.
  *
  * - Zemin: --s-bg, --s-surface, --s-ink, --s-muted, --s-line
  * - Renk: --s-primary/--s-on-primary, --s-secondary/--s-on-secondary, --s-accent/--s-on-accent
  * - Zeminde okunan renk: --s-primary-text, --s-secondary-text, --s-accent-text
- * - Yumuşak yüzey (üst çubuk ve giriş bölümü): --s-tint/--s-on-tint, --s-tint-muted, --s-tint-primary
+ * - Yumuşak yüzey (harita kartı, "Bugün" işareti): --s-tint/--s-on-tint, --s-tint-muted, --s-tint-primary
+ * - Koyu bant: --s-band/--s-on-band, --s-band-muted, --s-band-line, --s-band-line-strong, --s-band-accent, --s-band-btn/--s-on-band-btn,
+ *   --s-band-tint/--s-band-on-tint, --s-band-tint-muted, --s-band-tint-accent, --s-band-ok, --s-band-warn
  * - Durum metni: --s-ok (açık), --s-warn (mola); çerçeve: --s-line-strong; koyu zeminde logo plakası: --s-logo-plate, --s-logo-pad
  * - Yazı: --s-head, --s-body, --s-head-weight, --s-head-track, --s-head-leading, --s-head-style, --s-head-scale
  * - Biçim: --s-radius (kart ve denetim), --s-radius-img; boşluk: --s-gutter, --s-space, --s-max
- * - Düğme: --s-radius-btn, --s-btn-case, --s-btn-track, --s-btn-size, --s-btn-weight
+ * - Düğme (konseptin düğme dili): --s-radius-btn, --s-btn-case, --s-btn-track, --s-btn-size, --s-btn-weight, --s-btn-pad
  */
 export const GROUNDS: readonly { readonly key: GroundKey; readonly label: string; readonly bg: string; readonly ink: string }[] = [
     { key: 'beyaz', label: 'Beyaz', bg: '#ffffff', ink: '#14171a' },
@@ -26,15 +29,26 @@ export const GROUNDS: readonly { readonly key: GroundKey; readonly label: string
 ];
 
 const RADII: Readonly<Record<RadiusKey, { readonly control: string; readonly image: string }>> = {
-    keskin: { control: '2px', image: '2px' },
-    yumusak: { control: '12px', image: '16px' },
-    yuvarlak: { control: '22px', image: '28px' }
+    keskin: { control: '2px', image: '0px' },
+    yumusak: { control: '10px', image: '14px' },
+    yuvarlak: { control: '20px', image: '32px' }
 };
 
-/** `etiket` düğmenin köşesi kliniğin köşe seçimini izler; `hap` her zaman tam yuvarlaktır. */
-const BUTTONS: Readonly<Record<ButtonStyle, { readonly pill: boolean; readonly textCase: string; readonly track: string; readonly size: string; readonly weight: string }>> = {
-    hap: { pill: true, textCase: 'none', track: '0', size: '16px', weight: '600' },
-    etiket: { pill: false, textCase: 'uppercase', track: '0.1em', size: '14px', weight: '500' }
+interface ButtonLook {
+    /** Düğme köşesi kliniğin köşe seçimine göre; konsept dili en keskin hâlde bile düz kutuya inmez (`hap` hep tam yuvarlak). */
+    readonly radius: Readonly<Record<RadiusKey, string>>;
+    readonly textCase: string;
+    readonly track: string;
+    readonly size: string;
+    readonly weight: string;
+    readonly pad: string;
+}
+
+const BUTTONS: Readonly<Record<ButtonStyle, ButtonLook>> = {
+    net: { radius: { keskin: '8px', yumusak: '10px', yuvarlak: '999px' }, textCase: 'none', track: '-0.005em', size: '16px', weight: '600', pad: '24px' },
+    etiket: { radius: { keskin: '2px', yumusak: '6px', yuvarlak: '999px' }, textCase: 'uppercase', track: '0.14em', size: '13px', weight: '500', pad: '28px' },
+    hap: { radius: { keskin: '999px', yumusak: '999px', yuvarlak: '999px' }, textCase: 'none', track: '0', size: '16px', weight: '700', pad: '24px' },
+    yumusak: { radius: { keskin: '8px', yumusak: '16px', yuvarlak: '999px' }, textCase: 'none', track: '0', size: '16px', weight: '500', pad: '26px' }
 };
 
 export const RADIUS_OPTIONS: readonly { readonly key: RadiusKey; readonly label: string }[] = [
@@ -61,9 +75,14 @@ export function buildSiteTokens(design: SiteDesign): Record<string, string> {
     const dark = luminance(bg) < 0.18;
     const surface = mix(bg, ink, dark ? 0.07 : 0.04);
     const tint = mix(bg, primary, dark ? 0.16 : 0.1);
+    const band = dark ? mix(bg, primary, 0.13) : mix(primary, '#0b0c0d', contrast(primary, '#ffffff') >= 9 ? 0 : 0.55);
+    const onBand = readableOn(band);
+    const bandAccent = ensureContrast(accent, band);
+    const bandMuted = ensureContrast(mix(onBand, band, 0.28), band);
+    const bandTint = mix(band, onBand, 0.12);
     const muted = ensureContrast(mix(ink, bg, 0.36), surface);
     const concept = conceptByKey(design.conceptKey);
-    const button = BUTTONS[concept.button] ?? BUTTONS.hap;
+    const button = BUTTONS[concept.button] ?? BUTTONS.net;
     const head = fontByKey(design.headFont);
     const body = fontByKey(design.bodyFont);
     const radius = RADII[design.radius] ?? RADII.yumusak;
@@ -88,6 +107,20 @@ export function buildSiteTokens(design: SiteDesign): Record<string, string> {
         '--s-on-tint': ensureContrast(ink, tint, 7),
         '--s-tint-muted': ensureContrast(muted, tint),
         '--s-tint-primary': ensureContrast(primary, tint),
+        '--s-band': band,
+        '--s-on-band': onBand,
+        '--s-band-muted': bandMuted,
+        '--s-band-line': mix(band, onBand, 0.24),
+        '--s-band-line-strong': mix(band, onBand, 0.5),
+        '--s-band-accent': bandAccent,
+        '--s-band-btn': bandAccent,
+        '--s-on-band-btn': readableOn(bandAccent),
+        '--s-band-tint': bandTint,
+        '--s-band-on-tint': ensureContrast(onBand, bandTint),
+        '--s-band-tint-muted': ensureContrast(bandMuted, bandTint),
+        '--s-band-tint-accent': ensureContrast(bandAccent, bandTint),
+        '--s-band-ok': ensureContrast('#6fd39a', band),
+        '--s-band-warn': ensureContrast('#f0c36b', band),
         '--s-ok': ensureContrast(dark ? '#6fd39a' : '#17713f', bg),
         '--s-warn': ensureContrast(dark ? '#f0c36b' : '#8a5a00', bg),
         '--s-focus': ensureContrast(primary, bg),
@@ -102,15 +135,16 @@ export function buildSiteTokens(design: SiteDesign): Record<string, string> {
         '--s-head-scale': String(head.scale),
         '--s-radius': radius.control,
         '--s-radius-img': radius.image,
-        '--s-radius-btn': button.pill ? '999px' : radius.control,
+        '--s-radius-btn': button.radius[design.radius] ?? button.radius.yumusak,
         '--s-btn-case': button.textCase,
         '--s-btn-track': button.track,
         '--s-btn-size': button.size,
         '--s-btn-weight': button.weight,
-        '--s-gutter': 'clamp(20px, 3.2cqi, 40px)',
-        // Bölümler arası boşluk iki bölümün payı toplanınca masaüstünde büyük bant oluyordu (W-04); en çok 2 × 88 px.
-        '--s-space': 'clamp(56px, 7cqi, 88px)',
-        '--s-max': '1260px',
+        '--s-btn-pad': button.pad,
+        '--s-gutter': 'clamp(20px, 4.4cqi, 64px)',
+        // Bölümler arası boşluk iki bölümün payı toplanınca masaüstünde ~250 px boş bant oluyordu (W-04); ~150 px'e iner.
+        '--s-space': 'clamp(48px, 6cqi, 96px)',
+        '--s-max': '1440px',
         'color-scheme': dark ? 'dark' : 'light'
     };
 }

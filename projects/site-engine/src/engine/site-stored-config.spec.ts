@@ -217,10 +217,11 @@ describe('temsili görsel ibaresi (K7)', () => {
         expect(buildSiteVm(allUploaded, voice, now).usesStock).toBe(false);
     });
 
-    it('tek bir hazır fotoğraf çizilse görünür: boş hero, boş galeri, boş hizmet', () => {
+    it('tek bir hazır fotoğraf çizilse görünür: boş hero, boş galeri, boş hizmet, ikinci kare', () => {
         expect(buildSiteVm({ ...allUploaded, content: { ...allUploaded.content, heroImage: null } }, voice, now).usesStock).toBe(true);
         expect(buildSiteVm({ ...allUploaded, content: { ...allUploaded.content, gallery: [] } }, voice, now).usesStock).toBe(true);
         expect(buildSiteVm({ ...allUploaded, content: { ...allUploaded.content, services: [{ ...allUploaded.content.services[0], image: null }] } }, voice, now).usesStock).toBe(true);
+        expect(buildSiteVm({ ...allUploaded, design: { ...allUploaded.design, sections: { ...allUploaded.design.sections, about: 'modern' } } }, voice, now).usesStock).toBe(true);
     });
 
     it('kapalı bölümün hazır karesi sayılmaz', () => {
@@ -229,16 +230,10 @@ describe('temsili görsel ibaresi (K7)', () => {
         expect(buildSiteVm(noGallery, voice, now).usesStock).toBe(false);
     });
 
-    it('hizmet kartı ikonludur: hizmet sayfası kapalıysa hizmetin hazır karesi sayılmaz (K-01)', () => {
-        const noDetail = { ...allUploaded, content: { ...allUploaded.content, services: [{ ...allUploaded.content.services[0], image: null }] }, structure: { ...allUploaded.structure, pages: { ...allUploaded.structure.pages, hizmetDetay: false } } };
-
-        expect(buildSiteVm(noDetail, voice, now).usesStock).toBe(false);
-    });
-
     it('yüklenemeyen hazır fotoğraf çizilmez, ibare de kalkar', () => {
         const failed = new Set(Object.values(STOCK_PHOTOS).map((image) => image.src));
 
-        expect(buildSiteVm({ ...base, content: { ...base.content, heroImage: null } }, voice, now, failed).photos.hero).toBeNull();
+        expect(buildSiteVm(base, voice, now, failed).stock['modern-hero']).toBeNull();
         expect(buildSiteVm({ ...allUploaded, content: { ...allUploaded.content, heroImage: null } }, voice, now, failed).usesStock).toBe(false);
     });
 });

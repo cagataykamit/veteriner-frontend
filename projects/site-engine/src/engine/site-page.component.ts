@@ -1,7 +1,7 @@
 import { NgComponentOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import type { SectionType } from '../model/site.model';
-import { SECTION_COMPONENTS } from './section-registry';
+import type { SectionType, SiteDesign } from '../model/site.model';
+import { findAlternative } from './section-registry';
 import { SECTION_BASE, SECTION_KIT } from './section-base';
 import { SECTION_DIRECTIVES, SiteSection } from './site-context';
 import { PAGE_HEAD_STYLES, PAGE_INFO_STYLES, PAGE_READING_STYLES } from './site-page.styles';
@@ -9,8 +9,8 @@ import { SiteHoursComponent, SiteIconComponent, SiteMapComponent } from './site-
 import { pageHeading, type SitePage } from './site-page-route';
 
 /**
- * Alt sayfalar. Liste sayfaları ana sayfadaki bölümü çizer (hizmetler sayfası ana sayfadaki düzenle aynıdır); yalnız sayfa başlığı ve
- * yazı sayfaları burada, token'larla ortak yazılıdır. Başlık, üst çubukla aynı yumuşak zemindedir.
+ * Alt sayfalar. Liste sayfaları sitede seçili bölüm alternatifini çizer (hizmetler sayfası ana sayfadaki düzenle aynıdır); yalnız
+ * sayfa başlığı ve yazı sayfaları burada, token'larla ortak yazılıdır. Başlığın duruşu seçili hero'dan gelir.
  *
  * Randevu sayfası kliniğin talep formuna (ADR-042, K11) bağlantı verir, telefon ve saatleri gösterir; motor ikinci bir randevu
  * modeli kurmaz. En yakın müsait saatler (TIER-017) aynı forma o saat seçili gider.
@@ -24,7 +24,7 @@ import { pageHeading, type SitePage } from './site-page-route';
         @let v = vm();
         @let p = page();
         @if (head(); as h) {
-            <header class="page-head tinted">
+            <header class="page-head" [attr.data-style]="sections().hero">
                 <div class="inner">
                     @if (h.back; as back) {
                         <a class="back" [siteLink]="back.path"><site-icon name="arrowLeft" />{{ back.label }}</a>
@@ -182,6 +182,7 @@ import { pageHeading, type SitePage } from './site-page-route';
 })
 export class SitePageComponent extends SiteSection {
     readonly page = input.required<SitePage>();
+    readonly sections = input.required<SiteDesign['sections']>();
 
     protected readonly service = computed(() => {
         const page = this.page();
@@ -202,6 +203,6 @@ export class SitePageComponent extends SiteSection {
     protected readonly head = computed(() => pageHeading(this.page(), this.vm()));
 
     protected comp(type: SectionType) {
-        return SECTION_COMPONENTS[type];
+        return findAlternative(type, this.sections()[type]).component;
     }
 }

@@ -188,10 +188,50 @@ export class SiteNavFitDirective {
     }
 }
 
-export const SECTION_DIRECTIVES = [SiteLinkDirective, SiteImgDirective, SiteCtaDirective, SiteNavFitDirective] as const;
+/** Üst çubuğun boyu: eylem düğmeleri bunun altına kaçınca "ekrandan çıktı" sayılır. */
+const BAR_HEIGHT = 64;
+const BELOW = 100000;
 
-/** Bölümlerin ortak tabanı. */
+/**
+ * Giriş bölümünün eylem düğmeleri: `<div siteHeroActs>`. Üst çubuğun üstüne kayınca telefonda alt şerit görünür (W-01 A,
+ * `SiteContext.heroActionsVisible`). Dört konseptin giriş bölümü aynı kuralı bu yönergeyle paylaşır. Gözlem alanı aşağı doğru
+ * sınırsızdır: düğmeler ekranın altındayken de "görünür" sayılır; çapaya atlamak gibi tek karede aşağıdan yukarıya geçişte de
+ * durum değişir ve bildirilir.
+ */
+@Directive({
+    selector: '[siteHeroActs]',
+    standalone: true
+})
+export class SiteHeroActsDirective {
+    constructor() {
+        const host = inject(ElementRef<HTMLElement>).nativeElement as HTMLElement;
+        const site = inject(SiteContext);
+        const destroyRef = inject(DestroyRef);
+
+        afterNextRender(() => {
+            if (typeof IntersectionObserver === 'undefined') return;
+
+            const observer = new IntersectionObserver(([entry]) => site.heroActionsVisible.set(entry.isIntersecting), { rootMargin: `-${BAR_HEIGHT}px 0px ${BELOW}px 0px` });
+
+            observer.observe(host);
+            destroyRef.onDestroy(() => observer.disconnect());
+        });
+
+        destroyRef.onDestroy(() => site.heroActionsVisible.set(true));
+    }
+}
+
+export const SECTION_DIRECTIVES = [SiteLinkDirective, SiteImgDirective, SiteCtaDirective, SiteNavFitDirective, SiteHeroActsDirective] as const;
+
+/** Bölüm alternatiflerinin ortak tabanı. */
 export abstract class SiteSection {
     protected readonly site = inject(SiteContext);
     protected readonly vm = this.site.vm;
+
+    /** Başlığın son sözcüğünü vurgulamak için böler. */
+    protected lastWord(text: string): { readonly lead: string; readonly last: string } {
+        const at = text.trimEnd().lastIndexOf(' ');
+
+        return at < 0 ? { lead: '', last: text } : { lead: text.slice(0, at + 1), last: text.slice(at + 1) };
+    }
 }

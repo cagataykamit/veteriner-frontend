@@ -169,18 +169,18 @@ describe('buildSiteVm', () => {
         expect(forbiddenCopy('Tamamen açık bir yaklaşım; sözcük içinde kalanlar sayılmaz: yaşamama')).toEqual([]);
     });
 
-    it('iletişim yolu ana sayfadaki bölüme, yoksa iletişim sayfasına gider; ikisi de yoksa bağlantı yoktur (W-02)', () => {
+    it('giriş bölümünün ikinci bağlantısı hizmet yoksa iletişime döner, ikisi de yoksa çizilmez (W-02)', () => {
         const config = sampleConfig();
 
-        expect(buildSiteVm(config, voice, NOW).contactPath).toBe('/#contact');
+        expect(buildSiteVm(config, voice, NOW).heroLink).toEqual({ label: voice.ctaSecondary, path: '/#services' });
 
-        const noSection = { ...config, structure: { ...config.structure, homeSections: config.structure.homeSections.filter((section) => section.type !== 'contact') } };
+        const noServices = { ...config, content: { ...config.content, services: [] } };
 
-        expect(buildSiteVm(noSection, voice, NOW).contactPath).toBe('/iletisim');
+        expect(buildSiteVm(noServices, voice, NOW).heroLink).toEqual({ label: 'İletişim', path: '/#contact' });
 
-        const bare = { ...noSection, structure: { ...noSection.structure, pages: { ...noSection.structure.pages, iletisim: false } } };
+        const bare = { ...noServices, structure: { ...noServices.structure, homeSections: [], pages: { ...noServices.structure.pages, iletisim: false } } };
 
-        expect(buildSiteVm(bare, voice, NOW).contactPath).toBeNull();
+        expect(buildSiteVm(bare, voice, NOW).heroLink).toBeNull();
     });
 
     it('telefon ve e-posta güvenli bağlantıya çevrilir', () => {
@@ -261,7 +261,16 @@ describe('token sözleşmesi', () => {
         [tokens['--s-tint-muted'], tokens['--s-tint']],
         [tokens['--s-tint-primary'], tokens['--s-tint']],
         [tokens['--s-ok'], tokens['--s-bg']],
-        [tokens['--s-warn'], tokens['--s-bg']]
+        [tokens['--s-warn'], tokens['--s-bg']],
+        [tokens['--s-on-band'], tokens['--s-band']],
+        [tokens['--s-band-muted'], tokens['--s-band']],
+        [tokens['--s-band-accent'], tokens['--s-band']],
+        [tokens['--s-on-band-btn'], tokens['--s-band-btn']],
+        [tokens['--s-band-on-tint'], tokens['--s-band-tint']],
+        [tokens['--s-band-tint-muted'], tokens['--s-band-tint']],
+        [tokens['--s-band-tint-accent'], tokens['--s-band-tint']],
+        [tokens['--s-band-ok'], tokens['--s-band']],
+        [tokens['--s-band-warn'], tokens['--s-band']]
     ];
 
     for (const concept of SITE_CONCEPTS) {
@@ -288,26 +297,29 @@ describe('token sözleşmesi', () => {
         }
     });
 
-    it('düğme biçimi konseptten gelir: Zarif köşeyi izleyen büyük harfli etiket, diğerleri hap (K-01)', () => {
+    it('düğme dili konseptten gelir: Modern net, Zarif büyük harfli etiket, Samimi hap, Doğal yumuşak; hiçbiri düz kutu değildir (K-01)', () => {
         const tokens = (key: string) => buildSiteTokens(designFromConcept(SITE_CONCEPTS.find((concept) => concept.key === key)!));
 
-        for (const key of ['modern', 'friendly', 'nature']) {
-            expect(tokens(key)['--s-radius-btn'], key).toBe('999px');
-            expect(tokens(key)['--s-btn-case'], key).toBe('none');
-        }
-
-        expect(tokens('premium')['--s-radius-btn']).toBe(tokens('premium')['--s-radius']);
+        expect(tokens('modern')['--s-radius-btn']).toBe('8px');
+        expect(tokens('modern')['--s-btn-case']).toBe('none');
         expect(tokens('premium')['--s-btn-case']).toBe('uppercase');
+        expect(tokens('premium')['--s-btn-track']).toBe('0.14em');
+        expect(tokens('friendly')['--s-radius-btn']).toBe('999px');
+        expect(tokens('nature')['--s-radius-btn']).toBe('16px');
+        expect(tokens('nature')['--s-btn-case']).toBe('none');
+        // Modern'in keskin köşesi kart ve görsele uygulanır; düğme yine yumuşar.
+        expect(tokens('modern')['--s-radius']).toBe('2px');
     });
 
-    it('köşe kliniğin seçimidir: kart ve görsel köşesi değişir, hap düğme aynı kalır', () => {
-        const base = designFromConcept(SITE_CONCEPTS[0]);
-        const sharp = buildSiteTokens({ ...base, radius: 'keskin' });
-        const round = buildSiteTokens({ ...base, radius: 'yuvarlak' });
+    it('köşe kliniğin seçimidir: kart ve görsel köşesi değişir, düğme köşe seçimini konseptin dilinde izler, hap aynı kalır', () => {
+        const design = (key: string) => designFromConcept(SITE_CONCEPTS.find((concept) => concept.key === key)!);
+        const sharp = buildSiteTokens({ ...design('modern'), radius: 'keskin' });
+        const round = buildSiteTokens({ ...design('modern'), radius: 'yuvarlak' });
 
         expect(sharp['--s-radius']).not.toBe(round['--s-radius']);
         expect(sharp['--s-radius-img']).not.toBe(round['--s-radius-img']);
-        expect(sharp['--s-radius-btn']).toBe(round['--s-radius-btn']);
+        expect(sharp['--s-radius-btn']).not.toBe(round['--s-radius-btn']);
+        expect(buildSiteTokens({ ...design('friendly'), radius: 'keskin' })['--s-radius-btn']).toBe('999px');
     });
 
     it('geçersiz renk konseptin rengine, bilinmeyen köşe ve zemin varsayılana düşer', () => {
@@ -360,7 +372,7 @@ describe('fontlar ve hazır fotoğraf', () => {
         expect(isStockPhoto({ src: '/api/v1/public/sites/a/images/b', alt: '' })).toBe(false);
     });
 
-    it('her konseptin yuvaları doludur; bilinmeyen konsept boş döner', () => {
+    it('her konseptin yuvaları doludur; yuvası olmayan alternatif boş döner', () => {
         for (const concept of SITE_CONCEPTS) {
             for (const type of ['hero', 'about', 'features'] as const) expect(stockSectionPhoto(concept.key, type), `${concept.key}-${type}`).not.toBeNull();
         }

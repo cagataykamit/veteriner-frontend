@@ -1,18 +1,20 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { SiteSection } from '../site-context';
-import { SECTION_BASE, SECTION_KIT } from '../section-base';
-import { SiteIconComponent } from '../site-parts.component';
+import { SiteSection } from './site-context';
+import { SECTION_BASE, SECTION_KIT } from './section-base';
+import { SiteIconComponent } from './site-parts.component';
 
 /**
  * Telefonda alttaki sabit eylem şeridi (W-01 A): giriş bölümünün düğmeleri ekrandan çıkınca görünür, alt sayfada hep görünür. Online
  * randevu açıksa "Ara" + "Randevu al", kapalıysa yalnız "Ara · numara". Geniş ekranda üst çubuk aynı işi gördüğü için çizilmez.
- * Konumu `sticky`dır: site kabının içinde kalır, önizleme çerçevesinde de çerçevenin altına yapışır.
+ * Dört konseptte aynı bileşendir; renk, köşe ve düğme dili konseptin token'larından gelir. Konumu `sticky`dır: site kabının içinde kalır,
+ * önizleme çerçevesinde de çerçevenin altına yapışır. Şerit kadar yer ayırır, sayfanın sonunda alt bilgiyi örtmez.
  */
 @Component({
     selector: 'site-dock',
     standalone: true,
     imports: [SiteIconComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    host: { '[class.has-acts]': '!!(vm().bookingHref || vm().telHref)' },
     template: `
         @let v = vm();
         @if (v.bookingHref || v.telHref) {
@@ -40,6 +42,10 @@ import { SiteIconComponent } from '../site-parts.component';
                 bottom: 0;
                 z-index: 30;
                 height: 0;
+            }
+
+            :host(.has-acts) {
+                height: calc(69px + env(safe-area-inset-bottom, 0px));
             }
 
             .dock {

@@ -117,14 +117,13 @@ describe('suggestDesign (K5)', () => {
         expect(result.reason).toContain('logonuzun');
     });
 
-    it('düzen tektir: içerik sayısı bölüm önermez, öneri konsept ve paletle sınırlıdır (K-01)', () => {
+    it('fotoğrafsız hekimlerde satır düzeni önerir ve söyler', () => {
         const base = config();
         const members = [1, 2].map((n) => ({ slug: `h${n}`, kind: 'hekim' as const, name: `Hekim ${n}`, title: '', specialties: '', bio: '', image: null }));
         const result = suggestDesign({ ...base, design: { ...base.design, character: 'samimi' }, content: { ...base.content, members } }, null);
 
-        expect(result.design.conceptKey).toBe('friendly');
-        expect(Object.values(result.design.sections).every((key) => key === 'friendly')).toBe(true);
-        expect(result.reason).not.toContain('düzeninde');
+        expect(result.design.sections.team).toBe('modern');
+        expect(result.reason).toContain('fotoğraf');
     });
 });
 
