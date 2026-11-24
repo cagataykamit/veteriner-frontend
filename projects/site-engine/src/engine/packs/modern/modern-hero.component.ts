@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { SECTION_DIRECTIVES, SiteSection } from '../../site-context';
 import { SECTION_BASE, SECTION_KIT } from '../../section-base';
-import { SiteIconComponent, SiteStatusComponent } from '../../site-parts.component';
+import { SiteCallComponent, SiteIconComponent, SiteStatusComponent } from '../../site-parts.component';
 
 /**
  * Modern: dev tipografi üstte, altında sağ kenara taşan geniş fotoğraf; sol sütunda kısa künye. Kartsız, çizgiyle bölünür. Eylemler
@@ -10,7 +10,7 @@ import { SiteIconComponent, SiteStatusComponent } from '../../site-parts.compone
 @Component({
     selector: 'site-modern-hero',
     standalone: true,
-    imports: [SECTION_DIRECTIVES, SiteIconComponent, SiteStatusComponent],
+    imports: [SECTION_DIRECTIVES, SiteCallComponent, SiteIconComponent, SiteStatusComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @let v = vm();
@@ -25,7 +25,14 @@ import { SiteIconComponent, SiteStatusComponent } from '../../site-parts.compone
                     @if (v.cta || v.heroLink) {
                         <div class="acts" siteHeroActs>
                             @if (v.cta; as cta) {
-                                <a siteCta class="btn main"><site-icon [name]="v.bookingHref ? 'calendar' : 'phone'" />{{ cta.label }}</a>
+                                <a siteCta class="btn main"
+                                    ><site-icon [name]="v.bookingHref ? 'calendar' : 'phone'" />
+                                    @if (v.bookingHref) {
+                                        {{ cta.label }}
+                                    } @else {
+                                        <site-call />
+                                    }
+                                </a>
                             }
                             @if (v.heroLink; as link) {
                                 <a class="btn line" [siteLink]="link.path">{{ link.label }}<site-icon name="arrowRight" /></a>
