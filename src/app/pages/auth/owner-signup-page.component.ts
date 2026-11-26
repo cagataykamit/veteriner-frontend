@@ -35,9 +35,9 @@ import { DiscountCodeFieldComponent } from '@/app/entities/sales-partner/compone
 import type { DiscountCodeValidationDto } from '@/app/entities/sales-partner/models/sales-partner.model';
 import { clearPendingDiscountCode, DISCOUNT_CODE_QUERY_PARAM, discountNoteText, normalizeDiscountCodeInput, readPendingDiscountCode } from '@/app/entities/sales-partner/utils/discount-code.utils';
 import { TrDatePipe } from '@/app/shared/pipes/tr-date.pipe';
+import { revealField } from '@/app/shared/forms/form-field/form-field.utils';
 
 const PLAN_REQUIRED_MESSAGE = 'Bir paket seçin.';
-const MISSING_FIELDS_MESSAGE = 'Eksik alanları doldurun; ilgili alanın altında yazıyor.';
 
 /** Alanın yanında gösterilen zorunlu alan hataları (şifre ve vergi numarasının kendi hata alanı vardır). */
 type SignupField = 'plan' | 'tenantName' | 'clinicName' | 'clinicCity' | 'fullName';
@@ -48,6 +48,17 @@ const FIELD_REQUIRED_MESSAGES: Readonly<Record<SignupField, string>> = {
     clinicCity: 'Şehri yazın.',
     fullName: 'Adınızı ve soyadınızı yazın.'
 };
+/** Alanın ekrandaki adı (uyarıda sayılır) ve kaydırılacak öğe; sıra formdakiyle aynı, ilk eksik alana gidilir. */
+const FIELD_TARGETS: Readonly<Record<SignupField | 'password', { readonly label: string; readonly elementId: string }>> = {
+    plan: { label: 'Paket', elementId: 'signup-plan-group' },
+    tenantName: { label: 'Klinik / işletme adı', elementId: 'tenantName' },
+    clinicName: { label: 'İlk klinik adı', elementId: 'clinicName' },
+    clinicCity: { label: 'Şehir', elementId: 'clinicCity' },
+    fullName: { label: 'Adınız soyadınız', elementId: 'fullName' },
+    password: { label: 'Şifre', elementId: 'password' }
+};
+const EMAIL_ELEMENT_ID = 'signupEmailField';
+const missingFieldsMessage = (labels: readonly string[]): string => `Doldurulmamış alanlar: ${labels.join(', ')}.`;
 const EMAIL_REQUIRED_MESSAGE = TRIAL_SIGNUP_CODE_MESSAGES['SignupEmail.VerificationRequired'];
 /** Kaydın reddettiği e-posta doğrulaması: bileşen baştan başlar (`TRIAL_SIGNUP_ABUSE_API_CONTRACT.md` §5). */
 const EMAIL_RESET_CODES = new Set(['SignupEmail.VerificationRequired', 'SignupIdentity.DuplicateEmail', 'Users.DuplicateEmail']);
@@ -110,7 +121,7 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
                 </div>
 
                 <h2 id="signup-plan-label" class="public-auth-group public-auth-group--first">Paket seçin</h2>
-                <div role="radiogroup" aria-labelledby="signup-plan-label" class="public-auth-plans">
+                <div id="signup-plan-group" role="radiogroup" aria-labelledby="signup-plan-label" class="public-auth-plans">
                     @for (option of planOptions(); track option.def.slug) {
                         <button
                             type="button"
@@ -206,7 +217,7 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
                     }
                 </div>
 
-                <div class="public-auth-field">
+                <div id="signupEmailField" class="public-auth-field">
                     <app-signup-email-verification [disabled]="submitting()" [turnstileSiteKey]="turnstileSiteKey()" (verifiedChange)="onEmailVerified($event)" />
                 </div>
 
@@ -412,7 +423,10 @@ export class OwnerSignupPageComponent implements OnInit {
         }
 
         if (!plan || missing.length > 0 || !password) {
-            this.formError.set(MISSING_FIELDS_MESSAGE);
+            const targets = [...missing, ...(password ? [] : ['password' as const])].map((field) => FIELD_TARGETS[field]);
+
+            this.formError.set(missingFieldsMessage(targets.map((t) => t.label)));
+            this.showField(targets[0].elementId);
 
             return;
         }
@@ -421,6 +435,7 @@ export class OwnerSignupPageComponent implements OnInit {
 
         if (passwordPolicyError) {
             this.passwordFieldError.set(passwordPolicyError);
+            this.showField(FIELD_TARGETS.password.elementId);
 
             return;
         }
@@ -444,6 +459,7 @@ export class OwnerSignupPageComponent implements OnInit {
 
         if (!verification) {
             this.formError.set(EMAIL_REQUIRED_MESSAGE);
+            this.showField(EMAIL_ELEMENT_ID);
 
             return;
         }
@@ -453,6 +469,7 @@ export class OwnerSignupPageComponent implements OnInit {
         if ((taxIdentityNumber || this.taxIdentityRequired()) && !isTaxIdentityFormat(taxIdentityNumber)) {
             this.taxIdentityError.set(TAX_IDENTITY_INVALID_MESSAGE);
             this.formError.set(TAX_IDENTITY_INVALID_MESSAGE);
+            this.showField('taxIdentityNumber');
 
             return;
         }
@@ -516,6 +533,15 @@ export class OwnerSignupPageComponent implements OnInit {
     onTaxIdentityChange(value: string): void {
         this.taxIdentityNumber = (value ?? '').replace(/\D/g, '').slice(0, 11);
         this.taxIdentityError.set(null);
+    }
+
+    /** Uyarı düğmenin altında kalır; düzeltilecek alan ekranın ortasına getirilip odaklanır (panel formlarındaki O3). */
+    private showField(elementId: string): void {
+        const element = this.document.getElementById(elementId);
+
+        if (element) {
+            revealField(element);
+        }
     }
 
     /** Görünen ve gönderilen sürüm backend'den (tek kaynak); 409 sonrası yenilenir. */

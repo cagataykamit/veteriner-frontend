@@ -345,6 +345,27 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
             expect(cmp.fieldError('fullName')).toBeNull();
         });
 
+        it('eksik alanlar uyarıda adlarıyla sayılır; ilk eksik alana kaydırılıp odaklanılır', () => {
+            const original = Element.prototype.scrollIntoView;
+            const scrollIntoView = vi.fn();
+
+            Element.prototype.scrollIntoView = scrollIntoView;
+            cmp.legalConsent.set(true);
+            cmp.clinicName = '';
+            cmp.fullName = '';
+            cmp.password = '';
+
+            try {
+                cmp.submit();
+
+                expect(cmp.formError()).toBe('Doldurulmamış alanlar: İlk klinik adı, Adınız soyadınız, Şifre.');
+                expect(scrollIntoView).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' });
+                expect(document.activeElement?.id).toBe('clinicName');
+            } finally {
+                Element.prototype.scrollIntoView = original;
+            }
+        });
+
         it('iç geliştirme notu gösterilmez', () => {
             expect(host().textContent).not.toContain('sonraki fazda');
         });

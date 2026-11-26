@@ -1001,6 +1001,12 @@ html.public-site-root {
     margin: 18px 0 16px;
 }
 
+/* Onay metnindeki belge bağlantıları satır içinde kalır: tanıtımın 44 px bağlantı yüksekliği satırları açıp kutuyu metinden ayırıyordu. */
+.public-page.public-auth-page .public-auth-consent .public-brand-link {
+    display: inline;
+    min-height: 0;
+}
+
 /* —— Satırlar ve bağlantılar —— */
 
 .public-auth-options-row {
