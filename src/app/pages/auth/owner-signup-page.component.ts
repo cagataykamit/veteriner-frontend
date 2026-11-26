@@ -48,18 +48,21 @@ const FIELD_REQUIRED_MESSAGES: Readonly<Record<SignupField, string>> = {
     clinicCity: 'Şehri yazın.',
     fullName: 'Adınızı ve soyadınızı yazın.'
 };
+type RequiredField = SignupField | 'taxIdentity' | 'email' | 'password';
 /** Alanın ekrandaki adı (uyarıda sayılır) ve kaydırılacak öğe; sıra formdakiyle aynı, ilk eksik alana gidilir. */
-const FIELD_TARGETS: Readonly<Record<SignupField | 'password', { readonly label: string; readonly elementId: string }>> = {
+const FIELD_TARGETS: Readonly<Record<RequiredField, { readonly label: string; readonly elementId: string }>> = {
     plan: { label: 'Paket', elementId: 'signup-plan-group' },
     tenantName: { label: 'Klinik / işletme adı', elementId: 'tenantName' },
     clinicName: { label: 'İlk klinik adı', elementId: 'clinicName' },
     clinicCity: { label: 'Şehir', elementId: 'clinicCity' },
+    taxIdentity: { label: 'Vergi numarası ya da TC kimlik no', elementId: 'taxIdentityNumber' },
     fullName: { label: 'Adınız soyadınız', elementId: 'fullName' },
+    email: { label: 'Yetkili e-posta', elementId: 'signupEmailField' },
     password: { label: 'Şifre', elementId: 'password' }
 };
-const EMAIL_ELEMENT_ID = 'signupEmailField';
 const missingFieldsMessage = (labels: readonly string[]): string => `Doldurulmamış alanlar: ${labels.join(', ')}.`;
 const EMAIL_REQUIRED_MESSAGE = TRIAL_SIGNUP_CODE_MESSAGES['SignupEmail.VerificationRequired'];
+const EMAIL_MISSING_MESSAGE = 'E-posta adresinizi yazıp gelen kodla doğrulayın.';
 /** Kaydın reddettiği e-posta doğrulaması: bileşen baştan başlar (`TRIAL_SIGNUP_ABUSE_API_CONTRACT.md` §5). */
 const EMAIL_RESET_CODES = new Set(['SignupEmail.VerificationRequired', 'SignupIdentity.DuplicateEmail', 'Users.DuplicateEmail']);
 const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'SignupIdentity.Validation.TaxIdentityRequired']);
@@ -418,12 +421,25 @@ export class OwnerSignupPageComponent implements OnInit {
 
         this.fieldErrors.set(Object.fromEntries(missing.map((field) => [field, FIELD_REQUIRED_MESSAGES[field]])));
 
+        const taxIdentityMissing = this.taxIdentityRequired() && !this.taxIdentityNumber.trim();
+        const emailMissing = !this.emailVerification();
+
+        if (taxIdentityMissing) {
+            this.taxIdentityError.set(TAX_IDENTITY_INVALID_MESSAGE);
+        }
+
+        if (emailMissing) {
+            this.emailField()?.error.set(EMAIL_MISSING_MESSAGE);
+        }
+
         if (!password) {
             this.passwordFieldError.set(validateStrongPasswordValue(''));
         }
 
-        if (!plan || missing.length > 0 || !password) {
-            const targets = [...missing, ...(password ? [] : ['password' as const])].map((field) => FIELD_TARGETS[field]);
+        const empty = new Set<RequiredField>([...missing, ...(taxIdentityMissing ? ['taxIdentity' as const] : []), ...(emailMissing ? ['email' as const] : []), ...(password ? [] : ['password' as const])]);
+
+        if (!plan || empty.size > 0) {
+            const targets = (Object.keys(FIELD_TARGETS) as RequiredField[]).filter((field) => empty.has(field)).map((field) => FIELD_TARGETS[field]);
 
             this.formError.set(missingFieldsMessage(targets.map((t) => t.label)));
             this.showField(targets[0].elementId);
@@ -459,7 +475,7 @@ export class OwnerSignupPageComponent implements OnInit {
 
         if (!verification) {
             this.formError.set(EMAIL_REQUIRED_MESSAGE);
-            this.showField(EMAIL_ELEMENT_ID);
+            this.showField(FIELD_TARGETS.email.elementId);
 
             return;
         }
@@ -469,7 +485,7 @@ export class OwnerSignupPageComponent implements OnInit {
         if ((taxIdentityNumber || this.taxIdentityRequired()) && !isTaxIdentityFormat(taxIdentityNumber)) {
             this.taxIdentityError.set(TAX_IDENTITY_INVALID_MESSAGE);
             this.formError.set(TAX_IDENTITY_INVALID_MESSAGE);
-            this.showField('taxIdentityNumber');
+            this.showField(FIELD_TARGETS.taxIdentity.elementId);
 
             return;
         }

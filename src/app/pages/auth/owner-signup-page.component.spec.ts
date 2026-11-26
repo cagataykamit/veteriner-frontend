@@ -142,7 +142,20 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
             cmp.submit();
 
             expect(signup.signup).not.toHaveBeenCalled();
-            expect(cmp.formError()).toBe(TRIAL_SIGNUP_CODE_MESSAGES['SignupEmail.VerificationRequired']);
+            expect(cmp.formError()).toBe('Doldurulmamış alanlar: Yetkili e-posta.');
+            fixture.detectChanges();
+            expect(host().querySelector('#signupEmailField')?.textContent).toContain('E-posta adresinizi yazıp gelen kodla doğrulayın.');
+        });
+
+        it('zorunlu vergi numarası boşsa alanın altında kırmızı uyarı çıkar ve eksiklerde sayılır', () => {
+            cmp.legalConsent.set(true);
+            cmp.onTaxIdentityChange('');
+
+            cmp.submit();
+
+            expect(signup.signup).not.toHaveBeenCalled();
+            expect(cmp.taxIdentityError()).toBe(TRIAL_SIGNUP_CODE_MESSAGES['SignupIdentity.Validation.TaxIdentityRequired']);
+            expect(cmp.formError()).toBe('Doldurulmamış alanlar: Vergi numarası ya da TC kimlik no.');
         });
 
         it('zorunluyken vergi numarası boş ya da biçimsizse istek atılmaz', () => {
