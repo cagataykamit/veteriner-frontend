@@ -15,6 +15,8 @@ import { DiscountCodesService } from '@/app/entities/sales-partner/services/disc
 import { PENDING_DISCOUNT_CODE_KEY } from '@/app/entities/sales-partner/utils/discount-code.utils';
 import { TrialSignupService } from '@/app/features/public/services/trial-signup.service';
 import { TRIAL_SIGNUP_CODE_MESSAGES } from '@/app/features/public/utils/trial-signup.utils';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { Router } from '@angular/router';
 import { OwnerSignupPageComponent } from './owner-signup-page.component';
 
 const VERSIONS: LegalDocumentVersionDto[] = [
@@ -39,6 +41,7 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
     let cmp: OwnerSignupPageComponent;
     let signup: MockedObject<PublicOwnerSignupService>;
     let legal: MockedObject<LegalAcceptanceService>;
+    let auth: { login: ReturnType<typeof vi.fn>; selectClinic: ReturnType<typeof vi.fn> };
 
     const host = (): HTMLElement => fixture.nativeElement as HTMLElement;
     const submitButton = (): HTMLButtonElement | undefined => Array.from(host().querySelectorAll<HTMLButtonElement>('button')).find((b) => b.textContent?.includes('Hesabı oluştur'));
@@ -63,10 +66,15 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         const discountCodes = {
             validate: vi.fn().mockName('DiscountCodesService.validate')
         };
+        // Varsayılan: kayıt sonrası otomatik giriş olmaz, başarı kartı ekranda kalır (ayrı testte başarılı yol denenir).
+        auth = {
+            login: vi.fn().mockReturnValue(throwError(() => new HttpErrorResponse({ status: 503 }))),
+            selectClinic: vi.fn()
+        };
 
         await TestBed.configureTestingModule({
             imports: [OwnerSignupPageComponent],
-            providers: [provideRouter([]), { provide: PublicOwnerSignupService, useValue: signup }, { provide: LegalAcceptanceService, useValue: legal }, { provide: DiscountCodesService, useValue: discountCodes }, { provide: TrialSignupService, useValue: trialSignup }, { provide: PublicPlanCatalogService, useValue: { state: signal({ status: 'error' }), ensureLoaded: vi.fn() } }]
+            providers: [provideRouter([]), { provide: PublicOwnerSignupService, useValue: signup }, { provide: LegalAcceptanceService, useValue: legal }, { provide: DiscountCodesService, useValue: discountCodes }, { provide: TrialSignupService, useValue: trialSignup }, { provide: AuthService, useValue: auth }, { provide: PublicPlanCatalogService, useValue: { state: signal({ status: 'error' }), ensureLoaded: vi.fn() } }]
         }).compileComponents();
 
         fixture = TestBed.createComponent(OwnerSignupPageComponent);
@@ -127,6 +135,39 @@ describe('OwnerSignupPageComponent hukuki onay (ADR-029)', () => {
         expect(body.taxIdentityNumber).toBe('1234567890');
         expect(body.email).toBe('sahip@example.com');
         expect(cmp.successResult()).toEqual(RESULT);
+    });
+
+    describe('kayıt sonrası otomatik giriş', () => {
+        it('az önce yazılan bilgilerle oturum açılır, kayıtta kurulan klinik seçilir ve panele geçilir', () => {
+            const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+
+            auth.login.mockReturnValue(of({}));
+            auth.selectClinic.mockReturnValue(of({}));
+            signup.signup.mockReturnValue(of(RESULT));
+            cmp.legalConsent.set(true);
+
+            cmp.submit();
+
+            expect(auth.login).toHaveBeenCalledWith({ email: 'sahip@example.com', password: 'Abc12345!' });
+            expect(auth.selectClinic).toHaveBeenCalledWith('c1', 'Pati Klinik');
+            expect(navigate).toHaveBeenCalledWith('/panel');
+            expect(cmp.password).toBe('');
+        });
+
+        it('giriş olmazsa kayıt kartı ve "Giriş yap" düğmesi kalır', () => {
+            const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl');
+
+            signup.signup.mockReturnValue(of(RESULT));
+            cmp.legalConsent.set(true);
+
+            cmp.submit();
+            fixture.detectChanges();
+
+            expect(auth.selectClinic).not.toHaveBeenCalled();
+            expect(navigate).not.toHaveBeenCalled();
+            expect(cmp.autoSignIn()).toBe(false);
+            expect(host().querySelector('[data-testid="signup-go-login"]')?.textContent?.trim()).toBe('Giriş yap');
+        });
     });
 
     describe('tek deneme kuralı (TRIAL-001)', () => {
