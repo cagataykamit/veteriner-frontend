@@ -134,7 +134,7 @@ export const KOLAYVET_UPLOAD_FILES: readonly ProgramUploadFileDef[] = [
         instruction: "Sağ üstteki İşlemler menüsünden Dışa Aktar'ı seçin.",
         caution: KOLAYVET_ALL_ROWS,
         label: 'Müşteri Listesi (.xlsx)',
-        contents: 'Müşteriler, telefon, TC kimlik no ve açık bakiye'
+        contents: 'Müşteriler, telefon, kimlik numarası ve açık bakiye'
     },
     {
         slot: 'pets',
