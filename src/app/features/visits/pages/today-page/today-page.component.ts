@@ -231,17 +231,17 @@ export class TodayPageComponent implements OnInit {
      * Kapsayıcı genişliğine göre (kapsayıcı sorgusu; ekran/yakınlaştırma değil): <72 rem Hekim gizlenir (ad Hasta hücresine iner) ve Hasta /
      * Müşteri esner, <64 rem Neden / not gizlenir (açık iş çipleri Durum hücresine iner), <50 rem düğmeler yalnız simge. Sınıflar tam yazılmalı
      * (Tailwind kaynaktan tarar). İşlem sütunu "Muayene aç + birincil adım + ⋯" sığacak genişlikte (yuvalar: actionButtons); Hasta, Müşteri,
-     * Hekim ve Durum ona yer açar (2026-11-28).
+     * Hekim ve Durum ona yer açar (2026-11-28). <72 rem "Muayene aç" yalnız simge, sütun daralır (Hasta / Müşteri sıkışmasın).
      */
     readonly columns = computed<TodayColumn[]>(() => [
         // Önceki günden kalan gelişte saatin altındaki not tarihlidir ("19.11 05:37 geldi"); tek satıra sığsın diye sütun genişler (B-03).
         { label: 'Saat', className: this.hasCarriedOver() ? 'w-[128px]' : 'w-[80px]' },
-        { label: 'Hasta', className: 'w-[210px] @max-[72rem]:w-auto' },
-        { label: 'Müşteri', className: 'w-[220px] @max-[72rem]:w-auto' },
+        { label: 'Hasta', className: 'w-[200px] @max-[72rem]:w-auto' },
+        { label: 'Müşteri', className: 'w-[200px] @max-[72rem]:w-auto' },
         ...(this.hasVet() ? [{ label: 'Hekim', className: 'w-[150px] @max-[72rem]:hidden' }] : []),
-        { label: 'Durum', className: 'w-[175px]' },
+        { label: 'Durum', className: 'w-[170px]' },
         { label: 'Neden / not', className: 'w-auto @max-[64rem]:hidden' },
-        { label: 'İşlem', className: 'w-[288px] @max-[50rem]:w-[132px]' }
+        { label: 'İşlem', className: 'w-[292px] @max-[72rem]:w-[216px] @max-[50rem]:w-[132px]' }
     ]);
     /**
      * Telefonda "⋯" menüsündeki hızlı işlemler (B-01): geniş ekrandaki düğmelerle aynı yetki kuralı; salt okunurda pasif. Yetkisi olmayan

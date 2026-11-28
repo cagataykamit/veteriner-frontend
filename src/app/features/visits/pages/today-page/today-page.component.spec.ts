@@ -1285,7 +1285,7 @@ describe('TodayPageComponent', () => {
             const groupTitle = root.querySelector('[data-testid="today-group-header"]') as HTMLElement;
             const client = root.querySelector('[data-testid="today-client-link"]') as HTMLElement;
 
-            expect(cols).toEqual(['w-[80px]', 'w-[210px]', 'w-[220px]', 'w-[150px]', 'w-[175px]', 'w-auto', 'w-[288px]']);
+            expect(cols).toEqual(['w-[80px]', 'w-[200px]', 'w-[200px]', 'w-[150px]', 'w-[170px]', 'w-auto', 'w-[292px]']);
             expect(wrapper.className).toContain('[&_th]:text-[12px]!');
             expect(wrapper.className).toContain('[&_th]:text-muted-color!');
             expect(groupTitle.tagName).toBe('H3');
@@ -1372,7 +1372,7 @@ describe('TodayPageComponent', () => {
             const container = rows[0].querySelector('td:last-child > div') as HTMLElement;
 
             // [Muayene aç][birincil adım][⋯]: yuvalar her satırda var (boşken de yer tutar), birincil düğme yuvasını doldurur.
-            expect(container.className).toContain('grid-cols-[minmax(0,1fr)_9rem_2.25rem]');
+            expect(container.className).toContain('grid-cols-[minmax(0,1fr)_8.75rem_2.25rem]');
             expect(rows.map((r) => r.querySelector('td:last-child > div')!.children.length)).toEqual([3, 3, 3, 3, 3]);
             expect(container.children[1].className).toContain('[&>button]:w-full');
             expect(host.querySelector('tbody button[aria-label="Acil işaretle"], tbody button[aria-label="Acili kaldır"]')).toBeNull();
