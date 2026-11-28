@@ -237,8 +237,12 @@
                             yer tutar ve ekran okuyucuya okunur (sabit düzen genişliği başlık hücresinden alır).
                         -->
                         <div
-                            class="@container overflow-x-auto [&_th]:px-[10px]! [&_th]:py-[7px]! [&_th]:text-[12px]! [&_th]:font-semibold! [&_th]:text-muted-color! [&_th]:bg-surface-50! dark:[&_th]:bg-surface-800! [&_tbody>tr:last-child>td]:border-b-0!"
-                            [class]="first ? '' : '[&_th]:h-0! [&_th]:py-0! [&_th]:border-0! [&_th]:text-[0px]! [&_th]:leading-[0]!'"
+                            class="@container overflow-x-auto [&_th]:px-[10px]! [&_tbody>tr:last-child>td]:border-b-0!"
+                            [class]="
+                                first
+                                    ? '[&_th]:py-[7px]! [&_th]:text-[12px]! [&_th]:font-semibold! [&_th]:text-muted-color! [&_th]:bg-surface-50! dark:[&_th]:bg-surface-800!'
+                                    : '[&_th]:h-0! [&_th]:py-0! [&_th]:border-0! [&_th]:text-[0px]! [&_th]:leading-[0]! [&_th]:bg-transparent!'
+                            "
                         >
                             <!-- Genişlik başlık hücrelerinden gelir (sabit düzen ilk satıra bakar); <col> kullanılmaz: gizli sütunun <col>'u yer tutmaya devam ediyor (B-06). -->
                             <p-table [value]="section.items" dataKey="key" size="small" [tableStyle]="{ 'table-layout': 'fixed', width: '100%' }">
@@ -326,7 +330,7 @@
                                         </td>
                                         <td>
                                             <!-- Üç sabit yuva [Muayene aç][birincil adım][⋯]: birincil düğme her satırda ve her kartta aynı genişlikte, aynı yerde. -->
-                                            <div class="grid grid-cols-[minmax(0,1fr)_9rem_2.25rem] @max-[50rem]:grid-cols-[minmax(0,1fr)_2.25rem_2.25rem] items-center gap-[6px] whitespace-nowrap">
+                                            <div class="grid grid-cols-[minmax(0,1fr)_8.75rem_2.25rem] @max-[50rem]:grid-cols-[minmax(0,1fr)_2.25rem_2.25rem] items-center gap-[6px] whitespace-nowrap">
                                                 <ng-container *ngTemplateOutlet="actionButtons; context: { $implicit: item, slots: true }" />
                                             </div>
                                         </td>
@@ -591,7 +595,7 @@
     <span [class]="slots ? 'flex justify-end min-w-0' : 'contents'">
         @if (canCreateExamination && actions.canOpenExamination) {
             <button pButton type="button" aria-label="Muayene aç" [attr.title]="'Muayene aç'" size="small" severity="secondary" [disabled]="ro.mutationBlocked()" (click)="openExamination(item)">
-                <i class="p-button-icon pi pi-file-edit"></i><span class="@max-[50rem]:hidden">Muayene aç</span>
+                <i class="p-button-icon pi pi-file-edit"></i><span class="@max-[72rem]:hidden">Muayene aç</span>
             </button>
         }
     </span>
