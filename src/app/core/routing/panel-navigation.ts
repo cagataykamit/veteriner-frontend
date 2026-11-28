@@ -153,6 +153,8 @@ export const PORTAL_INBOX_ROUTE = '/panel/portal-inbox';
 /** Silinen müşteri ve hastalar (ADR-054 K6): Müşteri ve Hasta'nın sekmesi, geri yükleme buradan. */
 export const DELETED_RECORDS_ROUTE = '/panel/patients/deleted';
 export const CLINIC_PORTAL_SETTINGS_ROUTE = '/panel/settings/owner-portal';
+/** Kliniğin yapay zekâ ayarı ve kredisi (ADR-044 E1, TIER-013); kullanım kartı ve kota bildirimleri buraya götürür. */
+export const AI_SETTINGS_ROUTE = '/panel/settings/ai';
 export const CLINIC_SITE_ROUTE = '/panel/settings/web-page';
 export const VET_FINDER_SETTINGS_ROUTE = '/panel/settings/vet-finder';
 export const E_DOCUMENT_SETTINGS_ROUTE = '/panel/settings/e-documents';
@@ -607,6 +609,13 @@ export const SETTINGS_SECTIONS: readonly CardSection[] = [
                 route: E_DOCUMENT_SETTINGS_ROUTE,
                 claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
                 description: 'e-SMM, e-Arşiv ve e-Fatura: entegratör bağlantısı, belge türleri ve otomatik e-belge.'
+            },
+            {
+                label: 'Yapay zekâ',
+                icon: 'pi pi-fw pi-sparkles',
+                route: AI_SETTINGS_ROUTE,
+                claims: [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM],
+                description: 'Yapay zekâyı klinik için açıp kapatma, bu ayın kredisi ve eklenen krediler.'
             },
             {
                 label: 'Hasta sahibi portalı',

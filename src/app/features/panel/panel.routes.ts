@@ -58,6 +58,7 @@ export default [
     { path: 'settings/vet-finder', loadChildren: () => import('../vet-finder/routes/vet-finder.routes') },
     { path: 'settings/e-documents', loadChildren: () => import('../e-documents/routes/e-document-settings.routes') },
     { path: 'settings/owner-portal', loadChildren: () => import('../clinic-portal/routes/clinic-portal.routes') },
+    { path: 'settings/ai', loadChildren: () => import('../ai-settings/routes/ai-settings.routes') },
     { path: 'settings/api-access', loadChildren: () => import('../api-access/routes/api-access.routes') },
     { path: 'settings/data-export', loadChildren: () => import('../data-export/routes/data-export.routes') },
     { path: 'settings/custom-development', loadChildren: () => import('../custom-development/routes/custom-development.routes') },
