@@ -32,6 +32,15 @@ const MAX_BATCH_NAME_LENGTH = 100;
 
 const NO_CSV_FILES: Readonly<Record<ImportTable, File | null>> = { customers: null, pets: null, vaccinations: null, clinicalRecords: null, accountEntries: null, appointments: null, products: null };
 
+/** Program seçimindeki sıra ve kutu metinleri; Excel, bugünkü genel yoldur (profil `Generic`). */
+const PROGRAM_CHOICE_ORDER: readonly ImportSourceProfileCode[] = ['EVet', 'Kolayvet', 'Generic'];
+
+const PROGRAM_CHOICE_TEXT: Readonly<Record<ImportSourceProfileCode, { name: string; note?: string }>> = {
+    EVet: { name: 'E-vet' },
+    Kolayvet: { name: 'Kolayvet' },
+    Generic: { name: 'Excel', note: 'Kendi dosyanız ya da şablonumuz' }
+};
+
 /** Adı bilinen programın seçilen dosyaları (yuva → dosya). */
 type ProgramFiles = Readonly<Partial<Record<ProgramUploadSlot, File | null>>>;
 
@@ -59,7 +68,7 @@ const REQUIREMENT_TONE: Readonly<Record<ProgramUploadFileDef['requirement'], str
     imports: [NgTemplateOutlet, FormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, ProgressBarModule, SelectModule, ImportDropZoneComponent, AppPageHeaderComponent, AppTrialLimitNoticeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-page-header title="Yeni içe aktarma" description="Adım 1 / 4 · Eski programınızdaki kayıtları dosyayla yükleyin. Bu adımda hiçbir kayıt oluşmaz.">
+        <app-page-header title="Yeni içe aktarma" [description]="headerDescription()">
             <div actions>
                 <a pButton size="small" severity="secondary" [routerLink]="listRoute"><i class="p-button-icon pi pi-arrow-left"></i>Geçmişe dön</a>
             </div>
@@ -122,30 +131,42 @@ const REQUIREMENT_TONE: Readonly<Record<ProgramUploadFileDef['requirement'], str
                                     }
                                 </section>
                             }
-                            <section>
-                                <h2 class="m-0 text-xl sm:text-2xl font-semibold">{{ openDrafts().length ? 'Ya da yeni bir aktarma başlatın: hangi programdan geliyorsunuz?' : 'Hangi programdan geliyorsunuz?' }}</h2>
-                                <p class="m-0 mt-1 text-muted-color">Seçiminize göre hangi dosyayı nereden alacağınızı adım adım gösteririz.</p>
-                                <!-- Kartta yalnız program adı: hangi dosyanın nereden alınacağı sonraki adımlarda yazar. -->
-                                <div class="flex flex-col gap-3 mt-4" role="radiogroup" aria-label="Kaynak program" data-testid="import-source-profile">
-                                    @for (p of orderedProfiles(); track p.code) {
+                            <!-- Tasarım "1 · Kutular" (Fable, 2026-11-28): eşit kutular, kutuda yalnız ad (Excel'de tek alt satır); telefonda satır. -->
+                            <section class="w-full max-w-3xl mx-auto">
+                                @if (openDrafts().length > 0) {
+                                    <p class="m-0 mb-1.5 text-muted-color">Ya da yeni bir aktarma başlatın</p>
+                                }
+                                <h2 class="m-0 text-xl sm:text-2xl font-semibold">Hangi programdan geliyorsunuz?</h2>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6" role="radiogroup" aria-label="Kaynak program" data-testid="import-source-profile">
+                                    @for (p of programChoices(); track p.code) {
                                         <button
                                             type="button"
                                             role="radio"
-                                            class="rounded-border border-2 px-4 py-3 min-h-16 text-left text-color cursor-pointer flex items-center gap-3"
-                                            [class]="sourceProfile() === p.code ? 'border-primary bg-primary-50 dark:bg-primary-950/40' : 'border-surface bg-transparent hover:border-primary hover:bg-emphasis'"
+                                            class="group rounded-border border text-color text-left cursor-pointer transition-colors flex items-center gap-3 min-h-[4.5rem] px-4 py-3 sm:flex-col sm:items-stretch sm:justify-between sm:min-h-36 sm:p-5 hover:border-primary hover:bg-primary-50 dark:hover:bg-primary-950/40 focus-visible:border-primary"
+                                            [class]="sourceProfile() === p.code ? 'border-primary bg-primary-50 dark:bg-primary-950/40' : 'border-surface-300 dark:border-surface-600 bg-surface-0 dark:bg-surface-900'"
                                             [attr.aria-checked]="sourceProfile() === p.code"
                                             [attr.data-profile]="p.code"
                                             (click)="chooseProfile(p.code)"
                                         >
-                                            <span class="min-w-0 flex-1 text-lg font-semibold">{{ p.displayName }}</span>
-                                            <i class="pi pi-arrow-right text-primary" aria-hidden="true"></i>
+                                            <span class="min-w-0 flex-1 flex flex-col gap-0.5">
+                                                <span class="text-xl sm:text-2xl font-semibold">{{ p.name }}</span>
+                                                @if (p.note) {
+                                                    <span class="text-sm text-muted-color">{{ p.note }}</span>
+                                                }
+                                            </span>
+                                            <span
+                                                class="w-10 h-10 shrink-0 rounded-full border border-surface-300 dark:border-surface-600 text-muted-color flex items-center justify-center sm:self-end transition-colors group-hover:bg-primary group-hover:border-primary group-hover:text-primary-contrast"
+                                                aria-hidden="true"
+                                            >
+                                                <i class="pi pi-arrow-right"></i>
+                                            </span>
                                         </button>
                                     }
                                 </div>
-                                <p class="m-0 mt-4 text-sm text-muted-color" data-testid="import-other-program">
-                                    Uygulamanız listede yoksa
+                                <p class="m-0 mt-5 sm:mt-7 pt-4 sm:pt-5 border-t border-surface text-muted-color" data-testid="import-other-program">
+                                    Diğer uygulamalardan geliyorsanız
                                     @if (canRequestSupport) {
-                                        <a [routerLink]="migrationSupportRoute" class="text-primary font-medium" data-testid="import-migration-support-link">bizimle iletişime geçin</a>.
+                                        <a [routerLink]="migrationSupportRoute" class="inline-block py-2 sm:py-0 text-primary font-medium" data-testid="import-migration-support-link">bizimle iletişime geçin</a>.
                                     } @else {
                                         bizimle iletişime geçin.
                                     }
@@ -436,10 +457,12 @@ export class ImportUploadPageComponent implements OnInit {
     readonly migrationSupportRoute = MIGRATION_SUPPORT_ROUTE;
 
     /**
-     * Yalnız dosyaları doğrudan okunan programlar (E-vet, Kolayvet). Genel yol sunulmaz: başka programın dosya içeriği bilinmiyor,
-     * klinik bizimle iletişime geçer (kullanıcı kararı 2026-11-28).
+     * Program seçimi (tasarım "1 · Kutular", 2026-11-28): E-vet, Kolayvet, Excel (genel yol). Başka programın dosyası okunmaz; klinik
+     * bizimle iletişime geçer. Sunucunun vermediği profil gösterilmez.
      */
-    protected readonly orderedProfiles = computed(() => this.profiles().filter((p) => p.code !== 'Generic'));
+    protected readonly programChoices = computed(() =>
+        PROGRAM_CHOICE_ORDER.flatMap((code) => (this.profiles().some((p) => p.code === code) ? [{ code, ...PROGRAM_CHOICE_TEXT[code] }] : []))
+    );
     protected readonly selectedProfile = computed(() => this.profiles().find((p) => p.code === this.sourceProfile()));
     /** Seçilen programın dosyaları; boşsa genel yol (tek Excel ya da CSV). */
     protected readonly programFileDefs = computed<readonly ProgramUploadFileDef[]>(() => PROGRAM_UPLOAD_FILES[this.sourceProfile() ?? 'Generic'] ?? []);
@@ -458,6 +481,9 @@ export class ImportUploadPageComponent implements OnInit {
         return this.isProgram() ? [...start, ...this.programFileDefs().map((f) => f.slot), 'summary'] : [...start, 'file'];
     });
     protected readonly screen = computed(() => this.screens()[Math.min(this.index(), this.screens().length - 1)]);
+    protected readonly headerDescription = computed(() =>
+        this.screen() === 'program' ? 'Adım 1 / 4 · Program seçimi' : 'Adım 1 / 4 · Eski programınızdaki kayıtları dosyayla yükleyin. Bu adımda hiçbir kayıt oluşmaz.'
+    );
     protected readonly currentProgramFile = computed(() => this.programFileDefs().find((f) => f.slot === this.screen()) ?? null);
     protected readonly programFileIndex = computed(() => this.programFileDefs().findIndex((f) => f.slot === this.screen()));
     /** Seçilmemiş ilk zorunlu dosya; yoksa null. */

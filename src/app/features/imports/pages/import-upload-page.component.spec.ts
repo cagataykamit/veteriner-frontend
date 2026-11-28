@@ -84,14 +84,8 @@ describe('ImportUploadPageComponent', () => {
         fixture.detectChanges();
     };
 
-    /** Genel yolun kartı yok (yalnız program listesi gelmezse açılır); o yol doğrudan seçilir. */
     const choose = (code: ImportSourceProfileCode) => {
-        if (code === 'Generic') {
-            page.chooseProfile('Generic');
-        } else {
-            el.querySelector<HTMLButtonElement>(`[data-profile="${code}"]`)!.click();
-        }
-
+        el.querySelector<HTMLButtonElement>(`[data-profile="${code}"]`)!.click();
         fixture.detectChanges();
     };
 
@@ -99,16 +93,18 @@ describe('ImportUploadPageComponent', () => {
     const sentForm = () => imports.createBatch.mock.calls[0][0] as FormData;
     const sentKeys = () => Array.from(sentForm().keys());
 
-    it('ilk ekran yalnız E-vet ve Kolayvet sunar; başka program için iletişim satırı', () => {
+    it('ilk ekran üç kutu sunar: E-vet, Kolayvet, Excel; altta diğer uygulamalar için iletişim satırı', () => {
         create();
 
         const options = Array.from(el.querySelectorAll<HTMLButtonElement>('[data-testid="import-source-profile"] button'));
 
+        expect(text()).toContain('Adım 1 / 4 · Program seçimi');
         expect(text()).toContain('Hangi programdan geliyorsunuz?');
-        expect(options.map((o) => o.dataset['profile'])).toEqual(['Kolayvet', 'EVet']);
-        expect(options.map((o) => o.textContent?.trim())).toEqual(['Kolayvet', 'E-vet']);
-        expect(text()).not.toContain('Programım listede yok');
-        expect(q('import-other-program')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Uygulamanız listede yoksa bizimle iletişime geçin.');
+        expect(text()).not.toContain('Seçiminize göre');
+        expect(options.map((o) => o.dataset['profile'])).toEqual(['EVet', 'Kolayvet', 'Generic']);
+        expect(options.map((o) => o.querySelector('span span')?.textContent?.trim())).toEqual(['E-vet', 'Kolayvet', 'Excel']);
+        expect(options.map((o) => o.querySelector('span span + span')?.textContent?.trim() ?? null)).toEqual([null, null, 'Kendi dosyanız ya da şablonumuz']);
+        expect(q('import-other-program')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Diğer uygulamalardan geliyorsanız bizimle iletişime geçin.');
         expect(el.querySelector('app-import-drop-zone')).toBeNull();
         expect(submitButton()).toBeNull();
         expect(q('import-migration-support-link')).toBeNull();
@@ -118,7 +114,6 @@ describe('ImportUploadPageComponent', () => {
         create({ support: true });
 
         expect(q('import-migration-support-link')?.textContent?.trim()).toBe('bizimle iletişime geçin');
-        expect(q('import-other-program')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Uygulamanız listede yoksa bizimle iletişime geçin.');
     });
 
     it('Genel: dosya ve gönderme tek ekranda; şablon ve CSV ikinci planda; Excel klinik olmadan "file" ile gider, profil gönderilmez', () => {
