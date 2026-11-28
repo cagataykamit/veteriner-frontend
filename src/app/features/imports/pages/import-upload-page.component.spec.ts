@@ -123,7 +123,7 @@ describe('ImportUploadPageComponent', () => {
         expect(q('import-template-xlsx')?.textContent).toContain('Boş Excel şablonunu indirin');
         expect(el.querySelectorAll('app-import-drop-zone').length).toBe(1);
         expect(q('import-csv')).toBeNull();
-        expect(q('import-evet-guide')).toBeNull();
+        expect(q('import-program-guide')).toBeNull();
         expect(submitButton().disabled).toBe(true);
         expect(q('import-submit-hint')?.textContent).toBe('Önce dosyanızı seçin.');
         expect(q('import-roadmap')?.textContent).toContain('Yükledikten sonra ne olacak?');
@@ -169,18 +169,59 @@ describe('ImportUploadPageComponent', () => {
         expect(sentKeys()).toEqual(['requestId', 'customersFile', 'vaccinationsFile', 'encoding', 'delimiter', 'clinicId', 'name']);
     });
 
-    it('Kolayvet: genel yoldan gider; başlıkta program adı, profil notu ve "sourceProfile" ile', () => {
-        create();
+    it('Kolayvet: her liste ayrı ekranda; menü yolu, dışa aktarma düğmesi ve "Tümünü listele" uyarısı; müşteri ve hasta listesi zorunlu', () => {
+        create({ clinicId: 'c1' });
         choose('Kolayvet');
 
-        expect(text()).toContain('Kolayvet dosyanızı yükleyin');
-        expect(q('import-source-profile-note')?.textContent).toBe('Kolayvet dışa aktarımı');
+        const guide = () => (q('import-program-guide')?.textContent ?? '').replace(/\s+/g, ' ');
+        const menu = () => q('import-program-guide')?.querySelector('[aria-label]')?.getAttribute('aria-label');
 
-        page.setXlsx(file('kolayvet.xlsx'));
+        expect(q('import-file-counter')?.textContent).toBe('Dosya 1 / 4');
+        expect(text()).toContain('Müşteri Listesi (.xlsx)');
+        expect(menu()).toBe('Menü yolu: Müşteriler > Müşteri Listesi');
+        expect(guide()).toContain("Kolayvet'te şu menüyü açın:");
+        expect(guide()).toContain("İşlemler menüsünden Dışa Aktar'ı seçin");
+        expect(guide()).toContain("Tümünü listele'yi seçin");
+        expect(q('import-skip')).toBeNull();
+        expect(q('import-evet-ambiguous-hint')).toBeNull();
+
+        page.setProgramFile('customers', file('tum-musteriler.xlsx'));
         fixture.detectChanges();
-        submitButton().click();
+        click('import-next');
+        expect(menu()).toBe('Menü yolu: Hastalar > Hasta Listesi');
+        expect(q('import-skip')).toBeNull();
 
-        expect(sentKeys()).toEqual(['requestId', 'file', 'name', 'sourceProfile']);
+        page.setProgramFile('pets', file('hasta-listesi.xlsx'));
+        fixture.detectChanges();
+        click('import-next');
+        expect(menu()).toBe('Menü yolu: Aşı Takvimi > Tüm Aşılar');
+        expect(guide()).toContain("Hızlı İşlemler menüsünden Dışa Aktar'ı seçin");
+
+        click('import-skip');
+        expect(q('import-file-counter')?.textContent).toBe('Dosya 4 / 4');
+        expect(menu()).toBe('Menü yolu: Raporlar > Hasta Listesi (Detaylı)');
+        expect(guide()).toContain('doğum tarihi ve mikroçipi');
+
+        click('import-skip');
+        expect(text()).toContain('Hazırsınız: gönderelim mi?');
+        expect(submitButton().disabled).toBe(false);
+    });
+
+    it('Kolayvet: zorunlu liste eksikken gönderilmez; dosyalar sırayla "kolayvetFiles" alanıyla gider', () => {
+        create({ clinicId: 'c1' });
+        choose('Kolayvet');
+        page.setProgramFile('pets', file('hasta-listesi.xlsx'));
+        page.submit();
+        expect(imports.createBatch).not.toHaveBeenCalled();
+
+        page.setProgramFile('detailedPatients', file('Yeni Hasta Listesi.xlsx'));
+        page.setProgramFile('customers', file('tum-musteriler.xlsx'));
+        page.setProgramFile('vaccines', file('asi-takvimi.xlsx'));
+        page.submit();
+
+        expect(sentKeys()).toEqual(['requestId', 'kolayvetFiles', 'kolayvetFiles', 'kolayvetFiles', 'kolayvetFiles', 'clinicId', 'name', 'sourceProfile']);
+        expect((sentForm().getAll('kolayvetFiles') as File[]).map((f) => f.name)).toEqual(['tum-musteriler.xlsx', 'hasta-listesi.xlsx', 'asi-takvimi.xlsx', 'Yeni Hasta Listesi.xlsx']);
+        expect(sentForm().get('name')).toBe('tum-musteriler.xlsx');
         expect(sentForm().get('sourceProfile')).toBe('Kolayvet');
     });
 
@@ -188,8 +229,8 @@ describe('ImportUploadPageComponent', () => {
         create();
         choose('EVet');
 
-        const guide = () => (q('import-evet-guide')?.textContent ?? '').replace(/\s+/g, ' ');
-        const menu = () => q('import-evet-guide')?.querySelector('[aria-label]')?.getAttribute('aria-label');
+        const guide = () => (q('import-program-guide')?.textContent ?? '').replace(/\s+/g, ' ');
+        const menu = () => q('import-program-guide')?.querySelector('[aria-label]')?.getAttribute('aria-label');
 
         expect(q('import-file-counter')?.textContent).toBe('Dosya 1 / 4');
         expect(text()).toContain('E-vet yedeği (.xlsx)');
@@ -203,7 +244,7 @@ describe('ImportUploadPageComponent', () => {
         expect(el.querySelector('label[for="importEncoding"]')).toBeNull();
         expect(q('import-evet-ambiguous-hint')?.textContent?.trim()).toBe('Aynı müşterinin aynı adlı iki hayvanı varsa Vetinity çoğunu tür, tarih ve kiloya bakarak kendisi ayırır; kalanları size sorar.');
 
-        page.setEVet('backup', file('ornek-yedek.xlsx'));
+        page.setProgramFile('backup', file('ornek-yedek.xlsx'));
         fixture.detectChanges();
         click('import-next');
 
@@ -228,14 +269,14 @@ describe('ImportUploadPageComponent', () => {
     it('E-vet özeti: yüklenen ve yüklenmeyen dosyaları gösterir; "Ekle" o dosyanın ekranına götürür', () => {
         create({ clinicId: 'c1' });
         choose('EVet');
-        page.setEVet('backup', file('ornek-yedek.xlsx'));
+        page.setProgramFile('backup', file('ornek-yedek.xlsx'));
         fixture.detectChanges();
         click('import-next');
         click('import-skip');
         click('import-skip');
         click('import-skip');
 
-        const rows = Array.from(q('import-evet-summary')!.querySelectorAll('li')).map((li) => (li.textContent ?? '').replace(/\s+/g, ' ').trim());
+        const rows = Array.from(q('import-program-summary')!.querySelectorAll('li')).map((li) => (li.textContent ?? '').replace(/\s+/g, ' ').trim());
 
         expect(rows[0]).toContain('ornek-yedek.xlsx');
         expect(rows[0]).toContain('Değiştir');
@@ -244,7 +285,7 @@ describe('ImportUploadPageComponent', () => {
         expect(q('import-clinic-info')?.textContent).toContain('Merkez Klinik');
         expect(submitButton().disabled).toBe(false);
 
-        q('import-evet-summary')!.querySelectorAll<HTMLButtonElement>('button')[1].click();
+        q('import-program-summary')!.querySelectorAll<HTMLButtonElement>('button')[1].click();
         fixture.detectChanges();
 
         expect(q('import-file-counter')?.textContent).toBe('Dosya 2 / 4');
@@ -253,13 +294,13 @@ describe('ImportUploadPageComponent', () => {
     it('E-vet: yedek ve klinik birlikte seçilmeden yüklenemez; nedeni düğmenin yanında yazar', () => {
         create();
         choose('EVet');
-        page.setEVet('patientReport', file('ornek-hasta-listesi.csv'));
+        page.setProgramFile('patientReport', file('ornek-hasta-listesi.csv'));
         page.clinicId.set('c1');
         page.submit();
         expect(imports.createBatch).not.toHaveBeenCalled();
 
         page.clinicId.set(null);
-        page.setEVet('backup', file('ornek-yedek.xlsx'));
+        page.setProgramFile('backup', file('ornek-yedek.xlsx'));
         fixture.detectChanges();
         click('import-next');
         click('import-next');
@@ -284,8 +325,8 @@ describe('ImportUploadPageComponent', () => {
         page.encoding.set('utf-8');
         page.delimiter.set(';');
         choose('EVet');
-        page.setEVet('backup', file('ornek-yedek.xlsx'));
-        page.setEVet('patientReport', file('ornek-hasta-listesi.csv'));
+        page.setProgramFile('backup', file('ornek-yedek.xlsx'));
+        page.setProgramFile('patientReport', file('ornek-hasta-listesi.csv'));
         page.clinicId.set('c1');
         page.name.set(' E-vet geçişi ');
 
@@ -303,10 +344,10 @@ describe('ImportUploadPageComponent', () => {
     it('E-vet: dört dosyanın tamamı ayrı alanlarla gider', () => {
         create();
         choose('EVet');
-        page.setEVet('backup', file('ornek-yedek.xlsx'));
-        page.setEVet('patientReport', file('ornek-hasta-listesi.csv'));
-        page.setEVet('vaccineReport', file('ornek-asi-bilgi.csv'));
-        page.setEVet('products', file('ornek-urun-listesi.csv'));
+        page.setProgramFile('backup', file('ornek-yedek.xlsx'));
+        page.setProgramFile('patientReport', file('ornek-hasta-listesi.csv'));
+        page.setProgramFile('vaccineReport', file('ornek-asi-bilgi.csv'));
+        page.setProgramFile('products', file('ornek-urun-listesi.csv'));
         page.clinicId.set('c1');
 
         page.submit();
@@ -416,25 +457,25 @@ describe('ImportUploadPageComponent', () => {
         expect(page.xlsxFile()).toBeNull();
         expect(page.error()).toBeNull();
 
-        page.setEVet('backup', file('ornek-yedek.xlsx'));
+        page.setProgramFile('backup', file('ornek-yedek.xlsx'));
         fixture.detectChanges();
         click('import-back');
         choose('Kolayvet');
 
-        expect(Object.values(page.evetFiles()).every((f) => f === null)).toBe(true);
-        expect(q('import-evet-guide')).toBeNull();
-        expect(text()).toContain('Kolayvet dosyanızı yükleyin');
+        expect(Object.values(page.programFiles()).every((f) => f === null)).toBe(true);
+        expect(text()).toContain('Müşteri Listesi (.xlsx)');
+        expect(text()).not.toContain('E-vet yedeği (.xlsx)');
     });
 
     it('aynı program yeniden seçilirse dosyalar korunur', () => {
         create();
         choose('EVet');
-        page.setEVet('backup', file('ornek-yedek.xlsx'));
+        page.setProgramFile('backup', file('ornek-yedek.xlsx'));
         fixture.detectChanges();
         click('import-back');
         choose('EVet');
 
-        expect(page.evetFiles().backup?.name).toBe('ornek-yedek.xlsx');
+        expect(page.programFiles().backup?.name).toBe('ornek-yedek.xlsx');
     });
 
     it('program listesi gelmezse soru sorulmaz; genel yol doğrudan açılır', () => {
