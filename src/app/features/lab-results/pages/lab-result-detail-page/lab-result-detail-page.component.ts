@@ -144,7 +144,13 @@ const SAVED_MESSAGES: Record<string, string> = { '1': 'Kayıt güncellendi.', cr
                         }
                         <h6 class="m-0 mb-1 field-label">Yorum</h6>
                         @if (r.interpretation === emptyMark) {
-                            <p class="m-0 field-empty">Yorum yok</p>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <p class="m-0 field-empty">Yorum yok</p>
+                                <!-- Değerlendirme = yorum yazmak; düzenleme formu doğrudan yorum alanında açılır (sonuç metni hemen üstünde). -->
+                                @if (r.awaitingInterpretation && canUpdateLabResult && isEditable(r.status) && !ro.mutationBlocked()) {
+                                    <a [routerLink]="['/panel/lab-results', r.id, 'edit']" [queryParams]="{ odak: 'yorum' }" pButton type="button" size="small" data-testid="lab-result-interpret"><i class="pi pi-comment"></i>Değerlendir</a>
+                                }
+                            </div>
                         } @else {
                             <p class="m-0 whitespace-pre-wrap">{{ r.interpretation }}</p>
                         }

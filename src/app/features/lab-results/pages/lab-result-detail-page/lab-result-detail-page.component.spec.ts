@@ -80,6 +80,44 @@ describe('LabResultDetailPageComponent — başlık eylemleri', () => {
     });
 });
 
+describe('LabResultDetailPageComponent — Değerlendir', () => {
+    const interpretLink = (awaiting: boolean, canUpdate = true, blocked = false): HTMLAnchorElement | null => {
+        TestBed.configureTestingModule({
+            imports: [LabResultDetailPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: RecordHistoryService, useValue: { getHistory: () => of([]) } },
+                { provide: PetsService, useValue: { getPetById: () => of({ petAlerts: { flags: [], note: null } }) } },
+                { provide: StoredFilesService, useValue: { list: () => of([]) } },
+                { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'l1' })), snapshot: { queryParamMap: convertToParamMap({}) } } },
+                { provide: LabResultsService, useValue: { getLabResultById: () => of({ ...vm('Resulted'), resultText: 'pH 6,5', awaitingInterpretation: awaiting }) } },
+                { provide: AuthService, useValue: { hasOperationClaim: () => canUpdate } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => blocked } }
+            ]
+        });
+        const fixture = TestBed.createComponent(LabResultDetailPageComponent);
+
+        fixture.detectChanges();
+
+        return (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>('[data-testid="lab-result-interpret"]');
+    };
+
+    it('değerlendirme bekleyen sonuçta yorumun yanında düğme çıkar ve formu yorum alanında açar', () => {
+        const link = interpretLink(true);
+
+        expect(link?.textContent?.trim()).toBe('Değerlendir');
+        expect(link?.getAttribute('href')).toBe('/panel/lab-results/l1/edit?odak=yorum');
+    });
+
+    it('değerlendirme beklemiyorsa, izin yoksa ya da salt okunursa düğme yok', () => {
+        expect(interpretLink(false)).toBeNull();
+        TestBed.resetTestingModule();
+        expect(interpretLink(true, false)).toBeNull();
+        TestBed.resetTestingModule();
+        expect(interpretLink(true, true, true)).toBeNull();
+    });
+});
+
 describe('LabResultDetailPageComponent — İptal et', () => {
     it('liste satırıyla ortak iptal diyaloğunu açar; onayda ekranın açıldığı sürümle iptal eder ve kaydı yeniler', () => {
         const service = {

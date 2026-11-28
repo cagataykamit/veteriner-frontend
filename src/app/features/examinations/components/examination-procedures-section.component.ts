@@ -102,7 +102,8 @@ const ADD_ICON: Record<ProcedureKind, string> = {
                         @for (row of rows(); track row.kind + row.id) {
                             <li class="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 border-b border-surface-200 dark:border-surface-700 last:border-b-0" [class.opacity-60]="row.cancelled" [attr.data-cancelled]="row.cancelled ? 'true' : null">
                                 <app-status-tag [label]="label(row.kind)" severity="info" />
-                                <span class="font-medium min-w-0 break-words flex-1" [class.line-through]="row.cancelled">{{ row.title }}</span>
+                                <!-- Ad en az 6rem kalır: yer daralınca harf harf alt alta kırılmak yerine yanındakiler alt satıra iner. -->
+                                <span class="font-medium min-w-[6rem] break-words flex-1" [class.line-through]="row.cancelled">{{ row.title }}</span>
                                 @if (row.stateLabel) {
                                     <app-status-tag [label]="row.stateLabel" [severity]="row.cancelled ? 'secondary' : 'warn'" />
                                 }
@@ -110,7 +111,7 @@ const ADD_ICON: Record<ProcedureKind, string> = {
                                     <app-status-tag [label]="lateEntryLabel" severity="warn" data-testid="procedure-late-entry" />
                                 }
                                 @if (row.detail) {
-                                    <span class="text-sm text-muted-color">{{ row.detail }}</span>
+                                    <span class="text-sm text-muted-color min-w-0 break-words">{{ row.detail }}</span>
                                 }
                                 <span class="text-sm text-muted-color">{{ row.atUtc | trDateTime }}</span>
                                 <app-detail-row-link [link]="['/panel', routeSegment(row.kind), row.id]" [ariaLabel]="label(row.kind) + ' detayı: ' + row.title" />
