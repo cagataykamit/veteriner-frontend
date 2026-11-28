@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, DestroyRef, ElementRef, OnInit, computed, effect, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, OnInit, computed, inject, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { EDocumentIssueDialogComponent } from '@/app/entities/e-document/components/e-document-issue-dialog.component';
 import type { EDocumentSource } from '@/app/entities/e-document/models/e-document.model';
 import { EDocumentsService } from '@/app/entities/e-document/services/e-documents.service';
@@ -98,27 +98,37 @@ type RefreshMode = 'initial' | 'silent';
 /** Tamamlanacak geliş: Bugün satırı ya da "Önceki günden açık geliş" listesindeki satır (satır anahtarı = meşgul kilidi). */
 type CompletionTarget = Pick<TodayItemVm, 'key' | 'visitId' | 'petId' | 'petName' | 'clientId' | 'latestExaminationId'>;
 
-/** Tek tablonun satırları: grup ara başlığı, kayıt ya da katlanmış tamamlananları açan/kapatan satır. */
-type TodayListRow = { kind: 'group'; id: string; group: TodayGroup } | { kind: 'item'; id: string; item: TodayItemVm; groupKey: TodayGroupKey; done: boolean } | { kind: 'toggle'; id: string; hiddenCount: number; expanded: boolean };
+/** Kartın görünümü: klinikteki hasta öne çıkar, gelecek randevu sade, bitmiş iş (Tamamlandı, Gelmedi, yanlış işaretlenen) soluk. */
+type TodaySectionTone = 'clinic' | 'planned' | 'done';
+
+/** Liste grup başına ayrı karttır; kart başlığında ad, sayı, durum sayımı ve (Tamamlandı'da) aç / kapat düğmesi. */
+interface TodaySection {
+    group: TodayGroup;
+    tone: TodaySectionTone;
+    /** Kartta görünen kayıtlar: tamamlananlar katlıyken yalnız işi kalanlar. */
+    items: TodayItemVm[];
+    /** Başlıktaki durum sayımı ("2 sırada · 1 muayenede"); bitmiş işte yok (kartın sayısı yeter). */
+    summary: { tone: TodayStatusTone; text: string }[];
+    /** Katlı "Tamamlandı"nın düğmesi; gizlenen ya da açılmış kayıt yoksa `null`. */
+    toggle: { hiddenCount: number; expanded: boolean } | null;
+}
 
 interface TodayColumn {
     label: string;
     /** Başlık hücresi genişliği; dar kapsayıcıda gizlenen sütunun gövde hücresi de aynı `@max-[…]:hidden` sınıfını taşır. */
     className: string;
-    /** `className`'deki `@max-[n rem]:hidden` eşiği (colspan hesabı için; ikisi birlikte değişir). */
-    hiddenBelowRem?: number;
 }
 
 /** Bitmiş iş: daha alçak, soluk satır (Tamamlandı, Gelmedi, yanlış işaretlenen). */
 const DONE_GROUPS: ReadonlySet<TodayGroupKey> = new Set(['completed', 'noShow', 'voided']);
 
-/** Liste başlığındaki sayım sırası (gün akışı: gelecek, klinikte, biten). */
+/** Kart başlığındaki sayım sırası (gün akışı: gelecek, klinikte, biten). */
 const SUMMARY_ORDER: readonly TodayStatusTone[] = ['planned', 'waiting', 'inProgress', 'completed', 'noShow'];
 
 /**
- * Bugün: o günün randevuları ve gelen hastalar tek kartta, tek tabloda (randevulu Visit tek satır). Ara başlıklar Klinikte, Sıradaki
- * randevular ve Tamamlandı; tamamlananlar katlıdır, işi kalan (ödeme, açık iş) tamamlanmış satır görünür kalır. Satır başına tek birincil
- * adım sağda, "⋯" hemen yanında. Aktif yatışlar ayrı bölümde, klinik geneli açık iş özeti üstte.
+ * Bugün: o günün randevuları ve gelen hastalar grup başına ayrı kartta (randevulu Visit tek satır): Klinikte üstte ve belirgin, Sıradaki
+ * randevular sade, Tamamlandı soluk ve katlı; işi kalan (ödeme, açık iş) tamamlanmış satır görünür kalır. Kartların sütunları aynı hizada.
+ * Satır başına tek birincil adım sabit yuvada sağda, "⋯" hemen yanında. Aktif yatışlar ayrı bölümde, klinik geneli açık iş özeti üstte.
  */
 @Component({
     selector: 'app-today-page',
@@ -211,8 +221,8 @@ export class TodayPageComponent implements OnInit {
     readonly groups = computed(() => groupTodayItems(this.today()?.items ?? []));
     /** Katlı "Tamamlandı" bölümü açık mı (sayfa açık kaldıkça; otomatik yenileme kapatmaz). */
     readonly showCompleted = signal(false);
-    /** Tek tablonun satırları: tamamlananlar katlıyken yalnız işi kalanlar, altında "N tamamlanan kayıt daha göster". */
-    readonly rows = computed(() => this.buildRows(this.groups(), this.showCompleted()));
+    /** Grup kartları: tamamlananlar katlıyken yalnız işi kalanlar, başlıkta "N tamamlanan kayıt daha göster". */
+    readonly sections = computed(() => this.buildSections(this.groups(), this.showCompleted()));
     /** Listede hiçbir satırda sorumlu hekim yoksa Hekim sütunu çizilmez (her satırda "—" yer kaplamasın). */
     readonly hasVet = computed(() => (this.today()?.items ?? []).some((i) => !!i.responsibleVeterinarianName));
     private readonly hasCarriedOver = computed(() => (this.today()?.items ?? []).some((i) => !!i.scheduledAtUtc && carriedOverDays(i, this.now()) !== null));
@@ -220,30 +230,19 @@ export class TodayPageComponent implements OnInit {
      * Sütun genişlikleri taslak A ile aynı (px): Saat dar, Hasta ve Müşteri geniş, Neden / not kalan yeri alır, İşlem sağa yaslı.
      * Kapsayıcı genişliğine göre (kapsayıcı sorgusu; ekran/yakınlaştırma değil): <72 rem Hekim gizlenir (ad Hasta hücresine iner) ve Hasta /
      * Müşteri esner, <64 rem Neden / not gizlenir (açık iş çipleri Durum hücresine iner), <50 rem düğmeler yalnız simge. Sınıflar tam yazılmalı
-     * (Tailwind kaynaktan tarar).
+     * (Tailwind kaynaktan tarar). İşlem sütunu "Muayene aç + birincil adım + ⋯" sığacak genişlikte (yuvalar: actionButtons); Hasta, Müşteri,
+     * Hekim ve Durum ona yer açar (2026-11-28).
      */
     readonly columns = computed<TodayColumn[]>(() => [
         // Önceki günden kalan gelişte saatin altındaki not tarihlidir ("19.11 05:37 geldi"); tek satıra sığsın diye sütun genişler (B-03).
         { label: 'Saat', className: this.hasCarriedOver() ? 'w-[128px]' : 'w-[80px]' },
-        { label: 'Hasta', className: 'w-[220px] @max-[72rem]:w-auto' },
-        { label: 'Müşteri', className: 'w-[230px] @max-[72rem]:w-auto' },
-        ...(this.hasVet() ? [{ label: 'Hekim', className: 'w-[160px] @max-[72rem]:hidden', hiddenBelowRem: 72 }] : []),
-        { label: 'Durum', className: 'w-[180px]' },
-        { label: 'Neden / not', className: 'w-auto @max-[64rem]:hidden', hiddenBelowRem: 64 },
-        { label: 'İşlem', className: 'w-[230px] @max-[50rem]:w-[120px]' }
+        { label: 'Hasta', className: 'w-[210px] @max-[72rem]:w-auto' },
+        { label: 'Müşteri', className: 'w-[220px] @max-[72rem]:w-auto' },
+        ...(this.hasVet() ? [{ label: 'Hekim', className: 'w-[150px] @max-[72rem]:hidden' }] : []),
+        { label: 'Durum', className: 'w-[175px]' },
+        { label: 'Neden / not', className: 'w-auto @max-[64rem]:hidden' },
+        { label: 'İşlem', className: 'w-[288px] @max-[50rem]:w-[132px]' }
     ]);
-    /** Tablo kapsayıcısının genişliği (rem); kapsayıcı sorgusuyla aynı ölçü. Ölçülmeden önce `null` (tüm sütunlar sayılır). */
-    private readonly tableWidthRem = signal<number | null>(null);
-    /**
-     * Ara başlık ve "tamamlananlar" satırının `colspan`'ı görünen sütun sayısıdır (B-06): gizli sütunu da sayan colspan sabit düzende
-     * fazladan boş bir sütun açıyor, başlık şeridi ve satırlar karttan kısa kalıyordu.
-     */
-    readonly visibleColumnCount = computed(() => {
-        const width = this.tableWidthRem();
-
-        return this.columns().filter((c) => width === null || !c.hiddenBelowRem || width >= c.hiddenBelowRem).length;
-    });
-    private readonly tableBox = viewChild<ElementRef<HTMLElement>>('tableBox');
     /**
      * Telefonda "⋯" menüsündeki hızlı işlemler (B-01): geniş ekrandaki düğmelerle aynı yetki kuralı; salt okunurda pasif. Yetkisi olmayan
      * işlem hiç yazılmaz.
@@ -268,18 +267,6 @@ export class TodayPageComponent implements OnInit {
     });
     /** Başlığın yanında soluk tarih ve saat ("Çarşamba, 19 Kasım · 15:20"); her yenilemede güncellenir. */
     readonly headerNote = computed(() => `${formatWeekdayDayMonthDisplay(this.now())} · ${formatTimeDisplay(this.now())}`);
-    /** Liste başlığındaki sayım ("1 bekleniyor · 2 sırada …"); yalnız günlük listede. */
-    readonly summary = computed(() => {
-        const counts = new Map<TodayStatusTone, number>();
-
-        for (const i of this.today()?.items ?? []) {
-            const tone = todayStatusOf(i, this.now()).tone;
-
-            counts.set(tone, (counts.get(tone) ?? 0) + 1);
-        }
-
-        return SUMMARY_ORDER.filter((t) => counts.has(t)).map((tone) => ({ tone, text: `${counts.get(tone)} ${todayStatusLabel(tone).toLocaleLowerCase('tr-TR')}` }));
-    });
 
     /** Bekleme süresini canlı tutan saat (her yenilemede güncellenir). */
     private readonly now = signal(new Date());
@@ -349,6 +336,22 @@ export class TodayPageComponent implements OnInit {
         completed: 'bg-green-500',
         noShow: 'bg-surface-400 dark:bg-surface-500'
     };
+    /** Grup kartı: Klinikte üst kenarı kalın birincil renk ve gölgeli (en önemli iş); bitmiş iş gri zeminde, satırları soluk. */
+    readonly sectionClass: Record<TodaySectionTone, string> = {
+        clinic: 'border-t-4! border-t-primary! shadow-md',
+        planned: '',
+        done: 'bg-surface-50! dark:bg-surface-950! [&_td]:bg-transparent! [&_td]:text-muted-color'
+    };
+    readonly sectionHeadClass: Record<TodaySectionTone, string> = {
+        clinic: 'pt-[14px] pb-[12px]',
+        planned: 'py-[12px] border-b border-surface-200 dark:border-surface-700',
+        done: 'py-[8px] pr-[10px] border-b border-surface-200 dark:border-surface-700'
+    };
+    readonly sectionTitleClass: Record<TodaySectionTone, string> = {
+        clinic: 'text-[18px] font-bold',
+        planned: 'text-[15px] font-bold',
+        done: 'text-[14px] font-semibold text-muted-color'
+    };
     readonly waitAlertClass: Record<WaitAlertLevel, string> = {
         none: '',
         warning: 'font-semibold text-warn',
@@ -380,25 +383,6 @@ export class TodayPageComponent implements OnInit {
         this.menuBadgeFeed.claim('waitingVisits');
         this.destroyRef.onDestroy(() => this.menuBadgeFeed.release('waitingVisits'));
         this.startWithScope();
-    }
-
-    constructor() {
-        // Tablo kapsayıcısı liste yüklenince çizilir; genişliği değiştikçe görünen sütun sayısı güncellenir (B-06).
-        effect((onCleanup) => {
-            const box = this.tableBox()?.nativeElement;
-
-            if (!box || typeof ResizeObserver === 'undefined') {
-                this.tableWidthRem.set(null);
-
-                return;
-            }
-
-            const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-            const observer = new ResizeObserver(() => this.tableWidthRem.set(box.clientWidth / rem));
-
-            observer.observe(box);
-            onCleanup(() => observer.disconnect());
-        });
     }
 
     private watchCompactViewport(): void {        const query = window.matchMedia(COMPACT_MEDIA_QUERY);
@@ -489,24 +473,33 @@ export class TodayPageComponent implements OnInit {
         this.showCompleted.update((v) => !v);
     }
 
-    private buildRows(groups: TodayGroup[], showCompleted: boolean): TodayListRow[] {
-        const rows: TodayListRow[] = [];
-
-        for (const group of groups) {
-            const done = DONE_GROUPS.has(group.key);
+    private buildSections(groups: TodayGroup[], showCompleted: boolean): TodaySection[] {
+        return groups.map((group) => {
             const collapsible = group.key === 'completed';
-            const visible = collapsible && !showCompleted ? group.items.filter(todayHasOpenWork) : group.items;
-            const hiddenCount = group.items.length - visible.length;
+            const items = collapsible && !showCompleted ? group.items.filter(todayHasOpenWork) : group.items;
+            const hiddenCount = group.items.length - items.length;
+            const tone: TodaySectionTone = DONE_GROUPS.has(group.key) ? 'done' : group.key === 'clinic' ? 'clinic' : 'planned';
 
-            rows.push({ kind: 'group', id: `g:${group.key}`, group });
-            rows.push(...visible.map((item): TodayListRow => ({ kind: 'item', id: item.key, item, groupKey: group.key, done })));
+            return {
+                group,
+                tone,
+                items,
+                summary: tone === 'done' ? [] : this.statusCounts(group.items),
+                toggle: collapsible && (showCompleted || hiddenCount > 0) ? { hiddenCount, expanded: showCompleted } : null
+            };
+        });
+    }
 
-            if (collapsible && (showCompleted || hiddenCount > 0)) {
-                rows.push({ kind: 'toggle', id: 't:completed', hiddenCount, expanded: showCompleted });
-            }
+    private statusCounts(items: readonly TodayItemVm[]): { tone: TodayStatusTone; text: string }[] {
+        const counts = new Map<TodayStatusTone, number>();
+
+        for (const i of items) {
+            const tone = todayStatusOf(i, this.now()).tone;
+
+            counts.set(tone, (counts.get(tone) ?? 0) + 1);
         }
 
-        return rows;
+        return SUMMARY_ORDER.filter((t) => counts.has(t)).map((tone) => ({ tone, text: `${counts.get(tone)} ${todayStatusLabel(tone).toLocaleLowerCase('tr-TR')}` }));
     }
 
     possiblyForgotten(item: TodayItemVm): boolean {
