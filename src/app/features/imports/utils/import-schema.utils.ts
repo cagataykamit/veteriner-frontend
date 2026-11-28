@@ -1,4 +1,4 @@
-import type { ImportColumnDto, ImportMappingRequestDto, ImportTable, ImportTableInfoDto } from '@/app/features/imports/models/import-api.model';
+import type { ImportColumnDto, ImportMappingRequestDto, ImportSourceProfileCode, ImportTable, ImportTableInfoDto } from '@/app/features/imports/models/import-api.model';
 
 /** Sihirbazda gösterilen kanonik alanlar (sözleşme bölüm 4.3); öneri ve doğrulama kuralları backend'dedir. */
 export interface ImportFieldDef {
@@ -53,16 +53,19 @@ export const IMPORT_CSV_TEMPLATE_FILE: Readonly<Record<ImportTable, string>> = {
     products: 'vetinity-iceaktar-urunler.csv'
 };
 
-/** E-vet'ten yüklenen dosyalar; yedek zorunlu, raporlar yedeğe eklenir (yedeksiz `Imports.UnsupportedFile`). */
-export type EVetUploadSlot = 'backup' | 'patientReport' | 'vaccineReport' | 'products';
+/**
+ * Adı bilinen programdan yüklenen dosyalar; her dosya ayrı ekranda gösterilir. E-vet: yedek zorunlu, raporlar yedeğe eklenir (yedeksiz
+ * `Imports.UnsupportedFile`). Kolayvet: liste dışa aktarmaları, hepsi `kolayvetFiles` alanıyla (sözleşme bölüm 15).
+ */
+export type ProgramUploadSlot = 'backup' | 'patientReport' | 'vaccineReport' | 'products' | 'customers' | 'pets' | 'vaccines' | 'detailedPatients';
 
-export interface EVetUploadFileDef {
-    readonly slot: EVetUploadSlot;
+export interface ProgramUploadFileDef {
+    readonly slot: ProgramUploadSlot;
     /** Yükleme isteğindeki alan adı. */
     readonly field: string;
     readonly extension: '.xlsx' | '.csv';
     readonly requirement: 'zorunlu' | 'önerilir' | 'isteğe bağlı';
-    /** E-vet'teki menü yolu. */
+    /** Eski programdaki menü yolu. */
     readonly menu: string;
     readonly instruction: string;
     /** Kalın gösterilen uyarı. */
@@ -73,7 +76,7 @@ export interface EVetUploadFileDef {
 }
 
 /** Yönerge ve yükleme alanları bu sırayla gösterilir. */
-export const EVET_UPLOAD_FILES: readonly EVetUploadFileDef[] = [
+export const EVET_UPLOAD_FILES: readonly ProgramUploadFileDef[] = [
     {
         slot: 'backup',
         field: 'file',
@@ -116,6 +119,66 @@ export const EVET_UPLOAD_FILES: readonly EVetUploadFileDef[] = [
         contents: 'Ürün kartları, fiyat ve KDV oranı'
     }
 ];
+
+/** Kolayvet "Dışa Aktar" yalnız ekrandaki sayfayı indirir (sözleşme 15). */
+const KOLAYVET_ALL_ROWS = "Önce tablonun altındaki \"Sayfada … kayıt göster\" kutusundan Tümünü listele'yi seçin; seçmezseniz yalnız ilk sayfa iner.";
+
+/**
+ * Kolayvet'te tam yedek yok: her liste ayrı Excel dosyası (sözleşme 15.1). Dışa Aktar her ekranda başka menüde (Kolayvet v4'te
+ * görüldü, 2026-11-28): Müşteri Listesi'nde Entegrasyonlar, Hasta Listesi ve Aşı Takvimi'nde Hızlı İşlemler, raporda ayrı düğme.
+ */
+export const KOLAYVET_UPLOAD_FILES: readonly ProgramUploadFileDef[] = [
+    {
+        slot: 'customers',
+        field: 'kolayvetFiles',
+        extension: '.xlsx',
+        requirement: 'zorunlu',
+        menu: 'Müşteriler > Müşteri Listesi',
+        instruction: "Sağ üstteki Entegrasyonlar menüsünü açıp Dışa Aktar'ı seçin.",
+        caution: KOLAYVET_ALL_ROWS,
+        label: 'Müşteri Listesi (.xlsx)',
+        contents: 'Müşteriler, telefon, kimlik numarası ve açık bakiye'
+    },
+    {
+        slot: 'pets',
+        field: 'kolayvetFiles',
+        extension: '.xlsx',
+        requirement: 'zorunlu',
+        menu: 'Hastalar > Hasta Listesi',
+        instruction: "Üstteki Hızlı İşlemler menüsünü açıp Dışa Aktar'ı seçin.",
+        caution: KOLAYVET_ALL_ROWS,
+        label: 'Hasta Listesi (.xlsx)',
+        contents: 'Hastalar, tür, ırk, cinsiyet ve sahibi'
+    },
+    {
+        slot: 'vaccines',
+        field: 'kolayvetFiles',
+        extension: '.xlsx',
+        requirement: 'önerilir',
+        menu: 'Aşı Takvimi > Tüm Aşılar',
+        instruction: "Üstteki Hızlı İşlemler menüsünü açıp Dışa Aktar'ı seçin.",
+        caution: KOLAYVET_ALL_ROWS,
+        label: 'Aşı Takvimi (.xlsx)',
+        contents: 'Yapılmış aşılar, sonraki aşı tarihleri ve gelecek aşı randevuları'
+    },
+    {
+        slot: 'detailedPatients',
+        field: 'kolayvetFiles',
+        extension: '.xlsx',
+        requirement: 'önerilir',
+        menu: 'Raporlar > Hasta Listesi (Detaylı)',
+        instruction: "Filtrele düğmesinin yanındaki Dışa Aktar menüsünden Excel Dosyası'nı seçin. Kolayvet'in hasta listesi doğum tarihi ve mikroçipi vermez; bu rapor tamamlar.",
+        caution: KOLAYVET_ALL_ROWS,
+        label: 'Hasta Listesi (Detaylı) (.xlsx)',
+        contents: 'Doğum tarihi, mikroçip ve eski programa kayıt tarihi'
+    }
+];
+
+/** Dosyaları adım adım istenen programlar; listede olmayan program genel yoldan (tek Excel ya da CSV) yükler. */
+export const PROGRAM_UPLOAD_FILES: Readonly<Partial<Record<ImportSourceProfileCode, readonly ProgramUploadFileDef[]>>> = {
+    EVet: EVET_UPLOAD_FILES,
+    Kolayvet: KOLAYVET_UPLOAD_FILES
+};
 
 /** Klinik seçimi gerektiren tablolar (sözleşme 12.1); yoksa yükleme `Imports.ClinicRequired` döner. */
 export const IMPORT_CLINIC_TABLES: readonly ImportTable[] = ['vaccinations', 'clinicalRecords', 'accountEntries', 'appointments'];

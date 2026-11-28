@@ -16,7 +16,7 @@ import type { ImportBatchDto, ImportFileFormat, ImportSourceProfileCode, ImportS
 import { ImportsService } from '@/app/features/imports/services/imports.service';
 import { saveDownload } from '@/app/features/imports/utils/import-download.utils';
 import { duplicateBatchId, importErrorMessage, importStatusLabel, isDiscardable } from '@/app/features/imports/utils/import-labels.utils';
-import { EVET_UPLOAD_FILES, type EVetUploadFileDef, type EVetUploadSlot, IMPORT_CSV_FIELD, IMPORT_CSV_TEMPLATE_FILE, IMPORT_TABLE_LABELS, IMPORT_TABLES, needsClinic } from '@/app/features/imports/utils/import-schema.utils';
+import { IMPORT_CSV_FIELD, IMPORT_CSV_TEMPLATE_FILE, IMPORT_TABLE_LABELS, IMPORT_TABLES, needsClinic, PROGRAM_UPLOAD_FILES, type ProgramUploadFileDef, type ProgramUploadSlot } from '@/app/features/imports/utils/import-schema.utils';
 import { AppPageHeaderComponent } from '@/app/shared/ui/page-header/app-page-header.component';
 import { AppTrialLimitNoticeComponent } from '@/app/shared/ui/trial-limit-notice/app-trial-limit-notice.component';
 import { isTrialLimitError } from '@/app/shared/utils/api-error.utils';
@@ -24,14 +24,25 @@ import { formatUtcIsoAsLocalDateTimeDisplay } from '@/app/shared/utils/date.util
 
 type UploadMode = 'xlsx' | 'csv';
 
-/** Ekranlar: program sorusu, dosya (genel yol: dosya ve gönderme tek ekranda), E-vet'te her dosya ayrı ekran ve sonda özet. */
-type UploadScreen = 'program' | 'file' | EVetUploadSlot | 'summary';
+/** Ekranlar: program sorusu, dosya (genel yol: dosya ve gönderme tek ekranda), adı bilinen programda (E-vet, Kolayvet) her dosya ayrı ekran ve sonda özet. */
+type UploadScreen = 'program' | 'file' | ProgramUploadSlot | 'summary';
 
 /** Parti adı sınırı (sunucu `ImportBatch.MaxNameLength`). */
 const MAX_BATCH_NAME_LENGTH = 100;
 
 const NO_CSV_FILES: Readonly<Record<ImportTable, File | null>> = { customers: null, pets: null, vaccinations: null, clinicalRecords: null, accountEntries: null, appointments: null, products: null };
-const NO_EVET_FILES: Readonly<Record<EVetUploadSlot, File | null>> = { backup: null, patientReport: null, vaccineReport: null, products: null };
+
+/** Program seçimindeki sıra ve kutu metinleri; Excel, bugünkü genel yoldur (profil `Generic`). */
+const PROGRAM_CHOICE_ORDER: readonly ImportSourceProfileCode[] = ['EVet', 'Kolayvet', 'Generic'];
+
+const PROGRAM_CHOICE_TEXT: Readonly<Record<ImportSourceProfileCode, { name: string; note?: string }>> = {
+    EVet: { name: 'E-vet' },
+    Kolayvet: { name: 'Kolayvet' },
+    Generic: { name: 'Excel', note: 'Kendi dosyanız ya da şablonumuz' }
+};
+
+/** Adı bilinen programın seçilen dosyaları (yuva → dosya). */
+type ProgramFiles = Readonly<Partial<Record<ProgramUploadSlot, File | null>>>;
 
 /** "Yükledikten sonra ne olacak?": sihirbazın dört adımı, sade dille. */
 const ROADMAP: readonly { n: number; title: string; text: string }[] = [
@@ -41,7 +52,7 @@ const ROADMAP: readonly { n: number; title: string; text: string }[] = [
     { n: 4, title: 'Onay', text: 'Siz onaylayınca kayıtlar oluşur.' }
 ];
 
-const REQUIREMENT_TONE: Readonly<Record<EVetUploadFileDef['requirement'], string>> = {
+const REQUIREMENT_TONE: Readonly<Record<ProgramUploadFileDef['requirement'], string>> = {
     zorunlu: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
     önerilir: 'bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300',
     'isteğe bağlı': 'bg-surface-100 dark:bg-surface-800 text-muted-color'
@@ -57,7 +68,7 @@ const REQUIREMENT_TONE: Readonly<Record<EVetUploadFileDef['requirement'], string
     imports: [NgTemplateOutlet, FormsModule, RouterLink, ButtonModule, InputTextModule, MessageModule, ProgressBarModule, SelectModule, ImportDropZoneComponent, AppPageHeaderComponent, AppTrialLimitNoticeComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <app-page-header title="Yeni içe aktarma" description="Adım 1 / 4 · Eski programınızdaki kayıtları dosyayla yükleyin. Bu adımda hiçbir kayıt oluşmaz.">
+        <app-page-header title="Yeni içe aktarma" [description]="headerDescription()">
             <div actions>
                 <a pButton size="small" severity="secondary" [routerLink]="listRoute"><i class="p-button-icon pi pi-arrow-left"></i>Geçmişe dön</a>
             </div>
@@ -89,7 +100,7 @@ const REQUIREMENT_TONE: Readonly<Record<EVetUploadFileDef['requirement'], string
                                     @if (uploadPercent() >= 100) {
                                         <p-progressbar mode="indeterminate" styleClass="h-2 mt-2" />
                                         <div class="text-sm text-muted-color mt-1">
-                                            Büyük bir E-vet yedeğinde bu adım bir dakikaya kadar sürebilir. Sayfayı kapatsanız da işlem sürer; içe aktarma <a [routerLink]="listRoute" class="text-primary">Veri içe aktarma</a> listesinde görünür,
+                                            Büyük bir dosyada bu adım bir dakikaya kadar sürebilir. Sayfayı kapatsanız da işlem sürer; içe aktarma <a [routerLink]="listRoute" class="text-primary">Veri içe aktarma</a> listesinde görünür,
                                             oradan kaldığınız yerden devam edebilirsiniz.
                                         </div>
                                     }
@@ -120,33 +131,44 @@ const REQUIREMENT_TONE: Readonly<Record<EVetUploadFileDef['requirement'], string
                                     }
                                 </section>
                             }
-                            <section>
-                                <h2 class="m-0 text-xl sm:text-2xl font-semibold">{{ openDrafts().length ? 'Ya da yeni bir aktarma başlatın: hangi programdan geliyorsunuz?' : 'Hangi programdan geliyorsunuz?' }}</h2>
-                                <p class="m-0 mt-1 text-muted-color">Seçiminize göre hangi dosyayı nereden alacağınızı adım adım gösteririz.</p>
-                                <div class="flex flex-col gap-2 mt-4" role="radiogroup" aria-label="Kaynak program" data-testid="import-source-profile">
-                                    @for (p of orderedProfiles(); track p.code) {
+                            <!-- Tasarım "1 · Kutular" (Fable, 2026-11-28): eşit kutular, kutuda yalnız ad (Excel'de tek alt satır); telefonda satır. -->
+                            <section class="w-full max-w-3xl mx-auto">
+                                @if (openDrafts().length > 0) {
+                                    <p class="m-0 mb-1.5 text-muted-color">Ya da yeni bir aktarma başlatın</p>
+                                }
+                                <h2 class="m-0 text-xl sm:text-2xl font-semibold">Hangi programdan geliyorsunuz?</h2>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6" role="radiogroup" aria-label="Kaynak program" data-testid="import-source-profile">
+                                    @for (p of programChoices(); track p.code) {
                                         <button
                                             type="button"
                                             role="radio"
-                                            class="rounded-border border-2 p-4 text-left text-color cursor-pointer flex items-center gap-3"
-                                            [class]="sourceProfile() === p.code ? 'border-primary bg-primary-50 dark:bg-primary-950/40' : 'border-surface bg-transparent hover:bg-emphasis'"
+                                            class="group rounded-border border text-color text-left cursor-pointer transition-colors flex items-center gap-3 min-h-[4.5rem] px-4 py-3 sm:flex-col sm:items-stretch sm:justify-between sm:min-h-36 sm:p-5 hover:border-primary hover:bg-primary-50 dark:hover:bg-primary-950/40 focus-visible:border-primary"
+                                            [class]="sourceProfile() === p.code ? 'border-primary bg-primary-50 dark:bg-primary-950/40' : 'border-surface-300 dark:border-surface-600 bg-surface-0 dark:bg-surface-900'"
                                             [attr.aria-checked]="sourceProfile() === p.code"
                                             [attr.data-profile]="p.code"
                                             (click)="chooseProfile(p.code)"
                                         >
-                                            <span class="min-w-0 flex-1">
-                                                <span class="block font-semibold">{{ p.code === 'Generic' ? 'Programım listede yok' : p.displayName }}</span>
-                                                <span class="block text-sm text-muted-color">{{ p.code === 'Generic' ? p.displayName + ' · ' + p.note : p.note }}</span>
+                                            <span class="min-w-0 flex-1 flex flex-col gap-0.5">
+                                                <span class="text-xl sm:text-2xl font-semibold">{{ p.name }}</span>
+                                                @if (p.note) {
+                                                    <span class="text-sm text-muted-color">{{ p.note }}</span>
+                                                }
                                             </span>
-                                            <i class="pi pi-angle-right text-muted-color" aria-hidden="true"></i>
+                                            <span
+                                                class="w-10 h-10 shrink-0 rounded-full border border-surface-300 dark:border-surface-600 text-muted-color flex items-center justify-center sm:self-end transition-colors group-hover:bg-primary group-hover:border-primary group-hover:text-primary-contrast"
+                                                aria-hidden="true"
+                                            >
+                                                <i class="pi pi-arrow-right"></i>
+                                            </span>
                                         </button>
                                     }
                                 </div>
-                                <p class="m-0 mt-4 text-sm text-muted-color">
-                                    Excel'e aktarabildiğiniz her liste yüklenir; programınızın listede olması gerekmez.
+                                <p class="m-0 mt-5 sm:mt-7 pt-4 sm:pt-5 border-t border-surface text-muted-color" data-testid="import-other-program">
+                                    Diğer uygulamalardan geliyorsanız
                                     @if (canRequestSupport) {
-                                        Takılırsanız <a [routerLink]="migrationSupportRoute" class="text-primary font-medium" data-testid="import-migration-support-link">geçiş desteği isteyin</a>; dosyanızı e-postayla göndermeyin, buradan kendiniz
-                                        yükleyin.
+                                        <a [routerLink]="migrationSupportRoute" class="inline-block py-2 sm:py-0 text-primary font-medium" data-testid="import-migration-support-link">bizimle iletişime geçin</a>.
+                                    } @else {
+                                        bizimle iletişime geçin.
                                     }
                                 </p>
                             </section>
@@ -222,15 +244,15 @@ const REQUIREMENT_TONE: Readonly<Record<EVetUploadFileDef['requirement'], string
                         @case ('summary') {
                             <section class="flex flex-col gap-4">
                                 <h2 class="m-0 text-xl sm:text-2xl font-semibold">Hazırsınız: gönderelim mi?</h2>
-                                <ul class="list-none p-0 m-0 rounded-border border border-surface divide-y divide-surface-200 dark:divide-surface-700" data-testid="import-evet-summary">
-                                    @for (f of evetFileDefs; track f.slot) {
+                                <ul class="list-none p-0 m-0 rounded-border border border-surface divide-y divide-surface-200 dark:divide-surface-700" data-testid="import-program-summary">
+                                    @for (f of programFileDefs(); track f.slot) {
                                         <li class="flex items-center gap-3 p-3">
-                                            <i [class]="evetFiles()[f.slot] ? 'pi pi-check-circle text-primary' : 'pi pi-minus-circle text-muted-color'" aria-hidden="true"></i>
+                                            <i [class]="programFiles()[f.slot] ? 'pi pi-check-circle text-primary' : 'pi pi-minus-circle text-muted-color'" aria-hidden="true"></i>
                                             <span class="min-w-0 flex-1">
                                                 <span class="block font-medium">{{ f.label }}</span>
-                                                <span class="block text-sm text-muted-color break-words">{{ evetFiles()[f.slot]?.name ?? (f.requirement === 'zorunlu' ? 'Seçilmedi; bu dosya olmadan aktarma başlamaz' : 'Yüklenmeyecek') }}</span>
+                                                <span class="block text-sm text-muted-color break-words">{{ programFiles()[f.slot]?.name ?? (f.requirement === 'zorunlu' ? 'Seçilmedi; bu dosya olmadan aktarma başlamaz' : 'Yüklenmeyecek') }}</span>
                                             </span>
-                                            <button type="button" class="bg-transparent border-0 p-0 text-sm text-primary font-medium cursor-pointer" (click)="goTo(f.slot)">{{ evetFiles()[f.slot] ? 'Değiştir' : 'Ekle' }}</button>
+                                            <button type="button" class="bg-transparent border-0 p-0 text-sm text-primary font-medium cursor-pointer" (click)="goTo(f.slot)">{{ programFiles()[f.slot] ? 'Değiştir' : 'Ekle' }}</button>
                                         </li>
                                     }
                                 </ul>
@@ -240,16 +262,16 @@ const REQUIREMENT_TONE: Readonly<Record<EVetUploadFileDef['requirement'], string
                         }
 
                         @default {
-                            <!-- E-vet: her dosya ayrı ekran -->
-                            @if (currentEVetFile(); as f) {
+                            <!-- Adı bilinen program: her dosya ayrı ekran -->
+                            @if (currentProgramFile(); as f) {
                                 <section class="flex flex-col gap-4">
                                     <div class="flex items-center gap-3">
                                         <div class="flex-1 flex gap-1" aria-hidden="true">
-                                            @for (d of evetFileDefs; track d.slot; let i = $index) {
-                                                <span class="h-1.5 flex-1 rounded-full" [class]="i <= evetFileIndex() ? 'bg-primary' : 'bg-surface-200 dark:bg-surface-700'"></span>
+                                            @for (d of programFileDefs(); track d.slot; let i = $index) {
+                                                <span class="h-1.5 flex-1 rounded-full" [class]="i <= programFileIndex() ? 'bg-primary' : 'bg-surface-200 dark:bg-surface-700'"></span>
                                             }
                                         </div>
-                                        <span class="text-sm text-muted-color tabular-nums" data-testid="import-file-counter">Dosya {{ evetFileIndex() + 1 }} / {{ evetFileDefs.length }}</span>
+                                        <span class="text-sm text-muted-color tabular-nums" data-testid="import-file-counter">Dosya {{ programFileIndex() + 1 }} / {{ programFileDefs().length }}</span>
                                     </div>
 
                                     <div>
@@ -260,10 +282,10 @@ const REQUIREMENT_TONE: Readonly<Record<EVetUploadFileDef['requirement'], string
                                         <p class="m-0 mt-1 text-muted-color">Bu dosyadan gelir: {{ f.contents.toLocaleLowerCase('tr-TR') }}.</p>
                                     </div>
 
-                                    <div class="rounded-border bg-surface-50 dark:bg-surface-800 p-4" data-testid="import-evet-guide">
+                                    <div class="rounded-border bg-surface-50 dark:bg-surface-800 p-4" data-testid="import-program-guide">
                                         <div class="text-sm font-semibold mb-2">Nereden alacağım?</div>
                                         <div class="flex flex-wrap items-center gap-1 mb-2 text-sm" [attr.aria-label]="'Menü yolu: ' + f.menu">
-                                            <span class="text-muted-color mr-1">E-vet'te şu menüyü açın:</span>
+                                            <span class="text-muted-color mr-1">{{ selectedProfile()?.displayName }}'te şu menüyü açın:</span>
                                             @for (m of menuPath(f.menu); track $index; let last = $last) {
                                                 <span class="rounded-border border border-surface bg-surface-0 dark:bg-surface-900 px-2 py-0.5 font-medium whitespace-nowrap">{{ m }}</span>
                                                 @if (!last) {
@@ -277,7 +299,7 @@ const REQUIREMENT_TONE: Readonly<Record<EVetUploadFileDef['requirement'], string
                                         }
                                     </div>
 
-                                    <app-import-drop-zone [label]="f.label" [description]="f.contents" [extension]="f.extension" [file]="evetFiles()[f.slot]" (fileChange)="setEVet(f.slot, $event)" />
+                                    <app-import-drop-zone [label]="f.label" [description]="f.contents" [extension]="f.extension" [file]="programFiles()[f.slot] ?? null" (fileChange)="setProgramFile(f.slot, $event)" />
 
                                     @if (f.slot === 'backup') {
                                         <p class="m-0 flex gap-2 text-sm text-muted-color" data-testid="import-evet-ambiguous-hint">
@@ -287,7 +309,7 @@ const REQUIREMENT_TONE: Readonly<Record<EVetUploadFileDef['requirement'], string
 
                                     <div class="flex flex-wrap items-center gap-2">
                                         <button pButton type="button" severity="secondary" data-testid="import-back" (click)="go(index() - 1)"><i class="p-button-icon pi pi-arrow-left"></i>Geri</button>
-                                        @if (evetFiles()[f.slot]) {
+                                        @if (programFiles()[f.slot]) {
                                             <button pButton type="button" data-testid="import-next" (click)="go(index() + 1)">Devam<i class="p-button-icon pi pi-arrow-right"></i></button>
                                         } @else if (f.requirement === 'zorunlu') {
                                             <button pButton type="button" data-testid="import-next" [disabled]="true">Devam<i class="p-button-icon pi pi-arrow-right"></i></button>
@@ -388,7 +410,6 @@ export class ImportUploadPageComponent implements OnInit {
     readonly listRoute = IMPORTS_ROUTE;
     readonly tables = IMPORT_TABLES;
     readonly tableLabels = IMPORT_TABLE_LABELS;
-    readonly evetFileDefs = EVET_UPLOAD_FILES;
     protected readonly roadmap = ROADMAP;
     protected readonly requirementTone = REQUIREMENT_TONE;
     readonly encodingOptions = [
@@ -415,8 +436,8 @@ export class ImportUploadPageComponent implements OnInit {
 
     readonly xlsxFile = signal<File | null>(null);
     readonly csvFiles = signal<Record<ImportTable, File | null>>(NO_CSV_FILES);
-    /** E-vet yolu: yedek zorunlu, raporlar isteğe bağlı (`EVET_UPLOAD_FILES`). */
-    readonly evetFiles = signal<Record<EVetUploadSlot, File | null>>(NO_EVET_FILES);
+    /** Adı bilinen programın dosyaları (`PROGRAM_UPLOAD_FILES`): E-vet yedeği ve raporları, Kolayvet listeleri. */
+    readonly programFiles = signal<ProgramFiles>({});
     readonly clinicOptions = signal<{ label: string; value: string }[]>([]);
     readonly clinicsLoading = signal(false);
     readonly templateBusy = signal<string | null>(null);
@@ -435,11 +456,18 @@ export class ImportUploadPageComponent implements OnInit {
     readonly canRequestSupport = this.auth.hasOperationClaim(CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM);
     readonly migrationSupportRoute = MIGRATION_SUPPORT_ROUTE;
 
-    /** Adı bilinen programlar önce, genel yol ("Programım listede yok") sonda. */
-    protected readonly orderedProfiles = computed(() => [...this.profiles().filter((p) => p.code !== 'Generic'), ...this.profiles().filter((p) => p.code === 'Generic')]);
+    /**
+     * Program seçimi (tasarım "1 · Kutular", 2026-11-28): E-vet, Kolayvet, Excel (genel yol). Başka programın dosyası okunmaz; klinik
+     * bizimle iletişime geçer. Sunucunun vermediği profil gösterilmez.
+     */
+    protected readonly programChoices = computed(() =>
+        PROGRAM_CHOICE_ORDER.flatMap((code) => (this.profiles().some((p) => p.code === code) ? [{ code, ...PROGRAM_CHOICE_TEXT[code] }] : []))
+    );
     protected readonly selectedProfile = computed(() => this.profiles().find((p) => p.code === this.sourceProfile()));
-    /** E-vet yedeği aşı, muayene, randevu ve bakiye içerir; ayrı yükleme alanları ve zorunlu klinikle gider. */
-    protected readonly isEVet = computed(() => this.sourceProfile() === 'EVet');
+    /** Seçilen programın dosyaları; boşsa genel yol (tek Excel ya da CSV). */
+    protected readonly programFileDefs = computed<readonly ProgramUploadFileDef[]>(() => PROGRAM_UPLOAD_FILES[this.sourceProfile() ?? 'Generic'] ?? []);
+    /** E-vet ve Kolayvet dosyaları aşı, randevu ve bakiye içerir; ayrı yükleme alanları ve zorunlu klinikle gider. */
+    protected readonly isProgram = computed(() => this.programFileDefs().length > 0);
     /** Profil listesi gelmediyse program sorusu sorulmaz. */
     protected readonly hasProgramScreen = computed(() => this.profiles().length > 0);
 
@@ -450,11 +478,16 @@ export class ImportUploadPageComponent implements OnInit {
 
         const start: UploadScreen[] = this.hasProgramScreen() ? ['program'] : [];
 
-        return this.isEVet() ? [...start, ...EVET_UPLOAD_FILES.map((f) => f.slot), 'summary'] : [...start, 'file'];
+        return this.isProgram() ? [...start, ...this.programFileDefs().map((f) => f.slot), 'summary'] : [...start, 'file'];
     });
     protected readonly screen = computed(() => this.screens()[Math.min(this.index(), this.screens().length - 1)]);
-    protected readonly currentEVetFile = computed(() => EVET_UPLOAD_FILES.find((f) => f.slot === this.screen()) ?? null);
-    protected readonly evetFileIndex = computed(() => EVET_UPLOAD_FILES.findIndex((f) => f.slot === this.screen()));
+    protected readonly headerDescription = computed(() =>
+        this.screen() === 'program' ? 'Adım 1 / 4 · Program seçimi' : 'Adım 1 / 4 · Eski programınızdaki kayıtları dosyayla yükleyin. Bu adımda hiçbir kayıt oluşmaz.'
+    );
+    protected readonly currentProgramFile = computed(() => this.programFileDefs().find((f) => f.slot === this.screen()) ?? null);
+    protected readonly programFileIndex = computed(() => this.programFileDefs().findIndex((f) => f.slot === this.screen()));
+    /** Seçilmemiş ilk zorunlu dosya; yoksa null. */
+    private readonly missingRequired = computed(() => this.programFileDefs().find((f) => f.requirement === 'zorunlu' && !this.programFiles()[f.slot]) ?? null);
 
     /** Genel yolda başlık: adı bilinen programda "Kolayvet dosyanızı yükleyin". */
     protected readonly fileTitle = computed(() => {
@@ -464,8 +497,8 @@ export class ImportUploadPageComponent implements OnInit {
     });
 
     private readonly hasFile = computed(() => {
-        if (this.isEVet()) {
-            return !!this.evetFiles().backup;
+        if (this.isProgram()) {
+            return !this.missingRequired();
         }
 
         return this.mode() === 'xlsx' ? !!this.xlsxFile() : Object.values(this.csvFiles()).some(Boolean);
@@ -474,11 +507,15 @@ export class ImportUploadPageComponent implements OnInit {
     protected readonly clinicRequired = computed(() => {
         const files = this.csvFiles();
 
-        return this.isEVet() || (this.mode() === 'csv' && needsClinic(IMPORT_TABLES.filter((t) => !!files[t])));
+        return this.isProgram() || (this.mode() === 'csv' && needsClinic(IMPORT_TABLES.filter((t) => !!files[t])));
     });
 
     protected readonly clinicHint = computed(() =>
-        this.isEVet() ? 'Yedekteki aşı, muayene, randevu ve açık bakiye bu kliniğe yazılır.' : 'Aşı, klinik geçmiş, hesap hareketi, randevu ve açık bakiye bu kliniğe yazılır. Bu listelerden biri varsa klinik gereklidir.'
+        this.sourceProfile() === 'EVet'
+            ? 'Yedekteki aşı, muayene, randevu ve açık bakiye bu kliniğe yazılır.'
+            : this.isProgram()
+              ? 'Aşılar, aşı randevuları ve açık bakiye bu kliniğe yazılır.'
+              : 'Aşı, klinik geçmiş, hesap hareketi, randevu ve açık bakiye bu kliniğe yazılır. Bu listelerden biri varsa klinik gereklidir.'
     );
 
     /** Tek klinik varsa ve o seçiliyse seçim yerine bilgi satırı gösterilir. */
@@ -491,7 +528,7 @@ export class ImportUploadPageComponent implements OnInit {
     /** Gönderilemiyorsa düğmenin yanında yazan neden; gönderilebiliyorsa null. */
     protected readonly blockedReason = computed<string | null>(() => {
         if (!this.hasFile()) {
-            return this.isEVet() ? 'Önce E-vet yedeğini seçin.' : this.mode() === 'csv' ? 'Önce en az bir CSV dosyası seçin.' : 'Önce dosyanızı seçin.';
+            return this.isProgram() ? `Önce şu dosyayı seçin: ${this.missingRequired()?.label}.` : this.mode() === 'csv' ? 'Önce en az bir CSV dosyası seçin.' : 'Önce dosyanızı seçin.';
         }
 
         return this.clinicRequired() && !this.clinicId() ? 'Kayıtların yazılacağı kliniği seçin.' : null;
@@ -536,7 +573,7 @@ export class ImportUploadPageComponent implements OnInit {
     onProfileChange(): void {
         this.xlsxFile.set(null);
         this.csvFiles.set(NO_CSV_FILES);
-        this.evetFiles.set(NO_EVET_FILES);
+        this.programFiles.set({});
         this.resetAttempt();
     }
 
@@ -545,8 +582,8 @@ export class ImportUploadPageComponent implements OnInit {
         this.resetAttempt();
     }
 
-    setEVet(slot: EVetUploadSlot, file: File | null): void {
-        this.evetFiles.update((cur) => ({ ...cur, [slot]: file }));
+    setProgramFile(slot: ProgramUploadSlot, file: File | null): void {
+        this.programFiles.update((cur) => ({ ...cur, [slot]: file }));
         this.resetAttempt();
     }
 
@@ -597,10 +634,10 @@ export class ImportUploadPageComponent implements OnInit {
 
         form.append('requestId', this.requestId);
 
-        if (this.isEVet()) {
-            const files = this.evetFiles();
+        if (this.isProgram()) {
+            const files = this.programFiles();
 
-            for (const f of EVET_UPLOAD_FILES) {
+            for (const f of this.programFileDefs()) {
                 const file = files[f.slot];
 
                 if (file) form.append(f.field, file);
@@ -676,10 +713,10 @@ export class ImportUploadPageComponent implements OnInit {
         this.profilesReady.set(true);
     }
 
-    /** Ana dosyanın adı: E-vet yedeği, Excel dosyası ya da ilk CSV. */
+    /** Ana dosyanın adı: programın ilk dosyası (E-vet yedeği, Kolayvet müşteri listesi), Excel dosyası ya da ilk CSV. */
     private primaryFileName(): string {
-        if (this.isEVet()) {
-            return this.evetFiles().backup?.name ?? '';
+        if (this.isProgram()) {
+            return this.programFiles()[this.programFileDefs()[0].slot]?.name ?? '';
         }
 
         return this.mode() === 'xlsx' ? (this.xlsxFile()?.name ?? '') : (Object.values(this.csvFiles()).find(Boolean)?.name ?? '');
