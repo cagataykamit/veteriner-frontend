@@ -154,6 +154,9 @@ const parseLabResultStatusFilter = (raw: unknown): LabResultStatus | '' =>
                                         <td>
                                             <div class="flex items-center gap-1">
                                                 <app-row-action-button action="detail" [link]="['/panel/lab-results', row.id]" />
+                                                @if (canInterpretRow(row)) {
+                                                    <app-row-action-button action="interpret" [link]="['/panel/lab-results', row.id, 'edit']" [queryParams]="interpretQuery" testId="lr-interpret" />
+                                                }
                                                 @if (canEditRow(row) && !ro.mutationBlocked()) {
                                                     <app-row-action-button action="edit" [label]="editLabel(row.status)" [link]="['/panel/lab-results', row.id, 'edit']" />
                                                 } @else if (canEditRow(row) && ro.mutationBlocked()) {
@@ -198,6 +201,9 @@ const parseLabResultStatusFilter = (raw: unknown): LabResultStatus | '' =>
                                     <div class="text-sm font-medium text-surface-900 dark:text-surface-0 mb-3 min-w-0 break-words">{{ row.testName }}</div>
                                     <div class="flex justify-end items-center gap-1 pt-1 border-t border-surface-200 dark:border-surface-700">
                                         <app-row-action-button action="detail" [link]="['/panel/lab-results', row.id]" />
+                                        @if (canInterpretRow(row)) {
+                                            <app-row-action-button action="interpret" [link]="['/panel/lab-results', row.id, 'edit']" [queryParams]="interpretQuery" />
+                                        }
                                         @if (canEditRow(row) && !ro.mutationBlocked()) {
                                             <app-row-action-button action="edit" [label]="editLabel(row.status)" [link]="['/panel/lab-results', row.id, 'edit']" />
                                         } @else if (canEditRow(row) && ro.mutationBlocked()) {
@@ -305,6 +311,13 @@ export class LabResultsListPageComponent implements OnInit {
     /** Detay sayfasındaki Düzenle ve İptal et koşuluyla aynı; salt okunur durumda Düzenle pasif, İptal gizlidir (detaydaki gibi). */
     canEditRow(row: { status: LabResultStatus | null }): boolean {
         return this.canUpdateLabResult && isLabResultEditable(row.status);
+    }
+
+    /** Değerlendirme bekleyen sonuçta satırdan doğrudan yorum yazılır; düzenleme formu yorum alanında açılır (detaydaki düğmeyle aynı). */
+    readonly interpretQuery = { odak: 'yorum' };
+
+    canInterpretRow(row: { status: LabResultStatus | null; awaitingInterpretation: boolean }): boolean {
+        return row.awaitingInterpretation && this.canEditRow(row) && !this.ro.mutationBlocked();
     }
 
     /** İptal diyaloğunun açık olduğu satır. */

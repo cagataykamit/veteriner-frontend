@@ -2,7 +2,7 @@ import { Component, computed, input, output, ChangeDetectionStrategy } from '@an
 import { Params, RouterLink } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
 
-export type RowActionKind = 'detail' | 'edit' | 'delete' | 'void' | 'document';
+export type RowActionKind = 'detail' | 'edit' | 'delete' | 'void' | 'document' | 'interpret';
 
 /** Satır eylemi türünün simgesi ve varsayılan Türkçe etiketi; Font Awesome Solid (ADR-026). */
 export const ROW_ACTIONS: Readonly<Record<RowActionKind, { readonly icon: string; readonly label: string; readonly danger: boolean }>> = {
@@ -10,7 +10,8 @@ export const ROW_ACTIONS: Readonly<Record<RowActionKind, { readonly icon: string
     edit: { icon: 'fa-pen-to-square', label: 'Düzenle', danger: false },
     delete: { icon: 'fa-trash-can', label: 'Sil', danger: true },
     void: { icon: 'fa-ban', label: 'İptal et', danger: true },
-    document: { icon: 'fa-file-invoice', label: 'e-Belge kes', danger: false }
+    document: { icon: 'fa-file-invoice', label: 'e-Belge kes', danger: false },
+    interpret: { icon: 'fa-comment-medical', label: 'Değerlendir', danger: false }
 };
 
 /**

@@ -73,6 +73,38 @@ describe('LabResultsListPageComponent — istem ve sonuç tarihi', () => {
     });
 });
 
+describe('LabResultsListPageComponent — satırda Değerlendir', () => {
+    const links = (items: LabResultListItemVm[], mutationBlocked = false): HTMLAnchorElement[] => {
+        TestBed.configureTestingModule({
+            imports: [LabResultsListPageComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({}) } } },
+                { provide: LabResultsService, useValue: { getLabResults: () => of({ items, page: 1, pageSize: 10, totalItems: items.length, totalPages: 1 }) } },
+                { provide: AuthService, useValue: { hasOperationClaim: (c: string) => c === LAB_RESULTS_UPDATE_CLAIM } },
+                { provide: TenantReadOnlyContextService, useValue: { mutationBlocked: () => mutationBlocked } }
+            ]
+        });
+        const fixture = TestBed.createComponent(LabResultsListPageComponent);
+
+        fixture.detectChanges();
+
+        return Array.from((fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>('[data-testid="lr-interpret"]'));
+    };
+
+    it('yalnız değerlendirme bekleyen satırda çıkar ve formu yorum alanında açar', () => {
+        const found = links([row({ id: 'a', status: 'Resulted', awaitingInterpretation: true }), row({ id: 'b', status: 'Resulted' })]);
+
+        expect(found.length).toBe(1);
+        expect(found[0].getAttribute('href')).toBe('/panel/lab-results/a/edit?odak=yorum');
+        expect(found[0].getAttribute('aria-label')).toBe('Değerlendir');
+    });
+
+    it('salt okunur kiracıda çıkmaz', () => {
+        expect(links([row({ status: 'Resulted', awaitingInterpretation: true })], true)).toEqual([]);
+    });
+});
+
 /** ADR-026 madde 6: Düzenle ("Sonuç gir") simge düğmesidir; detay sayfasındaki gibi iptalde gizli, aynı yetki ve salt okunur koşuluyla Detay'ın yanındadır. */
 describe('LabResultsListPageComponent — satırda Düzenle', () => {
     const create = (items: LabResultListItemVm[], claims: string[], mutationBlocked = false): HTMLElement => {
