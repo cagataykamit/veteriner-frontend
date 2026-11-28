@@ -1,5 +1,5 @@
-import type { AiDraftDto, AiProvenanceDto, AiSourceRefDto, AiStatusDto, PetHistorySummaryDto } from '@/app/entities/ai/models/ai-api.model';
-import type { AiDraftVm, AiProvenanceVm, AiSourceVm, AiStatusVm, PetHistorySummaryVm } from '@/app/entities/ai/models/ai-vm.model';
+import type { AiDraftDto, AiProvenanceDto, AiSourceRefDto, AiStatusDto, ClinicAiSettingsDto, PetHistorySummaryDto } from '@/app/entities/ai/models/ai-api.model';
+import type { AiDraftVm, AiProvenanceVm, AiSourceVm, AiStatusVm, ClinicAiSettingsVm, PetHistorySummaryVm } from '@/app/entities/ai/models/ai-vm.model';
 import { AI_SUMMARY_ALERT_SECTION, aiDayMonthLabel, aiRecordCountsLabel, aiSummarySectionTitle, aiTypeListLabel } from '@/app/entities/ai/utils/ai-labels';
 import { petTimelineTypeDefinition } from '@/app/entities/pet/utils/pet-timeline-types';
 import { parseUtcApiInstantIsoString } from '@/app/shared/utils/date.utils';
@@ -13,6 +13,33 @@ export function mapAiStatusDtoToVm(dto: AiStatusDto): AiStatusVm {
         clinicMonthUsedPercent: Number.isFinite(dto.clinicMonthUsedPercent) ? dto.clinicMonthUsedPercent : 0,
         creditsRemaining: typeof dto.creditsRemaining === 'number' && Number.isFinite(dto.creditsRemaining) ? Math.max(0, Math.floor(dto.creditsRemaining)) : null,
         quotaResetsAtUtc: dto.quotaResetsAtUtc?.trim() || null
+    };
+}
+
+/** Kredi alanı: sayı değilse 0, eksiye düşmüş fon 0 gösterilir, tam sayıya aşağı yuvarlanır (sözleşme §1). */
+function credits(value: number | null | undefined): number {
+    return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+}
+
+export function mapClinicAiSettingsDtoToVm(dto: ClinicAiSettingsDto): ClinicAiSettingsVm {
+    return {
+        clinicId: dto.clinicId,
+        isConfigured: dto.isConfigured === true,
+        isEnabled: dto.isEnabled === true,
+        isAvailable: dto.isAvailable === true,
+        unavailableCode: dto.unavailableCode?.trim() || null,
+        updatedAtUtc: dto.updatedAtUtc?.trim() || null,
+        hasAcknowledged: dto.hasAcknowledged === true,
+        acknowledgedAtUtc: dto.acknowledgedAtUtc?.trim() || null,
+        acknowledgementVersion: dto.acknowledgement?.version ?? 0,
+        acknowledgementItems: dto.acknowledgement?.items ?? [],
+        monthlyCredits: credits(dto.monthlyCredits),
+        creditsUsedThisMonth: credits(dto.creditsUsedThisMonth),
+        creditsRemaining: credits(dto.creditsRemaining),
+        fundCredits: credits(dto.fundCredits),
+        usedPercent: Number.isFinite(dto.usedPercent) ? Math.max(0, Math.min(100, Math.round(dto.usedPercent))) : 0,
+        quotaResetsAtUtc: dto.quotaResetsAtUtc?.trim() || null,
+        creditGrants: (dto.creditGrants ?? []).map((g) => ({ id: g.id, kind: g.kind, credits: g.credits, createdAtUtc: g.createdAtUtc }))
     };
 }
 

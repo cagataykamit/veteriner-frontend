@@ -40,6 +40,8 @@ export const ApiEndpoints = {
         kvkkFormTemplate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/kvkk-form-template`,
         /** GET `Clinics.Read`, PUT `Clinics.Update` `{ isEnabled }`; kayıt yoksa açık (`PORTAL_API_CONTRACT.md` §12). */
         portalSettings: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/portal-settings`,
+        /** GET `Clinics.Read`, PUT `Clinics.Update` `{ isEnabled, acknowledgementVersion? }`; kayıt yoksa kapalı (`AI_HISTORY_SUMMARY_API_CONTRACT.md` §3a). */
+        aiSettings: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/ai-settings`,
         /** KVKK aydınlatma metni şablonu; açık rıza şablonuyla aynı sözleşme ve izinler (`KVKK_CONSENT_API_CONTRACT.md` §2b). */
         kvkkDisclosureTemplate: (id: string) => `/api/v1/clinics/${encodeURIComponent(id)}/kvkk-disclosure-template`,
         /** Mükellef ayarları; GET `Clinics.Read`, PUT `Clinics.Update` (`INVOICING_IDENTITY_API_CONTRACT.md` §3). */

@@ -1,14 +1,19 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM } from '@/app/core/auth/operation-claims.constants';
+import { AI_SETTINGS_ROUTE } from '@/app/core/routing/panel-navigation';
 import { AiStatusService } from '@/app/entities/ai/services/ai-status.service';
 import { AI_USAGE_WARNING_PERCENT } from '@/app/entities/ai/utils/ai-error.utils';
 
 /**
  * Klinik ayarlarında kliniğin kendi AI kullanımı (AI-007): bu ayın oranı ve yenilenme günü. Dolar ve kredi tutarı gösterilmez;
- * AI klinikte açık değilse hiç görünmez. Kural `aiClinicUsage`'da.
+ * AI klinikte açık değilse hiç görünmez. Kural `aiClinicUsage`'da. Ayrıntı (kredi, aç/kapa) Yapay zekâ ayar sayfasında.
  */
 @Component({
     selector: 'app-ai-clinic-usage-card',
     standalone: true,
+    imports: [RouterLink],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         @if (usage(); as u) {
@@ -17,6 +22,9 @@ import { AI_USAGE_WARNING_PERCENT } from '@/app/entities/ai/utils/ai-error.utils
                     <span class="flex items-center gap-2 font-semibold"><i class="pi pi-sparkles text-ai" aria-hidden="true"></i>Yapay zekâ kullanımı</span>
                     <span class="text-sm text-muted-color" data-testid="ai-clinic-usage-text">
                         Bu ay <strong class="text-color">%{{ u.percent }}</strong> · {{ u.resetLabel }}
+                        @if (canOpenSettings) {
+                            · <a [routerLink]="settingsRoute" class="font-medium" data-testid="ai-clinic-usage-link">Ayrıntılar</a>
+                        }
                     </span>
                 </div>
                 <div
@@ -40,9 +48,12 @@ import { AI_USAGE_WARNING_PERCENT } from '@/app/entities/ai/utils/ai-error.utils
 })
 export class AiClinicUsageCardComponent implements OnInit {
     private readonly aiStatus = inject(AiStatusService);
+    private readonly auth = inject(AuthService);
 
     protected readonly usage = this.aiStatus.clinicUsage;
     protected readonly warningPercent = AI_USAGE_WARNING_PERCENT;
+    protected readonly settingsRoute = AI_SETTINGS_ROUTE;
+    protected readonly canOpenSettings = [CLINICS_READ_CLAIM, CLINICS_UPDATE_CLAIM].some((c) => this.auth.hasOperationClaim(c));
 
     ngOnInit(): void {
         // Ayarlar sayfası açılınca güncel oran okunsun (panelden sonra harcanmış olabilir).

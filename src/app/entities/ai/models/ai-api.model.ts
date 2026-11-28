@@ -23,6 +23,34 @@ export interface AiStatusDto {
     quotaResetsAtUtc?: string | null;
 }
 
+/** `GET|PUT /api/v1/clinics/{clinicId}/ai-settings` (§3a); dolar ve platform iç notu içermez. */
+export interface ClinicAiSettingsDto {
+    clinicId: string;
+    isConfigured: boolean;
+    isEnabled: boolean;
+    isAvailable: boolean;
+    /** `/ai/status` ile aynı sıra. */
+    unavailableCode?: string | null;
+    updatedAtUtc?: string | null;
+    /** Güncel bilgilendirme bu klinikte kabul edildi mi; değilse açarken `acknowledgement` gösterilir. */
+    hasAcknowledged: boolean;
+    acknowledgedAtUtc?: string | null;
+    acknowledgement: { version: number; items: string[] };
+    monthlyCredits: number;
+    creditsUsedThisMonth: number;
+    creditsRemaining: number;
+    fundCredits: number;
+    usedPercent: number;
+    quotaResetsAtUtc: string;
+    creditGrants?: { id: string; kind: string; credits: number; createdAtUtc: string }[] | null;
+}
+
+/** PUT gövdesi; `acknowledgementVersion` yalnız ilk açılışta (ya da sürüm değişince). */
+export interface ClinicAiSettingsUpdateDto {
+    isEnabled: boolean;
+    acknowledgementVersion?: number;
+}
+
 /** Kaynak kayıt: `Pet` ya da zaman çizelgesi türü. `occurredAtUtc` `Pet` için `null`. */
 export interface AiSourceRefDto {
     type: string;

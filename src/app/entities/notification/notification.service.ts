@@ -4,7 +4,7 @@ import type { Router } from '@angular/router';
 import { map, Observable, tap } from 'rxjs';
 import { ApiClient } from '@/app/core/api/api.client';
 import { ApiEndpoints } from '@/app/core/api/api-endpoints';
-import { APPOINTMENT_REQUESTS_ROUTE, DATA_EXPORT_ROUTE, PORTAL_INBOX_ROUTE, SETTINGS_ROUTE } from '@/app/core/routing/panel-navigation';
+import { AI_SETTINGS_ROUTE, APPOINTMENT_REQUESTS_ROUTE, DATA_EXPORT_ROUTE, PORTAL_INBOX_ROUTE } from '@/app/core/routing/panel-navigation';
 import { type PagedResultDto, type PagedVm, toPagedVm } from '@/app/entities/online-booking/models/online-booking.model';
 import { toOnlineBookingError } from '@/app/entities/online-booking/utils/online-booking-error.utils';
 
@@ -90,7 +90,7 @@ export function notificationTargetUrl(
         case 'EDocumentSettings':
             return { commands: ['/panel/settings/e-documents'] };
         case 'AiUsage':
-            return { commands: [SETTINGS_ROUTE] };
+            return { commands: [AI_SETTINGS_ROUTE] };
         default:
             return null;
     }
