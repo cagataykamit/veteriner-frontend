@@ -9,6 +9,27 @@ export interface AiStatusVm {
     quotaResetsAtUtc?: string | null;
 }
 
+/** Klinik ayarlarındaki "Yapay zekâ" sayfası (§3a). Krediler tam sayıya aşağı yuvarlı; dolar yok. */
+export interface ClinicAiSettingsVm {
+    clinicId: string;
+    isConfigured: boolean;
+    isEnabled: boolean;
+    isAvailable: boolean;
+    unavailableCode: string | null;
+    updatedAtUtc: string | null;
+    hasAcknowledged: boolean;
+    acknowledgedAtUtc: string | null;
+    acknowledgementVersion: number;
+    acknowledgementItems: string[];
+    monthlyCredits: number;
+    creditsUsedThisMonth: number;
+    creditsRemaining: number;
+    fundCredits: number;
+    usedPercent: number;
+    quotaResetsAtUtc: string | null;
+    creditGrants: { id: string; kind: string; credits: number; createdAtUtc: string }[];
+}
+
 /** Klinik ayarlarındaki sade kullanım satırı: yalnız oran ve yenilenme (dolar ve kredi yok). */
 export interface AiClinicUsageVm {
     percent: number;
