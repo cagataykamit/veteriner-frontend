@@ -125,32 +125,28 @@ const REQUIREMENT_TONE: Readonly<Record<ProgramUploadFileDef['requirement'], str
                             <section>
                                 <h2 class="m-0 text-xl sm:text-2xl font-semibold">{{ openDrafts().length ? 'Ya da yeni bir aktarma başlatın: hangi programdan geliyorsunuz?' : 'Hangi programdan geliyorsunuz?' }}</h2>
                                 <p class="m-0 mt-1 text-muted-color">Seçiminize göre hangi dosyayı nereden alacağınızı adım adım gösteririz.</p>
-                                <div class="flex flex-col gap-2 mt-4" role="radiogroup" aria-label="Kaynak program" data-testid="import-source-profile">
+                                <!-- Kartta yalnız program adı: hangi dosyanın nereden alınacağı sonraki adımlarda yazar. -->
+                                <div class="flex flex-col gap-3 mt-4" role="radiogroup" aria-label="Kaynak program" data-testid="import-source-profile">
                                     @for (p of orderedProfiles(); track p.code) {
                                         <button
                                             type="button"
                                             role="radio"
-                                            class="rounded-border border-2 p-4 text-left text-color cursor-pointer flex items-center gap-3"
-                                            [class]="sourceProfile() === p.code ? 'border-primary bg-primary-50 dark:bg-primary-950/40' : 'border-surface bg-transparent hover:bg-emphasis'"
+                                            class="rounded-border border-2 px-4 py-3 min-h-16 text-left text-color cursor-pointer flex items-center gap-3"
+                                            [class]="sourceProfile() === p.code ? 'border-primary bg-primary-50 dark:bg-primary-950/40' : 'border-surface bg-transparent hover:border-primary hover:bg-emphasis'"
                                             [attr.aria-checked]="sourceProfile() === p.code"
                                             [attr.data-profile]="p.code"
                                             (click)="chooseProfile(p.code)"
                                         >
-                                            <span class="min-w-0 flex-1">
-                                                <span class="block font-semibold">{{ p.code === 'Generic' ? 'Programım listede yok' : p.displayName }}</span>
-                                                <span class="block text-sm text-muted-color">{{ p.code === 'Generic' ? p.displayName + ' · ' + p.note : p.note }}</span>
-                                            </span>
-                                            <i class="pi pi-angle-right text-muted-color" aria-hidden="true"></i>
+                                            <span class="min-w-0 flex-1 text-lg font-semibold">{{ p.code === 'Generic' ? 'Programım listede yok' : p.displayName }}</span>
+                                            <i class="pi pi-arrow-right text-primary" aria-hidden="true"></i>
                                         </button>
                                     }
                                 </div>
-                                <p class="m-0 mt-4 text-sm text-muted-color">
-                                    Excel'e aktarabildiğiniz her liste yüklenir; programınızın listede olması gerekmez.
-                                    @if (canRequestSupport) {
-                                        Takılırsanız <a [routerLink]="migrationSupportRoute" class="text-primary font-medium" data-testid="import-migration-support-link">geçiş desteği isteyin</a>; dosyanızı e-postayla göndermeyin, buradan kendiniz
-                                        yükleyin.
-                                    }
-                                </p>
+                                @if (canRequestSupport) {
+                                    <p class="m-0 mt-4 text-sm text-muted-color">
+                                        Takılırsanız <a [routerLink]="migrationSupportRoute" class="text-primary font-medium" data-testid="import-migration-support-link">geçiş desteği isteyin</a>.
+                                    </p>
+                                }
                             </section>
                         }
 
