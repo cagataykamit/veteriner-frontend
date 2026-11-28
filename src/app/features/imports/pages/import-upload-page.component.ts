@@ -137,16 +137,19 @@ const REQUIREMENT_TONE: Readonly<Record<ProgramUploadFileDef['requirement'], str
                                             [attr.data-profile]="p.code"
                                             (click)="chooseProfile(p.code)"
                                         >
-                                            <span class="min-w-0 flex-1 text-lg font-semibold">{{ p.code === 'Generic' ? 'Programım listede yok' : p.displayName }}</span>
+                                            <span class="min-w-0 flex-1 text-lg font-semibold">{{ p.displayName }}</span>
                                             <i class="pi pi-arrow-right text-primary" aria-hidden="true"></i>
                                         </button>
                                     }
                                 </div>
-                                @if (canRequestSupport) {
-                                    <p class="m-0 mt-4 text-sm text-muted-color">
-                                        Takılırsanız <a [routerLink]="migrationSupportRoute" class="text-primary font-medium" data-testid="import-migration-support-link">geçiş desteği isteyin</a>.
-                                    </p>
-                                }
+                                <p class="m-0 mt-4 text-sm text-muted-color" data-testid="import-other-program">
+                                    Uygulamanız listede yoksa
+                                    @if (canRequestSupport) {
+                                        <a [routerLink]="migrationSupportRoute" class="text-primary font-medium" data-testid="import-migration-support-link">bizimle iletişime geçin</a>.
+                                    } @else {
+                                        bizimle iletişime geçin.
+                                    }
+                                </p>
                             </section>
                         }
 
@@ -432,8 +435,11 @@ export class ImportUploadPageComponent implements OnInit {
     readonly canRequestSupport = this.auth.hasOperationClaim(CUSTOM_DEVELOPMENT_REQUESTS_MANAGE_CLAIM);
     readonly migrationSupportRoute = MIGRATION_SUPPORT_ROUTE;
 
-    /** Adı bilinen programlar önce, genel yol ("Programım listede yok") sonda. */
-    protected readonly orderedProfiles = computed(() => [...this.profiles().filter((p) => p.code !== 'Generic'), ...this.profiles().filter((p) => p.code === 'Generic')]);
+    /**
+     * Yalnız dosyaları doğrudan okunan programlar (E-vet, Kolayvet). Genel yol sunulmaz: başka programın dosya içeriği bilinmiyor,
+     * klinik bizimle iletişime geçer (kullanıcı kararı 2026-11-28).
+     */
+    protected readonly orderedProfiles = computed(() => this.profiles().filter((p) => p.code !== 'Generic'));
     protected readonly selectedProfile = computed(() => this.profiles().find((p) => p.code === this.sourceProfile()));
     /** Seçilen programın dosyaları; boşsa genel yol (tek Excel ya da CSV). */
     protected readonly programFileDefs = computed<readonly ProgramUploadFileDef[]>(() => PROGRAM_UPLOAD_FILES[this.sourceProfile() ?? 'Generic'] ?? []);

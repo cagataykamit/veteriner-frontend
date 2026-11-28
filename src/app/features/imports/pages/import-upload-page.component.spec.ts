@@ -84,8 +84,14 @@ describe('ImportUploadPageComponent', () => {
         fixture.detectChanges();
     };
 
+    /** Genel yolun kartı yok (yalnız program listesi gelmezse açılır); o yol doğrudan seçilir. */
     const choose = (code: ImportSourceProfileCode) => {
-        el.querySelector<HTMLButtonElement>(`[data-profile="${code}"]`)!.click();
+        if (code === 'Generic') {
+            page.chooseProfile('Generic');
+        } else {
+            el.querySelector<HTMLButtonElement>(`[data-profile="${code}"]`)!.click();
+        }
+
         fixture.detectChanges();
     };
 
@@ -93,24 +99,26 @@ describe('ImportUploadPageComponent', () => {
     const sentForm = () => imports.createBatch.mock.calls[0][0] as FormData;
     const sentKeys = () => Array.from(sentForm().keys());
 
-    it('ilk ekran yalnız programı sorar: kartta yalnız program adı, adı bilinenler önce, "Programım listede yok" sonda', () => {
+    it('ilk ekran yalnız E-vet ve Kolayvet sunar; başka program için iletişim satırı', () => {
         create();
 
         const options = Array.from(el.querySelectorAll<HTMLButtonElement>('[data-testid="import-source-profile"] button'));
 
         expect(text()).toContain('Hangi programdan geliyorsunuz?');
-        expect(options.map((o) => o.dataset['profile'])).toEqual(['Kolayvet', 'EVet', 'Generic']);
-        expect(options.map((o) => o.textContent?.trim())).toEqual(['Kolayvet', 'E-vet', 'Programım listede yok']);
-        expect(text()).not.toContain('E-vet yedeği');
+        expect(options.map((o) => o.dataset['profile'])).toEqual(['Kolayvet', 'EVet']);
+        expect(options.map((o) => o.textContent?.trim())).toEqual(['Kolayvet', 'E-vet']);
+        expect(text()).not.toContain('Programım listede yok');
+        expect(q('import-other-program')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Uygulamanız listede yoksa bizimle iletişime geçin.');
         expect(el.querySelector('app-import-drop-zone')).toBeNull();
         expect(submitButton()).toBeNull();
         expect(q('import-migration-support-link')).toBeNull();
     });
 
-    it('geçiş desteği yetkisi varsa program ekranında tek satırlık bağlantısı görünür', () => {
+    it('geçiş desteği yetkisi varsa "bizimle iletişime geçin" geçiş desteği sayfasına gider', () => {
         create({ support: true });
 
-        expect(q('import-migration-support-link')?.parentElement?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Takılırsanız geçiş desteği isteyin.');
+        expect(q('import-migration-support-link')?.textContent?.trim()).toBe('bizimle iletişime geçin');
+        expect(q('import-other-program')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Uygulamanız listede yoksa bizimle iletişime geçin.');
     });
 
     it('Genel: dosya ve gönderme tek ekranda; şablon ve CSV ikinci planda; Excel klinik olmadan "file" ile gider, profil gönderilmez', () => {
