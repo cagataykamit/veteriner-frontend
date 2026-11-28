@@ -59,10 +59,10 @@ const RETURN_REASONS: Record<string, string> = {
                 }
 
                 @if (c.status === 'NotConnected' || c.status === 'ReauthorizationRequired') {
-                    <div class="mb-4 max-w-md">
+                    <div>
                         <label for="edocProvider" class="block text-sm font-medium text-muted-color mb-2">Entegratör</label>
-                        <p-select inputId="edocProvider" class="w-full" [options]="providerOptions()" optionLabel="label" optionValue="value" optionDisabled="disabled" [(ngModel)]="selectedProvider" [ngModelOptions]="{ standalone: true }" />
-                        <small class="text-muted-color">Listede olmayan entegratör için destekle iletişime geçin; sağlayıcılar zamanla eklenir.</small>
+                        <p-select inputId="edocProvider" class="w-full max-w-md" [options]="providerOptions()" optionLabel="label" optionValue="value" optionDisabled="disabled" [(ngModel)]="selectedProvider" [ngModelOptions]="{ standalone: true }" />
+                        <small class="block mt-1 text-muted-color">Listede olmayan entegratör için destekle iletişime geçin; sağlayıcılar zamanla eklenir.</small>
                     </div>
                 } @else {
                     <dl class="grid grid-cols-12 gap-x-4 gap-y-2 m-0 text-sm">
@@ -96,6 +96,8 @@ const RETURN_REASONS: Record<string, string> = {
                     <p class="text-sm m-0">Entegratör yetkisi sona erdi ({{ c.lastVerificationMessage }}). Belge kesmek için hesabı yeniden bağlayın.</p>
                 }
 
+                <!-- Anahtarla bağlanan sağlayıcıda bağlı değilken bu satır boştur; boş satırın payı seçim ile formu ayırıyordu. -->
+                @if (c.status !== 'NotConnected' || chosenProvider()?.connectionMethod === 'OAuth') {
                 <div class="mt-4 flex flex-wrap justify-end gap-2">
                     @if (c.status === 'Connected') {
                         <button pButton type="button" severity="secondary" [outlined]="true" [disabled]="busy()" (click)="verify()" data-testid="edoc-verify"><i class="p-button-icon pi pi-check-circle"></i>Bağlantıyı sına</button>
@@ -115,21 +117,23 @@ const RETURN_REASONS: Record<string, string> = {
                         }
                     }
                 </div>
+                }
 
                 @if (chosenProvider(); as p) {
                     @if (p.connectionMethod === 'Credentials' && (c.status !== 'Connected' || keyFormOpen())) {
-                        <form class="mt-4 flex flex-wrap items-end gap-2" (ngSubmit)="connectWithKey(p.provider)" data-testid="edoc-key-form">
-                            <div class="grow min-w-[16rem]">
-                                <label for="edocApiKey" class="block text-sm font-medium text-muted-color mb-2">{{ p.providerName }} API anahtarı</label>
-                                <input pInputText id="edocApiKey" name="apiKey" type="password" class="w-full" autocomplete="off" spellcheck="false" [(ngModel)]="apiKey" [disabled]="busy() || ro.mutationBlocked() || !p.configured" />
-                                <small class="text-muted-color">Anahtarı {{ p.providerName }} portalının API tanımları ekranında üretip buraya yapıştırın. Anahtar şifreli saklanır, bir daha gösterilmez.</small>
+                        <!-- Açıklama satırın altında: düğme yalnız alanla hizalanır, açıklamanın hizasına kaymaz. -->
+                        <form class="mt-4" (ngSubmit)="connectWithKey(p.provider)" data-testid="edoc-key-form">
+                            <label for="edocApiKey" class="block text-sm font-medium text-muted-color mb-2">{{ p.providerName }} API anahtarı</label>
+                            <div class="flex flex-wrap items-center gap-2 max-w-3xl">
+                                <input pInputText id="edocApiKey" name="apiKey" type="password" class="grow min-w-[16rem]" autocomplete="off" spellcheck="false" [(ngModel)]="apiKey" [disabled]="busy() || ro.mutationBlocked() || !p.configured" />
+                                @if (keyFormOpen()) {
+                                    <button pButton type="button" severity="secondary" [text]="true" [disabled]="busy()" (click)="closeKeyForm()">Vazgeç</button>
+                                }
+                                <button pButton type="submit" [disabled]="!apiKey.trim() || busy() || ro.mutationBlocked() || !p.configured" appReadOnlyReason data-testid="edoc-key-connect">
+                                    <i class="p-button-icon pi pi-link"></i>Bağla ve sına
+                                </button>
                             </div>
-                            @if (keyFormOpen()) {
-                                <button pButton type="button" severity="secondary" [text]="true" [disabled]="busy()" (click)="closeKeyForm()">Vazgeç</button>
-                            }
-                            <button pButton type="submit" [disabled]="!apiKey.trim() || busy() || ro.mutationBlocked() || !p.configured" appReadOnlyReason data-testid="edoc-key-connect">
-                                <i class="p-button-icon pi pi-link"></i>Bağla ve sına
-                            </button>
+                            <small class="block mt-1 text-muted-color">Anahtarı {{ p.providerName }} portalının API tanımları ekranında üretip buraya yapıştırın. Anahtar şifreli saklanır, bir daha gösterilmez.</small>
                         </form>
                     }
                 }
