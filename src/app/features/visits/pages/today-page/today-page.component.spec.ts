@@ -1145,37 +1145,44 @@ describe('TodayPageComponent', () => {
         const groupRows = (f: ComponentFixture<TodayPageComponent>, group: string) => Array.from((f.nativeElement as HTMLElement).querySelectorAll(`tbody tr[data-group="${group}"]`)) as HTMLElement[];
         const groupHeaders = (f: ComponentFixture<TodayPageComponent>) => Array.from((f.nativeElement as HTMLElement).querySelectorAll('[data-testid="today-group-header"]')).map((h) => words(h));
 
-        it('tek kart, tek tablo: ara başlıklar Klinikte, Sıradaki randevular, Tamamlandı, Gelmedi; sabit tablo düzeni ve başlık sayısı sütunlarla eşit', async () => {
+        it('grup başına ayrı kart: Klinikte, Sıradaki randevular, Tamamlandı, Gelmedi; her kartta sabit düzenli tablo ve 7 başlık hücresi, başlıklar yalnız ilk kartta görünür', async () => {
             const f = await create(['Visits.Read'], {
                 date: 'd',
                 activeHospitalizations: [],
                 items: [item({ key: 'w' }), item({ key: 'i', visitId: 'i', careStatus: 'InProgress' }), plannedItem(), item({ key: 'c', visitId: 'c', careStatus: 'Completed', outstandingAmount: 50 }), noShowItem()]
             });
             const root = f.nativeElement as HTMLElement;
-            const tables = Array.from(root.querySelectorAll('section table'));
+            const sections = Array.from(root.querySelectorAll('[data-testid="today-section"]'));
+            const tables = sections.map((s) => s.querySelector('table')!);
+            const boxes = tables.map((t) => t.closest('.overflow-x-auto')!.className);
 
             expect(root.querySelectorAll('[data-testid="today-list"]').length).toBe(1);
-            expect(tables.length).toBe(1);
+            expect(sections.map((s) => s.getAttribute('data-group'))).toEqual(['clinic', 'planned', 'completed', 'noShow']);
             expect(groupHeaders(f)).toEqual(['Klinikte 2', 'Sıradaki randevular 1', 'Tamamlandı 1', 'Gelmedi 1']);
-            expect(getComputedStyle(tables[0]).tableLayout).toBe('fixed');
-            expect(tables[0].querySelectorAll('thead th').length).toBe(7);
-            expect(tables[0].querySelector('colgroup')).toBeNull();
-            expect(root.querySelector('[data-testid="today-group-header"] td')?.getAttribute('colspan')).toBe('7');
+            expect(tables.every((t) => getComputedStyle(t).tableLayout === 'fixed')).toBe(true);
+            expect(tables.map((t) => t.querySelectorAll('thead th').length)).toEqual([7, 7, 7, 7]);
+            expect(root.querySelector('colgroup')).toBeNull();
+            expect(root.querySelector('[colspan]')).toBeNull();
+            // Sonraki kartlarda başlık yer tutar (aynı sütun hizası) ama görünmez.
+            expect(boxes[0]).not.toContain('[&_th]:h-0!');
+            expect(boxes.slice(1).every((c) => c.includes('[&_th]:h-0!') && c.includes('[&_th]:text-[0px]!'))).toBe(true);
         });
 
-        it('liste başlığı: Günlük liste, toplam ve durum sayımı (bekleniyor, sırada, muayenede, tamamlandı)', async () => {
+        it('liste başlığı: Günlük liste ve toplam; durum sayımı kart başlığında (Klinikte: sırada, muayenede; Sıradaki: bekleniyor), bitmiş işte yok', async () => {
             const f = await create(['Visits.Read'], {
                 date: 'd',
                 activeHospitalizations: [],
                 items: [item({ key: 'w' }), item({ key: 'i', visitId: 'i', careStatus: 'InProgress' }), plannedItem(), item({ key: 'c', visitId: 'c', careStatus: 'Completed' })]
             });
             const list = (f.nativeElement as HTMLElement).querySelector('[data-testid="today-list"]')!;
-            const summary = Array.from(list.querySelectorAll('[data-testid="today-summary"] > span')).map((s) => s.textContent?.trim());
+            const summaries = Array.from(list.querySelectorAll('[data-testid="today-section"]')).map((s) =>
+                Array.from(s.querySelectorAll('[data-testid="today-group-summary"] > span')).map((x) => x.textContent?.trim())
+            );
 
             expect(list.getAttribute('aria-label')).toBe('Günlük liste');
             expect(list.querySelector('h2')?.textContent).toBe('Günlük liste');
             expect(list.querySelector('[aria-label="4 kayıt"]')).not.toBeNull();
-            expect(summary).toEqual(['1 bekleniyor', '1 sırada', '1 muayenede', '1 tamamlandı']);
+            expect(summaries).toEqual([['1 sırada', '1 muayenede'], ['1 bekleniyor'], []]);
         });
 
         it('saat tek değer: "Randevu" kelimesi yok; gelen randevulu hastada "… geldi", randevusuz gelişte "randevusuz", bitmiş işte not yok', async () => {
@@ -1250,40 +1257,39 @@ describe('TodayPageComponent', () => {
             expect(root.querySelector('[data-testid="today-completed-toggle"]')).toBeNull();
             expect(done.getAttribute('data-today-row')).toBe('done');
             expect(done.className).toContain('[&>td]:h-[38px]');
-            expect(open.className).toContain('[&>td]:h-[46px]');
+            expect(open.className).toContain('[&>td]:h-[54px]');
             expect(done.querySelector('[data-testid="today-pet-link"]')?.className).not.toContain('text-primary');
             expect(open.querySelector('[data-testid="today-pet-link"]')?.className).toContain('text-primary');
         });
 
-        it('B-06: ara başlığın colspan değeri görünen sütun sayısıdır (gizli Hekim / Neden sütunu boş sütun açmaz)', async () => {
-            const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'w' })] });
-            const width = (f.componentInstance as unknown as { tableWidthRem: { set(v: number): void } }).tableWidthRem;
-            const colspan = () => (f.nativeElement as HTMLElement).querySelector('[data-testid="today-group-header"] td')?.getAttribute('colspan');
+        it('Klinikte kartı belirgin (kalın birincil üst kenar), bitmiş iş kartı gri zeminde; aç / kapat düğmesi Tamamlandı kartının başlığında', async () => {
+            const done = (key: string, over: Partial<TodayItemVm> = {}) => item({ key, visitId: key, careStatus: 'Completed', ...over });
+            const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'w' }), plannedItem(), done('c1'), done('c2', { outstandingAmount: 50 })] });
+            const root = f.nativeElement as HTMLElement;
+            const [clinic, planned, completed] = Array.from(root.querySelectorAll<HTMLElement>('[data-testid="today-section"]'));
+            const toggle = root.querySelector('[data-testid="today-completed-toggle"]')!;
 
-            width.set(66);
-            f.detectChanges();
-            expect(colspan()).toBe('6');
-            width.set(60);
-            f.detectChanges();
-            expect(colspan()).toBe('5');
-            width.set(80);
-            f.detectChanges();
-            expect(colspan()).toBe('7');
+            expect(clinic.className).toContain('border-t-4!');
+            expect(clinic.querySelector('h3')?.className).toContain('text-[18px]');
+            expect(planned.className).not.toContain('border-t-4!');
+            expect(completed.className).toContain('bg-surface-50!');
+            expect(completed.querySelector('h3')?.className).toContain('text-muted-color');
+            expect(completed.querySelector('h3')!.parentElement!.contains(toggle)).toBe(true);
         });
-        it('taslak ölçüleri: px sütun genişlikleri, küçük soluk başlıklar, düz yazılı ara başlık; müşteri adı düz metin renginde', async () => {
+        it('taslak ölçüleri: px sütun genişlikleri (İşlem üç yuvaya yetecek kadar), küçük soluk başlıklar, kalın kart başlığı; müşteri adı düz metin renginde', async () => {
             const f = await create(['Visits.Read'], { date: 'd', activeHospitalizations: [], items: [item({ key: 'w', clientPhone: '905439580091' })] });
             const root = f.nativeElement as HTMLElement;
             // Genişlik başlık hücrelerinde (B-06: <col> yok, gizli sütun yer tutmaz).
             const cols = Array.from(root.querySelectorAll('thead th')).map((c) => Array.from(c.classList).find((k) => k.startsWith('w-')));
             const wrapper = root.querySelector('table')!.closest('.overflow-x-auto') as HTMLElement;
-            const groupCell = root.querySelector('[data-testid="today-group-header"] td') as HTMLElement;
+            const groupTitle = root.querySelector('[data-testid="today-group-header"]') as HTMLElement;
             const client = root.querySelector('[data-testid="today-client-link"]') as HTMLElement;
 
-            expect(cols).toEqual(['w-[80px]', 'w-[220px]', 'w-[230px]', 'w-[160px]', 'w-[180px]', 'w-auto', 'w-[230px]']);
+            expect(cols).toEqual(['w-[80px]', 'w-[200px]', 'w-[200px]', 'w-[150px]', 'w-[170px]', 'w-auto', 'w-[292px]']);
             expect(wrapper.className).toContain('[&_th]:text-[12px]!');
             expect(wrapper.className).toContain('[&_th]:text-muted-color!');
-            expect(groupCell.className).toContain('text-[13px]!');
-            expect(groupCell.className).toContain('font-semibold');
+            expect(groupTitle.tagName).toBe('H3');
+            expect(groupTitle.className).toContain('font-bold');
             expect(client.className).toContain('text-color');
             expect(client.className).not.toContain('text-primary');
             expect(client.closest('td')?.textContent).toContain('+90 543 958 00 91');
@@ -1344,7 +1350,7 @@ describe('TodayPageComponent', () => {
             expect(titled).toContain('Dr. Çok Uzun Hekim Adı');
         });
 
-        it('satır başına tek birincil adım sağda, klinikteyse önünde Muayene aç, "⋯" hemen yanında; acil satırda düğme değil', async () => {
+        it('satır başına tek birincil adım sağda, klinikteyse önünde Muayene aç, "⋯" hemen yanında; üç sabit yuva (düğmeler kaymaz); acil satırda düğme değil', async () => {
             const claims = ['Visits.Read', 'Visits.Create', 'Visits.Update', 'Visits.Correct', 'Examinations.Create', 'Payments.Create'];
             const f = await create(claims, {
                 date: 'd',
@@ -1365,8 +1371,10 @@ describe('TodayPageComponent', () => {
             expect(rows.map(actionsOf)).toEqual([['Muayeneye al', 'Diğer işlemler'], ['Muayene aç', 'Hesabı kapat', 'Diğer işlemler'], ['Geldi', 'Diğer işlemler'], ['Hesabı kapat', 'Diğer işlemler'], ['Diğer işlemler']]);
             const container = rows[0].querySelector('td:last-child > div') as HTMLElement;
 
-            expect(container.className).toContain('justify-end');
-            expect(container.className).not.toContain('grid');
+            // [Muayene aç][birincil adım][⋯]: yuvalar her satırda var (boşken de yer tutar), birincil düğme yuvasını doldurur.
+            expect(container.className).toContain('grid-cols-[minmax(0,1fr)_8.75rem_2.25rem]');
+            expect(rows.map((r) => r.querySelector('td:last-child > div')!.children.length)).toEqual([3, 3, 3, 3, 3]);
+            expect(container.children[1].className).toContain('[&>button]:w-full');
             expect(host.querySelector('tbody button[aria-label="Acil işaretle"], tbody button[aria-label="Acili kaldır"]')).toBeNull();
             // Dar tabloda (<50 rem) yalnız simge; etiket gizlenir, erişilebilir ad kalır
             expect(rows[0].querySelector('td:last-child button span')?.className).toContain('@max-[50rem]:hidden');

@@ -135,9 +135,9 @@
     }
     @if (groups().length > 0) {
         @let listTitle = view() === 'voided' ? 'Yanlış işaretlenenler' : 'Günlük liste';
-        <!-- Tek kart, tek liste: açık iş üstte (Klinikte, Sıradaki randevular), bitmiş iş altta ve katlı. -->
-        <section class="card mb-4 p-0! overflow-hidden" [attr.aria-label]="listTitle" data-testid="today-list">
-            <div class="flex flex-wrap items-center gap-x-[10px] gap-y-1 px-[16px] pt-[12px] pb-[10px]">
+        <!-- Grup başına ayrı kart (2026-11-28, taslak 2): Klinikte üstte ve belirgin, Sıradaki randevular sade, bitmiş iş soluk ve katlı. -->
+        <section class="mb-4" [attr.aria-label]="listTitle" data-testid="today-list">
+            <div class="flex flex-wrap items-center gap-x-[10px] gap-y-1 px-[2px] mb-3">
                 @if (compact()) {
                     <p-select
                         [options]="viewOptions"
@@ -158,32 +158,40 @@
                     >{{ today()?.items?.length ?? 0 }}</span
                 >
                 @if (view() === 'today') {
-                    <div class="flex flex-wrap gap-x-[16px] gap-y-1 sm:ml-auto" data-testid="today-summary">
-                        @for (s of summary(); track s.tone) {
-                            <span class="inline-flex items-center gap-[7px] text-[13px] font-semibold whitespace-nowrap" [class]="statusTextClass[s.tone]">
-                                <span class="w-[9px] h-[9px] rounded-full shrink-0" [class]="statusDotClass[s.tone]" aria-hidden="true"></span>{{ s.text }}
-                            </span>
-                        }
-                        <ng-container [ngTemplateOutlet]="cancelledLink" />
-                    </div>
+                    <div class="sm:ml-auto"><ng-container [ngTemplateOutlet]="cancelledLink" /></div>
                 }
             </div>
-            @if (compact()) {
-                <div class="flex flex-col gap-2 px-3 pb-3" data-testid="today-cards">
-                    @for (row of rows(); track row.id) {
-                        @switch (row.kind) {
-                            @case ('group') {
-                                <h3 class="m-0 mt-2 text-[13px] font-semibold text-color" data-testid="today-group-header">
-                                    {{ row.group.title }}<ng-container *ngTemplateOutlet="groupCount; context: { $implicit: row.group.items.length }" />
-                                </h3>
+            @for (section of sections(); track section.group.key; let first = $first) {
+                <section class="card mb-4 p-0! overflow-hidden" [class]="sectionClass[section.tone]" [attr.aria-label]="section.group.title" data-testid="today-section" [attr.data-group]="section.group.key">
+                    <!-- Yanlış işaretlenenler görünümünde tek grup var; adı liste başlığında, kart başlığı tekrar etmez. -->
+                    @if (view() !== 'voided') {
+                        <div class="flex flex-wrap items-center gap-x-[10px] gap-y-1 px-[16px]" [class]="sectionHeadClass[section.tone]">
+                            <h3 class="m-0" [class]="sectionTitleClass[section.tone]" data-testid="today-group-header">
+                                {{ section.group.title }}<ng-container *ngTemplateOutlet="groupCount; context: { $implicit: section.group.items.length }" />
+                            </h3>
+                            @if (section.summary.length > 0) {
+                                <div class="flex flex-wrap gap-x-[14px] gap-y-1 ml-auto" data-testid="today-group-summary">
+                                    @for (s of section.summary; track s.tone) {
+                                        <span class="inline-flex items-center gap-[7px] text-[13px] font-semibold whitespace-nowrap" [class]="statusTextClass[s.tone]">
+                                            <span class="w-[9px] h-[9px] rounded-full shrink-0" [class]="statusDotClass[s.tone]" aria-hidden="true"></span>{{ s.text }}
+                                        </span>
+                                    }
+                                </div>
                             }
-                            @case ('item') {
-                                @let item = row.item;
-                                @let note = timeNote(item, row.done);
-                                <article class="rounded-border border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 p-3 min-w-0" data-testid="today-card" [attr.data-group]="row.groupKey">
+                            @if (section.toggle; as toggle) {
+                                <ng-container *ngTemplateOutlet="completedToggle; context: { $implicit: toggle }" />
+                            }
+                        </div>
+                    }
+                    @if (compact()) {
+                        <div class="flex flex-col border-surface-200 dark:border-surface-700" [class.border-t]="section.tone === 'clinic'" data-testid="today-cards">
+                            @for (item of section.items; track item.key) {
+                                @let done = section.tone === 'done';
+                                @let note = timeNote(item, done);
+                                <article class="p-3 min-w-0 border-t first:border-t-0 border-surface-200 dark:border-surface-700" data-testid="today-card" [attr.data-group]="section.group.key">
                                     <div class="flex items-start justify-between gap-2 mb-2">
                                         <div class="tabular-nums leading-tight">
-                                            <div class="font-bold" [class.text-muted-color]="row.done">{{ mainTime(item) }}</div>
+                                            <div class="font-bold" [class.text-muted-color]="done">{{ mainTime(item) }}</div>
                                             @if (note) {
                                                 <div class="text-xs text-muted-color whitespace-nowrap" data-testid="today-time-note">{{ note }}</div>
                                             }
@@ -193,7 +201,7 @@
                                             <ng-container *ngTemplateOutlet="statusExtras; context: { $implicit: item }" />
                                         </div>
                                     </div>
-                                    <ng-container *ngTemplateOutlet="petCell; context: { $implicit: item, done: row.done }" />
+                                    <ng-container *ngTemplateOutlet="petCell; context: { $implicit: item, done: done }" />
                                     <ng-container *ngTemplateOutlet="reasonTags; context: { $implicit: item }" />
                                     <ng-container *ngTemplateOutlet="statusNotes; context: { $implicit: item }" />
                                     <dl class="m-0 mt-2 grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-1 text-sm">
@@ -217,53 +225,52 @@
                                         }
                                     </dl>
                                     <div class="flex flex-wrap items-center justify-end gap-2 mt-3 pt-3 border-t border-surface-200 dark:border-surface-700">
-                                        <ng-container *ngTemplateOutlet="actionButtons; context: { $implicit: item }" />
+                                        <ng-container *ngTemplateOutlet="actionButtons; context: { $implicit: item, slots: false }" />
                                     </div>
                                 </article>
                             }
-                            @case ('toggle') {
-                                <ng-container *ngTemplateOutlet="completedToggle; context: { $implicit: row }" />
-                            }
-                        }
-                    }
-                </div>
-            } @else {
-                <!-- Taslak (A) ölçüleri px: başlık 12 px soluk, hücre yatay 10 px (satır sınıflarında), gövde kök yazı boyutu (14 px). PrimeNG tablo stillerini ezmek için `!`. -->
-                <div
-                    #tableBox
-                    class="@container overflow-x-auto [&_th]:px-[10px]! [&_th]:py-[7px]! [&_th]:text-[12px]! [&_th]:font-semibold! [&_th]:text-muted-color! [&_th]:bg-surface-50! dark:[&_th]:bg-surface-800!"
-                >
-                    <!-- Genişlik başlık hücrelerinden gelir (sabit düzen ilk satıra bakar); <col> kullanılmaz: gizli sütunun <col>'u yer tutmaya devam ediyor, başlık şeridi karttan kısa kalıyordu (B-06). -->
-                    <p-table [value]="rows()" dataKey="id" size="small" [tableStyle]="{ 'table-layout': 'fixed', width: '100%' }">
-                        <ng-template #header>
-                            <tr>
-                                @for (col of columns(); track col.label; let last = $last) {
-                                    <th class="whitespace-nowrap" [class]="col.className" [class.text-right]="last">{{ col.label }}</th>
-                                }
-                            </tr>
-                        </ng-template>
-                        <ng-template #body let-row>
-                            @switch (row.kind) {
-                                @case ('group') {
-                                    <tr data-testid="today-group-header">
-                                        <td [attr.colspan]="visibleColumnCount()" class="h-[32px] px-[10px]! pt-[9px]! pb-[5px]! text-[13px]! font-semibold text-color">
-                                            {{ row.group.title }}<ng-container *ngTemplateOutlet="groupCount; context: { $implicit: row.group.items.length }" />
-                                        </td>
+                        </div>
+                    } @else {
+                        <!--
+                            Taslak ölçüleri px: başlık 12 px soluk, hücre yatay 10 px (satır sınıflarında), gövde kök yazı boyutu (14 px). PrimeNG tablo
+                            stillerini ezmek için `!`. Kartların sütunları aynı genişlikte; sütun başlıkları yalnız ilk kartta görünür, diğerlerinde
+                            yer tutar ve ekran okuyucuya okunur (sabit düzen genişliği başlık hücresinden alır).
+                        -->
+                        <div
+                            class="@container overflow-x-auto [&_th]:px-[10px]! [&_tbody>tr:last-child>td]:border-b-0!"
+                            [class]="
+                                first
+                                    ? '[&_th]:py-[7px]! [&_th]:text-[12px]! [&_th]:font-semibold! [&_th]:text-muted-color! [&_th]:bg-surface-50! dark:[&_th]:bg-surface-800!'
+                                    : '[&_th]:h-0! [&_th]:py-0! [&_th]:border-0! [&_th]:text-[0px]! [&_th]:leading-[0]! [&_th]:bg-transparent!'
+                            "
+                        >
+                            <!-- Genişlik başlık hücrelerinden gelir (sabit düzen ilk satıra bakar); <col> kullanılmaz: gizli sütunun <col>'u yer tutmaya devam ediyor (B-06). -->
+                            <p-table [value]="section.items" dataKey="key" size="small" [tableStyle]="{ 'table-layout': 'fixed', width: '100%' }">
+                                <ng-template #header>
+                                    <tr>
+                                        @for (col of columns(); track col.label; let last = $last) {
+                                            <th class="whitespace-nowrap" [class]="col.className" [class.text-right]="last">{{ col.label }}</th>
+                                        }
                                     </tr>
-                                }
-                                @case ('item') {
-                                    @let item = row.item;
-                                    @let note = timeNote(item, row.done);
-                                    <!-- Açık satır 46 px, bitmiş satır 38 px (yükseklik en az değerdir; uzun ad ya da rozet satırı uzatabilir). -->
-                                    <tr [class]="row.done ? '[&>td]:h-[38px] [&>td]:py-0! [&>td]:px-[10px]!' : '[&>td]:h-[46px] [&>td]:py-[3px]! [&>td]:px-[10px]!'" [attr.data-today-row]="row.done ? 'done' : 'open'" [attr.data-group]="row.groupKey">
+                                </ng-template>
+                                <ng-template #body let-item>
+                                    @let done = section.tone === 'done';
+                                    @let clinic = section.tone === 'clinic';
+                                    @let note = timeNote(item, done);
+                                    <!-- Klinikteki satır 54 px, sıradaki 46 px, bitmiş satır 38 px (yükseklik en az değerdir; uzun ad ya da rozet satırı uzatabilir). -->
+                                    <tr
+                                        [class]="done ? '[&>td]:h-[38px] [&>td]:py-0! [&>td]:px-[10px]!' : clinic ? '[&>td]:h-[54px] [&>td]:py-[3px]! [&>td]:px-[10px]!' : '[&>td]:h-[46px] [&>td]:py-[3px]! [&>td]:px-[10px]!'"
+                                        [attr.data-today-row]="done ? 'done' : 'open'"
+                                        [attr.data-group]="section.group.key"
+                                    >
                                         <td class="tabular-nums leading-tight" [attr.title]="item.arrivedAtUtc ? 'Geliş ' + arrival(item.arrivedAtUtc) : null">
-                                            <div class="text-[14.5px]" [class]="row.done ? 'font-medium text-muted-color' : 'font-bold'">{{ mainTime(item) }}</div>
+                                            <div [class]="done ? 'text-[14.5px] font-medium text-muted-color' : clinic ? 'text-[15.5px] font-bold' : 'text-[14.5px] font-bold'">{{ mainTime(item) }}</div>
                                             @if (note) {
                                                 <div class="text-xs text-muted-color whitespace-nowrap" data-testid="today-time-note">{{ note }}</div>
                                             }
                                         </td>
                                         <td>
-                                            <ng-container *ngTemplateOutlet="petCell; context: { $implicit: item, done: row.done }" />
+                                            <ng-container *ngTemplateOutlet="petCell; context: { $implicit: item, done: done }" />
                                             @if (item.responsibleVeterinarianName; as vet) {
                                                 <!-- Hekim sütunu yoksa (dar kapsayıcı) ad burada görünür -->
                                                 <div class="text-[12px] text-muted-color truncate @min-[72rem]:hidden" [attr.title]="vet">{{ vet }}</div>
@@ -281,7 +288,7 @@
                                                 >
                                                 <ng-container *ngTemplateOutlet="clientDebt; context: { $implicit: item }" />
                                             </div>
-                                            @if (item.clientPhone && !row.done) {
+                                            @if (item.clientPhone && !done) {
                                                 <div class="text-[12px] text-muted-color whitespace-nowrap">{{ phone(item.clientPhone) }}</div>
                                             }
                                         </td>
@@ -302,6 +309,7 @@
                                             </td>
                                         }
                                         <td>
+                                            <!-- Durum uzun olabilir ("Bekleniyor · 1 sa 10 dk gecikti"): süre alt satıra sarar, yandaki sütunun üstüne binmez. -->
                                             <div class="flex flex-wrap items-center gap-x-[6px] gap-y-1">
                                                 <ng-container *ngTemplateOutlet="statusLine; context: { $implicit: item }" />
                                                 <ng-container *ngTemplateOutlet="statusExtras; context: { $implicit: item }" />
@@ -321,23 +329,17 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="flex items-center justify-end gap-[6px] whitespace-nowrap">
-                                                <ng-container *ngTemplateOutlet="actionButtons; context: { $implicit: item }" />
+                                            <!-- Üç sabit yuva [Muayene aç][birincil adım][⋯]: birincil düğme her satırda ve her kartta aynı genişlikte, aynı yerde. -->
+                                            <div class="grid grid-cols-[minmax(0,1fr)_8.75rem_2.25rem] @max-[50rem]:grid-cols-[minmax(0,1fr)_2.25rem_2.25rem] items-center gap-[6px] whitespace-nowrap">
+                                                <ng-container *ngTemplateOutlet="actionButtons; context: { $implicit: item, slots: true }" />
                                             </div>
                                         </td>
                                     </tr>
-                                }
-                                @case ('toggle') {
-                                    <tr>
-                                        <td [attr.colspan]="visibleColumnCount()" class="p-0!">
-                                            <ng-container *ngTemplateOutlet="completedToggle; context: { $implicit: row }" />
-                                        </td>
-                                    </tr>
-                                }
-                            }
-                        </ng-template>
-                    </p-table>
-                </div>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    }
+                </section>
             }
         </section>
     } @else {
@@ -585,76 +587,86 @@
 <!--
     Satır başına tek birincil adım sağda: Geldi | Muayeneye al (başlatır ve muayeneyi açar) | Tamamla | tamamlanmışta Ücret ekle (hiç ücret yoksa)
     ya da Ödeme al (kalanı varsa); muayenedeki hastada önünde "Muayene aç"; "⋯" hemen yanında. Dar tabloda (<50 rem) yalnız simge
-    (aria-label + ipucu); kartta etiketler açık.
+    (aria-label + ipucu); kartta etiketler açık. Tabloda (slots) üç sabit yuva: [Muayene aç][birincil adım, yuvayı doldurur][⋯]; boş yuva da
+    yer tutar, düğmeler satırdan satıra kaymaz. Kartta yuvalar akışa karışır (contents).
 -->
-<ng-template #actionButtons let-item>
+<ng-template #actionButtons let-item let-slots="slots">
     @let actions = actionsOf(item);
-    @if (canCreateExamination && actions.canOpenExamination) {
-        <button pButton type="button" aria-label="Muayene aç" [attr.title]="'Muayene aç'" size="small" severity="secondary" [disabled]="ro.mutationBlocked()" (click)="openExamination(item)">
-            <i class="p-button-icon pi pi-file-edit"></i><span class="@max-[50rem]:hidden">Muayene aç</span>
-        </button>
-    }
-    @if (canCreateVisit && actions.canMarkArrived) {
-        <button pButton type="button" aria-label="Geldi" [attr.title]="'Geldi'" size="small" [disabled]="ro.mutationBlocked()" (click)="openAppointmentArrival(item)">
-            <i class="p-button-icon pi pi-sign-in"></i><span class="@max-[50rem]:hidden">Geldi</span>
-        </button>
-    }
-    @if (canUpdateVisit && actions.canStartCare) {
-        <button pButton type="button" aria-label="Muayeneye al" [attr.title]="'Muayeneye al'" size="small" [disabled]="isBusy(item) || ro.mutationBlocked()" (click)="transition(item, 'start')" data-testid="today-take-in">
-            <i class="p-button-icon" [class]="isBusy(item) ? 'pi pi-spin pi-spinner' : 'pi pi-play'"></i><span class="@max-[50rem]:hidden">Muayeneye al</span>
-        </button>
-    }
-    @if (canCheckout && actions.canCheckout) {
-        <button pButton type="button" aria-label="Hesabı kapat" [attr.title]="'Hesabı kapat'" size="small" [disabled]="ro.mutationBlocked()" (click)="openCheckout(item)" data-testid="today-checkout">
-            <i class="p-button-icon pi pi-receipt"></i><span class="@max-[50rem]:hidden">Hesabı kapat</span>
-        </button>
-    }
-    @if (canUpdateVisit && actions.canCompleteCare && !(canCheckout && actions.canCheckout)) {
-        <button pButton type="button" aria-label="Tamamla" [attr.title]="'Tamamla'" size="small" [disabled]="isBusy(item) || ro.mutationBlocked()" (click)="requestComplete(item)">
-            <i class="p-button-icon" [class]="isBusy(item) ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i><span class="@max-[50rem]:hidden">Tamamla</span>
-        </button>
-    }
-    @if (canCreateCharge && actions.canAddMissingCharge) {
-        <button pButton type="button" aria-label="Ücret ekle" [attr.title]="'Ücret ekle'" size="small" [outlined]="true" [disabled]="ro.mutationBlocked()" (click)="openCharge(item)" data-testid="today-add-missing-charge">
-            <i class="p-button-icon pi pi-plus"></i><span class="@max-[50rem]:hidden">Ücret ekle</span>
-        </button>
-    }
-    @if (canCollectPayment && actions.canCollectRemaining && !(canCheckout && actions.canCheckout)) {
-        <button pButton type="button" aria-label="Ödeme al" [attr.title]="'Ödeme al'" size="small" [outlined]="true" [disabled]="ro.mutationBlocked()" (click)="openPayment(item)" data-testid="today-collect-remaining">
-            <i class="p-button-icon pi pi-wallet"></i><span class="@max-[50rem]:hidden">Ödeme al</span>
-        </button>
-    }
-    @let more = secondaryActionsOf(item, actions);
-    @if (more.length > 0) {
-        <button
-            pButton
-            type="button"
-            iconOnly
-            size="small"
-            severity="secondary"
-            [text]="true"
-            [rounded]="true"
-            aria-label="Diğer işlemler"
-            [attr.title]="'Diğer işlemler'"
-            aria-haspopup="menu"
-            (click)="openRowMenu($event, item, more)"
-        >
-            <i class="p-button-icon pi pi-ellipsis-h"></i>
-        </button>
-    }
+    <span [class]="slots ? 'flex justify-end min-w-0' : 'contents'">
+        @if (canCreateExamination && actions.canOpenExamination) {
+            <button pButton type="button" aria-label="Muayene aç" [attr.title]="'Muayene aç'" size="small" severity="secondary" [disabled]="ro.mutationBlocked()" (click)="openExamination(item)">
+                <i class="p-button-icon pi pi-file-edit"></i><span class="@max-[72rem]:hidden">Muayene aç</span>
+            </button>
+        }
+    </span>
+    <span [class]="slots ? 'flex min-w-0 [&>button]:w-full [&>button]:justify-center' : 'contents'">
+        @if (canCreateVisit && actions.canMarkArrived) {
+            <button pButton type="button" aria-label="Geldi" [attr.title]="'Geldi'" size="small" [disabled]="ro.mutationBlocked()" (click)="openAppointmentArrival(item)">
+                <i class="p-button-icon pi pi-sign-in"></i><span class="@max-[50rem]:hidden">Geldi</span>
+            </button>
+        }
+        @if (canUpdateVisit && actions.canStartCare) {
+            <button pButton type="button" aria-label="Muayeneye al" [attr.title]="'Muayeneye al'" size="small" [disabled]="isBusy(item) || ro.mutationBlocked()" (click)="transition(item, 'start')" data-testid="today-take-in">
+                <i class="p-button-icon" [class]="isBusy(item) ? 'pi pi-spin pi-spinner' : 'pi pi-play'"></i><span class="@max-[50rem]:hidden">Muayeneye al</span>
+            </button>
+        }
+        @if (canCheckout && actions.canCheckout) {
+            <button pButton type="button" aria-label="Hesabı kapat" [attr.title]="'Hesabı kapat'" size="small" [disabled]="ro.mutationBlocked()" (click)="openCheckout(item)" data-testid="today-checkout">
+                <i class="p-button-icon pi pi-receipt"></i><span class="@max-[50rem]:hidden">Hesabı kapat</span>
+            </button>
+        }
+        @if (canUpdateVisit && actions.canCompleteCare && !(canCheckout && actions.canCheckout)) {
+            <button pButton type="button" aria-label="Tamamla" [attr.title]="'Tamamla'" size="small" [disabled]="isBusy(item) || ro.mutationBlocked()" (click)="requestComplete(item)">
+                <i class="p-button-icon" [class]="isBusy(item) ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i><span class="@max-[50rem]:hidden">Tamamla</span>
+            </button>
+        }
+        @if (canCreateCharge && actions.canAddMissingCharge) {
+            <button pButton type="button" aria-label="Ücret ekle" [attr.title]="'Ücret ekle'" size="small" [outlined]="true" [disabled]="ro.mutationBlocked()" (click)="openCharge(item)" data-testid="today-add-missing-charge">
+                <i class="p-button-icon pi pi-plus"></i><span class="@max-[50rem]:hidden">Ücret ekle</span>
+            </button>
+        }
+        @if (canCollectPayment && actions.canCollectRemaining && !(canCheckout && actions.canCheckout)) {
+            <button pButton type="button" aria-label="Ödeme al" [attr.title]="'Ödeme al'" size="small" [outlined]="true" [disabled]="ro.mutationBlocked()" (click)="openPayment(item)" data-testid="today-collect-remaining">
+                <i class="p-button-icon pi pi-wallet"></i><span class="@max-[50rem]:hidden">Ödeme al</span>
+            </button>
+        }
+    </span>
+    <span [class]="slots ? 'flex justify-end' : 'contents'">
+        @let more = secondaryActionsOf(item, actions);
+        @if (more.length > 0) {
+            <button
+                pButton
+                type="button"
+                iconOnly
+                size="small"
+                severity="secondary"
+                [text]="true"
+                [rounded]="true"
+                aria-label="Diğer işlemler"
+                [attr.title]="'Diğer işlemler'"
+                aria-haspopup="menu"
+                (click)="openRowMenu($event, item, more)"
+            >
+                <i class="p-button-icon pi pi-ellipsis-h"></i>
+            </button>
+        }
+    </span>
 </ng-template>
 
-<!-- Katlı "Tamamlandı": işi kalanlar hep görünür; diğerleri bu satırla açılır / kapanır. -->
-<ng-template #completedToggle let-row>
+<!-- Katlı "Tamamlandı": işi kalanlar hep görünür; diğerleri kart başlığındaki bu düğmeyle açılır / kapanır. -->
+<ng-template #completedToggle let-toggle>
     <button
+        pButton
         type="button"
-        class="w-full h-[38px] flex items-center gap-[6px] px-[10px] border-0 bg-transparent text-left text-[13px] font-semibold text-primary cursor-pointer hover:bg-primary-50 dark:hover:bg-primary-400/10 rounded-border"
-        [attr.aria-expanded]="row.expanded"
+        size="small"
+        severity="secondary"
+        [outlined]="true"
+        class="ml-auto"
+        [attr.aria-expanded]="toggle.expanded"
         data-testid="today-completed-toggle"
         (click)="toggleCompleted()"
     >
-        <i class="pi text-xs" [class]="row.expanded ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i>
-        {{ row.expanded ? 'Tamamlananları gizle' : row.hiddenCount + ' tamamlanan kayıt daha göster' }}
+        <i class="p-button-icon pi" [class]="toggle.expanded ? 'pi-chevron-up' : 'pi-chevron-down'"></i>{{ toggle.expanded ? 'Tamamlananları gizle' : toggle.hiddenCount + ' tamamlanan kayıt daha göster' }}
     </button>
 </ng-template>
 
