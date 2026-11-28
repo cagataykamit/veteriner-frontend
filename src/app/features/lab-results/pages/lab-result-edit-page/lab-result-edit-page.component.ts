@@ -1,8 +1,9 @@
 import { DateInputComponent } from '@/app/shared/forms/date-input/date-input.component';
 import { ClientSearchComponent } from '@/app/entities/client/components/client-search.component';
 import { PetSearchComponent } from '@/app/entities/pet/components/pet-search.component';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
+import { revealField } from '@/app/shared/forms/form-field/form-field.utils';
 import { Component, DestroyRef, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -231,6 +232,8 @@ export class LabResultEditPageComponent implements OnInit, HasUnsavedChanges {
     readonly apiFieldErrors = signal<LabResultUpsertFieldErrors>({});
     readonly activeClinicLabel = signal<string>('Belirlenmedi');
 
+    private readonly document = inject(DOCUMENT);
+    private interpretationRevealed = false;
     private labResultId = '';
     private editVmCache: LabResultEditVm | null = null;
     private rowVersion = '';
@@ -400,10 +403,27 @@ export class LabResultEditPageComponent implements OnInit, HasUnsavedChanges {
 
                 this.loading.set(false);
                 this.lockIdentityWhenExaminationFinalized(x.examinationId);
+                this.revealInterpretationOnce();
             },
             error: (e: unknown) => {
                 this.loadError.set(panelHttpFailureMessage(e, 'Kayıt bilgileri yüklenemedi.'));
                 this.loading.set(false);
+            }
+        });
+    }
+
+    /** Detaydaki "Değerlendir" (`?odak=yorum`): form açılınca yorum alanına kaydırılıp odaklanır; çakışma yeniden yüklemesinde tekrarlanmaz. */
+    private revealInterpretationOnce(): void {
+        if (this.interpretationRevealed || this.route.snapshot.queryParamMap.get('odak') !== 'yorum') {
+            return;
+        }
+
+        this.interpretationRevealed = true;
+        setTimeout(() => {
+            const element = this.document.getElementById('interpretation');
+
+            if (element) {
+                revealField(element);
             }
         });
     }
