@@ -4,7 +4,9 @@ import { Meta, Title } from '@angular/platform-browser';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, switchMap } from 'rxjs';
+import { AuthService } from '@/app/core/auth/auth.service';
+import { DEFAULT_PANEL_AFTER_AUTH } from '@/app/core/auth/auth-return-url.utils';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
@@ -109,7 +111,9 @@ const TAX_IDENTITY_CODES = new Set(['SignupIdentity.DuplicateTaxIdentity', 'Sign
                         </div>
                     </div>
                 </div>
-                <button pButton type="button" class="w-full public-auth-submit" (click)="goToLogin()">Giriş yap</button>
+                <button pButton type="button" class="w-full public-auth-submit" [loading]="autoSignIn()" [disabled]="autoSignIn()" (click)="goToLogin()" data-testid="signup-go-login">
+                    {{ autoSignIn() ? 'Panele giriliyor…' : 'Giriş yap' }}
+                </button>
                 <p class="public-auth-alt">
                     <a routerLink="/paketler" class="public-auth-link">Paketlere dön</a>
                 </p>
@@ -297,6 +301,7 @@ export class OwnerSignupPageComponent implements OnInit {
     private readonly legal = inject(LegalAcceptanceService);
     private readonly planCatalog = inject(PublicPlanCatalogService);
     private readonly trialSignup = inject(TrialSignupService);
+    private readonly auth = inject(AuthService);
 
     /** Kayıt olan klinik yöneticisidir: sunucunun yayımladığı tüm belgeler (ADR-029 madde 4). */
     private readonly legalVersions = signal<LegalDocumentVersionDto[] | null>(null);
@@ -321,8 +326,10 @@ export class OwnerSignupPageComponent implements OnInit {
         });
     });
     readonly successResult = signal<PublicOwnerSignupResultDto | null>(null);
-    /** Success sonrası login prefill için saklanır. */
+    /** Success sonrası login prefill için saklanır (otomatik giriş olmazsa giriş sayfasına taşınır). */
     private readonly loginEmailAfterSuccess = signal<string>('');
+    /** Kayıttan hemen sonra az önce yazılan bilgilerle giriş sürüyor; başarısızsa "Giriş yap" kartı kalır. */
+    readonly autoSignIn = signal(false);
 
     tenantName = '';
     clinicName = '';
@@ -515,6 +522,7 @@ export class OwnerSignupPageComponent implements OnInit {
                     this.loginEmailAfterSuccess.set(email);
                     this.successResult.set(res);
                     clearPendingDiscountCode();
+                    this.signInAfterSignup(email, password, res);
                 },
                 error: (err: unknown) => {
                     const message = publicOwnerSignupFailureMessage(err);
@@ -570,6 +578,28 @@ export class OwnerSignupPageComponent implements OnInit {
 
     successPlanTitle(res: PublicOwnerSignupResultDto): string {
         return defByApiCode(res.planCode)?.title ?? res.planCode;
+    }
+
+    /**
+     * E-posta kodla doğrulandı ve şifre az önce yazıldı: kullanıcıya şifreyi ikinci kez yazdırmadan oturum açılır ve kayıtta
+     * kurulan klinik seçilir. Herhangi bir adım olmazsa sessizce "Giriş yap" kartına düşülür (kayıt zaten tamam).
+     */
+    private signInAfterSignup(email: string, password: string, res: PublicOwnerSignupResultDto): void {
+        this.autoSignIn.set(true);
+        this.auth
+            .login({ email, password })
+            .pipe(
+                switchMap(() => this.auth.selectClinic(res.clinicId, this.clinicName.trim() || null)),
+                finalize(() => this.autoSignIn.set(false)),
+                takeUntilDestroyed(this.destroyRef)
+            )
+            .subscribe({
+                next: () => {
+                    this.password = '';
+                    void this.router.navigateByUrl(DEFAULT_PANEL_AFTER_AUTH);
+                },
+                error: () => undefined
+            });
     }
 
     goToLogin(): void {
