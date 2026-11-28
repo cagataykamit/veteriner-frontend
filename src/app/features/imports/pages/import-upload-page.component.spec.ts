@@ -179,8 +179,8 @@ describe('ImportUploadPageComponent', () => {
         expect(text()).toContain('Müşteri Listesi (.xlsx)');
         expect(menu()).toBe('Menü yolu: Müşteriler > Müşteri Listesi');
         expect(guide()).toContain("Kolayvet'te şu menüyü açın:");
-        expect(guide()).toContain("İşlemler menüsünden Dışa Aktar'ı seçin");
-        expect(guide()).toContain("Tümünü listele'yi seçin");
+        expect(guide()).toContain("Entegrasyonlar menüsünü açıp Dışa Aktar'ı seçin");
+        expect(guide()).toContain("tablonun altındaki \"Sayfada … kayıt göster\" kutusundan Tümünü listele'yi seçin");
         expect(q('import-skip')).toBeNull();
         expect(q('import-evet-ambiguous-hint')).toBeNull();
 
@@ -188,17 +188,19 @@ describe('ImportUploadPageComponent', () => {
         fixture.detectChanges();
         click('import-next');
         expect(menu()).toBe('Menü yolu: Hastalar > Hasta Listesi');
+        expect(guide()).toContain("Hızlı İşlemler menüsünü açıp Dışa Aktar'ı seçin");
         expect(q('import-skip')).toBeNull();
 
         page.setProgramFile('pets', file('hasta-listesi.xlsx'));
         fixture.detectChanges();
         click('import-next');
         expect(menu()).toBe('Menü yolu: Aşı Takvimi > Tüm Aşılar');
-        expect(guide()).toContain("Hızlı İşlemler menüsünden Dışa Aktar'ı seçin");
+        expect(guide()).toContain("Hızlı İşlemler menüsünü açıp Dışa Aktar'ı seçin");
 
         click('import-skip');
         expect(q('import-file-counter')?.textContent).toBe('Dosya 4 / 4');
         expect(menu()).toBe('Menü yolu: Raporlar > Hasta Listesi (Detaylı)');
+        expect(guide()).toContain("Dışa Aktar menüsünden Excel Dosyası'nı seçin");
         expect(guide()).toContain('doğum tarihi ve mikroçipi');
 
         click('import-skip');

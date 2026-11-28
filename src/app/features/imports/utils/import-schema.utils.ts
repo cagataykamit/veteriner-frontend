@@ -121,9 +121,12 @@ export const EVET_UPLOAD_FILES: readonly ProgramUploadFileDef[] = [
 ];
 
 /** Kolayvet "Dışa Aktar" yalnız ekrandaki sayfayı indirir (sözleşme 15). */
-const KOLAYVET_ALL_ROWS = "Önce sayfanın en altında, sağdaki satır sayısı kutusundan Tümünü listele'yi seçin; seçmezseniz yalnız ilk sayfa iner.";
+const KOLAYVET_ALL_ROWS = "Önce tablonun altındaki \"Sayfada … kayıt göster\" kutusundan Tümünü listele'yi seçin; seçmezseniz yalnız ilk sayfa iner.";
 
-/** Kolayvet'te tam yedek yok: her liste ayrı Excel dosyası (sözleşme 15.1). */
+/**
+ * Kolayvet'te tam yedek yok: her liste ayrı Excel dosyası (sözleşme 15.1). Dışa Aktar her ekranda başka menüde (Kolayvet v4'te
+ * görüldü, 2026-11-28): Müşteri Listesi'nde Entegrasyonlar, Hasta Listesi ve Aşı Takvimi'nde Hızlı İşlemler, raporda ayrı düğme.
+ */
 export const KOLAYVET_UPLOAD_FILES: readonly ProgramUploadFileDef[] = [
     {
         slot: 'customers',
@@ -131,7 +134,7 @@ export const KOLAYVET_UPLOAD_FILES: readonly ProgramUploadFileDef[] = [
         extension: '.xlsx',
         requirement: 'zorunlu',
         menu: 'Müşteriler > Müşteri Listesi',
-        instruction: "Sağ üstteki İşlemler menüsünden Dışa Aktar'ı seçin.",
+        instruction: "Sağ üstteki Entegrasyonlar menüsünü açıp Dışa Aktar'ı seçin.",
         caution: KOLAYVET_ALL_ROWS,
         label: 'Müşteri Listesi (.xlsx)',
         contents: 'Müşteriler, telefon, kimlik numarası ve açık bakiye'
@@ -142,7 +145,7 @@ export const KOLAYVET_UPLOAD_FILES: readonly ProgramUploadFileDef[] = [
         extension: '.xlsx',
         requirement: 'zorunlu',
         menu: 'Hastalar > Hasta Listesi',
-        instruction: "Sağ üstteki İşlemler menüsünden Dışa Aktar'ı seçin.",
+        instruction: "Üstteki Hızlı İşlemler menüsünü açıp Dışa Aktar'ı seçin.",
         caution: KOLAYVET_ALL_ROWS,
         label: 'Hasta Listesi (.xlsx)',
         contents: 'Hastalar, tür, ırk, cinsiyet ve sahibi'
@@ -153,7 +156,7 @@ export const KOLAYVET_UPLOAD_FILES: readonly ProgramUploadFileDef[] = [
         extension: '.xlsx',
         requirement: 'önerilir',
         menu: 'Aşı Takvimi > Tüm Aşılar',
-        instruction: "Üstteki Hızlı İşlemler menüsünden Dışa Aktar'ı seçin.",
+        instruction: "Üstteki Hızlı İşlemler menüsünü açıp Dışa Aktar'ı seçin.",
         caution: KOLAYVET_ALL_ROWS,
         label: 'Aşı Takvimi (.xlsx)',
         contents: 'Yapılmış aşılar, sonraki aşı tarihleri ve gelecek aşı randevuları'
@@ -164,7 +167,7 @@ export const KOLAYVET_UPLOAD_FILES: readonly ProgramUploadFileDef[] = [
         extension: '.xlsx',
         requirement: 'önerilir',
         menu: 'Raporlar > Hasta Listesi (Detaylı)',
-        instruction: "Excel Olarak İndir'i seçin. Kolayvet'in hasta listesi doğum tarihi ve mikroçipi vermez; bu rapor tamamlar.",
+        instruction: "Filtrele düğmesinin yanındaki Dışa Aktar menüsünden Excel Dosyası'nı seçin. Kolayvet'in hasta listesi doğum tarihi ve mikroçipi vermez; bu rapor tamamlar.",
         caution: KOLAYVET_ALL_ROWS,
         label: 'Hasta Listesi (Detaylı) (.xlsx)',
         contents: 'Doğum tarihi, mikroçip ve eski programa kayıt tarihi'
