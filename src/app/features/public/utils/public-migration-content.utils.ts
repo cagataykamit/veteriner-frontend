@@ -5,11 +5,14 @@
  * borç ve alacağı kapsar (devir alacağı, T3). Dışa aktarımda geçmiş işlem/kontrol satırları varsa klinik geçmişe not olarak gelir
  * (IMPORT §13.2); geçmiş randevu randevu olarak, belge/ek ve stok miktarı aktarılmaz. Tanıtım sitesi yalnız aktarılanları sayar
  * (kullanıcı kararı); aktarılmayanlar panel içe aktarma sihirbazında söylenir.
- * TIER-021: kaynak program seçimi ve geçiş desteği; hazır eşlemeler gerçek dosyayla doğrulanmadığı için "hazır gelir" denmez,
- * program adı yazılmaz. Ücretsiz olduğu paket özellik tablosundan.
+ * TIER-021: kaynak program seçimi ve geçiş desteği. Program adı yalnız gerçek dosyasıyla doğrulanan, dosyaları doğrudan okunan
+ * programlar için yazılır: E-vet (IMPORT §13) ve Kolayvet (IMPORT §15, 2026-11-28). Ücretsiz olduğu paket özellik tablosundan.
  */
 
 import { planAvailabilityText } from '@/app/entities/subscription/utils/pricing-plan.utils';
+
+/** Dosyaları doğrudan okunan programlar; panelde her biri için adım adım rehber var ("E-vet ve Kolayvet"). */
+export const PUBLIC_MIGRATION_PROGRAMS_TEXT = 'E-vet ve Kolayvet';
 
 export interface PublicMigrationStepDef {
     readonly title: string;
@@ -20,7 +23,7 @@ export interface PublicMigrationStepDef {
 export const PUBLIC_MIGRATION_STEPS: readonly PublicMigrationStepDef[] = [
     {
         title: 'Kaynak programı seçin, dosyanızı yükleyin',
-        description: 'Şablonumuz ya da eski programınızın Excel veya CSV dışa aktarımı. Seçtiğiniz program için hazır eşleme varsa sütunlar ona göre önerilir.'
+        description: `Şablonumuz ya da eski programınızın Excel veya CSV dışa aktarımı. ${PUBLIC_MIGRATION_PROGRAMS_TEXT}'ten geliyorsanız hangi dosyayı nereden alacağınızı adım adım gösteririz; dosyaları olduğu gibi yüklersiniz.`
     },
     {
         title: 'Sütunları eşleyin',

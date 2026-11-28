@@ -7,6 +7,7 @@
 
 import { VETINITY_SUPPORT_PHONE_DISPLAY } from '@/app/core/support/vetinity-support.constants';
 import { planAvailabilityText, planTitlesText, planTitlesWithFeature, PRICING_VAT_NOTE, pricingTermsText } from '@/app/entities/subscription/utils/pricing-plan.utils';
+import { PUBLIC_MIGRATION_PROGRAMS_TEXT } from './public-migration-content.utils';
 import { PUBLIC_SITE_SHOWCASE } from './public-site-showcase-content.utils';
 
 /** Çok klinik yönetimi olan paketlerin adları ("Kurumsal"), özellik tablosundan. */
@@ -132,7 +133,7 @@ export const PUBLIC_FAQ_CATEGORIES: readonly PublicFaqCategoryDef[] = [
         items: [
             {
                 question: 'Eski programdan geçebilir miyim?',
-                answer: 'Evet. Excel veya CSV şablonuna aktarıp yüklersiniz; sütunları eşler, kontrol raporunu görür, aktarırsınız. Gerekirse geri alınır.',
+                answer: `Evet. Excel veya CSV şablonuna aktarıp yüklersiniz; sütunları eşler, kontrol raporunu görür, aktarırsınız. ${PUBLIC_MIGRATION_PROGRAMS_TEXT}'ten geliyorsanız dışa aktardığınız dosyaları olduğu gibi yüklersiniz; hangi dosyanın nereden alınacağını panel adım adım gösterir. Gerekirse geri alınır.`,
                 homepage: true
             },
             {

@@ -253,6 +253,7 @@ describe('Tanıtım sayfaları (PublicLayout)', () => {
         harness.detectChanges();
 
         expect(text('[data-migration-steps] h2')).toBe('Kaynak programı seçin, dosyanızı yükleyin');
+        expect(root().querySelector('[data-migration-steps]')?.textContent).toContain("E-vet ve Kolayvet'ten geliyorsanız hangi dosyayı nereden alacağınızı adım adım gösteririz");
         const support = root().querySelector('[data-testid="migration-support"]')?.textContent ?? '';
 
         expect(support).toContain('1 saatlik kurulum görüşmesi');
