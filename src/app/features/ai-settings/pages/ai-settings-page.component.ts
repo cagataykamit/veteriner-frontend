@@ -106,7 +106,7 @@ const NUMBER = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
                                 <span class="whitespace-nowrap">Son değişiklik: {{ dateTime(s.updatedAtUtc) }}</span>
                             }
                             @if (s.acknowledgedAtUtc) {
-                                <span class="whitespace-nowrap">· Bilgilendirme kabulü: {{ dateTime(s.acknowledgedAtUtc) }}</span>
+                                {{ ' ' }}<span class="whitespace-nowrap">· Bilgilendirme kabulü: {{ dateTime(s.acknowledgedAtUtc) }}</span>
                             }
                         </small>
                     </div>
@@ -151,7 +151,7 @@ const NUMBER = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
                         <ul class="m-0 p-0 list-none flex flex-col divide-y divide-surface" data-testid="ai-settings-grant-list">
                             @for (g of s.creditGrants; track g.id) {
                                 <li class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2 first:pt-0 last:pb-0 text-sm">
-                                    <span><span class="font-medium tabular-nums">+{{ number(g.credits) }} kredi</span> <span class="text-muted-color">· {{ grantKindLabel(g.kind) }}</span></span>
+                                    <span><span class="font-medium tabular-nums">+{{ number(g.credits) }} kredi</span><span class="text-muted-color"> · {{ grantKindLabel(g.kind) }}</span></span>
                                     <span class="text-muted-color whitespace-nowrap">{{ date(g.createdAtUtc) }}</span>
                                 </li>
                             }
@@ -162,7 +162,7 @@ const NUMBER = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
 
             <p-dialog header="Yapay zekâyı aç" [modal]="true" [visible]="ackOpen()" (visibleChange)="onAckVisibleChange($event)" [style]="{ width: 'min(36rem, 95vw)' }" [draggable]="false" [closable]="!saving()" data-testid="ai-ack-dialog">
                 <p class="mt-0 mb-3 text-sm">Açmadan önce lütfen okuyun:</p>
-                <ul class="mt-0 mb-4 pl-5 flex flex-col gap-2 text-sm" data-testid="ai-ack-items">
+                <ul class="mt-0 mb-4 pl-5 list-disc flex flex-col gap-2 text-sm" data-testid="ai-ack-items">
                     @for (item of s.acknowledgementItems; track $index) {
                         <li>{{ item }}</li>
                     }
